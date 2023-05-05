@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-from candlestick_charts import create_candlestick_chart
+from candlestick_charts import PLOTLY_CONFIG, create_candlestick_chart
 
 
 #CONFIGURATIONS
@@ -24,6 +24,7 @@ hide_table_row_index = """
         <style>
         thead tr th:first-child {display:none}
         tbody th {display:none}
+		button[title="View fullscreen"]{visibility: hidden;}
         </style>
         """
 
@@ -90,10 +91,13 @@ with right_column1:
    	# 	data['date/time'].dt.hour, bins=24, range=(0,24))[0]
 	# st.bar_chart(hist_values)
 
-	st.plotly_chart(
-		create_candlestick_chart(compa),
-		use_container_width = True
+	fig = create_candlestick_chart(compa)
+	fig.update_layout(
+		margin_t = 0,
+        margin_b = 0,
+        height = 300,
 	)
+	st.plotly_chart(fig, config = PLOTLY_CONFIG)
 
 
 

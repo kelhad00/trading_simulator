@@ -1,6 +1,10 @@
 import plotly.graph_objects as go
 import pandas as pd
 
+PLOTLY_CONFIG = {
+    'displaylogo': False,
+    'modeBarButtonsToRemove': ['toImage', 'select','lasso2d']
+}
 
 def create_candlestick_chart(company_id):
     """
@@ -34,10 +38,10 @@ def create_candlestick_chart(company_id):
 
     # Define chart layout
     figure.update_layout(
-        title = company_id + ' stock price',
+        #title = company_id + ' stock price',
         xaxis_title = 'Date',
         yaxis_title = 'Price',
-        yaxis_tickprefix = '€',
+        yaxis_tickprefix = '€'
     )
 
     return figure
