@@ -3,11 +3,12 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import time
-
+from tkinter import *
+import tkinter.messagebox
 from candlestick_charts import create_candlestick_chart
 
 
-#CONFIGURATIONS
+#CONFIGURATIONS#
 st.set_page_config(layout="wide")
 st.markdown(
 	f"""
@@ -31,37 +32,85 @@ hide_table_row_index = """
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
+#parametres
+max_inv_money=1000
+prix_actu=50
+prix_tot=[0,0,0,0,0,0,0,0,0]
+num_part=[0,0,0,0,0,0,0,0,0]
+comp= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
+#CONFIGURATIONS#
+
+def create_left_port():
+	comp1=[]
+	prix_tot1=[]
+	num_part1=[]
+	for i in range(5):
+		comp1.append(comp[i])
+		prix_tot1.append(prix_tot[i])
+		num_part1.append(num_part[i])
+
+	df1=pd.DataFrame({
+		'Companie':comp1,
+		'Nombre de part': num_part1,
+		'Prix total': prix_tot1
+		})
+	return df1
+
+def create_right_port():
+	comp2=[]
+	prix_tot2=[]
+	num_part2=[]
+	for j in range(5,9):
+		comp2.append(comp[j])
+		prix_tot2.append(prix_tot[j])
+		num_part2.append(num_part[j])
+
+	df2=pd.DataFrame({
+		'Companie':comp2,
+		'Nombre de part': num_part2,
+		'Prix total': prix_tot2
+		})
+	return df2
+
+
+def calcul_prix_tot_inv():
+	tot=0
+	for i in prix_tot:
+		tot+=i
+	tot+=max_inv_money
+	return tot
+
+
+def create_news_tab():
+	dp = pd.DataFrame(
+    {
+    	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45"],
+        "titre": ['Tesla bought Twitter','CAC40 is falling','News']
+    })
+	return dp
+
+def write_requets_vente():
+	st.write('En vente de ',part,' part(s) de ',compa,' à ',achat_vente,' eur/part.')
+	st.button('Annuler')
+
+def write_requets_achat():
+	st.write('En achat de ',part,' part(s) de ',compa,' à ',achat_vente,' eur/part.')
+	st.button('Annuler')
+
+
 #BODY
 left_column1, buff, right_column1 = st.columns([2,1,2])
 
-#parametres
-max_inv_money=1000
-prix_tot=[10, 20, 30, 40]
-num_part=[1, 2, 3, 4]
-comp= ["AAPL", "MSFT", "GOOG", "AMZN"]#, "TSLA", "META", "NVDA", "PEP", "COST"]
-
 #PORTFOLIO
 with left_column1:
-	st.title('Portfolio')
 
-	@st.cache_data
-	def update_data():
-		df=pd.DataFrame({
-  			'Companie':comp,
-  			'Nombre de part': num_part,
-  			'Prix total': prix_tot
-			})
-		return df
+	st.write('Portfolio')
 
-	df=update_data()
-	st.table(df)
+	left_colum, right_colum = st.columns(2)
+	left_colum.table(create_left_port())
+	right_colum.table(create_right_port())
 
-	prix_inv=0
-	for i in prix_tot:
-		prix_inv=prix_inv+i
-
-	st.write('Votre investissement total :',prix_inv,'eur')
-
+	st.write('Votre investissement total :',calcul_prix_tot_inv(),'eur.')
 	
 #COMPANY
 with right_column1: 
@@ -70,23 +119,6 @@ with right_column1:
     	'Sélectionnez une companie :',
     	["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
 	)
-    
-    #graph cartouche
-	# DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-	# 		'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
-
-	# def load_data(nrows):
-   	# 	data = pd.read_csv(DATA_URL, nrows=nrows)
-   	# 	lowercase = lambda x: str(x).lower()
-   	# 	data.rename(lowercase, axis='columns', inplace=True)
-   	# 	data['date/time'] = pd.to_datetime(data['date/time'])
-   	# 	return data
-
-	# data = load_data(10000)
-
-	# hist_values = np.histogram(
-   	# 	data['date/time'].dt.hour, bins=24, range=(0,24))[0]
-	# st.bar_chart(hist_values)
 
 	st.plotly_chart(
 		create_candlestick_chart(compa),
@@ -95,35 +127,27 @@ with right_column1:
 
 
 
-left_column2, buff,right_column2 = st.columns([2,1,2])
+left_column2, buff,middle_column2, buff,right_column2 = st.columns([2,1,2,1,2])
 
 
 
 #ACTUALITES
 with left_column2: 
-	st.title('Actualités')
+	st.write('Actualités')
 
-	link='https://www.automobile-propre.com/marque/tesla/actualites/'
+	st.table(create_news_tab())
 
-	#revoir les titres des colonnes !!
-	df = pd.DataFrame(
-    {
-    	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45"],
-        "url": [f'<a target="_blank" href="{link}">Tesla bought Twitter</a>',f'<a target="_blank" href="{link}">CAC40 is falling</a>',f'<a target="_blank" href="{link}">News</a>']
-    })
-
-	st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-
+#REQUETES
+with right_column2:
+	st.write('Requête en attente ...')
 
 #PRIX ACHAT/VENTE
-with right_column2: 
+with middle_column2: 
+	#st.empty()
 
-	st.write('')
-
-	col, coll = st.columns([2,2])
-	col.text_input("Votre prix :", value='Entrez le prix souhaité (€)',key="price")
+	st.text_input("Votre prix :", value='Entrez le prix souhaité (€)',key="price")
 	achat_vente=st.session_state.price
-	part=coll.selectbox(
+	part=st.selectbox(
     	'Nombre de parts :',
     	[1,2,3,4,5,6,7,8,9,10])
 
@@ -131,19 +155,45 @@ with right_column2:
 	col1, col2, buff= st.columns([2,2,3])
 
 	with col1:
-		if st.button('Acheter','buy'):
-			prix_tot.append(part*achat_vente)
-			num_part.append(part)
-			comp.append(compa)
+		if st.button('Acheter','buy'):  #on_click (callable)
+			#écriture du request
+			with right_column2:
+				write_requets_achat()
 
-
-		#on_click (callable)
+			#modification bdd et portfolio
+			#acheter_part()
 
 	with col2:
 		if st.button('Vendre','sell'):
+			#écriture du request
 			i=comp.index(compa)
-			comp.remove(compa)
-			num_part.remove(num_part[i])
-			prix_tot.remove(prix_tot[i])
+			if num_part[i]!=0:
+				with right_column2:
+					write_requets_vente()
+				#modification bdd et portfolio
+				#vente_part()
+			else : 
+				tkinter.messagebox.showinfo("Erreur",  "Vous ne pouvez pas vendre de part !")			
 
 
+def acheter_part():
+	if prix_actu==achat_vente:
+		#modification des listes
+		i=comp.index(compa)
+		num_part[i]+=part
+		prix_tot[i]+=num_part[i]*achat_vente
+	
+	#supprimer_request()
+	#appeler un fonction pour modifier le portfolio ou rerun l'app
+
+def vente_part():
+	if prix_actu==achat_vente:
+		#modification des listes
+		i=comp.index(compa)
+		num_part[i]-=part
+		prix_tot[i]-=num_part[i]*achat_vente #modifier pour afficher 0
+	
+	#supprimer_request()
+	#appeler un fonction pour modifier le portfolio ou rerun l'app
+
+def supprimer_request():
