@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
+import time
 
 #CONFIGURATIONS
 st.set_page_config(layout="wide")
@@ -31,17 +32,15 @@ st.markdown(hide_table_row_index, unsafe_allow_html=True)
 #BODY
 left_column1, buff, right_column1 = st.columns([2,1,2])
 
-
+#parametres
+max_inv_money=1000
+prix_tot=[10, 20, 30, 40]
+num_part=[1, 2, 3, 4]
+comp= ['Tesla', 'Apple', 'Amazon', 'Engie']
 
 #PORTFOLIO
 with left_column1:
 	st.title('Portfolio')
-
-	#parametres
-	max_inv_money=1000
-	prix_tot=[10, 20, 30, 40]
-	num_part=[1, 2, 3, 4]
-	comp= ['Tesla', 'Apple', 'Amazon', 'Engie']
 
 
 	@st.cache_data
@@ -139,5 +138,5 @@ with right_column2:
 			comp.remove(compa)
 			num_part.remove(num_part[i])
 			prix_tot.remove(prix_tot[i])
-	
-	st.write(comp,num_part,prix_tot)
+
+
