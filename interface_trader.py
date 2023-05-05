@@ -10,25 +10,19 @@ from candlestick_charts import PLOTLY_CONFIG, create_candlestick_chart
 
 #CONFIGURATIONS#
 st.set_page_config(layout="wide")
-st.markdown(
-	f"""
-<style>
-	.appview-container .main .block-container{{
-		padding-bottom: 1rem;
-		padding-top: 2rem;
-    }}
-</style>
-""",
-		unsafe_allow_html=True)
 
 # CSS to inject contained in a string
 hide_table_row_index = """
-        <style>
-        thead tr th:first-child {display:none}
-        tbody th {display:none}
-		button[title="View fullscreen"]{visibility: hidden;}
-        </style>
-        """
+<style>
+	.appview-container .main .block-container {
+		padding-bottom: 1rem;
+		padding-top: 2rem;
+	}
+	thead tr th:first-child {display:none}
+	tbody th {display:none}
+	button[title="View fullscreen"]{visibility: hidden;}
+</style>
+"""
 
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
@@ -40,6 +34,7 @@ prix_tot=[0,0,0,0,0,0,0,0,0]
 num_part=[0,0,0,0,0,0,0,0,0]
 comp= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
 #CONFIGURATIONS#
+
 
 def create_left_port():
 	comp1=[]
@@ -56,6 +51,7 @@ def create_left_port():
 		'Prix total': prix_tot1
 		})
 	return df1
+
 
 def create_right_port():
 	comp2=[]
@@ -90,9 +86,11 @@ def create_news_tab():
     })
 	return dp
 
+
 def write_requets_vente():
 	st.write('En vente de ',part,' part(s) de ',compa,' à ',achat_vente,' eur/part.')
 	st.button('Annuler')
+
 
 def write_requets_achat():
 	st.write('En achat de ',part,' part(s) de ',compa,' à ',achat_vente,' eur/part.')
@@ -104,7 +102,6 @@ left_column1, buff, right_column1 = st.columns([2,1,2])
 
 #PORTFOLIO
 with left_column1:
-
 	st.write('Portfolio')
 
 	left_colum, right_colum = st.columns(2)
@@ -112,14 +109,10 @@ with left_column1:
 	right_colum.table(create_right_port())
 
 	st.write('Votre investissement total :',calcul_prix_tot_inv(),'eur.')
-	
-#COMPANY
-with right_column1: 
 
-	compa = st.selectbox(
-    	'Sélectionnez une companie :',
-    	["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
-	)
+#COMPANY
+with right_column1:
+	compa = st.selectbox( 'Sélectionnez une companie :', comp )
 
 	fig = create_candlestick_chart(compa)
 	fig.update_layout(
@@ -130,13 +123,10 @@ with right_column1:
 	st.plotly_chart(fig, config = PLOTLY_CONFIG)
 
 
-
 left_column2, buff,middle_column2, buff,right_column2 = st.columns([2,1,2,1,2])
 
-
-
 #ACTUALITES
-with left_column2: 
+with left_column2:
 	st.write('Actualités')
 
 	st.table(create_news_tab())
@@ -146,16 +136,16 @@ with right_column2:
 	st.write('Requête en attente ...')
 
 #PRIX ACHAT/VENTE
-with middle_column2: 
+with middle_column2:
 	#st.empty()
 
 	st.text_input("Votre prix :", value='Entrez le prix souhaité (€)',key="price")
 	achat_vente=st.session_state.price
 	part=st.selectbox(
     	'Nombre de parts :',
-    	[1,2,3,4,5,6,7,8,9,10])
+    	[1,2,3,4,5,6,7,8,9,10]
+	)
 
-	
 	col1, col2, buff= st.columns([2,2,3])
 
 	with col1:
@@ -176,8 +166,8 @@ with middle_column2:
 					write_requets_vente()
 				#modification bdd et portfolio
 				#vente_part()
-			else : 
-				tkinter.messagebox.showinfo("Erreur",  "Vous ne pouvez pas vendre de part !")			
+			else :
+				tkinter.messagebox.showinfo("Erreur",  "Vous ne pouvez pas vendre de part !")
 
 
 def acheter_part():
@@ -186,9 +176,10 @@ def acheter_part():
 		i=comp.index(compa)
 		num_part[i]+=part
 		prix_tot[i]+=num_part[i]*achat_vente
-	
+
 	#supprimer_request()
 	#appeler un fonction pour modifier le portfolio ou rerun l'app
+
 
 def vente_part():
 	if prix_actu==achat_vente:
@@ -196,7 +187,7 @@ def vente_part():
 		i=comp.index(compa)
 		num_part[i]-=part
 		prix_tot[i]-=num_part[i]*achat_vente #modifier pour afficher 0
-	
+
 	#supprimer_request()
 	#appeler un fonction pour modifier le portfolio ou rerun l'app
 
