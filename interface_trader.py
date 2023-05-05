@@ -70,7 +70,7 @@ with right_column1:
 
 	compa = st.selectbox(
     	'Sélectionnez une companie :',
-    	["AAPL", "MSFT", "GOOG", "AMZN"]#, "TSLA", "META", "NVDA", "PEP", "COST"]
+    	["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
 	)
     
     #graph cartouche
