@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 from datetime import datetime
 import time
+
+from candlestick_charts import create_candlestick_chart
+
 
 #CONFIGURATIONS
 st.set_page_config(layout="wide")
@@ -36,12 +38,11 @@ left_column1, buff, right_column1 = st.columns([2,1,2])
 max_inv_money=1000
 prix_tot=[10, 20, 30, 40]
 num_part=[1, 2, 3, 4]
-comp= ['Tesla', 'Apple', 'Amazon', 'Engie']
+comp= ["AAPL", "MSFT", "GOOG", "AMZN"]#, "TSLA", "META", "NVDA", "PEP", "COST"]
 
 #PORTFOLIO
 with left_column1:
 	st.title('Portfolio')
-
 
 	@st.cache_data
 	def update_data():
@@ -67,24 +68,30 @@ with right_column1:
 
 	compa = st.selectbox(
     	'Sélectionnez une companie :',
-    	['Tesla','Apple','Engie','Amazon'])
+    	["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
+	)
     
     #graph cartouche
-	DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-			'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
+	# DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
+	# 		'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
 
-	def load_data(nrows):
-   		data = pd.read_csv(DATA_URL, nrows=nrows)
-   		lowercase = lambda x: str(x).lower()
-   		data.rename(lowercase, axis='columns', inplace=True)
-   		data['date/time'] = pd.to_datetime(data['date/time'])
-   		return data
+	# def load_data(nrows):
+   	# 	data = pd.read_csv(DATA_URL, nrows=nrows)
+   	# 	lowercase = lambda x: str(x).lower()
+   	# 	data.rename(lowercase, axis='columns', inplace=True)
+   	# 	data['date/time'] = pd.to_datetime(data['date/time'])
+   	# 	return data
 
-	data = load_data(10000)
+	# data = load_data(10000)
 
-	hist_values = np.histogram(
-   		data['date/time'].dt.hour, bins=24, range=(0,24))[0]
-	st.bar_chart(hist_values)
+	# hist_values = np.histogram(
+   	# 	data['date/time'].dt.hour, bins=24, range=(0,24))[0]
+	# st.bar_chart(hist_values)
+
+	st.plotly_chart(
+		create_candlestick_chart(compa),
+		use_container_width = True
+	)
 
 
 
