@@ -5,13 +5,14 @@ from datetime import datetime
 import time
 from tkinter import *
 import tkinter.messagebox
-from candlestick_charts import PLOTLY_CONFIG, create_candlestick_chart
+from candlestick_charts import PLOTLY_CONFIG, create_candlestick_chart, update_candlestick_chart
 
+# Default value for session variables
+if 'timestamp' not in st.session_state:
+	st.session_state['timestamp'] = '2022-05-05 07:00:00-04:00'
 
 #CONFIGURATIONS#
 st.set_page_config(layout="wide")
-
-# CSS to inject contained in a string
 hide_table_row_index = """
 <style>
 	.appview-container .main .block-container {
@@ -23,8 +24,6 @@ hide_table_row_index = """
 	button[title="View fullscreen"]{visibility: hidden;}
 </style>
 """
-
-# Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
 #parametres
@@ -110,17 +109,20 @@ with left_column1:
 
 	st.write('Votre investissement total :',calcul_prix_tot_inv(),'eur.')
 
-#COMPANY
+#COMPANY GRAPH
 with right_column1:
 	compa = st.selectbox( 'Sélectionnez une companie :', comp )
 
-	fig = create_candlestick_chart(compa)
-	fig.update_layout(
+	candlestick, market_dataframe, st.session_state['timestamp'] = create_candlestick_chart(
+		compa,
+		st.session_state['timestamp']
+	)
+	candlestick.update_layout(
 		margin_t = 0,
         margin_b = 0,
         height = 300,
 	)
-	st.plotly_chart(fig, config = PLOTLY_CONFIG)
+	stream_candlestick = st.plotly_chart(candlestick, config = PLOTLY_CONFIG)
 
 
 left_column2, buff,middle_column2, buff,right_column2 = st.columns([2,1,2,1,2])
@@ -192,3 +194,16 @@ def vente_part():
 	#appeler un fonction pour modifier le portfolio ou rerun l'app
 
 # def supprimer_request():
+
+# Update layout depending of the current market data every 5 minutes
+while True:
+	time.sleep(5) #TODO: change to 5 minutes (300 seconds)
+
+	# Graph part
+	with right_column1:
+		st.session_state['timestamp'] = update_candlestick_chart(
+			candlestick,
+			market_dataframe,
+			st.session_state['timestamp']
+		)
+		stream_candlestick.plotly_chart(candlestick)
