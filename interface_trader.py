@@ -5,31 +5,25 @@ from datetime import datetime
 import time
 from tkinter import *
 import tkinter.messagebox
-from candlestick_charts import create_candlestick_chart
+from candlestick_charts import PLOTLY_CONFIG, create_candlestick_chart, update_candlestick_chart
 
+# Default value for session variables
+if 'timestamp' not in st.session_state:
+	st.session_state['timestamp'] = '2022-05-05 07:00:00-04:00'
 
 #CONFIGURATIONS#
 st.set_page_config(layout="wide")
-st.markdown(
-	f"""
+hide_table_row_index = """
 <style>
-	.appview-container .main .block-container{{
+	.appview-container .main .block-container {
 		padding-bottom: 1rem;
 		padding-top: 2rem;
-    }}
+	}
+	thead tr th:first-child {display:none}
+	tbody th {display:none}
+	button[title="View fullscreen"]{visibility: hidden;}
 </style>
-""",
-		unsafe_allow_html=True)
-
-# CSS to inject contained in a string
-hide_table_row_index = """
-        <style>
-        thead tr th:first-child {display:none}
-        tbody th {display:none}
-        </style>
-        """
-
-# Inject CSS with Markdown
+"""
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
 #parametres
@@ -69,6 +63,7 @@ def create_left_port():
 		'Prix total': prix_tot1
 		})
 	return df1
+
 
 def create_right_port():
 	comp2=[]
@@ -114,6 +109,8 @@ def ajouter_requetes(action):
 		
 def afficher_requetes():
 	rq=pd.DataFrame(st.session_state.listes_requetes,columns=['index','action','companie','prix (€)','nb part'])
+	print(rq)
+	print(st.session_state.listes_requetes)
 	return rq
 
 def supprimer_requete(index):
@@ -130,7 +127,6 @@ left_column1, buff, right_column1 = st.columns([2,1,2])
 
 #PORTFOLIO
 with left_column1:
-
 	st.write('Portfolio')
 
 	left_colum, right_colum = st.columns(2)
@@ -138,28 +134,27 @@ with left_column1:
 	right_colum.table(create_right_port())
 
 	st.write('Votre investissement total :',calcul_prix_tot_inv(),'eur.')
-	
-#COMPANY
-with right_column1: 
 
-	compa = st.selectbox(
-    	'Sélectionnez une companie :',
-    	["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
+#COMPANY GRAPH
+with right_column1:
+	compa = st.selectbox( 'Sélectionnez une companie :', comp )
+
+	candlestick, market_dataframe, st.session_state['timestamp'] = create_candlestick_chart(
+		compa,
+		st.session_state['timestamp']
 	)
-
-	st.plotly_chart(
-		create_candlestick_chart(compa),
-		use_container_width = True
+	candlestick.update_layout(
+		margin_t = 0,
+        margin_b = 0,
+        height = 300,
 	)
-
+	stream_candlestick = st.plotly_chart(candlestick, config = PLOTLY_CONFIG)
 
 
 left_column2, buff,middle_column2, buff,right_column2 = st.columns([2,1,2,0.5,2])
 
-
-
 #ACTUALITES
-with left_column2: 
+with left_column2:
 	st.write('Actualités')
 
 	st.table(create_news_tab())
@@ -179,16 +174,16 @@ with right_column2:
 
 
 #PRIX ACHAT/VENTE
-with middle_column2: 
+with middle_column2:
 	#st.empty()
 
 	st.text_input("Votre prix :", value='(€)',key="price")
 	achat_vente=st.session_state.price
 	part=st.selectbox(
     	'Nombre de parts :',
-    	[1,2,3,4,5,6,7,8,9,10])
+    	[1,2,3,4,5,6,7,8,9,10]
+	)
 
-	
 	col1, col2, buff= st.columns([2,2,3])
 
 	with col1:
@@ -203,7 +198,16 @@ with middle_column2:
 			st.session_state.action='vente'
 			ajouter_requetes(st.session_state.action)
 
+# Update layout depending of the current market data every 5 minutes
+while True:
+	time.sleep(3) #TODO: change to 5 minutes (300 seconds)
 
-
-
+	# # Graph part
+	# with right_column1:
+	# 	st.session_state['timestamp'] = update_candlestick_chart(
+	# 		candlestick,
+	# 		market_dataframe,
+	# 		st.session_state['timestamp']
+	# 	)
+	# 	stream_candlestick.plotly_chart(candlestick)
 
