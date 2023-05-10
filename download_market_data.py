@@ -31,4 +31,5 @@ if not os.path.exists("market_data"):
 
 # Save data to CSV file
 for stock in stock_list:
-    data[stock].to_csv('market_data/'+ stock +'.csv')
+    file_path = os.join('market_data', stock + '.csv')
+    data[stock].to_csv(path)
