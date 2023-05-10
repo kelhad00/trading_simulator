@@ -17,8 +17,7 @@ def create_candlestick_chart(company_id, timestamp):
         NASDAQ stock name
 
     timestamp : str
-        timestamp of the initial market data to display (default: '2022-05-09 12:30:00-04:00')
-
+        timestamp of the initial market data to display
     Returns
     -------
     plotly.graph_objects.Figure
@@ -59,7 +58,7 @@ def create_candlestick_chart(company_id, timestamp):
     return figure, df, dftmp.index[-1]
 
 
-def update_candlestick_chart(figure, dataframe, lasttimestamp, range = 10):
+def update_candlestick_chart(figure, dataframe, lasttimestamp, range = 20):
     """
     Update the candlestick chart with new market data
 
@@ -115,9 +114,9 @@ def update_candlestick_chart(figure, dataframe, lasttimestamp, range = 10):
 
 
 if __name__ == '__main__':
-    name = 'TSLA'
+    name = 'OR.PA'
 
-    fig,df,endtime = create_candlestick_chart(name, '2022-05-05 07:00:00-04:00')
+    fig,df,endtime = create_candlestick_chart(name, '2023-04-11 13:45:00')
     fig.show()
 
     testtime = 3

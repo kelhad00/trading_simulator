@@ -9,7 +9,7 @@ from candlestick_charts import PLOTLY_CONFIG, create_candlestick_chart, update_c
 
 # Default value for session variables
 if 'timestamp' not in st.session_state:
-	st.session_state['timestamp'] = '2022-05-05 07:00:00-04:00'
+	st.session_state['timestamp'] = '2023-04-11 13:45:00'
 
 #CONFIGURATIONS#
 st.set_page_config(layout="wide")
@@ -31,7 +31,12 @@ max_inv_money=1000
 prix_actu=50
 prix_tot=[0,0,0,0,0,0,0,0,0]
 num_part=[0,0,0,0,0,0,0,0,0]
-comp= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
+comp = [ # List of stocks
+    "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
+    "AI.PA",  "AIR.PA", "BNP.PA", "DG.PA",  "CS.PA", \
+    "RMS.PA", "EL.PA",  "SAF.PA", "KER.PA", "RI.PA", \
+    "STLAM.MI",  "BN.PA",  "STMPA.PA",  "CAP.PA", "SGO.PA"
+]
 #CONFIGURATIONS#
 
 
@@ -145,7 +150,7 @@ with middle_column2:
 	achat_vente=st.session_state.price
 	part=st.selectbox(
     	'Nombre de parts :',
-    	[1,2,3,4,5,6,7,8,9,10]
+    	[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 	)
 
 	col1, col2, buff= st.columns([2,2,3])
