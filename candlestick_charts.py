@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import pandas as pd
 import time
+import os
 
 PLOTLY_CONFIG = {
     'displaylogo': False,
@@ -32,7 +33,8 @@ def create_candlestick_chart(company_id, timestamp):
     """
 
     # Get saved market data
-    df = pd.read_csv('market_data/' + company_id + '.csv', index_col=0)
+    file_path = os.path.join('market_data' , company_id + '.csv')
+    df = pd.read_csv(file_path, index_col=0)
     dftmp = df[:timestamp]
 
     # Create candlestick chart for the selected stock
