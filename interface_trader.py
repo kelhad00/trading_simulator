@@ -33,12 +33,26 @@ hide_table_row_index = """
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
 #parametres
-max_inv_money=1000
-prix_actu=50
-prix_tot=[0,0,0,0,0,0,0,0,0]
-num_part=[0,0,0,0,0,0,0,0,0]
+max_inv_money=100000
+
+if 'prix_actu' not in st.session_state:
+	st.session_state.prix_actu=[]
+
+if 'prix_tot' not in st.session_state:
+	st.session_state.prix_tot=[0,0,0,0,0,0,0,0,0]
+
+if 'num_part' not in st.session_state:
+	st.session_state.num_part=[0,0,0,0,0,0,0,0,0]
+
+if 'listes_requetes' not in st.session_state:
+	st.session_state.listes_requetes=[]
+
+if 'action' not in st.session_state:
+	st.session_state.action=''
+
 comp= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
 #CONFIGURATIONS#
+
 
 def create_left_port():
 	comp1=[]
@@ -46,8 +60,8 @@ def create_left_port():
 	num_part1=[]
 	for i in range(5):
 		comp1.append(comp[i])
-		prix_tot1.append(prix_tot[i])
-		num_part1.append(num_part[i])
+		prix_tot1.append(st.session_state.prix_tot[i])
+		num_part1.append(st.session_state.num_part[i])
 
 	df1=pd.DataFrame({
 		'Companie':comp1,
@@ -62,8 +76,8 @@ def create_right_port():
 	num_part2=[]
 	for j in range(5,9):
 		comp2.append(comp[j])
-		prix_tot2.append(prix_tot[j])
-		num_part2.append(num_part[j])
+		prix_tot2.append(st.session_state.prix_tot[j])
+		num_part2.append(st.session_state.num_part[j])
 
 	df2=pd.DataFrame({
 		'Companie':comp2,
@@ -75,7 +89,7 @@ def create_right_port():
 
 def calcul_prix_tot_inv():
 	tot=0
-	for i in prix_tot:
+	for i in st.session_state.prix_tot:
 		tot+=i
 	tot+=max_inv_money
 	return tot
@@ -84,18 +98,31 @@ def calcul_prix_tot_inv():
 def create_news_tab():
 	dp = pd.DataFrame(
     {
-    	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45"],
-        "titre": ['Tesla bought Twitter','CAC40 is falling','News']
+    	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45","05/05/2023 11:45","05/05/2023 11:45"],
+        "titre": ['Tesla bought Twitter','CAC40 is falling','News','News 23', 'News NEWS']
     })
 	return dp
 
-def write_requets_vente():
-	st.write('En vente de ',part,' part(s) de ',compa,' à ',achat_vente,' eur/part.')
-	st.button('Annuler')
 
-def write_requets_achat():
-	st.write('En achat de ',part,' part(s) de ',compa,' à ',achat_vente,' eur/part.')
-	st.button('Annuler')
+def ajouter_requetes(action):
+	longu=len(st.session_state.listes_requetes)
+	if longu<=3:
+		req=[longu+1,action,compa,achat_vente,part]
+		st.session_state.listes_requetes.append(req)
+	else:
+		tkinter.messagebox.showinfo("Erreur",  "Vous avez déjà 3 requêtes en attente !")			
+		
+def afficher_requetes():
+	rq=pd.DataFrame(st.session_state.listes_requetes,columns=['index','action','companie','prix (€)','nb part'])
+	return rq
+
+def supprimer_requete(index):
+	for req in st.session_state.listes_requetes:
+		if req[0]==index:
+			st.session_state.listes_requetes.remove(req)
+			return 'Requêtes supprimer'
+		else:
+			return 'Cette requêtes n\'existe pas !'
 
 
 #BODY
@@ -127,7 +154,7 @@ with right_column1:
 
 
 
-left_column2, buff,middle_column2, buff,right_column2 = st.columns([2,1,2,1,2])
+left_column2, buff,middle_column2, buff,right_column2 = st.columns([2,1,2,0.5,2])
 
 
 
@@ -139,13 +166,23 @@ with left_column2:
 
 #REQUETES
 with right_column2:
-	st.write('Requête en attente ...')
+	afficher=st.button('Afficher les requêtes')
+	if afficher:
+		st.table(afficher_requetes())
+	left,right=st.columns(2)
+	ind=left.selectbox('index :',[1,2,3])
+	right.write(' ')
+	right.write(' ')
+	supprimer=right.button('Supprimer')
+	if supprimer:
+		st.write(supprimer_requete(ind))
+
 
 #PRIX ACHAT/VENTE
 with middle_column2: 
 	#st.empty()
 
-	st.text_input("Votre prix :", value='Entrez le prix souhaité (€)',key="price")
+	st.text_input("Votre prix :", value='(€)',key="price")
 	achat_vente=st.session_state.price
 	part=st.selectbox(
     	'Nombre de parts :',
@@ -155,45 +192,18 @@ with middle_column2:
 	col1, col2, buff= st.columns([2,2,3])
 
 	with col1:
-		if st.button('Acheter','buy'):  #on_click (callable)
-			#écriture du request
-			with right_column2:
-				write_requets_achat()
-
-			#modification bdd et portfolio
-			#acheter_part()
+		acheter=st.button('Acheter','buy')  
+		if acheter:
+			st.session_state.action='achat'
+			ajouter_requetes(st.session_state.action)
 
 	with col2:
-		if st.button('Vendre','sell'):
-			#écriture du request
-			i=comp.index(compa)
-			if num_part[i]!=0:
-				with right_column2:
-					write_requets_vente()
-				#modification bdd et portfolio
-				#vente_part()
-			else : 
-				tkinter.messagebox.showinfo("Erreur",  "Vous ne pouvez pas vendre de part !")			
+		vendre=st.button('Vendre','sell')
+		if vendre:
+			st.session_state.action='vente'
+			ajouter_requetes(st.session_state.action)
 
 
-def acheter_part():
-	if prix_actu==achat_vente:
-		#modification des listes
-		i=comp.index(compa)
-		num_part[i]+=part
-		prix_tot[i]+=num_part[i]*achat_vente
-	
-	#supprimer_request()
-	#appeler un fonction pour modifier le portfolio ou rerun l'app
 
-def vente_part():
-	if prix_actu==achat_vente:
-		#modification des listes
-		i=comp.index(compa)
-		num_part[i]-=part
-		prix_tot[i]-=num_part[i]*achat_vente #modifier pour afficher 0
-	
-	#supprimer_request()
-	#appeler un fonction pour modifier le portfolio ou rerun l'app
 
-def supprimer_request():
+
