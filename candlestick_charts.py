@@ -8,7 +8,7 @@ PLOTLY_CONFIG = {
     'modeBarButtonsToRemove': ['toImage', 'select','lasso2d']
 }
 
-def create_candlestick_chart(company_id, timestamp):
+def create_candlestick_chart(company_id, timestamp='', range=10):
     """
     Create a candlestick chart for the selected stock
 
@@ -18,7 +18,11 @@ def create_candlestick_chart(company_id, timestamp):
         NASDAQ stock name
 
     timestamp : str
-        timestamp of the initial market data to display (default: '2022-05-09 12:30:00-04:00')
+        timestamp of the initial market data to display (optional)
+        if not specified, the oldest market data will be displayed
+
+    range : int
+        number of data points to display (default: 10)
 
     Returns
     -------
@@ -35,7 +39,18 @@ def create_candlestick_chart(company_id, timestamp):
     # Get saved market data
     file_path = os.path.join('market_data' , company_id + '.csv')
     df = pd.read_csv(file_path, index_col=0)
-    dftmp = df[:timestamp]
+
+    # Select market data to display depending on the range and the timestamp
+    if (timestamp == ''):
+        if range == 0:
+            dftmp = df[:1]
+        else:
+            dftmp = df[:range]
+    else:
+        if range == 0:
+            dftmp = df[timestamp-1:timestamp]
+        else:
+            dftmp = df[:timestamp]
 
     # Create candlestick chart for the selected stock
     figure = go.Figure(
@@ -119,7 +134,7 @@ def update_candlestick_chart(figure, dataframe, lasttimestamp, range = 10):
 if __name__ == '__main__':
     name = 'TSLA'
 
-    fig,df,endtime = create_candlestick_chart(name, '2022-05-05 07:00:00-04:00')
+    fig,df,endtime = create_candlestick_chart(name)
     fig.show()
 
     testtime = 3

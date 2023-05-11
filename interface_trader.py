@@ -9,7 +9,7 @@ from candlestick_charts import PLOTLY_CONFIG, create_candlestick_chart, update_c
 
 # Default value for session variables
 if 'timestamp' not in st.session_state:
-	st.session_state['timestamp'] = '2022-05-05 07:00:00-04:00'
+	st.session_state['timestamp'] = ''
 
 #CONFIGURATIONS#
 st.set_page_config(layout="wide")
@@ -200,14 +200,14 @@ with middle_column2:
 
 # Update layout depending of the current market data every 5 minutes
 while True:
-	time.sleep(3) #TODO: change to 5 minutes (300 seconds)
+	time.sleep(3)
 
-	# # Graph part
-	# with right_column1:
-	# 	st.session_state['timestamp'] = update_candlestick_chart(
-	# 		candlestick,
-	# 		market_dataframe,
-	# 		st.session_state['timestamp']
-	# 	)
-	# 	stream_candlestick.plotly_chart(candlestick)
+	# Graph part
+	with right_column1:
+		st.session_state['timestamp'] = update_candlestick_chart(
+			candlestick,
+			market_dataframe,
+			st.session_state['timestamp']
+		)
+		stream_candlestick.plotly_chart(candlestick)
 
