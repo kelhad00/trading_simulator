@@ -117,9 +117,9 @@ def supprimer_requete(index):
 	for req in st.session_state.listes_requetes:
 		if req[0]==index:
 			st.session_state.listes_requetes.remove(req)
-			return 'Requêtes supprimer'
-		else:
-			return 'Cette requêtes n\'existe pas !'
+			return 'Requêtes supprimé'
+	else:
+		return 'Cette requêtes n\'existe pas !'
 
 
 #BODY
