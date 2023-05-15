@@ -8,6 +8,72 @@ PLOTLY_CONFIG = {
     'modeBarButtonsToRemove': ['toImage', 'select','lasso2d']
 }
 
+def create_next_graph(company_id, timestamp='', range=10):
+    """
+    Create a candlestick chart for the selected stock or update an existing one
+
+    Parameters
+    ----------
+    company_id : str
+        NASDAQ stock name
+
+    timestamp : str
+        timestamp of the initial market data to display (optional)
+        if not specified, the oldest market data will be displayed
+
+    range : int
+        number of data points to display (default: 10)
+
+    Returns
+    -------
+    plotly.graph_objects.Figure
+        Candlestick chart to display
+
+    datetime.datetime
+        Last timestamp of the default market data used to create the chart
+    """
+
+    # Get saved market data
+    file_path = os.path.join('market_data' , company_id + '.csv')
+    df = pd.read_csv(file_path, index_col=0)
+
+    # if this is the first time the graph is being created
+    if (timestamp == ''):
+        if range == 0:
+            dftmp = df[:1]
+        else:
+            dftmp = df[:range]
+    else: # if the graph is being updated
+        idx = df.index.get_loc(timestamp)
+        if range == 0:
+            dftmp = df.iloc[:idx + 1]
+        else:
+            dftmp = df.iloc[idx - (range - 2) : idx + 2]
+
+     # Create candlestick chart for the selected stock
+    figure = go.Figure(
+        data = [go.Candlestick(
+            x = dftmp.index,
+            open  = dftmp['Open'],
+            high  = dftmp['High'],
+            low   = dftmp['Low'],
+            close = dftmp['Close']
+        )]
+    )
+
+    # Define chart layout
+    figure.update_layout(
+        #title = company_id + ' stock price',
+        xaxis_title = 'Date',
+        yaxis_title = 'Price',
+        yaxis_tickprefix = '€',
+        showlegend=False
+    )
+
+    return figure, dftmp.index[-1]
+
+
+#TODO: Deprecated. Remove this function
 def create_candlestick_chart(company_id, timestamp='', range=10):
     """
     Create a candlestick chart for the selected stock
@@ -76,6 +142,7 @@ def create_candlestick_chart(company_id, timestamp='', range=10):
     return figure, df, dftmp.index[-1]
 
 
+#TODO: Deprecated. Remove this function
 def update_candlestick_chart(figure, dataframe, lasttimestamp, range = 10):
     """
     Update the candlestick chart with new market data
@@ -134,14 +201,14 @@ def update_candlestick_chart(figure, dataframe, lasttimestamp, range = 10):
 if __name__ == '__main__':
     name = 'TSLA'
 
-    fig,df,endtime = create_candlestick_chart(name)
+    fig,endtime = create_next_graph(name)
     fig.show()
 
     testtime = 3
     while testtime > 0:
         time.sleep(5)
 
-        endtime = update_candlestick_chart(fig, df, endtime)
+        fig,endtime = create_next_graph(name, endtime)
         print(endtime)
 
         fig.show()
