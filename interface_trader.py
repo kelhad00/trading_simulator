@@ -1,4 +1,4 @@
-from dash import Dash, dash_table, html, dcc, callback, Output, Input, State
+from dash import Dash, html, dcc, dash_table, Output, Input, State, Patch, ALL
 import pandas as pd
 from datetime import datetime
 import time
@@ -120,6 +120,54 @@ app.layout = html.Div([
 ])
 
 
+#TODO: Add layout for the requests
+# app.layout = html.Div([
+#     html.Div([
+
+#     html.H4('Request List',style={"font-size": "25px"}),
+#     html.Table([
+#             html.Thead(
+#                 html.Tr(['Prix ','Parts ','Comp ','Actions '])
+#             )
+#         ],id="title-table"),
+#     html.Div(id="request-container"),
+#     html.Button("Clear",id="clear-done-btn")
+#     ],style = {"display": "inline-block","margin":"20px"}),
+
+#     html.Div([
+
+#     html.Br(),
+#     html.H4('Make A Request',style={"font-size": "25px"}),
+#     html.Label('Prix'),
+#     dcc.Input(id='price-input',value='(€)', type='number'),
+
+#     html.Br(),
+#     html.Label('Parts'),
+#     dcc.Input(id='nbr-part-input',value='(€)', type='number'),
+
+
+#     html.Br(),
+#     html.Label('Companie'),
+#     dcc.Dropdown(["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"],id='companie-input',value='AAPL'),
+
+#     html.Label('Actions'),
+#     dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
+
+#     html.Br(),
+#     html.Button("Submit",id='submit-button', n_clicks=0,style={"color":"black"})
+#     ],style = {"display": "inline-block","margin":"20px"}),
+
+#     html.Div([
+#         html.H4("Portfolio",style={"font-size": "25px"}),
+#         html.Table([html.Thead(
+#                 html.Tr(['Companie ','Parts ','Prix '])
+#             )
+#         ],id="title-table")
+#         ])
+
+# ])
+
+
 # Callbacks
 @app.callback(
 	Output('company-graph', 'figure'),
@@ -144,6 +192,55 @@ def update_graph(n, company_id, timestamp, range=10):
         height = 300,
     )
 	return fig, timestamp
+
+
+@app.callback(
+    Output(component_id="request-container", component_property="children", allow_duplicate=True),
+    Input("submit-button", "n_clicks"),
+    [State("price-input", "value"),State("nbr-part-input", "value"),State("companie-input", "value"),State("action-input","value")],
+    prevent_initial_call=True,
+)
+def ajouter_requetes(button_clicked,prix,part,companie,action):
+    patched_list = Patch()
+
+    def generate_line():
+        value=[prix,part,companie,action]
+        return html.Div(
+            [
+                html.Div(
+                    str(value),
+                    id={"index": button_clicked, "type": "output-str"},
+                    style={"display": "inline", "margin": "10px"},
+                ),
+                dcc.Checklist(
+                    options=[{"label": "", "value": "done"}],
+                    id={"index": button_clicked, "type": "done"},
+                    style={"display": "inline"},
+                    labelStyle={"display": "inline"},
+                ),
+            ]
+        )
+    patched_list.append(generate_line())
+    return patched_list
+
+
+# Callback to delete items marked as done
+@app.callback(
+    Output("request-container", "children", allow_duplicate=True),
+    Input("clear-done-btn", "n_clicks"),
+    State({"index": ALL, "type": "done"}, "value"),
+    prevent_initial_call=True,
+)
+def delete_items(n_clicks, state):
+    patched_list = Patch()
+    values_to_remove = []
+    for i, val in enumerate(state):
+        if val:
+            values_to_remove.insert(0, i)
+    for v in values_to_remove:
+        del patched_list[v]
+    return patched_list
+
 
 
 # def ajouter_requetes(action):
