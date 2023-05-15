@@ -1,4 +1,4 @@
-from dash import Dash, html, dcc, callback, Output, Input, State
+from dash import Dash, dash_table, html, dcc, callback, Output, Input, State
 import pandas as pd
 from datetime import datetime
 import time
@@ -8,19 +8,19 @@ from candlestick_charts import create_next_graph, PLOTLY_CONFIG
 # Constants
 MAX_INV_MONEY=100000
 COMP= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
-
-# Global variables
-#TODO: Move global variables to Dash app as dcc.Store components
-prix_actu = []
-# prix_tot = [0,0,0,0,0,0,0,0,0]
-# num_part = [0,0,0,0,0,0,0,0,0]
-listes_requetes = []
-action = ''
-portfolio_info = pd.DataFrame({
-	'Companie':COMP,
-	'Nombre de part': [0,0,0,0,0,0,0,0,0],
-	'Prix total': [0,0,0,0,0,0,0,0,0]
+NEWS_DATA = pd.DataFrame({
+	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45","05/05/2023 11:45","05/05/2023 11:45"],
+	"titre": ['Tesla bought Twitter','CAC40 is falling','News','News 23', 'News NEWS']
 })
+
+#TODO: Change to dcc.Store
+prix_tot= [0,0,0,0,0,0,0,0,0]
+def calcul_prix_tot_inv():
+	tot=0
+	for i in prix_tot:
+		tot+=i
+	tot+=MAX_INV_MONEY
+	return tot
 
 
 # Components
@@ -55,14 +55,22 @@ app = Dash(__name__)
 
 # Layout of the app
 app.layout = html.Div([
+
 	# Global variables
-	dcc.Store(id='market-timestamp-value', data=''), # Store timestamp value in the browser
-	dcc.Store(id='market-dataframe'),   # Store market data in the browser
+	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
+	# dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
+	dcc.Store(id = 'listes_requetes', data = []),
+	dcc.Store(id = 'prix_actu', data = []),
+	dcc.Store(id = 'portfolio_info',data = {
+		'Companie':COMP,
+		'Nombre de part': [0,0,0,0,0,0,0,0,0],
+		'Prix total': [0,0,0,0,0,0,0,0,0]
+	}),
 
 	# Periodic updater
 	dcc.Interval(
 		id='periodic-updater',
-		interval=3*1000, # in milliseconds
+		interval=5*1000, # in milliseconds
 	),
 
 	# Upper part
@@ -70,7 +78,11 @@ app.layout = html.Div([
 		# Portfolio
 		html.Div(children=[
 			html.H1(children='Portfolio'),
-			generate_portfolio_table(portfolio_info)
+			# generate_portfolio_table(portfolio_info)
+			html.P(
+				id='portfolio-total-price',
+				children=['Votre investissement total :',calcul_prix_tot_inv(),'eur.']
+			)
 		], style={'padding': 10, 'flex': 1}),
 
 		# Company graph
@@ -78,7 +90,6 @@ app.layout = html.Div([
 			dcc.Dropdown(COMP, COMP[0], id='company-selector'),
 			dcc.Graph(
 				id='company-graph',
-				# figure=generate_graph(COMP[0]),
 				config = PLOTLY_CONFIG,
 				style={'padding': 30}
 			)
@@ -88,11 +99,23 @@ app.layout = html.Div([
 	# Lower part
 	html.Div([
 		# News
+		html.Div(children=[
+			html.H1(children='Market News'),
+			dash_table.DataTable(
+				id='news-table',
+				data=NEWS_DATA.to_dict('records'),
+			)
+		], style={'padding': 10, 'flex': 1}),
 
 		# Requests
+		html.Div(children=[
 
+		], style={'padding': 10, 'flex': 1}),
+		html.Div(children=[
 
-	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh', 'background-color': 'red'})
+		], style={'padding': 10, 'flex': 1})
+
+	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh'})
 
 ])
 
@@ -104,7 +127,7 @@ app.layout = html.Div([
 	# Output('market-dataframe', 'data'),
 	Input('periodic-updater', 'n_intervals'), # periodicly updated
 	Input('company-selector', 'value'), # User action
-	State('timestamp-value', 'data')
+	State('market-timestamp-value', 'data')
 )
 def update_graph(n, company_id, timestamp, range=10):
 	""" Update the graph with the latest market data
@@ -121,73 +144,6 @@ def update_graph(n, company_id, timestamp, range=10):
         height = 300,
     )
 	return fig, timestamp
-
-
-#CONFIGURATIONS#
-# st.set_page_config(layout="wide")
-# hide_table_row_index = """
-# <style>
-# 	.appview-container .main .block-container {
-# 		padding-bottom: 1rem;
-# 		padding-top: 2rem;
-# 	}
-# 	thead tr th:first-child {display:none}
-# 	tbody th {display:none}
-# 	button[title="View fullscreen"]{visibility: hidden;}
-# </style>
-# """
-# st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
-
-# def create_left_port():
-# 	comp1=[]
-# 	prix_tot1=[]
-# 	num_part1=[]
-# 	for i in range(5):
-# 		comp1.append(COMP[i])
-# 		prix_tot1.append(st.session_state.prix_tot[i])
-# 		num_part1.append(st.session_state.num_part[i])
-
-# 	df1=pd.DataFrame({
-# 		'Companie':comp1,
-# 		'Nombre de part': num_part1,
-# 		'Prix total': prix_tot1
-# 		})
-# 	return df1
-
-
-# def create_right_port():
-# 	comp2=[]
-# 	prix_tot2=[]
-# 	num_part2=[]
-# 	for j in range(5,9):
-# 		comp2.append(COMP[j])
-# 		prix_tot2.append(st.session_state.prix_tot[j])
-# 		num_part2.append(st.session_state.num_part[j])
-
-# 	df2=pd.DataFrame({
-# 		'Companie':comp2,
-# 		'Nombre de part': num_part2,
-# 		'Prix total': prix_tot2
-# 		})
-# 	return df2
-
-
-# def calcul_prix_tot_inv():
-# 	tot=0
-# 	for i in st.session_state.prix_tot:
-# 		tot+=i
-# 	tot+=MAX_INV_MONEY
-# 	return tot
-
-
-# def create_news_tab():
-# 	dp = pd.DataFrame(
-#     {
-#     	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45","05/05/2023 11:45","05/05/2023 11:45"],
-#         "titre": ['Tesla bought Twitter','CAC40 is falling','News','News 23', 'News NEWS']
-#     })
-# 	return dp
 
 
 # def ajouter_requetes(action):
@@ -211,44 +167,6 @@ def update_graph(n, company_id, timestamp, range=10):
 # 			return 'Requêtes supprimer'
 # 		else:
 # 			return 'Cette requêtes n\'existe pas !'
-
-
-# #BODY
-# left_column1, buff, right_column1 = st.columns([2,1,2])
-
-# #PORTFOLIO
-# with left_column1:
-# 	st.write('Portfolio')
-
-# 	left_colum, right_colum = st.columns(2)
-# 	left_colum.table(create_left_port())
-# 	right_colum.table(create_right_port())
-
-# 	st.write('Votre investissement total :',calcul_prix_tot_inv(),'eur.')
-
-# #COMPANY GRAPH
-# with right_column1:
-# 	compa = st.selectbox( 'Sélectionnez une companie :', COMP )
-
-# 	candlestick, market_dataframe, st.session_state['timestamp'] = create_candlestick_chart(
-# 		compa,
-# 		st.session_state['timestamp']
-# 	)
-# 	candlestick.update_layout(
-# 		margin_t = 0,
-#         margin_b = 0,
-#         height = 300,
-# 	)
-# 	stream_candlestick = st.plotly_chart(candlestick, config = PLOTLY_CONFIG)
-
-
-# left_column2, buff,middle_column2, buff,right_column2 = st.columns([2,1,2,0.5,2])
-
-# #ACTUALITES
-# with left_column2:
-# 	st.write('Actualités')
-
-# 	st.table(create_news_tab())
 
 # #REQUETES
 # with right_column2:
@@ -288,20 +206,6 @@ def update_graph(n, company_id, timestamp, range=10):
 # 		if vendre:
 # 			st.session_state.action='vente'
 # 			ajouter_requetes(st.session_state.action)
-
-# # Update layout depending of the current market data every 5 minutes
-# while True:
-# 	time.sleep(3)
-
-# 	# Graph part
-# 	with right_column1:
-# 		st.session_state['timestamp'] = update_candlestick_chart(
-# 			candlestick,
-# 			market_dataframe,
-# 			st.session_state['timestamp']
-# 		)
-# 		stream_candlestick.plotly_chart(candlestick)
-
 
 if __name__ == '__main__':
     app.run_server(debug=True) #TODO: change to False when deploying
