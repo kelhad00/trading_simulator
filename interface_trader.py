@@ -14,6 +14,11 @@ NEWS_DATA = pd.DataFrame({
 })
 
 #TODO: Change to dcc.Store
+portfolio_info = pd.DataFrame({
+	'Companie':COMP,
+	'Nombre de part': [0,0,0,0,0,0,0,0,0],
+	'Prix total': [0,0,0,0,0,0,0,0,0]
+})
 prix_tot= [0,0,0,0,0,0,0,0,0]
 def calcul_prix_tot_inv():
 	tot=0
@@ -49,6 +54,19 @@ def generate_portfolio_table(df):
     ], style={'display': 'flex', 'flex-direction': 'row'})
 
 
+def generate_table(dataframe):
+    return html.Table([
+        html.Thead(
+            html.Th(['Companie ','Parts ','Prix '])
+        ),
+        html.Tbody([
+            html.Tr([
+                html.Td(i) for i in ligne
+                ])for ligne in dataframe
+            ])
+    ],style={"text-align":"center","table-layout":'fixed',"border": "1px solid black"})
+
+
 # Initialize Dash app
 app = Dash(__name__)
 
@@ -77,8 +95,8 @@ app.layout = html.Div([
 	html.Div([
 		# Portfolio
 		html.Div(children=[
-			html.H1(children='Portfolio'),
-			# generate_portfolio_table(portfolio_info)
+			html.H2(children='Portfolio'),
+			generate_portfolio_table(portfolio_info),
 			html.P(
 				id='portfolio-total-price',
 				children=['Votre investissement total :',calcul_prix_tot_inv(),'eur.']
@@ -100,7 +118,7 @@ app.layout = html.Div([
 	html.Div([
 		# News
 		html.Div(children=[
-			html.H1(children='Market News'),
+			html.H2(children='Market News'),
 			dash_table.DataTable(
 				id='news-table',
 				data=NEWS_DATA.to_dict('records'),
@@ -109,63 +127,34 @@ app.layout = html.Div([
 
 		# Requests
 		html.Div(children=[
+			html.H2('Make A Request'),
 
-		], style={'padding': 10, 'flex': 1}),
+			html.Label('Prix', htmlFor='price-input'),
+			dcc.Input(id='price-input',value='(€)', type='number',min=0),
+
+			html.Label('Parts', htmlFor='nbr-part-input'),
+			dcc.Input(id='nbr-part-input',value='(€)', type='number',min=0, max=10, step=1),
+
+			html.Label('Actions', htmlFor='action-input'),
+			dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
+
+			html.Button("Submit",id='submit-button', n_clicks=0,style={"color":"black"})
+		], style={'flex': 1, 'display': 'flex', 'flex-direction': 'column', 'align-items': 'left'}),
+
 		html.Div(children=[
-
+			html.H2('Request List'),
+			html.Table([
+				html.Thead(
+					html.Tr(['Prix ','Parts ','Comp ','Actions '])
+				)
+			],id="title-table"),
+			html.Div(id="request-container"),
+			html.Button("Clear",id="clear-done-btn")
 		], style={'padding': 10, 'flex': 1})
 
 	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh'})
 
 ])
-
-
-#TODO: Add layout for the requests
-# app.layout = html.Div([
-#     html.Div([
-
-#     html.H4('Request List',style={"font-size": "25px"}),
-#     html.Table([
-#             html.Thead(
-#                 html.Tr(['Prix ','Parts ','Comp ','Actions '])
-#             )
-#         ],id="title-table"),
-#     html.Div(id="request-container"),
-#     html.Button("Clear",id="clear-done-btn")
-#     ],style = {"display": "inline-block","margin":"20px"}),
-
-#     html.Div([
-
-#     html.Br(),
-#     html.H4('Make A Request',style={"font-size": "25px"}),
-#     html.Label('Prix'),
-#     dcc.Input(id='price-input',value='(€)', type='number'),
-
-#     html.Br(),
-#     html.Label('Parts'),
-#     dcc.Input(id='nbr-part-input',value='(€)', type='number'),
-
-
-#     html.Br(),
-#     html.Label('Companie'),
-#     dcc.Dropdown(["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"],id='companie-input',value='AAPL'),
-
-#     html.Label('Actions'),
-#     dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
-
-#     html.Br(),
-#     html.Button("Submit",id='submit-button', n_clicks=0,style={"color":"black"})
-#     ],style = {"display": "inline-block","margin":"20px"}),
-
-#     html.Div([
-#         html.H4("Portfolio",style={"font-size": "25px"}),
-#         html.Table([html.Thead(
-#                 html.Tr(['Companie ','Parts ','Prix '])
-#             )
-#         ],id="title-table")
-#         ])
-
-# ])
 
 
 # Callbacks
@@ -197,7 +186,7 @@ def update_graph(n, company_id, timestamp, range=10):
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
     Input("submit-button", "n_clicks"),
-    [State("price-input", "value"),State("nbr-part-input", "value"),State("companie-input", "value"),State("action-input","value")],
+    [State("price-input", "value"),State("nbr-part-input", "value"),State("company-selector", "value"),State("action-input","value")],
     prevent_initial_call=True,
 )
 def ajouter_requetes(button_clicked,prix,part,companie,action):
