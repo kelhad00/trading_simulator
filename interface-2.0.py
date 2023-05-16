@@ -28,23 +28,31 @@ def ajouter_requetes(button_clicked,prix,part,companie,action):
 
     def generate_line():
         value=[prix,part,companie,action]
-        return html.Div(
-            [
-                html.Div(
-                    str(value),
-                    id={"index": button_clicked, "type": "output-str"},
-                    style={"display": "inline", "margin": "10px"},
-                ),
-                dcc.Checklist(
-                    options=[{"label": "", "value": "done"}],
-                    id={"index": button_clicked, "type": "done"},
-                    style={"display": "inline"},
-                    labelStyle={"display": "inline"},
-                ), 
-            ],
-        )
+        if button_clicked<10: #10 ou le nombre souhaité
+            return html.Div(
+                [
+                    html.Div(
+                        str(value),
+                        id={"index": button_clicked, "type": "output-str"},
+                        style={"display": "inline", "margin": "10px"},
+                    ),
+                    dcc.Checklist(
+                        options=[{"label": "", "value": "done"}],
+                        id={"index": button_clicked, "type": "done"},
+                        style={"display": "inline"},
+                        labelStyle={"display": "inline"},
+                    ), 
+                ]
+            )
     patched_list.append(generate_line())
     return patched_list
+
+@app.callback(Output('confirm-danger', 'displayed'),
+              Input("submit-button", "n_clicks"))
+def display_confirm(value_clicked):
+    if value_clicked >= 10:
+        return True
+    return False
 
 # Callback to delete items marked as done
 @app.callback(
@@ -64,7 +72,6 @@ def delete_items(n_clicks, state):
     return patched_list
 
 
-#create the starting portfolio
 def generate_table(dataframe):
     return html.Table([
         html.Thead(
@@ -79,22 +86,7 @@ def generate_table(dataframe):
 
 
 #Test prix_actu with prices in request
-@app.callback(
-    Output("request-container", "children", allow_duplicate=True),
-    Input("request-container",'children'),
-    State({"index": ALL, "type": "output-str"}, "value"),
-    prevent_initial_call=True,
-)
-def test_price(stri,state):   
-    patched_list = Patch()
-    list_to_remove=[]
-    for i,val in enumerate(state):
-        if i==1:
-            list_to_remove.insert(0,i)
-        print(i,val)
-    for v in list_to_remove:
-        del patched_list[v]
-    return patched_list
+
 
 
 
@@ -102,6 +94,12 @@ def test_price(stri,state):
 
 #APP LAYOUT
 app.layout = html.Div([
+    dcc.ConfirmDialog(
+        id='confirm-danger',
+        message='You have too many request ! ',
+    ),
+
+
     html.Div([
 
     html.H4('Request List',style={"font-size": "25px",'color': '#DEB887'}),
@@ -123,7 +121,7 @@ app.layout = html.Div([
     
     html.Br(),
     html.Label('Parts'),
-    dcc.Input(id='nbr-part-input',value='(€)', type='number',min=0, max=10, step=1),
+    dcc.Input(id='nbr-part-input',value='(€)', type='number',min=1, max=10, step=1),
     
 
     html.Br(),
@@ -136,15 +134,12 @@ app.layout = html.Div([
     html.Br(),
     html.Button("Submit",id='submit-button', n_clicks=0,style={"color":"black"})
     ]),
-
-    html.Div([
-        html.H4("Portfolio",style={"font-size": "25px"}),
-        generate_table(data)
-        ])
-
 ])
 
     
 #not mendatory
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+
+# style={'padding': 10, 'flex': 1}),
