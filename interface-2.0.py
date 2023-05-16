@@ -10,6 +10,8 @@ list_comp= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST
 prix_tot=[]
 num_part=[]
 data=[]
+prix_actu=[10,10,10,10,10,10,10,10,10]
+
 
 for c in list_comp:
     line=[c,0,0]
@@ -39,7 +41,7 @@ def ajouter_requetes(button_clicked,prix,part,companie,action):
                     style={"display": "inline"},
                     labelStyle={"display": "inline"},
                 ), 
-            ]
+            ],
         )
     patched_list.append(generate_line())
     return patched_list
@@ -61,6 +63,8 @@ def delete_items(n_clicks, state):
         del patched_list[v]
     return patched_list
 
+
+#create the starting portfolio
 def generate_table(dataframe):
     return html.Table([
         html.Thead(
@@ -74,7 +78,29 @@ def generate_table(dataframe):
     ],style={"text-align":"center","table-layout":'fixed',"border": "1px solid black"})
 
 
+#Test prix_actu with prices in request
+@app.callback(
+    Output("request-container", "children", allow_duplicate=True),
+    Input("request-container",'children'),
+    State({"index": ALL, "type": "output-str"}, "value"),
+    prevent_initial_call=True,
+)
+def test_price(stri,state):   
+    patched_list = Patch()
+    list_to_remove=[]
+    for i,val in enumerate(state):
+        if i==1:
+            list_to_remove.insert(0,i)
+        print(i,val)
+    for v in list_to_remove:
+        del patched_list[v]
+    return patched_list
 
+
+
+
+
+#APP LAYOUT
 app.layout = html.Div([
     html.Div([
 
@@ -122,6 +148,3 @@ app.layout = html.Div([
 #not mendatory
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-
-# style={'padding': 10, 'flex': 1}),
