@@ -5,6 +5,16 @@ import pandas as pd
 #mendatory
 app = Dash(__name__)
 
+inv_start=100000
+list_comp= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
+prix_tot=[]
+num_part=[]
+data=[]
+
+for c in list_comp:
+    line=[c,0,0]
+    data.append(line)
+
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
     Input("submit-button", "n_clicks"),
@@ -51,10 +61,24 @@ def delete_items(n_clicks, state):
         del patched_list[v]
     return patched_list
 
+def generate_table(dataframe):
+    return html.Table([
+        html.Thead(
+            html.Th(['Companie ','Parts ','Prix '])
+        ),
+        html.Tbody([
+            html.Tr([
+                html.Td(i) for i in ligne
+                ])for ligne in dataframe
+            ])
+    ],style={"text-align":"center","table-layout":'fixed',"border": "1px solid black"})
+
+
+
 app.layout = html.Div([
     html.Div([
 
-    html.H4('Request List',style={"font-size": "25px"}),
+    html.H4('Request List',style={"font-size": "25px",'color': '#DEB887'}),
     html.Table([
             html.Thead(
                 html.Tr(['Prix ','Parts ','Comp ','Actions '])
@@ -62,18 +86,18 @@ app.layout = html.Div([
         ],id="title-table"),
     html.Div(id="request-container"),
     html.Button("Clear",id="clear-done-btn")
-    ],style = {"display": "inline-block","margin":"20px"}),
+    ]),
     
     html.Div([
 
     html.Br(),
     html.H4('Make A Request',style={"font-size": "25px"}),
     html.Label('Prix'),
-    dcc.Input(id='price-input',value='(€)', type='number'),
+    dcc.Input(id='price-input',value='(€)', type='number',min=0),
     
     html.Br(),
     html.Label('Parts'),
-    dcc.Input(id='nbr-part-input',value='(€)', type='number'),
+    dcc.Input(id='nbr-part-input',value='(€)', type='number',min=0, max=10, step=1),
     
 
     html.Br(),
@@ -85,14 +109,11 @@ app.layout = html.Div([
     
     html.Br(),
     html.Button("Submit",id='submit-button', n_clicks=0,style={"color":"black"})
-    ],style = {"display": "inline-block","margin":"20px"}),
+    ]),
 
     html.Div([
         html.H4("Portfolio",style={"font-size": "25px"}),
-        html.Table([html.Thead(
-                html.Tr(['Companie ','Parts ','Prix '])
-            )
-        ],id="title-table")
+        generate_table(data)
         ])
 
 ])
