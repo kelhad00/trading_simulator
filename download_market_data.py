@@ -2,10 +2,14 @@ import yfinance as yf
 import os
 
 # Variables to set
-stock_list = ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"] # List of NASDAQ to scrape
-periode_to_scrape = "1y"
-each_time_interval = "1h"
-
+stock_list = [ # List of stocks to download
+    "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
+    "AI.PA",  "AIR.PA", "BNP.PA", "DG.PA",  "CS.PA", \
+    "RMS.PA", "EL.PA",  "SAF.PA", "KER.PA", "RI.PA", \
+    "STLAM.MI",  "BN.PA",  "STMPA.PA",  "CAP.PA", "SGO.PA"
+]
+periode_to_scrape = " 1mo"
+each_time_interval = "15m"
 
 print('stock_list:', stock_list)
 

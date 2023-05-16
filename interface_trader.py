@@ -7,7 +7,12 @@ from candlestick_charts import create_next_graph, PLOTLY_CONFIG
 
 # Constants
 MAX_INV_MONEY=100000
-COMP= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST"]
+COMP = [ # List of stocks to download
+    "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
+    "AI.PA",  "AIR.PA", "BNP.PA", "DG.PA",  "CS.PA", \
+    "RMS.PA", "EL.PA",  "SAF.PA", "KER.PA", "RI.PA", \
+    "STLAM.MI",  "BN.PA",  "STMPA.PA",  "CAP.PA", "SGO.PA"
+]
 NEWS_DATA = pd.DataFrame({
 	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45","05/05/2023 11:45","05/05/2023 11:45"],
 	"titre": ['Tesla bought Twitter','CAC40 is falling','News','News 23', 'News NEWS']
@@ -16,10 +21,10 @@ NEWS_DATA = pd.DataFrame({
 #TODO: Change to dcc.Store
 portfolio_info = pd.DataFrame({
 	'Companie':COMP,
-	'Nombre de part': [0,0,0,0,0,0,0,0,0],
-	'Prix total': [0,0,0,0,0,0,0,0,0]
+	'Nombre de part': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'Prix total': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 })
-prix_tot= [0,0,0,0,0,0,0,0,0]
+prix_tot= [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 def calcul_prix_tot_inv():
 	tot=0
 	for i in prix_tot:
@@ -30,6 +35,8 @@ def calcul_prix_tot_inv():
 
 # Components
 def generate_portfolio_table(df):
+	column_size = 10
+	stock_size = len(df)
 	return html.Div([
 		html.Table([
 			html.Thead(
@@ -38,19 +45,10 @@ def generate_portfolio_table(df):
 			html.Tbody([
 				html.Tr([
 					html.Td(df.iloc[i][col]) for col in df.columns
-				]) for i in range(5)
+				]) for i in range(j,column_size + j)
 			])
-		], style={'padding': 10, 'flex': 1,'width': 50}),
-		html.Table([
-			html.Thead(
-				html.Tr([html.Th(col) for col in  df.columns])
-			),
-			html.Tbody([
-				html.Tr([
-					html.Td(df.iloc[i][col]) for col in df.columns
-				]) for i in range(6, 9)
-			])
-		], style={'padding': 10, 'flex': 1, 'width': 50})
+		], style={'padding': 20}
+		) for j in range(0, stock_size, column_size)
     ], style={'display': 'flex', 'flex-direction': 'row'})
 
 
@@ -101,7 +99,7 @@ app.layout = html.Div([
 				id='portfolio-total-price',
 				children=['Votre investissement total :',calcul_prix_tot_inv(),'eur.']
 			)
-		], style={'padding': 10, 'flex': 1}),
+		], style={'padding': 10, 'flex': 2}),
 
 		# Company graph
 		html.Div(children=[
@@ -111,7 +109,7 @@ app.layout = html.Div([
 				config = PLOTLY_CONFIG,
 				style={'padding': 30}
 			)
-		], style={'padding': 10, 'flex': 1})
+		], style={'padding-top': 30, 'flex': 3})
 	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh'}),
 
 	# Lower part
@@ -139,7 +137,7 @@ app.layout = html.Div([
 			dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
 
 			html.Button("Submit",id='submit-button', n_clicks=0,style={"color":"black"})
-		], style={'flex': 1, 'display': 'flex', 'flex-direction': 'column', 'align-items': 'left'}),
+		], style={'padding': 10, 'flex': 1, 'display': 'flex', 'flex-direction': 'column', 'margin-left': '5%', 'margin-right': '5%'}),
 
 		html.Div(children=[
 			html.H2('Request List'),
