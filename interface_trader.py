@@ -1,11 +1,12 @@
 from dash import Dash, html, dcc, dash_table, Output, Input, State, Patch, ALL
-import pandas as pd
+import os
 from datetime import datetime
-import time
+import pandas as pd
 
 from candlestick_charts import create_next_graph, PLOTLY_CONFIG
 
 # Constants
+UPDATE_TIME = 5*1000 # in milliseconds
 MAX_INV_MONEY=100000
 COMP = [ # List of stocks to download
     "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
@@ -74,7 +75,7 @@ app.layout = html.Div([
 
 	# Global variables
 	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
-	# dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
+	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
 	dcc.Store(id = 'listes_requetes', data = []),
 	dcc.Store(id = 'prix_actu', data = []),
 	dcc.Store(id = 'portfolio_info',data = {
@@ -86,7 +87,7 @@ app.layout = html.Div([
 	# Periodic updater
 	dcc.Interval(
 		id='periodic-updater',
-		interval=5*1000, # in milliseconds
+		interval=UPDATE_TIME, # in milliseconds
 	),
 
 	# Upper part
@@ -157,19 +158,32 @@ app.layout = html.Div([
 
 # Callbacks
 @app.callback(
-	Output('company-graph', 'figure'),
-	Output('market-timestamp-value', 'data'),
-	# Output('market-dataframe', 'data'),
-	Input('periodic-updater', 'n_intervals'), # periodicly updated
-	Input('company-selector', 'value'), # User action
-	State('market-timestamp-value', 'data')
+    Output("market-dataframe", "data"),
+    Input('company-selector', 'value'),
 )
-def update_graph(n, company_id, timestamp, range=10):
+def import_market_data(company_id):
+	""" Import market data from CSV file
+	"""
+	file_path = os.path.join('market_data' , company_id + '.csv')
+	df = pd.read_csv(file_path, index_col=0)
+	return df.to_dict()
+
+
+@app.callback(
+	Output('company-graph', 'figure'),          # new graph
+	Output('market-timestamp-value', 'data'),   # new timestamp
+	Input('periodic-updater', 'n_intervals'), 	# periodicly updated
+	Input('market-dataframe', 'data'),          # new company is selected
+	State('market-timestamp-value', 'data') 	# Last timestamp
+)
+def update_graph(n, df, timestamp, range=80):
 	""" Update the graph with the latest market data
 		Periodicly updated or when the user selects a new company
 	"""
+	dftmp = pd.DataFrame.from_dict(df)
 	fig, timestamp = create_next_graph(
-        company_id,
+        # pd.DataFrame.from_records(df),
+		dftmp,
         timestamp,
         range
     )
@@ -228,68 +242,6 @@ def delete_items(n_clicks, state):
         del patched_list[v]
     return patched_list
 
-
-
-# def ajouter_requetes(action):
-# 	longu=len(st.session_state.listes_requetes)
-# 	if longu<=3:
-# 		req=[longu+1,action,compa,achat_vente,part]
-# 		st.session_state.listes_requetes.append(req)
-# 	else:
-# 		tkinter.messagebox.showinfo("Erreur",  "Vous avez déjà 3 requêtes en attente !")
-
-# def afficher_requetes():
-# 	rq=pd.DataFrame(st.session_state.listes_requetes,columns=['index','action','companie','prix (€)','nb part'])
-# 	print(rq)
-# 	print(st.session_state.listes_requetes)
-# 	return rq
-
-# def supprimer_requete(index):
-# 	for req in st.session_state.listes_requetes:
-# 		if req[0]==index:
-# 			st.session_state.listes_requetes.remove(req)
-# 			return 'Requêtes supprimer'
-# 		else:
-# 			return 'Cette requêtes n\'existe pas !'
-
-# #REQUETES
-# with right_column2:
-# 	afficher=st.button('Afficher les requêtes')
-# 	if afficher:
-# 		st.table(afficher_requetes())
-# 	left,right=st.columns(2)
-# 	ind=left.selectbox('index :',[1,2,3])
-# 	right.write(' ')
-# 	right.write(' ')
-# 	supprimer=right.button('Supprimer')
-# 	if supprimer:
-# 		st.write(supprimer_requete(ind))
-
-
-# #PRIX ACHAT/VENTE
-# with middle_column2:
-# 	#st.empty()
-
-# 	st.text_input("Votre prix :", value='(€)',key="price")
-# 	achat_vente=st.session_state.price
-# 	part=st.selectbox(
-#     	'Nombre de parts :',
-#     	[1,2,3,4,5,6,7,8,9,10]
-# 	)
-
-# 	col1, col2, buff= st.columns([2,2,3])
-
-# 	with col1:
-# 		acheter=st.button('Acheter','buy')
-# 		if acheter:
-# 			st.session_state.action='achat'
-# 			ajouter_requetes(st.session_state.action)
-
-# 	with col2:
-# 		vendre=st.button('Vendre','sell')
-# 		if vendre:
-# 			st.session_state.action='vente'
-# 			ajouter_requetes(st.session_state.action)
 
 if __name__ == '__main__':
     app.run_server(debug=True) #TODO: change to False when deploying
