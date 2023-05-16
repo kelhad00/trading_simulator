@@ -76,7 +76,7 @@ app.layout = html.Div([
 	# Global variables
 	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
 	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
-	dcc.Store(id = 'listes_requetes', data = []),
+	dcc.Store(id = 'request-list', data = []),
 	dcc.Store(id = 'prix_actu', data = []),
 	dcc.Store(id = 'portfolio_info',data = {
 		'Companie':COMP,
@@ -170,6 +170,30 @@ def import_market_data(company_id):
 
 
 @app.callback(
+    Output("request-container", "children", allow_duplicate=True),
+    Output("request-list", "data"),
+	Input("periodic-updater", "n_intervals"),
+    State("request-list", "data"),
+	State('market-dataframe','data'),
+	State('market-timestamp-value','data'),
+	prevent_initial_call=True
+)
+def test_prix(n,request_list,df,timestamp):
+	patched_list = Patch()
+	list_price = pd.DataFrame.from_dict(df)['Close'][timestamp]
+	for i,rq in request_list:
+		stock_price = list_price[rq[2]]
+		if rq[3] == 'Acheter' and rq[0] <= stock_price:
+			request_list.remove(rq)
+			patched_list.remove(rq)
+			#fonction acheter
+		elif rq[3] == 'Vendre' and rq[0] >= stock_price:
+			request_list.remove(rq)
+			patched_list.remove(rq)
+			#fonction vendre
+	return patched_list,request_list
+
+@app.callback(
 	Output('company-graph', 'figure'),          # new graph
 	Output('market-timestamp-value', 'data'),   # new timestamp
 	Input('periodic-updater', 'n_intervals'), 	# periodicly updated
@@ -194,35 +218,38 @@ def update_graph(n, df, timestamp, range=80):
     )
 	return fig, timestamp
 
-
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
+	Output("request-list", "data", allow_duplicate=True),
     Input("submit-button", "n_clicks"),
-    [State("price-input", "value"),State("nbr-part-input", "value"),State("company-selector", "value"),State("action-input","value")],
+    [State("price-input", "value"),State("nbr-part-input", "value"),State("company-selector", "value"),State("action-input","value"),State("request-list", "data")],
     prevent_initial_call=True,
 )
-def ajouter_requetes(button_clicked,prix,part,companie,action):
-    patched_list = Patch()
+def ajouter_requetes(button_clicked,prix,part,companie,action,req):
+	patched_list = Patch()
+		
+	def generate_line(value):
+		return html.Div(
+			[
+				html.Div(
+					str(value),
+					id={"index": button_clicked, "type": "output-str"},
+					style={"display": "inline", "margin": "10px"},
+				),
+				dcc.Checklist(
+					options=[{"label": "", "value": "done"}],
+					id={"index": button_clicked, "type": "done"},
+					style={"display": "inline"},
+					labelStyle={"display": "inline"},
+				),
+			]
+		)
 
-    def generate_line():
-        value=[prix,part,companie,action]
-        return html.Div(
-            [
-                html.Div(
-                    str(value),
-                    id={"index": button_clicked, "type": "output-str"},
-                    style={"display": "inline", "margin": "10px"},
-                ),
-                dcc.Checklist(
-                    options=[{"label": "", "value": "done"}],
-                    id={"index": button_clicked, "type": "done"},
-                    style={"display": "inline"},
-                    labelStyle={"display": "inline"},
-                ),
-            ]
-        )
-    patched_list.append(generate_line())
-    return patched_list
+	value = [prix,part,companie,action]
+	req.append(value)
+	patched_list.append(generate_line(value))
+
+	return patched_list, req
 
 
 # Callback to delete items marked as done
