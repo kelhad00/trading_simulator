@@ -30,9 +30,9 @@ app.layout = html.Div([
 
 	# Global variables
 	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
-	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
+	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browserz
+	dcc.Store(id = 'price-dataframe'),                  # Store market data in the browserz
 	dcc.Store(id = 'request-list', data = []),
-	dcc.Store(id = 'prix_actu', data = []),
 	dcc.Store(id = 'portfolio_info', data = {
 		'Stock':COMP,
 		'Shares': np.zeros(len(COMP)),
@@ -112,14 +112,20 @@ app.layout = html.Div([
 # Callbacks
 @app.callback(
     Output("market-dataframe", "data"),
+	Output("price-dataframe", "data"),
     Input('company-selector', 'value'),
+	State("price-dataframe", "data"),
 )
-def import_market_data(company_id):
+def import_market_data(company_id, price_list):
 	""" Import market data from CSV file
 	"""
-	file_path = os.path.join('market_data' , company_id + '.csv')
-	df = pd.read_csv(file_path, index_col=0)
-	return df.to_dict()
+	df = pd.read_csv('market_data.csv', index_col=0, header=[0,1])
+
+	if not price_list: # if the dataframe has not been loaded yet
+		price_list = df.xs('Close', axis=1, level=1)
+		price_list = price_list.to_dict()
+
+	return df[company_id].to_dict(), price_list
 
 
 @app.callback(

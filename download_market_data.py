@@ -1,5 +1,6 @@
 import yfinance as yf
 import os
+import pandas as pd
 
 # Variables to set
 stock_list = [ # List of stocks to download
@@ -29,11 +30,18 @@ data = yf.download(
 print('data fields downloaded:', set(data.columns.get_level_values(0)))
 print(data.head())
 
-# Create directory to save data
-if not os.path.exists("market_data"):
-    os.mkdir("market_data")
+# # Create directory to save data
+# if not os.path.exists("market_data"):
+#     os.mkdir("market_data")
 
-# Save data to CSV file
-for stock in stock_list:
-    file_path = os.path.join('market_data', stock + '.csv')
-    data[stock].to_csv(file_path)
+# # Save data to multily CSV file
+# for stock in stock_list:
+#     file_path = os.path.join('market_data', stock + '.csv')
+#     data[stock].to_csv(file_path)
+
+# Save data to single CSV file
+data.to_csv('market_data.csv')
+
+# Read data from CSV file and show its head to check if it is correct
+df = pd.read_csv('market_data.csv', index_col=0, header=[0,1])
+print(df.head())
