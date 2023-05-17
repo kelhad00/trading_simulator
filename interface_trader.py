@@ -7,7 +7,7 @@ import numpy as np
 from candlestick_charts import create_next_graph, PLOTLY_CONFIG
 
 # Constants
-UPDATE_TIME = 5*1000 # in milliseconds
+UPDATE_TIME = 8*1000 # in milliseconds
 MAX_INV_MONEY=100000
 COMP = [ # List of stocks to download
     "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
@@ -234,25 +234,29 @@ def ajouter_requetes(button_clicked,prix,part,companie,action,req):
 @app.callback(
     Output("request-container", "children", allow_duplicate=True),
     Output("request-list", "data"),
-	Input("periodic-updater", "n_intervals"),
+	Input('market-timestamp-value','data'),
     State("request-list", "data"),
-	State('market-dataframe','data'),
-	State('market-timestamp-value','data'),
+	State('price-dataframe','data'),
 	prevent_initial_call=True
 )
-def test_prix(n, request_list, df, timestamp):
+def remove_request(timestamp, request_list, list_price):
 	patched_list = Patch()
-	list_price = pd.DataFrame.from_dict(df)['Close'][timestamp]
-	for i,rq in request_list:
-		stock_price = list_price[rq[2]]
+	list_price = pd.DataFrame.from_dict(list_price)
+	i = 0
+	while i < len(request_list):
+		rq = request_list[i]
+		stock_price = list_price[rq[2]].loc[timestamp]
 		if rq[3] == 'Acheter' and rq[0] <= stock_price:
 			request_list.remove(rq)
-			patched_list.remove(rq)
+			del patched_list[i]
 			#fonction acheter
 		elif rq[3] == 'Vendre' and rq[0] >= stock_price:
 			request_list.remove(rq)
-			patched_list.remove(rq)
+			del patched_list[i]
 			#fonction vendre
+		else:
+			i += 1
+	print(request_list)
 	return patched_list,request_list
 
 
