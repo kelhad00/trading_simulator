@@ -247,15 +247,33 @@ def display_confirm(value_clicked, req):
 	return False
 
 
+def acheter(req, port, price, cashflow):
+	port = pd.DataFrame.from_dict(data,  columns=data['Stock'])
+	if req[1] * price > cashflow:
+		port[req[2]]['Shares'] += req[1]
+		port[req[2]]['Total'] += req[1] * price
+		cashflow -= req[1] * price
+	return port, cashflow
+
+def vendre(req, port, price):
+	port = pd.DataFrame.from_dict(data,  columns=data['Stock'])
+	if port[req[2]]['Shares'] < req[1]:
+		port[req[2]]['Shares'] -= req[1]
+		port[req[2]]['Total'] -= req[1] * price
+	return port
+
+
 @app.callback(
     Output("request-container", "children", allow_duplicate=True),
     Output("request-list", "data"),
+	Output("portfolio_info", "data"),
 	Input('market-timestamp-value','data'),
     State("request-list", "data"),
 	State('price-dataframe','data'),
+	State('portfolio_info','data'),
 	prevent_initial_call=True
 )
-def remove_request(timestamp, request_list, list_price):
+def remove_request(timestamp, request_list, list_price, portfolio_info):
 	patched_list = Patch()
 	list_price = pd.DataFrame.from_dict(list_price)
 	i = 0
@@ -265,14 +283,15 @@ def remove_request(timestamp, request_list, list_price):
 		if rq[3] == 'Acheter' and rq[0] <= stock_price:
 			request_list.remove(rq)
 			del patched_list[i]
-			#fonction acheter
+			#TODO: add cashflow
+			# portfolio_info, cashflow = acheter(rq, portfolio_info, stock_price, cashflow)
 		elif rq[3] == 'Vendre' and rq[0] >= stock_price:
 			request_list.remove(rq)
 			del patched_list[i]
-			#fonction vendre
+			portfolio_info = vendre(rq, portfolio_info, stock_price)
 		else:
 			i += 1
-	return patched_list,request_list
+	return patched_list,request_list, portfolio_info
 
 
 # Callback to delete items marked as done
