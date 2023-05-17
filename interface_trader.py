@@ -44,6 +44,10 @@ app.layout = html.Div([
 		id='periodic-updater',
 		interval=UPDATE_TIME, # in milliseconds
 	),
+	dcc.ConfirmDialog(
+        id='confirm-danger',
+        message='You have too many request ! ',
+    ),
 
 	# Upper part
 	html.Div([
@@ -82,10 +86,10 @@ app.layout = html.Div([
 			html.H2('Make A Request'),
 
 			html.Label('Prix', htmlFor='price-input'),
-			dcc.Input(id='price-input',value='(€)', type='number',min=0),
+			dcc.Input(id='price-input',value='(€)', type='number',min=0, step=0.1),
 
 			html.Label('Parts', htmlFor='nbr-part-input'),
-			dcc.Input(id='nbr-part-input',value='(€)', type='number',min=0, max=10, step=1),
+			dcc.Input(id='nbr-part-input',value='(€)', type='number',min=1, max=10, step=1),
 
 			html.Label('Actions', htmlFor='action-input'),
 			dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
@@ -204,31 +208,43 @@ def calcul_prix_tot_inv(stock_info):
     [State("price-input", "value"),State("nbr-part-input", "value"),State("company-selector", "value"),State("action-input","value"),State("request-list", "data")],
     prevent_initial_call=True,
 )
-def ajouter_requetes(button_clicked,prix,part,companie,action,req):
+def ajouter_requetes(btn,prix,part,companie,action,req):
 	patched_list = Patch()
 
 	def generate_line(value):
-		return html.Div(
-			[
-				html.Div(
-					str(value),
-					id={"index": button_clicked, "type": "output-str"},
-					style={"display": "inline", "margin": "10px"},
-				),
-				dcc.Checklist(
-					options=[{"label": "", "value": "done"}],
-					id={"index": button_clicked, "type": "done"},
-					style={"display": "inline"},
-					labelStyle={"display": "inline"},
-				),
-			]
-		)
+		if len(req) <= 10: #10 ou le nombre souhaité
+			return html.Div(
+				[
+					html.Div(
+						str(value),
+						id={"index": len(req), "type": "output-str"},
+						style={"display": "inline", "margin": "10px"},
+					),
+					dcc.Checklist(
+						options=[{"label": "", "value": "done"}],
+						id={"index": len(req), "type": "done"},
+						style={"display": "inline"},
+						labelStyle={"display": "inline"},
+					),
+				]
+			)
 
 	value = [prix,part,companie,action]
 	req.append(value)
 	patched_list.append(generate_line(value))
 
 	return patched_list, req
+
+
+@app.callback(
+	Output('confirm-danger', 'displayed'),
+    Input("submit-button", "n_clicks"),
+	State("request-list", "data")
+)
+def display_confirm(value_clicked, req):
+	if len(req) >= 10:
+		return True
+	return False
 
 
 @app.callback(
@@ -256,7 +272,6 @@ def remove_request(timestamp, request_list, list_price):
 			#fonction vendre
 		else:
 			i += 1
-	print(request_list)
 	return patched_list,request_list
 
 
