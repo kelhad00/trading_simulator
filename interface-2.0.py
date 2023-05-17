@@ -10,6 +10,8 @@ list_comp= ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META", "NVDA", "PEP", "COST
 prix_tot=[]
 num_part=[]
 data=[]
+prix_actu=[10,10,10,10,10,10,10,10,10]
+
 
 for c in list_comp:
     line=[c,0,0]
@@ -26,23 +28,31 @@ def ajouter_requetes(button_clicked,prix,part,companie,action):
 
     def generate_line():
         value=[prix,part,companie,action]
-        return html.Div(
-            [
-                html.Div(
-                    str(value),
-                    id={"index": button_clicked, "type": "output-str"},
-                    style={"display": "inline", "margin": "10px"},
-                ),
-                dcc.Checklist(
-                    options=[{"label": "", "value": "done"}],
-                    id={"index": button_clicked, "type": "done"},
-                    style={"display": "inline"},
-                    labelStyle={"display": "inline"},
-                ), 
-            ]
-        )
+        if button_clicked<10: #10 ou le nombre souhaité
+            return html.Div(
+                [
+                    html.Div(
+                        str(value),
+                        id={"index": button_clicked, "type": "output-str"},
+                        style={"display": "inline", "margin": "10px"},
+                    ),
+                    dcc.Checklist(
+                        options=[{"label": "", "value": "done"}],
+                        id={"index": button_clicked, "type": "done"},
+                        style={"display": "inline"},
+                        labelStyle={"display": "inline"},
+                    ), 
+                ]
+            )
     patched_list.append(generate_line())
     return patched_list
+
+@app.callback(Output('confirm-danger', 'displayed'),
+              Input("submit-button", "n_clicks"))
+def display_confirm(value_clicked):
+    if value_clicked >= 10:
+        return True
+    return False
 
 # Callback to delete items marked as done
 @app.callback(
@@ -61,6 +71,7 @@ def delete_items(n_clicks, state):
         del patched_list[v]
     return patched_list
 
+
 def generate_table(dataframe):
     return html.Table([
         html.Thead(
@@ -74,8 +85,21 @@ def generate_table(dataframe):
     ],style={"text-align":"center","table-layout":'fixed',"border": "1px solid black"})
 
 
+#Test prix_actu with prices in request
 
+
+
+
+
+
+#APP LAYOUT
 app.layout = html.Div([
+    dcc.ConfirmDialog(
+        id='confirm-danger',
+        message='You have too many request ! ',
+    ),
+
+
     html.Div([
 
     html.H4('Request List',style={"font-size": "25px",'color': '#DEB887'}),
@@ -97,7 +121,7 @@ app.layout = html.Div([
     
     html.Br(),
     html.Label('Parts'),
-    dcc.Input(id='nbr-part-input',value='(€)', type='number',min=0, max=10, step=1),
+    dcc.Input(id='nbr-part-input',value='(€)', type='number',min=1, max=10, step=1),
     
 
     html.Br(),
@@ -110,12 +134,6 @@ app.layout = html.Div([
     html.Br(),
     html.Button("Submit",id='submit-button', n_clicks=0,style={"color":"black"})
     ]),
-
-    html.Div([
-        html.H4("Portfolio",style={"font-size": "25px"}),
-        generate_table(data)
-        ])
-
 ])
 
     
