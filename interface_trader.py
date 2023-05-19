@@ -7,7 +7,7 @@ import numpy as np
 from candlestick_charts import create_next_graph, PLOTLY_CONFIG
 
 # Constants
-UPDATE_TIME = 8*1000 # in milliseconds
+UPDATE_TIME = 80*1000 # in milliseconds
 MAX_INV_MONEY=100000
 COMP = [ # List of stocks to download
     "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
@@ -30,14 +30,11 @@ app.layout = html.Div([
 
 	# Global variables
 	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
-	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browserz
-	dcc.Store(id = 'price-dataframe'),                  # Store market data in the browserz
+	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
+	dcc.Store(id = 'price-dataframe'),                  # Store market data in the browser
+	dcc.Store(id = 'cashflow', data = 100000),
 	dcc.Store(id = 'request-list', data = []),
-	dcc.Store(id = 'portfolio_info', data = {
-		'Stock':COMP,
-		'Shares': np.zeros(len(COMP)),
-		'Total': np.zeros(len(COMP))
-	}),
+	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP}),
 
 	# Periodic updater
 	dcc.Interval(
@@ -165,9 +162,11 @@ def update_graph(n, df, timestamp, range=80):
 def generate_portfolio_table(stocks_info):
 	""" Update the portfolio table with the latest user's portfolio information
 	"""
-	df = pd.DataFrame.from_dict(stocks_info)
+	df = pd.DataFrame.from_dict(stocks_info, orient='index').round(2)
+	df['Stock'] = df.index
 	column_size = 10
 	stock_size = len(df)
+	column_names = ['Stock', 'Shares', 'Total']
 	return html.Div([
 		html.Table([
 			html.Thead([
@@ -175,7 +174,7 @@ def generate_portfolio_table(stocks_info):
 					html.Th(
 						col,
 						style={'padding-right': 50,'border-color': '#d3d3d3', 'border-style': 'solid','border-width': '1px'}
-					) for col in  df.columns
+					) for col in column_names
 				], style = {'background-color': '#fafafa'})
 			]),
 			html.Tbody([
@@ -183,7 +182,7 @@ def generate_portfolio_table(stocks_info):
 					html.Td(
 						df.iloc[i][col],
 						style={'border-color': '#d3d3d3', 'border-style': 'solid', 'border-width': '1px'}
-					) for col in df.columns
+					) for col in column_names
 				]) for i in range(j,column_size + j)
 			])
 		]) for j in range(0, stock_size, column_size)
@@ -197,8 +196,8 @@ def generate_portfolio_table(stocks_info):
 def calcul_prix_tot_inv(stock_info):
 	""" Update the portfolio total price
 	"""
-	totals = pd.DataFrame.from_dict(stock_info)['Total']
-	return ['Votre investissement total : ', totals.sum(),' eur.']
+	totals = pd.DataFrame.from_dict(stock_info, orient='index')['Total']
+	return ['Votre investissement total : ', round(totals.sum(), 2),' eur.']
 
 
 @app.callback(
@@ -247,69 +246,86 @@ def display_confirm(value_clicked, req):
 	return False
 
 
-def acheter(req, port, price, cashflow):
-	port = pd.DataFrame.from_dict(data,  columns=data['Stock'])
-	if req[1] * price > cashflow:
-		port[req[2]]['Shares'] += req[1]
-		port[req[2]]['Total'] += req[1] * price
-		cashflow -= req[1] * price
-	return port, cashflow
-
-def vendre(req, port, price):
-	port = pd.DataFrame.from_dict(data,  columns=data['Stock'])
-	if port[req[2]]['Shares'] < req[1]:
-		port[req[2]]['Shares'] -= req[1]
-		port[req[2]]['Total'] -= req[1] * price
-	return port
-
-
 @app.callback(
     Output("request-container", "children", allow_duplicate=True),
     Output("request-list", "data"),
 	Output("portfolio_info", "data"),
+	Output("cashflow", "data"),
 	Input('market-timestamp-value','data'),
     State("request-list", "data"),
 	State('price-dataframe','data'),
 	State('portfolio_info','data'),
+	State('cashflow','data'),
 	prevent_initial_call=True
 )
-def remove_request(timestamp, request_list, list_price, portfolio_info):
-	patched_list = Patch()
+def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow):
+	patched_list = Patch() # Get request-container children
 	list_price = pd.DataFrame.from_dict(list_price)
+	portfolio_info = pd.DataFrame.from_dict(portfolio_info)
+
+	print('List request_list:',request_list)
+
 	i = 0
 	while i < len(request_list):
-		rq = request_list[i]
-		stock_price = list_price[rq[2]].loc[timestamp]
-		if rq[3] == 'Acheter' and rq[0] <= stock_price:
-			request_list.remove(rq)
+		req = request_list[i]
+		stock_price = list_price[req[2]].loc[timestamp]
+
+		# If the request is completed
+		if req[3] == 'Acheter' and req[0] >= stock_price:
+			# If the user has enough money
+			if req[1] * stock_price < cashflow:
+				portfolio_info.loc['Shares', req[2]] += req[1]
+				portfolio_info.loc['Total', req[2]] += req[1] * stock_price
+				cashflow -= req[1] * stock_price
+			# the request is removed, with or without the user having enough money
 			del patched_list[i]
-			#TODO: add cashflow
-			# portfolio_info, cashflow = acheter(rq, portfolio_info, stock_price, cashflow)
-		elif rq[3] == 'Vendre' and rq[0] >= stock_price:
-			request_list.remove(rq)
+			request_list.remove(req)
+
+		# Same as above for the sell request
+		elif req[3] == 'Vendre' and req[0] <= stock_price:
+			# If the user has enough shares
+			if portfolio_info.loc['Shares', req[2]] >= req[1]:
+				portfolio_info.loc['Shares', req[2]] -= req[1]
+				portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
+				cashflow += req[1] * stock_price
+			# the request is removed, with or without the user having enough shares
 			del patched_list[i]
-			portfolio_info = vendre(rq, portfolio_info, stock_price)
+			request_list.remove(req)
+
+		# If the request is not completed yet, pass to the next one.
+		# If the request is completed, the request is removed from the list and
+		# the next request is now at the current index.
 		else:
 			i += 1
-	return patched_list,request_list, portfolio_info
+
+	return patched_list,request_list, portfolio_info.to_dict(), cashflow
 
 
 # Callback to delete items marked as done
 @app.callback(
     Output("request-container", "children", allow_duplicate=True),
+	Output("request-list", "data", allow_duplicate=True),
     Input("clear-done-btn", "n_clicks"),
     State({"index": ALL, "type": "done"}, "value"),
     prevent_initial_call=True,
 )
 def delete_items(n_clicks, state):
-    patched_list = Patch()
-    values_to_remove = []
-    for i, val in enumerate(state):
-        if val:
-            values_to_remove.insert(0, i)
-    for v in values_to_remove:
-        del patched_list[v]
-    return patched_list
+	patched_list = Patch()
+	request_list = Patch()
+
+	print('before:',request_list)
+
+	values_to_remove = []
+	for i, val in enumerate(state):
+		if val:
+			values_to_remove.insert(0, i)
+	for v in values_to_remove:
+		del patched_list[v]
+		del request_list[v]
+
+	print('after:',request_list)
+
+	return patched_list, request_list
 
 
 if __name__ == '__main__':
