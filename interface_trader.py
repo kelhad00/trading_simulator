@@ -1,13 +1,13 @@
-from dash import Dash, html, dcc, dash_table, Output, Input, State, Patch, ALL
+from dash import Dash, html, dcc, dash_table, Output, Input, State, Patch, ALL, ctx
 import os
 from datetime import datetime
 import pandas as pd
 import numpy as np
 
-from candlestick_charts import create_next_graph, PLOTLY_CONFIG
+from candlestick_charts import create_graph, PLOTLY_CONFIG
 
 # Constants
-UPDATE_TIME = 80*1000 # in milliseconds
+UPDATE_TIME = 8*1000 # in milliseconds
 MAX_INV_MONEY=100000
 COMP = [ # List of stocks to download
     "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
@@ -140,11 +140,19 @@ def update_graph(n, df, timestamp, range=80):
 	""" Update the graph with the latest market data
 		Periodicly updated or when the user selects a new company
 	"""
+	# Determining which callback input changed
+	if ctx.triggered_id == 'periodic-updater':
+		next_graph = True
+	else:
+		# If the user selected a new company
+		# Don’t change the timestamp.
+		next_graph = False
+
 	dftmp = pd.DataFrame.from_dict(df)
-	fig, timestamp = create_next_graph(
-        # pd.DataFrame.from_records(df),
+	fig, timestamp = create_graph(
 		dftmp,
         timestamp,
+		next_graph,
         range
     )
 	fig.update_layout(
@@ -263,8 +271,6 @@ def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow
 	list_price = pd.DataFrame.from_dict(list_price)
 	portfolio_info = pd.DataFrame.from_dict(portfolio_info)
 
-	print('List request_list:',request_list)
-
 	i = 0
 	while i < len(request_list):
 		req = request_list[i]
@@ -313,8 +319,6 @@ def delete_items(n_clicks, state):
 	patched_list = Patch()
 	request_list = Patch()
 
-	print('before:',request_list)
-
 	values_to_remove = []
 	for i, val in enumerate(state):
 		if val:
@@ -322,8 +326,6 @@ def delete_items(n_clicks, state):
 	for v in values_to_remove:
 		del patched_list[v]
 		del request_list[v]
-
-	print('after:',request_list)
 
 	return patched_list, request_list
 

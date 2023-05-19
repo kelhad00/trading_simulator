@@ -7,7 +7,7 @@ PLOTLY_CONFIG = {
     'modeBarButtonsToRemove': ['toImage', 'select','lasso2d']
 }
 
-def create_next_graph(dataframe, timestamp='', range=10):
+def create_graph(dataframe, timestamp='', next_graph=True, range=10):
     """
     Create a candlestick chart for the selected stock or update an existing one
 
@@ -40,10 +40,17 @@ def create_next_graph(dataframe, timestamp='', range=10):
             dftmp = dataframe[:range]
     else: # if the graph is being updated
         idx = dataframe.index.get_loc(timestamp)
-        if range == 0:
-            dftmp = dataframe.iloc[:idx + 1]
-        else:
-            dftmp = dataframe.iloc[idx - (range - 2) : idx + 2]
+        if next_graph: # You want to see the graph with new data
+            if range == 0:
+                dftmp = dataframe.iloc[:idx + 1]
+            else:
+                dftmp = dataframe.iloc[idx - (range - 2) : idx + 2]
+        else: # You want to see the graph of another company
+              # And so with the same timestamp as the previous graph
+            if range == 0:
+                dftmp = dataframe.iloc[idx - 1 : idx]
+            else:
+                dftmp = dataframe.iloc[idx - (range - 1) : idx + 1]
 
      # Create candlestick chart for the selected stock
     figure = go.Figure(
@@ -75,14 +82,14 @@ if __name__ == '__main__':
     file_path = os.path.join('market_data' , name + '.csv')
     df = pd.read_csv(file_path, index_col=0)
 
-    fig,endtime = create_next_graph(df)
+    fig,endtime = create_graph(df)
     fig.show()
 
     testtime = 3
     while testtime > 0:
         time.sleep(5)
 
-        fig,endtime = create_next_graph(df, endtime)
+        fig,endtime = create_graph(df, endtime)
         print(endtime)
 
         fig.show()
