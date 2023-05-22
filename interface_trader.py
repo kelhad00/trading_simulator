@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import pandas as pd
 import numpy as np
+from random import randint, seed
 
 from candlestick_charts import create_next_graph, PLOTLY_CONFIG
 
@@ -33,6 +34,7 @@ app.layout = html.Div([
 	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browserz
 	dcc.Store(id = 'price-dataframe'),                  # Store market data in the browserz
 	dcc.Store(id = 'request-list', data = []),
+	dcc.Store(id='liste-skiprows', data=[6,7,8,9,10]),
 	dcc.Store(id = 'portfolio_info', data = {
 		'Stock':COMP,
 		'Shares': np.zeros(len(COMP)),
@@ -44,9 +46,15 @@ app.layout = html.Div([
 		id='periodic-updater',
 		interval=UPDATE_TIME, # in milliseconds
 	),
+
+	#pop-up d'erreur
 	dcc.ConfirmDialog(
-        id='confirm-danger',
+        id='many-request',
         message='You have too many request ! ',
+    ),
+	dcc.ConfirmDialog(
+        id='form-not-filled',
+        message='You haven\'t filled the form correctly ! ',
     ),
 
 	# Upper part
@@ -75,10 +83,7 @@ app.layout = html.Div([
 		# News
 		html.Div(children=[
 			html.H2(children='Market News'),
-			dash_table.DataTable(
-				id='news-table',
-				data=NEWS_DATA.to_dict('records'),
-			)
+			html.Div(id='table')
 		], style={'padding': 10, 'flex': 1}),
 
 		# Requests
@@ -86,10 +91,10 @@ app.layout = html.Div([
 			html.H2('Make A Request'),
 
 			html.Label('Prix', htmlFor='price-input'),
-			dcc.Input(id='price-input',value='(€)', type='number',min=0, step=0.1),
+			dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1),
 
 			html.Label('Parts', htmlFor='nbr-part-input'),
-			dcc.Input(id='nbr-part-input',value='(€)', type='number',min=1, max=10, step=1),
+			dcc.Input(id='nbr-part-input',value=1,type='number',min=1, max=10, step=1),
 
 			html.Label('Actions', htmlFor='action-input'),
 			dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
@@ -212,7 +217,7 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 	patched_list = Patch()
 
 	def generate_line(value):
-		if len(req) <= 10: #10 ou le nombre souhaité
+		if len(req) < 11 and prix != 0 : #10 ou le nombre souhaité
 			return html.Div(
 				[
 					html.Div(
@@ -237,12 +242,24 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 
 
 @app.callback(
-	Output('confirm-danger', 'displayed'),
+	Output('many-request', 'displayed'),
     Input("submit-button", "n_clicks"),
 	State("request-list", "data")
 )
 def display_confirm(value_clicked, req):
-	if len(req) >= 10:
+	if len(req) > 10:
+		return True
+	return False
+
+# Err message if the form isn't filled correctly 
+@app.callback(
+	Output('form-not-filled', 'displayed'),
+    Input("submit-button", "n_clicks"),
+	[State("price-input", "value"),
+	State("nbr-part-input", "value")],
+)
+def display_confirm(button, prix,part):
+	if prix == 0 and button != 0:
 		return True
 	return False
 
@@ -291,6 +308,30 @@ def delete_items(n_clicks, state):
     for v in values_to_remove:
         del patched_list[v]
     return patched_list
+
+
+@app.callback(
+	Output('liste-skiprows','data'),
+	Input('market-timestamp-value','data'),
+	State('liste-skiprows','data')
+)
+def update_skiprows_list(timestamp,skiprows):
+	for i in range(len(skiprows)):
+		if skiprows[i]==10:
+			skiprows[i]=1
+		else:
+			skiprows[i]+=1
+	# print(skiprows[i])
+	return skiprows
+
+@app.callback(
+	Output('table','children',allow_duplicate=True),
+	Input('liste-skiprows','data'),
+	prevent_initial_call=True
+)
+def update_news_table(skiprows):
+	nl = pd.read_csv('news.csv',sep=';',skiprows=skiprows,usecols=['Date','Title'])
+	return dash_table.DataTable(nl.to_dict('records'), [{"name": i, "id": i} for i in nl.columns])
 
 
 if __name__ == '__main__':
