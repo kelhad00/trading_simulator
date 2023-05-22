@@ -8,13 +8,15 @@ from candlestick_charts import create_graph, PLOTLY_CONFIG
 
 # Constants
 UPDATE_TIME = 8*1000 # in milliseconds
-MAX_INV_MONEY=100000
+MAX_REQUESTS = 10    # Maximum number of requests
+MAX_INV_MONEY=100000 # Initial money
 COMP = [ # List of stocks to download
     "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
     "AI.PA",  "AIR.PA", "BNP.PA", "DG.PA",  "CS.PA", \
     "RMS.PA", "EL.PA",  "SAF.PA", "KER.PA", "RI.PA", \
     "STLAM.MI",  "BN.PA",  "STMPA.PA",  "CAP.PA", "SGO.PA"
 ]
+#TODO: remove this after adding real news
 NEWS_DATA = pd.DataFrame({
 	"date": ["05/05/2023 10:03", "05/05/2023 11:27","05/05/2023 11:45","05/05/2023 11:45","05/05/2023 11:45"],
 	"titre": ['Tesla bought Twitter','CAC40 is falling','News','News 23', 'News NEWS']
@@ -87,7 +89,7 @@ app.layout = html.Div([
 			dcc.Input(id='price-input',value='(€)', type='number',min=0, step=0.1),
 
 			html.Label('Parts', htmlFor='nbr-part-input'),
-			dcc.Input(id='nbr-part-input',value='(€)', type='number',min=1, max=10, step=1),
+			dcc.Input(id='nbr-part-input',value='(€)', type='number',min=1, max=MAX_REQUESTS, step=1),
 
 			html.Label('Actions', htmlFor='action-input'),
 			dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
@@ -220,7 +222,7 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 	patched_list = Patch()
 
 	def generate_line(value):
-		if len(req) <= 10: #10 ou le nombre souhaité
+		if len(req) <= MAX_REQUESTS: #MAX_REQUESTS ou le nombre souhaité
 			return html.Div(
 				[
 					html.Div(
@@ -250,7 +252,7 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 	State("request-list", "data")
 )
 def display_confirm(value_clicked, req):
-	if len(req) >= 10:
+	if len(req) >= MAX_REQUESTS:
 		return True
 	return False
 
@@ -342,16 +344,24 @@ def delete_items(n_clicks, state):
 	# number of logs
 	State('nbr-logs', 'data')
 )
-def save_state(timestamp, company_id, cashflow, request_list, port, n_logs):
+def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debug=True):
 	""" Periodically save state of the app into csv
 	"""
+
+	# Don’t save the state in debug mode
+	# to avoid unnecessary file creation in the development environment
+	if not debug:
+		return n_logs
+
 	port = pd.DataFrame.from_dict(port)
+
 	df = pd.DataFrame({
 		"host-timestamp": [datetime.now().timestamp()],
 		"market-timestamp": [timestamp],
 		"selected-company": [company_id],
 		"cashflow": [cashflow]
 	})
+	# format portfolio info to be saved
 	df = pd.concat([
 		df,
 		port.loc['Shares'].to_frame().rename(index={
@@ -362,8 +372,22 @@ def save_state(timestamp, company_id, cashflow, request_list, port, n_logs):
 		}, columns={'Total':0}).T
 	], axis=1)
 
-	print(df.T)
+	# Be sure that the request list has MAX_REQUESTS elements in the header (useful for the first time only)
+	for i in range(MAX_REQUESTS):
+	    df[f'request {i+1}'] = None
 
+	# Prepare request list to be saved as columns
+	df = df.combine_first(
+		pd.DataFrame({
+			f'request {i+1}': f"{rq[3]} {rq[0]} {rq[2]} {rq[1]}" \
+			for i, rq in enumerate(request_list[:MAX_REQUESTS])
+		}, index = [0])
+	)
+
+	# Reorder columns to be sure that the order is always the same
+	df = df.reindex(sorted(df.columns), axis=1)
+
+	# Save the header only once and append the rest
 	if os.path.isfile('interface-logs.csv'):
 		df.to_csv('interface-logs.csv', mode='a', index=False, header=False)
 	else:
