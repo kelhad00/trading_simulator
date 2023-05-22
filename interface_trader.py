@@ -29,9 +29,10 @@ app = Dash(__name__)
 app.layout = html.Div([
 
 	# Global variables
+	dcc.Store(id = 'nbr-logs', data = 0),                # Number of times the app state has been saved
 	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
 	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
-	dcc.Store(id = 'price-dataframe'),                  # Store market data in the browser
+	dcc.Store(id = 'price-dataframe'),                   # Store market data in the browser
 	dcc.Store(id = 'cashflow', data = 100000),
 	dcc.Store(id = 'request-list', data = []),
 	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP}),
@@ -328,6 +329,47 @@ def delete_items(n_clicks, state):
 		del request_list[v]
 
 	return patched_list, request_list
+
+
+@app.callback(
+	Output('nbr-logs', 'data'),
+	# Data to save
+	Input('market-timestamp-value','data'),
+	Input('company-selector', 'value'),
+	Input('cashflow', 'data'),
+	Input('request-list', 'data'),
+	Input('portfolio_info', 'data'),
+	# number of logs
+	State('nbr-logs', 'data')
+)
+def save_state(timestamp, company_id, cashflow, request_list, port, n_logs):
+	""" Periodically save state of the app into csv
+	"""
+	port = pd.DataFrame.from_dict(port)
+	df = pd.DataFrame({
+		"host-timestamp": [datetime.now().timestamp()],
+		"market-timestamp": [timestamp],
+		"selected-company": [company_id],
+		"cashflow": [cashflow]
+	})
+	df = pd.concat([
+		df,
+		port.loc['Shares'].to_frame().rename(index={
+			c : c + '-shares' for c in port.columns
+		}, columns={'Shares':0}).T,
+		port.loc['Total'].to_frame().rename(index={
+			c : c + '-total' for c in port.columns
+		}, columns={'Total':0}).T
+	], axis=1)
+
+	print(df.T)
+
+	if os.path.isfile('interface-logs.csv'):
+		df.to_csv('interface-logs.csv', mode='a', index=False, header=False)
+	else:
+		df.to_csv('interface-logs.csv', index=False)
+
+	return n_logs + 1
 
 
 if __name__ == '__main__':
