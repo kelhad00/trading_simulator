@@ -227,7 +227,7 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 	patched_list = Patch()
 
     # If the user has too many requests
-	if len(req) > MAX_REQUESTS:
+	if len(req) == MAX_REQUESTS:
 		return patched_list, req, True, False
 
 	# If the form isn't filled correctly
