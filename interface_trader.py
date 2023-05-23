@@ -213,59 +213,52 @@ def calcul_prix_tot_inv(stock_info):
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
 	Output("request-list", "data", allow_duplicate=True),
+	Output('many-request', 'displayed'),    # Error message if the user has too many requests
+	Output('form-not-filled', 'displayed'), # Error message if the form isn't filled correctly
     Input("submit-button", "n_clicks"),
-    [State("price-input", "value"),State("nbr-part-input", "value"),State("company-selector", "value"),State("action-input","value"),State("request-list", "data")],
+    State("price-input", "value"),
+	State("nbr-part-input", "value"),
+	State("company-selector", "value"),
+	State("action-input","value"),
+	State("request-list", "data"),
     prevent_initial_call=True,
 )
 def ajouter_requetes(btn,prix,part,companie,action,req):
 	patched_list = Patch()
 
-	def generate_line(value):
-		if len(req) <= MAX_REQUESTS and prix != 0 : #MAX_REQUESTS ou le nombre souhaité
-			return html.Div(
-				[
-					html.Div(
-						str(value),
-						id={"index": len(req), "type": "output-str"},
-						style={"display": "inline", "margin": "10px"},
-					),
-					dcc.Checklist(
-						options=[{"label": "", "value": "done"}],
-						id={"index": len(req), "type": "done"},
-						style={"display": "inline"},
-						labelStyle={"display": "inline"},
-					),
-				]
-			)
+    # If the user has too many requests
+	if len(req) > MAX_REQUESTS:
+		return patched_list, req, True, False
 
+	# If the form isn't filled correctly
+	if prix == 0 and btn != 0:
+		return patched_list, req, False, True
+
+	# Add the request to the list
 	value = [prix,part,companie,action]
 	req.append(value)
+
+	def generate_line(value):
+		return html.Div(
+			[
+				html.Div(
+					str(value),
+					id={"index": len(req), "type": "output-str"},
+					style={"display": "inline", "margin": "10px"},
+				),
+				dcc.Checklist(
+					options=[{"label": "", "value": "done"}],
+					id={"index": len(req), "type": "done"},
+					style={"display": "inline"},
+					labelStyle={"display": "inline"},
+				),
+			]
+		)
+
+	# Show the request list on the interface
 	patched_list.append(generate_line(value))
 
-	return patched_list, req
-
-
-@app.callback(
-	Output('many-request', 'displayed'),
-    Input("submit-button", "n_clicks"),
-	State("request-list", "data")
-)
-def display_confirm(value_clicked, req):
-	if len(req) > MAX_REQUESTS:
-		return True
-	return False
-
-# Err message if the form isn't filled correctly
-@app.callback(
-	Output('form-not-filled', 'displayed'),
-    Input("submit-button", "n_clicks"),
-	[State("price-input", "value"),
-	State("nbr-part-input", "value")],
-)
-def display_confirm(button, prix,part):
-	if prix == 0 and button != 0:
-		return True
-	return False
+	return patched_list, req, False, False
 
 
 @app.callback(
@@ -380,13 +373,13 @@ def update_news_table(skiprows):
 	# number of logs
 	State('nbr-logs', 'data')
 )
-def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debug=True):
+def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
 	# Don’t save the state in debug mode
 	# to avoid unnecessary file creation in the development environment
-	if not debug:
+	if debug:
 		return n_logs
 
 	port = pd.DataFrame.from_dict(port)
