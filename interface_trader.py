@@ -57,7 +57,7 @@ app.layout = html.Div([
 		html.Div(children=[
 			html.H2(children='Portfolio'),
 			html.Div(id='portfolio-table-container'),
-			html.P(id='portfolio-total-price')
+			dcc.Markdown(id='portfolio-total-price')
 		], style={'padding': 10, 'flex': 2}),
 
 		# Company graph
@@ -201,13 +201,17 @@ def generate_portfolio_table(stocks_info):
 
 @app.callback(
 	Output('portfolio-total-price', 'children'),
-	Input('portfolio_info', 'data')
+	Input('portfolio_info', 'data'),
+	State('cashflow', 'data')
 )
-def calcul_prix_tot_inv(stock_info):
+def calcul_prix_tot_inv(stock_info, cash):
 	""" Update the portfolio total price
 	"""
 	totals = pd.DataFrame.from_dict(stock_info, orient='index')['Total']
-	return ['Votre investissement total : ', round(totals.sum(), 2),' eur.']
+	return [
+		'Votre cash disponible : ', round(cash, 2),' eur.\n',
+		'Votre investissement total : ', round(cash + totals.sum(), 2),' eur.'
+	]
 
 
 @app.callback(
