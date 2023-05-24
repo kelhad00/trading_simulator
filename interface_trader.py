@@ -204,13 +204,12 @@ def generate_portfolio_table(stocks_info):
 
 @app.callback(
 	Output('portfolio-total-price', 'children'),
-	Input('portfolio_info', 'data')
+	Input('cashflow','data'),
 )
-def calcul_prix_tot_inv(stock_info):
+def calcul_prix_tot_inv(cashflow):
 	""" Update the portfolio total price
 	"""
-	totals = pd.DataFrame.from_dict(stock_info, orient='index')['Total']
-	return ['Votre investissement total : ', round(totals.sum(), 2),' eur.']
+	return ['Votre investissement total : ', round(cashflow,2),' eur.']
 
 
 @app.callback(
@@ -307,10 +306,15 @@ def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow
 		# Same as above for the sell request
 		elif req[3] == 'Vendre' and req[0] <= stock_price:
 			# If the user has enough shares
-			if portfolio_info.loc['Shares', req[2]] >= req[1]:
+			if portfolio_info.loc['Shares', req[2]] >= req[1] and portfolio_info.loc['Total', req[2]] >= req[1] * stock_price :
 				portfolio_info.loc['Shares', req[2]] -= req[1]
 				portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
 				cashflow += req[1] * stock_price
+			elif portfolio_info.loc['Shares', req[2]] >= req[1] and portfolio_info.loc['Total', req[2]] < req[1] * stock_price :
+				portfolio_info.loc['Shares', req[2]] -= req[1]
+				portfolio_info.loc['Total', req[2]] = 0
+				cashflow += req[1] * stock_price
+				
 			# the request is removed, with or without the user having enough shares
 			del patched_list[i]
 			request_list.remove(req)
