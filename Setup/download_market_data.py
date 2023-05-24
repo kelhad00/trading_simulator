@@ -5,10 +5,10 @@ from pandas.testing import assert_frame_equal
 
 # Variables to set
 stock_list = [ # List of stocks to download
-    "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
-    "AI.PA",  "AIR.PA", "BNP.PA", "DG.PA",  "CS.PA", \
-    "RMS.PA", "EL.PA",  "SAF.PA", "KER.PA", "RI.PA", \
-    "STLAM.MI",  "BN.PA",  "STMPA.PA",  "CAP.PA", "SGO.PA"
+    "MC.PA",  "OR.PA", "RMS.PA", "TTE.PA", "SAN.PA",
+    "AIR.PA", "SU.PA", "AI.PA",  "EL.PA",  "BNP.PA",
+    "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
+    "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
 ]
 periode_to_scrape = " 1mo"
 each_time_interval = "15m"
