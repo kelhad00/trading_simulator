@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 
-from candlestick_charts import create_graph, PLOTLY_CONFIG
+from Components.candlestick_charts import create_graph, PLOTLY_CONFIG
 
 # Constants
 UPDATE_TIME = 8*1000 # in milliseconds
@@ -122,7 +122,8 @@ app.layout = html.Div([
 def import_market_data(company_id, price_list):
 	""" Import market data from CSV file
 	"""
-	df = pd.read_csv('market_data.csv', index_col=0, header=[0,1])
+	file_path = os.path.join('Data', 'market_data.csv')
+	df = pd.read_csv(file_path, index_col=0, header=[0,1])
 
 	if not price_list: # if the dataframe has not been loaded yet
 		price_list = df.xs('Close', axis=1, level=1)
@@ -362,7 +363,8 @@ def update_skiprows_list(timestamp,skiprows):
 	prevent_initial_call=True
 )
 def update_news_table(skiprows):
-	nl = pd.read_csv('news.csv',sep=';',skiprows=skiprows,usecols=['Date','Title'])
+	file_path = os.path.join('Data', 'news.csv')
+	nl = pd.read_csv(file_path,sep=';',skiprows=skiprows,usecols=['Date','Title'])
 	return dash_table.DataTable(nl.to_dict('records'), [{"name": i, "id": i} for i in nl.columns])
 
 
@@ -421,10 +423,11 @@ def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debu
 	df = df.reindex(sorted(df.columns), axis=1)
 
 	# Save the header only once and append the rest
-	if os.path.isfile('interface-logs.csv'):
-		df.to_csv('interface-logs.csv', mode='a', index=False, header=False)
+	file_path = os.path.join('Data', 'interface-logs.csv')
+	if os.path.isfile(file_path):
+		df.to_csv(file_path, mode='a', index=False, header=False)
 	else:
-		df.to_csv('interface-logs.csv', index=False)
+		df.to_csv(file_path, index=False)
 
 	return n_logs + 1
 
