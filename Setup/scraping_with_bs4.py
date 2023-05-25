@@ -28,7 +28,7 @@ company_df = pd.DataFrame(cac40data, columns=['name', 'ticker', 'url'])
 quotes = []
 
 def save_news_in_file(datas):
-    filename = os.path.join('Data', 'news_by_bs4.csv')
+    filename = os.path.join('Data', 'news.csv')
     df = pd.DataFrame(datas)
     # append the new data to the old file with the old data and delete the header and delete the duplicates
     df.to_csv(filename, index=False, encoding='utf-8-sig', sep=';', mode='a')

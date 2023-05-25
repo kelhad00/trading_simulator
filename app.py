@@ -73,7 +73,7 @@ app.layout = html.Div([
 				style={'padding': 30}
 			)
 		], style={'padding-top': 30, 'flex': 3})
-	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh'}),
+	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh'}),
 
 	# Lower part
 	html.Div([
@@ -82,7 +82,8 @@ app.layout = html.Div([
 			html.H2(children='Market News'),
 			dash_table.DataTable(
 				id='news-table',
-				columns=[{'name': 'Date', 'id': 'Date'}, {'name': 'Title', 'id': 'Title'}],
+				columns=[{'name': 'Date', 'id': 'date'}, {'name': 'Article', 'id': 'article'}],
+				style_cell={'textAlign': 'left', 'padding': '2px 10px'},
 			)
 		], style={'padding': 10, 'flex': 1}),
 
@@ -113,7 +114,7 @@ app.layout = html.Div([
 			html.Button("Clear",id="clear-done-btn")
 		], style={'padding': 10, 'flex': 1})
 
-	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh'})
+	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh'})
 
 ])
 
@@ -363,7 +364,7 @@ def update_news_table(timestamp, news_df, idx, range=10):
 	# If the news dataframe is not loaded yet, load it
 	if not news_df:
 		file_path = os.path.join('Data', 'news.csv')
-		news_df = pd.read_csv(file_path, sep=';', usecols=['Date','Title'])
+		news_df = pd.read_csv(file_path, sep=';', usecols=['article','date'])
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
 
