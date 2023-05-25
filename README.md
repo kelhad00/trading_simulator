@@ -9,7 +9,7 @@ Install the required packages:
 pip install -r requirements.txt
 ```
 
-And run this python this command:
+And run this command:
 ```bash
 python main.py
 ```
