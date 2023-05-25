@@ -30,6 +30,8 @@ app.layout = html.Div([
 	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
 	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
 	dcc.Store(id = 'price-dataframe'),                   # Store market data in the browser
+	dcc.Store(id = 'news-dataframe'),
+	dcc.Store(id = 'news-index', data = 9),              # Display 10 news at the first load (0-9)
 	dcc.Store(id = 'cashflow', data = 100000),
 	dcc.Store(id = 'request-list', data = []),
 	dcc.Store(id = 'liste-skiprows', data=[6,7,8,9,10]),
@@ -77,7 +79,10 @@ app.layout = html.Div([
 		# News
 		html.Div(children=[
 			html.H2(children='Market News'),
-			html.Div(id='table')
+			dash_table.DataTable(
+				id='news-table',
+				columns=[{'name': 'Date', 'id': 'Date'}, {'name': 'Title', 'id': 'Title'}],
+			)
 		], style={'padding': 10, 'flex': 1}),
 
 		# Requests
@@ -343,29 +348,28 @@ def delete_items(n_clicks, state):
 
 
 @app.callback(
-	Output('liste-skiprows','data'),
+	Output('news-index','data'),
+	Output('news-dataframe','data'),
+	Output('news-table','data'),
 	Input('market-timestamp-value','data'),
-	State('liste-skiprows','data')
+	State('news-dataframe','data'),
+	State('news-index','data'),
 )
-def update_skiprows_list(timestamp,skiprows):
-	for i in range(len(skiprows)):
-		if skiprows[i]==10:
-			skiprows[i]=1
-		else:
-			skiprows[i]+=1
-	# print(skiprows[i])
-	return skiprows
+def update_news_table(timestamp, news_df, idx, range=10):
+	""" Display one more news every time the timestamp is updated
+		Limit the number of news displayed to the range parameter
+	"""
+	# If the news dataframe is not loaded yet, load it
+	if not news_df:
+		file_path = os.path.join('Data', 'news.csv')
+		news_df = pd.read_csv(file_path, sep=';', usecols=['Date','Title'])
+	else:
+		news_df = pd.DataFrame.from_dict(news_df)
 
+	idx += 1
+	nl = news_df.iloc[idx - range : idx]
 
-@app.callback(
-	Output('table','children',allow_duplicate=True),
-	Input('liste-skiprows','data'),
-	prevent_initial_call=True
-)
-def update_news_table(skiprows):
-	file_path = os.path.join('Data', 'news.csv')
-	nl = pd.read_csv(file_path,sep=';',skiprows=skiprows,usecols=['Date','Title'])
-	return dash_table.DataTable(nl.to_dict('records'), [{"name": i, "id": i} for i in nl.columns])
+	return idx, news_df.to_dict(), nl.to_dict('records')
 
 
 @app.callback(
