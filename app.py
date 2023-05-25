@@ -1,4 +1,5 @@
 from dash import Dash, html, dcc, dash_table, Output, Input, State, Patch, ALL, ctx
+from dash.exceptions import PreventUpdate
 import os
 from datetime import datetime
 import pandas as pd
@@ -366,7 +367,13 @@ def update_news_table(timestamp, news_df, idx, range=10):
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
 
-	idx += 1
+	# While the index is not at the end of the dataframe, increment it
+	# Otherwise, the index does not change and let the news table unchanged
+	if idx >= len(news_df):
+		raise PreventUpdate # Exit the callback without updating anything
+	else:
+		idx += 1
+
 	nl = news_df.iloc[idx - range : idx].iloc[::-1]
 
 	return idx, news_df.to_dict(), nl.to_dict('records')
