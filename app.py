@@ -367,7 +367,7 @@ def update_news_table(timestamp, news_df, idx, range=10):
 		news_df = pd.DataFrame.from_dict(news_df)
 
 	idx += 1
-	nl = news_df.iloc[idx - range : idx]
+	nl = news_df.iloc[idx - range : idx].iloc[::-1]
 
 	return idx, news_df.to_dict(), nl.to_dict('records')
 
