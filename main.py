@@ -13,6 +13,9 @@ if not os.path.exists("Data"):
     print('\nDownloading news...\n')
     from Setup import download_news
 
+    print('\nScrapping news...\n')
+    from Setup import scraping_with_bs4
+
     print('\nSetup done')
 
 # Run the app
