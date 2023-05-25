@@ -11,7 +11,7 @@ stock_list = [ # List of stocks to download
     "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
 ]
 periode_to_scrape = " 1mo"
-each_time_interval = "15m"
+each_time_interval = "5m"
 
 print('For these stocks:', stock_list, '\n')
 
