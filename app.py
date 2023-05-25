@@ -314,10 +314,13 @@ def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow
 				portfolio_info.loc['Shares', req[2]] -= req[1]
 				cashflow += req[1] * stock_price
 
-				if portfolio_info.loc['Total', req[2]] < req[1] * stock_price :
+				# TODO: Find another way to fix total not a 0 when selling all shares
+				# if portfolio_info.loc['Total', req[2]] < req[1] * stock_price :
+				# 	portfolio_info.loc['Total', req[2]] = 0
+				# else :
+				# 	portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
+				if portfolio_info.loc['Shares', req[2]] == 0:
 					portfolio_info.loc['Total', req[2]] = 0
-				else :
-					portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
 
 			# the request is removed, with or without the user having enough shares
 			del patched_list[i]
