@@ -2,6 +2,23 @@
 
 The whole simulatior should be as light as possible to not disturb the data collection from the webcam and tobii pro spark.
 
+## How to use:
+
+Install the required packages:
+```bash
+pip install -r requirements.txt
+```
+
+And run this command:
+```bash
+<<<<<<< Updated upstream
+python main.py
+=======
+cd trading_simulator/
+python __main__.py
+>>>>>>> Stashed changes
+```
+
 ## Interesting Resources:
 
 ### Candlestick graph

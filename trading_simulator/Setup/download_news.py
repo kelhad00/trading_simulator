@@ -20,11 +20,13 @@ if not os.path.exists("Data"):
 
 file_path = os.path.join('Data', 'news.csv')
 NEWS_DATA.to_csv(file_path, index=False, sep=';')
+for i in range(10):
+	NEWS_DATA.to_csv(file_path, mode='a', header=False, index=False, sep=';')
 
 # Read data from CSV file and show its head to check if it is correct
 df = pd.read_csv(file_path, sep=';')
 print("Checking if the data as been saved correctly:")
 
-assert_frame_equal(NEWS_DATA, df, check_dtype=False)
+assert_frame_equal(NEWS_DATA, df.head(), check_dtype=False)
 
 print('Download done')

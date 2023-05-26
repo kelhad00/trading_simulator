@@ -1,4 +1,5 @@
 from dash import Dash, html, dcc, dash_table, Output, Input, State, Patch, ALL, ctx
+from dash.exceptions import PreventUpdate
 import os
 from datetime import datetime
 import pandas as pd
@@ -11,10 +12,10 @@ UPDATE_TIME = 8*1000 # in milliseconds
 MAX_REQUESTS = 10    # Maximum number of requests
 MAX_INV_MONEY=100000 # Initial money
 COMP = [ # List of stocks to download
-    "MC.PA",  "TTE.PA", "SAN.PA", "OR.PA",  "SU.PA", \
-    "AI.PA",  "AIR.PA", "BNP.PA", "DG.PA",  "CS.PA", \
-    "RMS.PA", "EL.PA",  "SAF.PA", "KER.PA", "RI.PA", \
-    "STLAM.MI",  "BN.PA",  "STMPA.PA",  "CAP.PA", "SGO.PA"
+    "MC.PA",  "OR.PA", "RMS.PA", "TTE.PA", "SAN.PA",
+    "AIR.PA", "SU.PA", "AI.PA",  "EL.PA",  "BNP.PA",
+    "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
+    "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
 ]
 
 
@@ -30,6 +31,8 @@ app.layout = html.Div([
 	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
 	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
 	dcc.Store(id = 'price-dataframe'),                   # Store market data in the browser
+	dcc.Store(id = 'news-dataframe'),
+	dcc.Store(id = 'news-index', data = 9),              # Display 10 news at the first load (0-9)
 	dcc.Store(id = 'cashflow', data = 100000),
 	dcc.Store(id = 'request-list', data = []),
 	dcc.Store(id = 'liste-skiprows', data=[6,7,8,9,10]),
@@ -70,14 +73,18 @@ app.layout = html.Div([
 				style={'padding': 30}
 			)
 		], style={'padding-top': 30, 'flex': 3})
-	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh'}),
+	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh'}),
 
 	# Lower part
 	html.Div([
 		# News
 		html.Div(children=[
 			html.H2(children='Market News'),
-			html.Div(id='table')
+			dash_table.DataTable(
+				id='news-table',
+				columns=[{'name': 'Date', 'id': 'date'}, {'name': 'Article', 'id': 'article'}],
+				style_cell={'textAlign': 'left', 'padding': '2px 10px'},
+			)
 		], style={'padding': 10, 'flex': 1}),
 
 		# Requests
@@ -107,7 +114,7 @@ app.layout = html.Div([
 			html.Button("Clear",id="clear-done-btn")
 		], style={'padding': 10, 'flex': 1})
 
-	], style={'display': 'flex', 'flex-direction': 'row', 'height': '50vh'})
+	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh'})
 
 ])
 
@@ -303,9 +310,18 @@ def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow
 		elif req[3] == 'Vendre' and req[0] <= stock_price:
 			# If the user has enough shares
 			if portfolio_info.loc['Shares', req[2]] >= req[1]:
+
 				portfolio_info.loc['Shares', req[2]] -= req[1]
-				portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
 				cashflow += req[1] * stock_price
+
+				# TODO: Find another way to fix total not a 0 when selling all shares
+				# if portfolio_info.loc['Total', req[2]] < req[1] * stock_price :
+				# 	portfolio_info.loc['Total', req[2]] = 0
+				# else :
+				# 	portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
+				if portfolio_info.loc['Shares', req[2]] == 0:
+					portfolio_info.loc['Total', req[2]] = 0
+
 			# the request is removed, with or without the user having enough shares
 			del patched_list[i]
 			request_list.remove(req)
@@ -343,29 +359,34 @@ def delete_items(n_clicks, state):
 
 
 @app.callback(
-	Output('liste-skiprows','data'),
+	Output('news-index','data'),
+	Output('news-dataframe','data'),
+	Output('news-table','data'),
 	Input('market-timestamp-value','data'),
-	State('liste-skiprows','data')
+	State('news-dataframe','data'),
+	State('news-index','data'),
 )
-def update_skiprows_list(timestamp,skiprows):
-	for i in range(len(skiprows)):
-		if skiprows[i]==10:
-			skiprows[i]=1
-		else:
-			skiprows[i]+=1
-	# print(skiprows[i])
-	return skiprows
+def update_news_table(timestamp, news_df, idx, range=10):
+	""" Display one more news every time the timestamp is updated
+		Limit the number of news displayed to the range parameter
+	"""
+	# If the news dataframe is not loaded yet, load it
+	if not news_df:
+		file_path = os.path.join('Data', 'news.csv')
+		news_df = pd.read_csv(file_path, sep=';', usecols=['article','date'])
+	else:
+		news_df = pd.DataFrame.from_dict(news_df)
 
+	# While the index is not at the end of the dataframe, increment it
+	# Otherwise, the index does not change and let the news table unchanged
+	if idx >= len(news_df):
+		raise PreventUpdate # Exit the callback without updating anything
+	else:
+		idx += 1
 
-@app.callback(
-	Output('table','children',allow_duplicate=True),
-	Input('liste-skiprows','data'),
-	prevent_initial_call=True
-)
-def update_news_table(skiprows):
-	file_path = os.path.join('Data', 'news.csv')
-	nl = pd.read_csv(file_path,sep=';',skiprows=skiprows,usecols=['Date','Title'])
-	return dash_table.DataTable(nl.to_dict('records'), [{"name": i, "id": i} for i in nl.columns])
+	nl = news_df.iloc[idx - range : idx].iloc[::-1]
+
+	return idx, news_df.to_dict(), nl.to_dict('records')
 
 
 @app.callback(
