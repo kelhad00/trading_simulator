@@ -6,13 +6,15 @@ from trading_simulator import app
 
 # Import data if not already done
 if not os.path.exists("Data"):
+    from trading_simulator.Setup import download_market_data, scraping_news
+
     # Run all setup files
     print('##### Setup #####'\
         '\nDownloading market data...\n')
-    from trading_simulator.Setup import download_market_data
+    download_market_data()
 
     print('\nScrapping news...\n')
-    from trading_simulator.Setup import scraping_with_bs4
+    scraping_news()
 
     print('\nSetup done')
 
