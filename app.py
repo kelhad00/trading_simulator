@@ -11,12 +11,28 @@ from Components.candlestick_charts import create_graph, PLOTLY_CONFIG
 UPDATE_TIME = 8*1000 # in milliseconds
 MAX_REQUESTS = 10    # Maximum number of requests
 MAX_INV_MONEY=100000 # Initial money
-COMP = [ # List of stocks to download
-    "MC.PA",  "OR.PA", "RMS.PA", "TTE.PA", "SAN.PA",
-    "AIR.PA", "SU.PA", "AI.PA",  "EL.PA",  "BNP.PA",
-    "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
-    "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
-]
+COMP = { # List of stocks to download
+    "MC.PA" : "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
+	"OR.PA" : "L'ORÉAL (OR)",
+	"RMS.PA" : "HERMÈS INTERNATIONAL (RMS)",
+	"TTE.PA" : "TOTALENERGIES SE (TTE)",
+	"SAN.PA" : "SANOFI (SAN)",
+    "AIR.PA" : "AIRBUS SE (AIR)",
+	"SU.PA" : "SCHNEIDER ELECTRIC SE (SU)",
+	"AI.PA" : "AIR LIQUIDE (AI)",
+	"EL.PA" : "ESSILORLUXOTTICA (EL)",
+	"BNP.PA" : "BNP PARIBAS (BNP)",
+    "KER.PA" : "KERING (KER)",
+	"DG.PA" : "VINCI (DG)",
+	"CS.PA" : "AXA (CS)",
+	"SAF.PA" : "SAFRAN (SAF)",
+	"RI.PA" : "PERNOD RICARD (RI)",
+    "DSY.PA" : "DASSAULT SYSTÈMES SE (DSY)",
+	"STLAM.MI" : "STELLANTIS N.V. (STLAM)",
+	"BN.PA" : "DANONE (BN)",
+	"STMPA.PA" : "STMICROELECTRONICS N.V. (STMPA)",
+	"ACA.PA": "CRÉDIT AGRICOLE S.A. (ACA)"
+}
 
 
 # Initialize Dash app
@@ -36,7 +52,7 @@ app.layout = html.Div([
 	dcc.Store(id = 'cashflow', data = 100000),
 	dcc.Store(id = 'request-list', data = []),
 	dcc.Store(id = 'liste-skiprows', data=[6,7,8,9,10]),
-	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP}),
+	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP.keys()}),
 
 	# Periodic updater
 	dcc.Interval(
@@ -65,7 +81,7 @@ app.layout = html.Div([
 
 		# Company graph
 		html.Div(children=[
-			dcc.Dropdown(COMP, COMP[0], id='company-selector'),
+			dcc.Dropdown(COMP, list(COMP.keys())[0], id='company-selector', clearable=False),
 			dcc.Graph(
 				id='company-graph',
 				figure={'layout': {'height': 300}},
