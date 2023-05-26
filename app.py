@@ -111,7 +111,7 @@ app.layout = html.Div([
 			dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1),
 
 			html.Label('Parts', htmlFor='nbr-part-input'),
-			dcc.Input(id='nbr-part-input',value=1, type='number',min=1, max=MAX_REQUESTS, step=1),
+			dcc.Input(id='nbr-part-input',value=1, type='number',min=1, step=1),
 
 			html.Label('Actions', htmlFor='action-input'),
 			dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
@@ -301,7 +301,7 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 	State('cashflow','data'),
 	prevent_initial_call=True
 )
-def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow):
+def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 	patched_list = Patch() # Get request-container children
 	list_price = pd.DataFrame.from_dict(list_price)
 	portfolio_info = pd.DataFrame.from_dict(portfolio_info)
@@ -359,7 +359,7 @@ def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow
     State({"index": ALL, "type": "done"}, "value"),
     prevent_initial_call=True,
 )
-def delete_items(n_clicks, state):
+def remove_request(n_clicks, state):
 	patched_list = Patch()
 	request_list = Patch()
 
