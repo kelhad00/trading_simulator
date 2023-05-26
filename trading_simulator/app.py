@@ -11,12 +11,28 @@ from Components.candlestick_charts import create_graph, PLOTLY_CONFIG
 UPDATE_TIME = 8*1000 # in milliseconds
 MAX_REQUESTS = 10    # Maximum number of requests
 MAX_INV_MONEY=100000 # Initial money
-COMP = [ # List of stocks to download
-    "MC.PA",  "OR.PA", "RMS.PA", "TTE.PA", "SAN.PA",
-    "AIR.PA", "SU.PA", "AI.PA",  "EL.PA",  "BNP.PA",
-    "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
-    "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
-]
+COMP = { # List of stocks to download
+    "MC.PA" : "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
+	"OR.PA" : "L'ORÉAL (OR)",
+	"RMS.PA" : "HERMÈS INTERNATIONAL (RMS)",
+	"TTE.PA" : "TOTALENERGIES SE (TTE)",
+	"SAN.PA" : "SANOFI (SAN)",
+    "AIR.PA" : "AIRBUS SE (AIR)",
+	"SU.PA" : "SCHNEIDER ELECTRIC SE (SU)",
+	"AI.PA" : "AIR LIQUIDE (AI)",
+	"EL.PA" : "ESSILORLUXOTTICA (EL)",
+	"BNP.PA" : "BNP PARIBAS (BNP)",
+    "KER.PA" : "KERING (KER)",
+	"DG.PA" : "VINCI (DG)",
+	"CS.PA" : "AXA (CS)",
+	"SAF.PA" : "SAFRAN (SAF)",
+	"RI.PA" : "PERNOD RICARD (RI)",
+    "DSY.PA" : "DASSAULT SYSTÈMES SE (DSY)",
+	"STLAM.MI" : "STELLANTIS N.V. (STLAM)",
+	"BN.PA" : "DANONE (BN)",
+	"STMPA.PA" : "STMICROELECTRONICS N.V. (STMPA)",
+	"ACA.PA": "CRÉDIT AGRICOLE S.A. (ACA)"
+}
 
 
 # Initialize Dash app
@@ -36,7 +52,7 @@ app.layout = html.Div([
 	dcc.Store(id = 'cashflow', data = 100000),
 	dcc.Store(id = 'request-list', data = []),
 	dcc.Store(id = 'liste-skiprows', data=[6,7,8,9,10]),
-	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP}),
+	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP.keys()}),
 
 	# Periodic updater
 	dcc.Interval(
@@ -65,7 +81,7 @@ app.layout = html.Div([
 
 		# Company graph
 		html.Div(children=[
-			dcc.Dropdown(COMP, COMP[0], id='company-selector'),
+			dcc.Dropdown(COMP, list(COMP.keys())[0], id='company-selector', clearable=False),
 			dcc.Graph(
 				id='company-graph',
 				figure={'layout': {'height': 300}},
@@ -95,7 +111,7 @@ app.layout = html.Div([
 			dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1),
 
 			html.Label('Parts', htmlFor='nbr-part-input'),
-			dcc.Input(id='nbr-part-input',value=1, type='number',min=1, max=MAX_REQUESTS, step=1),
+			dcc.Input(id='nbr-part-input',value=1, type='number',min=1, step=1),
 
 			html.Label('Actions', htmlFor='action-input'),
 			dcc.RadioItems(['Acheter', 'Vendre'], "Acheter",id="action-input"),
@@ -285,7 +301,7 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 	State('cashflow','data'),
 	prevent_initial_call=True
 )
-def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow):
+def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 	patched_list = Patch() # Get request-container children
 	list_price = pd.DataFrame.from_dict(list_price)
 	portfolio_info = pd.DataFrame.from_dict(portfolio_info)
@@ -343,7 +359,7 @@ def remove_request(timestamp, request_list, list_price, portfolio_info, cashflow
     State({"index": ALL, "type": "done"}, "value"),
     prevent_initial_call=True,
 )
-def delete_items(n_clicks, state):
+def remove_request(n_clicks, state):
 	patched_list = Patch()
 	request_list = Patch()
 
@@ -397,10 +413,12 @@ def update_news_table(timestamp, news_df, idx, range=10):
 	Input('cashflow', 'data'),
 	Input('request-list', 'data'),
 	Input('portfolio_info', 'data'),
+	Input('news-index', 'data'),
+	State('news-dataframe', 'data'),
 	# number of logs
 	State('nbr-logs', 'data')
 )
-def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debug=False): #TODO: replace by debug=False when deploying
+def save_state(timestamp, company_id, cashflow, request_list, port, news_id, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
@@ -410,12 +428,14 @@ def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debu
 		return n_logs
 
 	port = pd.DataFrame.from_dict(port)
+	news_df = pd.DataFrame.from_dict(news_df)
 
 	df = pd.DataFrame({
 		"host-timestamp": [datetime.now().timestamp()],
 		"market-timestamp": [timestamp],
 		"selected-company": [company_id],
-		"cashflow": [cashflow]
+		"cashflow": [cashflow],
+		"last-news": [news_df.iloc[news_id - 1]['article']],
 	})
 	# format portfolio info to be saved
 	df = pd.concat([
