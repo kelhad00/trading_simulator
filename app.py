@@ -413,10 +413,12 @@ def update_news_table(timestamp, news_df, idx, range=10):
 	Input('cashflow', 'data'),
 	Input('request-list', 'data'),
 	Input('portfolio_info', 'data'),
+	Input('news-index', 'data'),
+	State('news-dataframe', 'data'),
 	# number of logs
 	State('nbr-logs', 'data')
 )
-def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debug=False): #TODO: replace by debug=False when deploying
+def save_state(timestamp, company_id, cashflow, request_list, port, news_id, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
@@ -426,12 +428,14 @@ def save_state(timestamp, company_id, cashflow, request_list, port, n_logs, debu
 		return n_logs
 
 	port = pd.DataFrame.from_dict(port)
+	news_df = pd.DataFrame.from_dict(news_df)
 
 	df = pd.DataFrame({
 		"host-timestamp": [datetime.now().timestamp()],
 		"market-timestamp": [timestamp],
 		"selected-company": [company_id],
-		"cashflow": [cashflow]
+		"cashflow": [cashflow],
+		"last-news": [news_df.iloc[news_id - 1]['article']],
 	})
 	# format portfolio info to be saved
 	df = pd.concat([
