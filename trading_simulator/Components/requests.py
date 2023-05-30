@@ -11,13 +11,13 @@ from trading_simulator.app import app
 	Output('form-not-filled', 'displayed'), # Error message if the form isn't filled correctly
     Input("submit-button", "n_clicks"),
     State("price-input", "value"),
-	State("nbr-part-input", "value"),
+	State("nbr-share-input", "value"),
 	State("company-selector", "value"),
 	State("action-input","value"),
 	State("request-list", "data"),
     prevent_initial_call=True,
 )
-def ajouter_requetes(btn,prix,part,companie,action,req):
+def ajouter_requetes(btn,price,share,company,action,req):
 	patched_list = Patch()
 
     # If the user has too many requests
@@ -25,11 +25,11 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 		return patched_list, req, True, False
 
 	# If the form isn't filled correctly
-	if prix == 0 and btn != 0:
+	if price == 0 and btn != 0:
 		return patched_list, req, False, True
 
 	# Add the request to the list
-	value = [prix,part,companie,action]
+	value = [price,share,company,action]
 	req.append(value)
 
 	def generate_line(value):
@@ -78,7 +78,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 		stock_price = list_price[req[2]].loc[timestamp]
 
 		# If the request is completed
-		if req[3] == 'Acheter' and req[0] >= stock_price:
+		if req[3] == 'Buy' and req[0] >= stock_price:
 			# If the user has enough money
 			if req[1] * stock_price < cashflow:
 				portfolio_info.loc['Shares', req[2]] += req[1]
@@ -89,7 +89,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 			request_list.remove(req)
 
 		# Same as above for the sell request
-		elif req[3] == 'Vendre' and req[0] <= stock_price:
+		elif req[3] == 'Sell' and req[0] <= stock_price:
 			# If the user has enough shares
 			if portfolio_info.loc['Shares', req[2]] >= req[1]:
 

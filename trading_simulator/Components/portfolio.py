@@ -47,6 +47,6 @@ def calcul_prix_tot_inv(stock_info, cash):
 	"""
 	totals = pd.DataFrame.from_dict(stock_info, orient='index')['Total']
 	return [
-		'Votre cash disponible : ', round(cash, 2),' eur.\n',
-		'Votre investissement total : ', round(cash + totals.sum(), 2),' eur.'
+		'Your available cash : ', round(cash, 2),' eur.\n',
+		'Your total investment  : ', round(cash + totals.sum(), 2),' eur.'
 	]
