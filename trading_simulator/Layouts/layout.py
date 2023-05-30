@@ -38,14 +38,14 @@ main_layout = html.Div([
 	html.Div([
 		# Portfolio
 		html.Div(children=[
-			html.H2(children='Portfolio', style = {'font-family': 'Arial'}),
+			html.H2(children='Portfolio'),
 			html.Div(id='portfolio-table-container'),
 			dcc.Markdown(id='portfolio-total-price')
-		], style={'padding': 10, 'flex': 2, 'font-family': 'Arial'}),
+		], style={'padding': 10, 'flex': 2}),
 
 		# Company graph
 		html.Div(children=[
-			dcc.Dropdown(COMP, list(COMP.keys())[0], id='company-selector', clearable=False, style = {'font-family': 'Arial', 'padding-right' : 80, 'textAlign' : 'center'}),
+			dcc.Dropdown(COMP, list(COMP.keys())[0], id='company-selector', clearable=False, style = {'padding-right' : 80, 'textAlign' : 'center'}),
 			dcc.Graph(
 				id='company-graph',
 				figure={'layout': {'height': 300}},
@@ -59,40 +59,40 @@ main_layout = html.Div([
 	html.Div([
 		# News
 		html.Div(children=[
-			html.H2(children='Market News', style = {'font-family': 'Arial'}),
+			html.H2(children='Market News'),
 			dash_table.DataTable(
 				id='news-table',
 				columns=[{'name': 'Date', 'id': 'date'}, {'name': 'Article', 'id': 'article'}],
-				style_cell={'textAlign': 'left', 'padding': '2px 10px', 'font-family': 'Arial'},
+				style_cell={'textAlign': 'left', 'padding': '2px 10px'},
 			)
 		], style={'padding': 10, 'flex': 1}),
 
 		# Requests
 		html.Div(children=[
-			html.H2('Make A Request', style = {'font-family': 'Arial'}),
+			html.H2('Make A Request'),
 
-			html.Label('Actions :', htmlFor='action-input', style = {'font-family': 'Arial'}),
-			dcc.RadioItems(['Buy', 'Sell'], "Buy",id="action-input", inline=True, style = {'font-family': 'Arial'}),
-
-			html.Br(),
-			html.Label('Price', htmlFor='price-input', style = {'font-family': 'Arial'}),
-			dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1, style = {'font-family': 'Arial'}),
+			html.Label('Actions :', htmlFor='action-input'),
+			dcc.RadioItems(['Buy', 'Sell'], "Buy",id="action-input", inline=True),
 
 			html.Br(),
-			html.Label('Shares', htmlFor='nbr-share-input', style = {'font-family': 'Arial'}),
-			dcc.Input(id='nbr-share-input',value=1, type='number',min=1, step=1, style = {'font-family': 'Arial'}),
+			html.Label('Price', htmlFor='price-input'),
+			dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1),
+
+			html.Br(),
+			html.Label('Shares', htmlFor='nbr-share-input'),
+			dcc.Input(id='nbr-share-input',value=1, type='number',min=1, step=1),
 
 			html.Br(),
 			html.Button("Submit",id='submit-button', n_clicks=0,style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10, 'margin-right' : 90, 'margin-left' : 90})
 		], style={'padding': 10, 'flex': 1, 'display': 'flex', 'flex-direction': 'column', 'margin-left': '5%', 'margin-right': '5%'}),
 
 		html.Div(children=[
-			html.H2('Request List', style = {'font-family': 'Arial'}),
+			html.H2('Request List'),
 			html.Table([
 				html.Thead(
 					html.Tr(['Price ','Shares ','Comp ','Actions '])
 				)
-			],id="title-table", style = {'font-family': 'Arial'}),
+			],id="title-table"),
 			html.Div(id="request-container"),
 			html.Br(),
 			html.Button("Clear",id="clear-done-btn", style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'padding-left' : 30, 'padding-right' : 30, 'border-radius' : 10, 'margin-left' : 20})
@@ -100,4 +100,4 @@ main_layout = html.Div([
 
 	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh', 'margin-top' : 50})
 
-])
+], style = {'font-family': 'Arial'})
