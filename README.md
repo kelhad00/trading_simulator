@@ -11,12 +11,7 @@ pip install -r requirements.txt
 
 And run this command:
 ```bash
-<<<<<<< Updated upstream
 python main.py
-=======
-cd trading_simulator/
-python __main__.py
->>>>>>> Stashed changes
 ```
 
 ## Interesting Resources:
