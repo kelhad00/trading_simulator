@@ -13,13 +13,14 @@ from trading_simulator.app import app
 	Input('company-selector', 'value'),
 	Input('cashflow', 'data'),
 	Input('request-list', 'data'),
-	Input('portfolio_info', 'data'),
 	Input('news-index', 'data'),
+	Input('portfolio_totals', 'data'),
+	State('portfolio_shares', 'data'),
 	State('news-dataframe', 'data'),
 	# number of logs
 	State('nbr-logs', 'data')
 )
-def save_state(timestamp, company_id, cashflow, request_list, port, news_id, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
+def save_state(timestamp, company_id, cashflow, request_list, news_id, totals, shares, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
@@ -28,8 +29,9 @@ def save_state(timestamp, company_id, cashflow, request_list, port, news_id, new
 	if debug:
 		return n_logs
 
-	port = pd.DataFrame.from_dict(port)
 	news_df = pd.DataFrame.from_dict(news_df)
+	shares = pd.DataFrame.from_dict(shares)
+	totals = pd.DataFrame.from_dict(totals)
 
 	df = pd.DataFrame({
 		"host-timestamp": [datetime.now().timestamp()],
@@ -41,12 +43,16 @@ def save_state(timestamp, company_id, cashflow, request_list, port, news_id, new
 	# format portfolio info to be saved
 	df = pd.concat([
 		df,
-		port.loc['Shares'].to_frame().rename(index={
-			c : c + '-shares' for c in port.columns
-		}, columns={'Shares':0}).T,
-		port.loc['Total'].to_frame().rename(index={
-			c : c + '-total' for c in port.columns
-		}, columns={'Total':0}).T
+		shares.rename(
+			# Add '-shares' to each column name to avoid duplicates
+			columns={ c : c + '-shares' for c in shares.columns},
+			index={'Shares':0} # Remove index name to have only one row
+		),
+		totals.rename(
+			# Add '-total' to each column name to avoid duplicates
+			columns={ c : c + '-total' for c in totals.columns},
+			index={'Total':0} # Remove index name to have only one row
+		),
 	], axis=1)
 
 	# Be sure that the request list has MAX_REQUESTS elements in the header (useful for the first time only)

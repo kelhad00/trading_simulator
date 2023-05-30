@@ -16,7 +16,8 @@ main_layout = html.Div([
 	dcc.Store(id = 'cashflow', data = MAX_INV_MONEY),
 	dcc.Store(id = 'request-list', data = []),
 	dcc.Store(id = 'liste-skiprows', data=[6,7,8,9,10]),
-	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP.keys()}),
+	dcc.Store(id = 'portfolio_shares', data = {c: {'Shares': 0} for c in COMP.keys()}), # Store only the number of shares for each company
+	dcc.Store(id = 'portfolio_totals', data = {c: {'Total': 0} for c in COMP.keys()}),   # Store only the total price for each company
 
 	# Periodic updater
 	dcc.Interval(

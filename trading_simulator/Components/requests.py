@@ -58,12 +58,12 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 @app.callback(
     Output("request-container", "children", allow_duplicate=True),
     Output("request-list", "data"),
-	Output("portfolio_info", "data"),
+	Output("portfolio_shares", "data"),
 	Output("cashflow", "data"),
 	Input('market-timestamp-value','data'),
     State("request-list", "data"),
 	State('price-dataframe','data'),
-	State('portfolio_info','data'),
+	State('portfolio_shares','data'),
 	State('cashflow','data'),
 	prevent_initial_call=True
 )
@@ -81,9 +81,12 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 		if req[3] == 'Acheter' and req[0] >= stock_price:
 			# If the user has enough money
 			if req[1] * stock_price < cashflow:
+
+				# Update only the shares and the cashflow
+				# Because the total price will be updated in the portfolio callback
 				portfolio_info.loc['Shares', req[2]] += req[1]
-				portfolio_info.loc['Total', req[2]] += req[1] * stock_price
 				cashflow -= req[1] * stock_price
+
 			# the request is removed, with or without the user having enough money
 			del patched_list[i]
 			request_list.remove(req)
@@ -93,16 +96,10 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 			# If the user has enough shares
 			if portfolio_info.loc['Shares', req[2]] >= req[1]:
 
+				# Update only the shares and the cashflow
+				# Because the total price will be updated in the portfolio callback
 				portfolio_info.loc['Shares', req[2]] -= req[1]
 				cashflow += req[1] * stock_price
-
-				# TODO: Find another way to fix total not a 0 when selling all shares
-				# if portfolio_info.loc['Total', req[2]] < req[1] * stock_price :
-				# 	portfolio_info.loc['Total', req[2]] = 0
-				# else :
-				# 	portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
-				if portfolio_info.loc['Shares', req[2]] == 0:
-					portfolio_info.loc['Total', req[2]] = 0
 
 			# the request is removed, with or without the user having enough shares
 			del patched_list[i]
