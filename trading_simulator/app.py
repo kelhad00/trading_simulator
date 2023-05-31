@@ -10,7 +10,7 @@ app.layout = layout.main_layout
 
 # Import callbacks
 # This is done after app initialization to avoid circular imports.
-from trading_simulator.States import import_data, save_state
+from trading_simulator.States import import_state, import_data, save_state
 from trading_simulator.Components import graph, portfolio, requests, news
 
 

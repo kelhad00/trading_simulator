@@ -29,7 +29,7 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 		return patched_list, req, False, True
 
 	# Add the request to the list
-	value = [prix,part,companie,action]
+	value = [action,part,companie,prix] # Example: {Buy} {10} shares of {LVMH} at {100}$
 	req.append(value)
 
 	def generate_line(value):
@@ -78,7 +78,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 		stock_price = list_price[req[2]].loc[timestamp]
 
 		# If the request is completed
-		if req[3] == 'Acheter' and req[0] >= stock_price:
+		if req[0] == 'Acheter' and req[3] >= stock_price:
 			# If the user has enough money
 			if req[1] * stock_price < cashflow:
 
@@ -92,7 +92,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 			request_list.remove(req)
 
 		# Same as above for the sell request
-		elif req[3] == 'Vendre' and req[0] <= stock_price:
+		elif req[0] == 'Vendre' and req[3] <= stock_price:
 			# If the user has enough shares
 			if portfolio_info.loc['Shares', req[2]] >= req[1]:
 
