@@ -39,6 +39,7 @@ def save_state(timestamp, company_id, cashflow, request_list, news_id, totals, s
 		"selected-company": [company_id],
 		"cashflow": [cashflow],
 		"last-news": [news_df.iloc[news_id - 1]['article']],
+		"last-news-id": [news_id],
 	})
 	# format portfolio info to be saved
 	df = pd.concat([
