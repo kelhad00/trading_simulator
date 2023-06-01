@@ -24,14 +24,14 @@ from trading_simulator.app import app
 def import_state(n, timestamp):
     # If information has been imported don't do anything
     if timestamp != '':
-        PreventUpdate()
+        raise PreventUpdate # Exit the callback without updating anything
 
     file_path = os.path.join('Data', 'interface-logs.csv')
     if not os.path.exists(file_path):
-        print('No data to import')
-        PreventUpdate()
+        # If no state has been saved yet,
+        # let initialize the app with default values
+        raise PreventUpdate
     else:
-        print('Importing data')
         # Import the data
         df = pd.read_csv(file_path, on_bad_lines='skip')
         nbr_logs = df.shape[0]
