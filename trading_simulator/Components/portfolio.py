@@ -39,7 +39,7 @@ def generate_portfolio_table(stocks_info, shares):
 
 	column_size = 10
 	stock_size = len(df)
-	column_names = ['Stock', 'Shares', 'Total']
+	column_names = {'Actions':'Stock', 'Parts': 'Shares', 'Total': 'Total'}
 	return html.Div([
 		html.Table([
 			html.Thead([
@@ -47,7 +47,7 @@ def generate_portfolio_table(stocks_info, shares):
 					html.Th(
 						col,
 						style={'padding-right': 50,'border-color': '#d3d3d3', 'border-style': 'solid','border-width': '1px'}
-					) for col in column_names
+					) for col in column_names.keys()
 				], style = {'background-color': '#fafafa'})
 			]),
 			html.Tbody([
@@ -55,7 +55,7 @@ def generate_portfolio_table(stocks_info, shares):
 					html.Td(
 						df.iloc[i][col],
 						style={'border-color': '#d3d3d3', 'border-style': 'solid', 'border-width': '1px'}
-					) for col in column_names
+					) for col in column_names.values()
 				]) for i in range(j,column_size + j)
 			])
 		]) for j in range(0, stock_size, column_size)
