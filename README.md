@@ -2,6 +2,18 @@
 
 The whole simulatior should be as light as possible to not disturb the data collection from the webcam and tobii pro spark.
 
+## How to use:
+
+Install the required packages:
+```bash
+pip install -r requirements.txt
+```
+
+And run this command:
+```bash
+python main.py
+```
+
 ## Interesting Resources:
 
 ### Candlestick graph
