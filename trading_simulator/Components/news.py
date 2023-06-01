@@ -22,6 +22,7 @@ def update_news_table(n, news_df, idx, range=10):
 	if not news_df:
 		file_path = os.path.join('Data', 'news.csv')
 		news_df = pd.read_csv(file_path, sep=';', usecols=['article','date'])
+		news_df = news_df[::-1].reset_index(drop=True)
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
 
