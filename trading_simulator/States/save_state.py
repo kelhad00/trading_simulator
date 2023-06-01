@@ -39,6 +39,7 @@ def save_state(timestamp, company_id, cashflow, request_list, news_id, totals, s
 		"selected-company": [company_id],
 		"cashflow": [cashflow],
 		"last-news": [news_df.iloc[news_id - 1]['article']],
+		"last-news-id": [news_id],
 	})
 	# format portfolio info to be saved
 	df = pd.concat([
@@ -62,7 +63,7 @@ def save_state(timestamp, company_id, cashflow, request_list, news_id, totals, s
 	# Prepare request list to be saved as columns
 	df = df.combine_first(
 		pd.DataFrame({
-			f'request {i+1}': f"{rq[3]} {rq[0]} {rq[2]} {rq[1]}" \
+			f'request {i+1}': f"{rq[0]} {rq[1]} {rq[2]} {rq[3]}" \
 			for i, rq in enumerate(request_list[:MAX_REQUESTS])
 		}, index = [0])
 	)
