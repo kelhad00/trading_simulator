@@ -78,10 +78,10 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 		stock_price = list_price[req[2]].loc[timestamp]
 
 		# If the request is completed
-		if req[3] == 'Buy' and req[0] >= stock_price:
+		if req[3] == 'Acheter' and req[0] >= stock_price:
 			# If the user has enough money
 			if req[1] * stock_price < cashflow:
-				portfolio_info.loc['Shares', req[2]] += req[1]
+				portfolio_info.loc['Parts', req[2]] += req[1]
 				portfolio_info.loc['Total', req[2]] += req[1] * stock_price
 				cashflow -= req[1] * stock_price
 			# the request is removed, with or without the user having enough money
@@ -89,11 +89,11 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 			request_list.remove(req)
 
 		# Same as above for the sell request
-		elif req[3] == 'Sell' and req[0] <= stock_price:
+		elif req[3] == 'Vendre' and req[0] <= stock_price:
 			# If the user has enough shares
-			if portfolio_info.loc['Shares', req[2]] >= req[1]:
+			if portfolio_info.loc['Parts', req[2]] >= req[1]:
 
-				portfolio_info.loc['Shares', req[2]] -= req[1]
+				portfolio_info.loc['Parts', req[2]] -= req[1]
 				cashflow += req[1] * stock_price
 
 				# TODO: Find another way to fix total not a 0 when selling all shares
@@ -101,7 +101,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 				# 	portfolio_info.loc['Total', req[2]] = 0
 				# else :
 				# 	portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
-				if portfolio_info.loc['Shares', req[2]] == 0:
+				if portfolio_info.loc['Parts', req[2]] == 0:
 					portfolio_info.loc['Total', req[2]] = 0
 
 			# the request is removed, with or without the user having enough shares

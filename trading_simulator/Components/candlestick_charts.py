@@ -67,7 +67,7 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
     figure.update_layout(
         #title = company_id + ' stock price',
         xaxis_title = 'Date',
-        yaxis_title = 'Price',
+        yaxis_title = 'Prix',
         yaxis_tickprefix = '€',
         showlegend=False
     )

@@ -41,9 +41,9 @@ def save_state(timestamp, company_id, cashflow, request_list, port, news_id, new
 	# format portfolio info to be saved
 	df = pd.concat([
 		df,
-		port.loc['Shares'].to_frame().rename(index={
+		port.loc['Parts'].to_frame().rename(index={
 			c : c + '-shares' for c in port.columns
-		}, columns={'Shares':0}).T,
+		}, columns={'Parts':0}).T,
 		port.loc['Total'].to_frame().rename(index={
 			c : c + '-total' for c in port.columns
 		}, columns={'Total':0}).T

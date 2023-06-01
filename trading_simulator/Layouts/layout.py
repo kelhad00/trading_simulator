@@ -1,4 +1,5 @@
 from dash import html, dcc, dash_table
+import pandas as pd
 
 from trading_simulator import MAX_INV_MONEY, UPDATE_TIME, COMP
 from trading_simulator.Components.candlestick_charts import PLOTLY_CONFIG
@@ -14,9 +15,8 @@ main_layout = html.Div([
 	dcc.Store(id = 'news-dataframe'),
 	dcc.Store(id = 'news-index', data = 9),              # Display 10 news at the first load (0-9)
 	dcc.Store(id = 'cashflow', data = MAX_INV_MONEY),
-	dcc.Store(id = 'request-list', data = []),
-	dcc.Store(id = 'liste-skiprows', data=[6,7,8,9,10]), #still necessary ? 
-	dcc.Store(id = 'portfolio_info', data = {c: {'Shares': 0, 'Total': 0} for c in COMP.keys()}),
+	dcc.Store(id = 'request-list', data = []), 
+	dcc.Store(id = 'portfolio_info', data = {c: {'Parts': 0, 'Total': 0} for c in COMP.keys()}),
 
 	# Periodic updater
 	dcc.Interval(
@@ -59,43 +59,48 @@ main_layout = html.Div([
 	html.Div([
 		# News
 		html.Div(children=[
-			html.H2(children='Market News'),
+			html.H2(children='Actualités du Marché'),
 			dash_table.DataTable(
 				id='news-table',
 				columns=[{'name': 'Date', 'id': 'date'}, {'name': 'Article', 'id': 'article'}],
 				style_cell={'textAlign': 'left', 'padding': '2px 10px'},
+				# fixed_rows={'headers': True, 'data': 0},
 			)
-		], style={'padding': 10, 'flex': 1}),
+		], id ='news-container', style={'padding': 10, 'flex': 1}),
+
+		# Add the component with the description
+		html.Div(children=[
+			html.P('Description/résumé de l\'article cliqué', id='description-text', style = {'textAlign' : 'center'}),
+			html.Button('Retour', id = 'back-to-news-list', style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10})
+		], id='description-container', style={'padding': 10, 'flex': 1, 'display': 'none'}),
+
 
 		# Requests
 		html.Div(children=[
-			html.H2('Make A Request'),
+			html.H2('Faites une requêtes'),
 
 			html.Label('Actions :', htmlFor='action-input'),
-			dcc.RadioItems(['Buy', 'Sell'], "Buy",id="action-input", inline=True),
+			dcc.RadioItems(['Vendre', 'Acheter'], "Buy",id="action-input", inline=True),
 
-			html.Br(),
-			html.Label('Price', htmlFor='price-input'),
+			html.Label('Prix', htmlFor='price-input', style = {'margin-top' : 20}),
 			dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1),
 
-			html.Br(),
-			html.Label('Shares', htmlFor='nbr-share-input'),
+			html.Label('Parts', htmlFor='nbr-share-input', style = {'margin-top' : 20}),
 			dcc.Input(id='nbr-share-input',value=1, type='number',min=1, step=1),
 
-			html.Br(),
-			html.Button("Submit",id='submit-button', n_clicks=0,style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10, 'margin-right' : 90, 'margin-left' : 90})
+			html.Button("Soumettre",id='submit-button', n_clicks=0, style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10, 'margin-right' : 70, 'margin-left' : 70, 'margin-top' : 20})
 		], style={'padding': 10, 'flex': 1, 'display': 'flex', 'flex-direction': 'column', 'margin-left': '5%', 'margin-right': '5%'}),
 
 		html.Div(children=[
-			html.H2('Request List'),
+			html.H2('Listes Requêtes'),
 			html.Table([
 				html.Thead(
-					html.Tr(['Price ','Shares ','Comp ','Actions '])
+					html.Tr(['Prix ','Parts ','Comp ','Actions '])
 				)
 			],id="title-table"),
 			html.Div(id="request-container"),
 			html.Br(),
-			html.Button("Clear",id="clear-done-btn", style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'padding-left' : 30, 'padding-right' : 30, 'border-radius' : 10, 'margin-left' : 20})
+			html.Button("Supprimer",id="clear-done-btn", style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'padding-left' : 30, 'padding-right' : 30, 'border-radius' : 10, 'margin-left' : 20})
 		], style={'padding': 10, 'flex': 1})
 
 	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh', 'margin-top' : 50})

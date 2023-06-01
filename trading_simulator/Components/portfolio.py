@@ -14,7 +14,7 @@ def generate_portfolio_table(stocks_info):
 	df['Stock'] = df.index
 	column_size = 10
 	stock_size = len(df)
-	column_names = ['Stock', 'Shares', 'Total']
+	column_names = ['Stock', 'Parts', 'Total']
 	return html.Div([
 		html.Table([
 			html.Thead([
@@ -47,6 +47,6 @@ def calcul_prix_tot_inv(stock_info, cash):
 	"""
 	totals = pd.DataFrame.from_dict(stock_info, orient='index')['Total']
 	return [
-		'Your available cash : ', round(cash, 2),' eur.\n',
-		'Your total investment  : ', round(cash + totals.sum(), 2),' eur.'
+		'Votre cash disponible : ', round(cash, 2),' eur.\n',
+		'Votre investissement total : ', round(cash + totals.sum(), 2),' eur.'
 	]
