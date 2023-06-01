@@ -64,7 +64,13 @@ main_layout = html.Div([
 			dash_table.DataTable(
 				id='news-table',
 				columns=[{'name': 'Date', 'id': 'date'}, {'name': 'Article', 'id': 'article'}],
-				style_cell={'textAlign': 'left', 'padding': '2px 10px'},
+				style_cell={
+					'padding': '2px 10px',
+					'maxWidth': '30vw',
+					'overflow': 'hidden',
+        			'textOverflow': 'ellipsis',
+					'textAlign': 'left',
+				},
 			)
 		], style={'padding': 10, 'flex': 1}),
 
