@@ -45,6 +45,15 @@ quotes = []
 #     df.to_csv(filename, index=False, encoding='utf-8-sig', sep=';')
 #     return print('File saved')
 
+# TODO: tmp solution to fix the header problem
+def create_news_file_header(filename):
+    path = os.path.join('Data', filename)
+    with open(path, 'a', newline='', encoding='utf-8-sig') as csvfile:
+        writer = csv.writer(csvfile, delimiter=';')
+        writer.writerow(['article', 'ticker', 'date'])
+    return 0
+
+
 def save_news_in_file(news, filename):
     path = os.path.join('Data', filename)
     with open(path, 'a', newline='', encoding='utf-8-sig') as csvfile:
@@ -59,6 +68,8 @@ def random_news_scraping(max_date):
     quote = {}
     page_index = 1
     current_date = datetime.now().strftime("%d/%m/%Y")
+    # Write dataset header before scraping
+    create_news_file_header('news.csv')
     while current_date != max_date:
         print('Current page = ' + str(page_index))
         random_url = "https://www.zonebourse.com/actualite-bourse/societes/?p=" + str(page_index) + "&cf=RWJlMUV1N3NMRitwYlUxRG9PUjZibnBDZmtYRzJ3dHplQU1rR0pscTJVbz0"
