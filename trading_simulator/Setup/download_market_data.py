@@ -27,6 +27,15 @@ data = yf.download(
     proxy    = None
 )
 
+
+for stock in stock_list:
+    data[stock,'long_MA']=data[stock,'Close'].rolling(int(50)).mean()
+
+print(data.head()) 
+
+data = data.dropna()
+
+print(data.head())
 # Show stucture of the downloaded data
 print('data fields downloaded:', set(data.columns.get_level_values(0)))
 print("Overview of the data:\n", data.head(), '\n')
@@ -49,7 +58,7 @@ data.to_csv(file_path)
 # Read data from CSV file and show its head to check if it is correct
 imported_data = pd.read_csv(file_path, index_col=0, header=[0,1])
 imported_data.index = pd.to_datetime(imported_data.index)
-print("Checking if the data as been saved correctly:")
+# print("Checking if the data as been saved correctly:")
 
 assert_frame_equal(data, imported_data, check_dtype=False)
 
