@@ -1,10 +1,12 @@
 from bs4 import BeautifulSoup
 import requests
+import os
 import pandas as pd
 import csv
 from tqdm import tqdm
-from company_scraping import titles_scraping, articles_scraping, date_scraping
 from datetime import datetime
+
+from trading_simulator.Scraping.company_scraping import titles_scraping, articles_scraping, date_scraping
 
 cac40data = [['LVMH MOËT HENNESSY LOUIS VUITTON SE', 'MC', 'LVMH-MOET-HENNESSY-LOUIS-4669'],
              ["L'ORÉAL", 'OR', 'L-OREAL-4666'],
@@ -44,7 +46,8 @@ quotes = []
 #     return print('File saved')
 
 def save_news_in_file(news, filename):
-    with open(filename, 'a', newline='', encoding='utf-8-sig') as csvfile:
+    path = os.path.join('Data', filename)
+    with open(path, 'a', newline='', encoding='utf-8-sig') as csvfile:
         writer = csv.writer(csvfile, delimiter=';')
         # writer.writerow([news['title'], news['content'], news['ticker'], news['date']])
         writer.writerow([news['title'], news['ticker'], news['date']])
@@ -70,10 +73,15 @@ def random_news_scraping(max_date):
                 quote['date'] = row.time['title']
                 current_date = quote['date'].split(' ')[1]
                 # quotes.append(quote)
-                save_news_in_file(quote, 'random_companies_scrap.csv')
+                save_news_in_file(quote, 'news.csv')
             except TypeError:
                 continue
         page_index += 1
+
+        # Fix scraping error starting from page 100
+        # TODO: replace this fix by a better solution
+        if page_index == 101:
+            break
     return quotes
 
 def company_news_scraping(company_ticker, pages_number_to_scrap):
@@ -99,6 +107,7 @@ def company_news_scraping(company_ticker, pages_number_to_scrap):
     return quotes
 
 
-# save_news_in_file(random_news_scraping("MC"))
-# company_news_scraping("MC", 4)
-random_news_scraping('30/04/2023')
+if __name__ == '__main__':
+    # save_news_in_file(random_news_scraping("MC"))
+    # company_news_scraping("MC", 4)
+    random_news_scraping('30/04/2023')

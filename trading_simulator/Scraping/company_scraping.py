@@ -2,7 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 from datetime import datetime
 import re
-from convert_date import convert_date
+
+from trading_simulator.Scraping.convert_date import convert_date
 
 def titles_scraping(title_url):
     title_request = requests.get('https://www.zonebourse.com' + title_url)
