@@ -13,7 +13,7 @@ stock_list = [ # List of stocks to download
 periode_to_scrape = " 1mo"
 each_time_interval = "5m"
 
-print('For these stocks:', stock_list, '\n')
+# print('For these stocks:', stock_list, '\n')
 
 # Download market data
 data = yf.download(
@@ -29,16 +29,18 @@ data = yf.download(
 
 
 for stock in stock_list:
-    data[stock,'long_MA']=data[stock,'Close'].rolling(int(50)).mean()
+    data[stock,'long_MA'] = data[stock,'Close'].rolling(int(20)).mean()
+    data[stock,'short_MA'] = data[stock,'Close'].rolling(int(5)).mean()
 
-print(data.head()) 
+# print(data.head()) 
 
 data = data.dropna()
 
 print(data.head())
 # Show stucture of the downloaded data
-print('data fields downloaded:', set(data.columns.get_level_values(0)))
+# print('data fields downloaded:', set(data.columns.get_level_values(0)))
 print("Overview of the data:\n", data.head(), '\n')
+
 
 # Create directory to save data
 if not os.path.exists("Data"):
@@ -58,7 +60,7 @@ data.to_csv(file_path)
 # Read data from CSV file and show its head to check if it is correct
 imported_data = pd.read_csv(file_path, index_col=0, header=[0,1])
 imported_data.index = pd.to_datetime(imported_data.index)
-# print("Checking if the data as been saved correctly:")
+print("Checking if the data as been saved correctly:")
 
 assert_frame_equal(data, imported_data, check_dtype=False)
 

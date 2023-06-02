@@ -80,7 +80,7 @@ main_layout = html.Div([
 			html.H2('Faites une requêtes'),
 
 			html.Label('Actions :', htmlFor='action-input'),
-			dcc.RadioItems(['Vendre', 'Acheter'], "Buy",id="action-input", inline=True),
+			dcc.RadioItems(['Vendre', 'Acheter'], "Acheter",id="action-input", inline=True),
 
 			html.Label('Prix', htmlFor='price-input', style = {'margin-top' : 20}),
 			dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1),
