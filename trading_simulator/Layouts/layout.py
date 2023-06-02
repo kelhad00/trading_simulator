@@ -1,7 +1,7 @@
 from dash import html, dcc, dash_table
 import pandas as pd
 
-from trading_simulator import MAX_INV_MONEY, UPDATE_TIME, COMP
+from trading_simulator import MAX_INV_MONEY, UPDATE_TIME, COMP, INDEX
 from trading_simulator.Components.candlestick_charts import PLOTLY_CONFIG
 
 # Layout of the app
@@ -46,7 +46,11 @@ main_layout = html.Div([
 
 		# Company graph
 		html.Div(children=[
-			dcc.Dropdown(COMP, list(COMP.keys())[0], id='company-selector', clearable=False, style = {'padding-right' : 80, 'textAlign' : 'center'}),
+			dcc.Dropdown({**COMP, **INDEX}, list(COMP.keys())[0],
+				id='company-selector',
+				clearable=False,
+				style = {'padding-right' : 80, 'textAlign' : 'center'}
+			),
 			dcc.Graph(
 				id='company-graph',
 				figure={'layout': {'height': 300}},
