@@ -4,6 +4,23 @@ from dash import html, dcc, Output, Input, State, Patch, ALL
 import trading_simulator as ts
 from trading_simulator.app import app
 
+
+@app.callback(
+	Output("price-input", "disabled"),
+	Output("nbr-share-input", "disabled"),
+	Output("submit-button", "disabled"),
+	Input("company-selector", "value"),
+)
+def change_state_request_form(company):
+	""" Disable the request form when an index is selected
+		And enable it want a company is selected
+	"""
+	if company in ts.INDEX.keys():
+		return True, True, True # Disable the form
+	else:
+		return False, False, False # Enable the form
+
+
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
 	Output("request-list", "data", allow_duplicate=True),

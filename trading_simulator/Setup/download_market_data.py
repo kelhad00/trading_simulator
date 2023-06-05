@@ -29,6 +29,9 @@ data = yf.download(
     threads  = True,     # download with multiple threads
     proxy    = None
 )
+# Fill closed market data with the last available data.
+data.fillna(method='ffill',inplace=True)
+# Fill the nan data at the beginning of the dataframe with next available data
 data.fillna(method='bfill',inplace=True)
 
 # Show stucture of the downloaded data
