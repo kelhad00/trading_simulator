@@ -8,19 +8,28 @@ from trading_simulator.app import app
 
 @app.callback(
 	Output('nbr-logs', 'data'),
-	# Data to save
-	Input('market-timestamp-value','data'),
+	# ** Data to save **
+	# Changing the company doesn’t trigger other callbacks in every case
 	Input('company-selector', 'value'),
+	Input('news-index', 'data'), # indepedent variable
+	# the cashflow is triggered by the timestamp so
+	# we use it to call the callback as late as possible
 	Input('cashflow', 'data'),
+	# Adding or removing a request doesn’t trigger other callbacks
 	Input('request-list', 'data'),
-	Input('news-index', 'data'),
-	Input('portfolio_totals', 'data'),
+	# Data triggered by those above
+	# The timestamp isn’t an input because
+	# we want to save the state after all changes are done
+	# ( A callback is not triggered multiple times
+	#   if multiple inputs change at the same time )
+	State('market-timestamp-value','data'),
 	State('portfolio_shares', 'data'),
+	State('portfolio_totals', 'data'),
 	State('news-dataframe', 'data'),
-	# number of logs
-	State('nbr-logs', 'data')
+	# ** End of data to save **
+	State('nbr-logs', 'data') # number of times the callback has been called
 )
-def save_state(timestamp, company_id, cashflow, request_list, news_id, totals, shares, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
+def save_state(company_id, news_id, cashflow, request_list, timestamp, shares, totals, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
