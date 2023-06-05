@@ -34,8 +34,14 @@ data.fillna(method='ffill',inplace=True)
 # Fill the nan data at the beginning of the dataframe with next available data
 data.fillna(method='bfill',inplace=True)
 
+# Add moving average using downloaded data
+for stock in stock_list:
+    data[stock,'long_MA'] = data[stock,'Close'].rolling(int(20)).mean()
+    data[stock,'short_MA'] = data[stock,'Close'].rolling(int(5)).mean()
+
+data = data.dropna()
+
 # Show stucture of the downloaded data
-print('data fields downloaded:', set(data.columns.get_level_values(0)))
 print("Overview of the data:\n", data.head(), '\n')
 
 # Create directory to save data
