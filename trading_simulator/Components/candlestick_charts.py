@@ -51,25 +51,42 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
                 dftmp = dataframe.iloc[idx - 1 : idx]
             else:
                 dftmp = dataframe.iloc[idx - (range - 1) : idx + 1]
-
-     # Create candlestick chart for the selected stock
-    figure = go.Figure(
-        data = [go.Candlestick(
-            x = dftmp.index,
-            open  = dftmp['Open'],
-            high  = dftmp['High'],
-            low   = dftmp['Low'],
-            close = dftmp['Close']
-        )]
+    
+    #creating the plot the long moving average
+    long_mov_av = go.Scatter(
+        x = dftmp.index,
+        y = dftmp['long_MA'],
+        name = 'long MA'
     )
 
+    #creating the plot the short moving average
+    short_mov_av = go.Scatter(
+        x = dftmp.index,
+        y = dftmp['short_MA'],
+        name = 'short MA'
+    )
+
+    #creating the plot the candlestick plot
+    candelstick = go.Candlestick(
+        x = dftmp.index,
+        open  = dftmp['Open'],
+        high  = dftmp['High'],
+        low   = dftmp['Low'],
+        close = dftmp['Close'],
+        showlegend = False
+    )
+
+
+    # Create chart for the selected stock
+    figure = go.Figure(data = [long_mov_av, short_mov_av, candelstick])
+ 
     # Define chart layout
     figure.update_layout(
         #title = company_id + ' stock price',
         xaxis_title = 'Date',
-        yaxis_title = 'Price',
+        yaxis_title = 'Prix',
         yaxis_tickprefix = '€',
-        showlegend=False
+        showlegend=True
     )
 
     return figure, dftmp.index[-1]
@@ -77,20 +94,33 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
 if __name__ == '__main__':
     import os
 
-    name = 'TSLA'
+    df = pd.read_csv('Data\market_data.csv', header=[0,1],index_col=0)
+    data = df['MC.PA','long_MA'].to_frame().droplevel(0, axis=1)
+    # print(data)
 
-    file_path = os.path.join('market_data' , name + '.csv')
-    df = pd.read_csv(file_path, index_col=0)
+    trace = go.Scatter(
+        x=data.index,
+        y=data['long_MA']
+    )
 
-    fig,endtime = create_graph(df)
-    fig.show()
+    fig = go.Figure(data=trace)
+    # fig.show()
 
-    testtime = 3
-    while testtime > 0:
-        time.sleep(5)
+    # name = 'TSLA'
 
-        fig,endtime = create_graph(df, endtime)
-        print(endtime)
+    # file_path = os.path.join('market_data' , name + '.csv')
+    # print(file_path)
+    # df = pd.read_csv(file_path, index_col=0)
 
-        fig.show()
-        testtime -= 1
+    # fig,endtime = create_graph(df)
+    # fig.show()
+
+    # testtime = 3
+    # while testtime > 0:
+    #     time.sleep(5)
+
+    #     fig,endtime = create_graph(df, endtime)
+    #     print(endtime)
+
+    #     fig.show()
+    #     testtime -= 1

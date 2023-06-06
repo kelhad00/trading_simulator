@@ -9,7 +9,6 @@ def download_market_data():
     """
     importlib.import_module('.download_market_data', __package__)
 
-def scraping_news():
-    """ Scrap news from ZoneBourse and save it a Data folder
-    """
-    importlib.import_module('.scraping_with_bs4', __package__)
+# Provide scrapping_news function into Setup module
+# without having to import it from Scraping module
+from .scraping_news import scraping_news

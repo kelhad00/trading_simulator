@@ -4,6 +4,23 @@ from dash import html, dcc, Output, Input, State, Patch, ALL
 import trading_simulator as ts
 from trading_simulator.app import app
 
+
+@app.callback(
+	Output("price-input", "disabled"),
+	Output("nbr-share-input", "disabled"),
+	Output("submit-button", "disabled"),
+	Input("company-selector", "value"),
+)
+def change_state_request_form(company):
+	""" Disable the request form when an index is selected
+		And enable it want a company is selected
+	"""
+	if company in ts.INDEX.keys():
+		return True, True, True # Disable the form
+	else:
+		return False, False, False # Enable the form
+
+
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
 	Output("request-list", "data", allow_duplicate=True),
@@ -11,13 +28,13 @@ from trading_simulator.app import app
 	Output('form-not-filled', 'displayed'), # Error message if the form isn't filled correctly
     Input("submit-button", "n_clicks"),
     State("price-input", "value"),
-	State("nbr-part-input", "value"),
+	State("nbr-share-input", "value"),
 	State("company-selector", "value"),
 	State("action-input","value"),
 	State("request-list", "data"),
     prevent_initial_call=True,
 )
-def ajouter_requetes(btn,prix,part,companie,action,req):
+def add_request(btn,price,share,company,action,req):
 	patched_list = Patch()
 
     # If the user has too many requests
@@ -25,11 +42,11 @@ def ajouter_requetes(btn,prix,part,companie,action,req):
 		return patched_list, req, True, False
 
 	# If the form isn't filled correctly
-	if prix == 0 and btn != 0:
+	if price == 0 and btn != 0:
 		return patched_list, req, False, True
 
 	# Add the request to the list
-	value = [action,part,companie,prix] # Example: {Buy} {10} shares of {LVMH} at {100}$
+	value = [action,share,company,price]
 	req.append(value)
 
 	def generate_line(value):

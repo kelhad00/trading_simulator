@@ -3,13 +3,16 @@ import os
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
+from trading_simulator import COMP, INDEX
+
 # Variables to set
-stock_list = [ # List of stocks to download
-    "MC.PA",  "OR.PA", "RMS.PA", "TTE.PA", "SAN.PA",
-    "AIR.PA", "SU.PA", "AI.PA",  "EL.PA",  "BNP.PA",
-    "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
-    "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
-]
+# stock_list = [ # List of stocks to download
+#     "MC.PA",  "OR.PA", "RMS.PA", "TTE.PA", "SAN.PA",
+#     "AIR.PA", "SU.PA", "AI.PA",  "EL.PA",  "BNP.PA",
+#     "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
+#     "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
+# ]
+stock_list = list(COMP.keys()) + list(INDEX.keys())
 periode_to_scrape = " 1mo"
 each_time_interval = "5m"
 
@@ -26,9 +29,19 @@ data = yf.download(
     threads  = True,     # download with multiple threads
     proxy    = None
 )
+# Fill closed market data with the last available data.
+data.fillna(method='ffill',inplace=True)
+# Fill the nan data at the beginning of the dataframe with next available data
+data.fillna(method='bfill',inplace=True)
+
+# Add moving average using downloaded data
+for stock in stock_list:
+    data[stock,'long_MA'] = data[stock,'Close'].rolling(int(20)).mean()
+    data[stock,'short_MA'] = data[stock,'Close'].rolling(int(5)).mean()
+
+data = data.dropna()
 
 # Show stucture of the downloaded data
-print('data fields downloaded:', set(data.columns.get_level_values(0)))
 print("Overview of the data:\n", data.head(), '\n')
 
 # Create directory to save data
