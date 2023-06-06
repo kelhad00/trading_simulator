@@ -8,16 +8,26 @@ from trading_simulator.Components.candlestick_charts import PLOTLY_CONFIG
 main_layout = html.Div([
 
 	# Global variables
-	dcc.Store(id = 'nbr-logs', data = 0),                # Number of times the app state has been saved
-	dcc.Store(id = 'market-timestamp-value', data = ''), # Store timestamp value in the browser
-	dcc.Store(id = 'market-dataframe'),                  # Store market data in the browser
-	dcc.Store(id = 'price-dataframe'),                   # Store market data in the browser
+	dcc.Store(id = 'nbr-logs', data = 0), # Number of times the app state has been saved
+	# Store timestamp value in the browser
+	dcc.Store(id = 'market-timestamp-value', data = '', storage_type='local'),
+	dcc.Store(id = 'market-dataframe'),   # Store market data in the browser
+	dcc.Store(id = 'price-dataframe'),    # Store market data in the browser
 	dcc.Store(id = 'news-dataframe'),
-	dcc.Store(id = 'news-index', data = 9),              # Display 10 news at the first load (0-9)
-	dcc.Store(id = 'cashflow', data = MAX_INV_MONEY),
-	dcc.Store(id = 'request-list', data = []),
-	dcc.Store(id = 'portfolio_shares', data = {c: {'Shares': 0} for c in COMP.keys()}), # Store only the number of shares for each company
-	dcc.Store(id = 'portfolio_totals', data = {c: {'Total': 0} for c in COMP.keys()}),   # Store only the total price for each company
+	# Display 10 news at the first load (0-9)
+	dcc.Store(id = 'news-index', data = 9, storage_type='local'),
+	dcc.Store(id = 'cashflow', data = MAX_INV_MONEY, storage_type='local'),
+	dcc.Store(id = 'request-list', data = [], storage_type='local'),
+	dcc.Store(  # Store only the number of shares for each company
+		id = 'portfolio_shares',
+		data = {c: {'Shares': 0} for c in COMP.keys()},
+		storage_type='local'
+	),
+	dcc.Store(    # Store only the total price for each company
+		id = 'portfolio_totals',
+		data = {c: {'Total': 0} for c in COMP.keys()},
+		storage_type='local'
+	),
 
 	# Periodic updater
 	dcc.Interval(
@@ -49,6 +59,8 @@ main_layout = html.Div([
 			dcc.Dropdown({**COMP, **INDEX}, list(COMP.keys())[0],
 				id='company-selector',
 				clearable=False,
+				persistence = True,
+				persistence_type = 'local',
 				style = {'padding-right' : 80, 'textAlign' : 'center'}
 			),
 			dcc.Graph(
@@ -103,15 +115,23 @@ main_layout = html.Div([
 
 		html.Div(children=[
 			html.H2('Listes Requêtes'),
-			html.Table([
-				html.Thead(
-					html.Th(['Actions ','Parts ','Comp ','Prix '])
-				)
-			],id="title-table"),
-			html.Div(id="request-container"),
-			html.Br(),
-			html.Button("Supprimer",id="clear-done-btn", style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'padding-left' : 30, 'padding-right' : 30, 'border-radius' : 10, 'margin-left' : 20})
-		], style={'padding': 10, 'flex': 1})
+			dash_table.DataTable(
+				id='request-table',
+				columns=[
+					{'name': 'Actions', 'id':'actions'},
+					{'name': 'Parts', 'id':'shares'},
+					{'name': 'Compagnie', 'id': 'company'},
+					{'name': 'Prix ', 'id': 'price'}
+				],
+				row_selectable='multi',
+				cell_selectable=False,
+				style_cell={'padding': '2px 10px'},
+				style_table={'width': '20vw'}
+			),
+			html.Button("Supprimer", id="clear-done-btn",
+				style={'border' : 'none', 'padding' : '5px 30px', 'border-radius' : 10, 'width': '8vw', 'margin-left': '6vw'}
+			),
+		], style={'padding': 10, 'flex': 2})
 
 	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh', 'margin-top' : 50})
 
