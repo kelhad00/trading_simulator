@@ -1,7 +1,7 @@
-import yfinance as yf
 import os
 import pandas as pd
 from pandas.testing import assert_frame_equal
+from yahooquery import Ticker
 
 from trading_simulator import COMP, INDEX
 
@@ -19,16 +19,26 @@ each_time_interval = "5m"
 print('For these stocks:', stock_list, '\n')
 
 # Download market data
-data = yf.download(
-    tickers  = stock_list,
+tickers = Ticker(
+    stock_list,
+    asynchronous = True,  # download with multiple threads
+    formatted = True,     # all data will be returned as a dict
+    # country = 'France',   # set country to France to get the right timezone
+    progress=True         # show progress bar
+)
+data = tickers.history(   # download data
     period   = periode_to_scrape,
     interval = each_time_interval,
-    group_by = "ticker", # group columns by stock
-    auto_adjust = True,
-    prepost  = True,
-    threads  = True,     # download with multiple threads
-    proxy    = None
+    adj_timezone = False  # to standardize timezone
 )
+
+# Format data to be like yfinance output (previously used)
+data = data.drop(['dividends'],axis=1).unstack(level=0).swaplevel(axis=1)
+data.rename(
+    columns={"open": "Open", "high": "High", "low": "Low", "close": "Close", "volume": "Volume"},
+    inplace=True
+)
+
 # Fill closed market data with the last available data.
 data.fillna(method='ffill',inplace=True)
 # Fill the nan data at the beginning of the dataframe with next available data
