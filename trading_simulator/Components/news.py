@@ -43,19 +43,18 @@ def update_news_table(timestamp, news_df, idx, range=10):
 	Output(component_id = 'news-container', component_property = 'style'),
 	Output(component_id = 'description-text', component_property = 'children'),
 	Input(component_id = 'news-table', component_property = 'active_cell'),
-	State(component_id = 'news-dataframe', component_property = 'data'),
-	State(component_id = 'news-index', component_property = 'data')
+	State(component_id = 'news-index', component_property = 'data'),
+	State(component_id = 'news-table', component_property = 'data'),
 	)
-def show_hide_element(cell_clicked, news_df, idx):
+def show_hide_element(cell_clicked, idx, table):
 	"""Hide News table & Show News description when News table cell clicked
 	"""
-	# get the dataFrame for the summary and title
-	# Setup > news_scrapping
+	# get the dataFrame for the summary and title (Setup > news_scrapping)
+	# get the index of the cell clicked (dict) /!\ callback err ??
+	index_clicked = cell_clicked['row']
 
-	# get the index of the cell clicked
-	print(cell_clicked)
-
-	text_description = 'Résumé de l\'article'
+	# table = list & table[ind] = dict
+	text_description = table[index_clicked]['article']
 
 	# change the layout
 	if not cell_clicked :

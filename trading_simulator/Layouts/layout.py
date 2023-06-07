@@ -70,6 +70,7 @@ main_layout = html.Div([
 
 		# Add the component with the description
 		html.Div(children=[
+			html.H2(children = 'Description de l\'article'),
 			html.P('Description/résumé de l\'article cliqué', id='description-text', style = {'textAlign' : 'center'}),
 			html.Button('Retour', id = 'back-to-news-list', style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10})
 		], id='description-container', style={'padding': 10, 'flex': 1, 'display': 'none'}),
