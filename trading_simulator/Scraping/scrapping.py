@@ -3,11 +3,10 @@ import requests
 import os
 import pandas as pd
 import csv
-from tqdm import tqdm
 from datetime import datetime
-
 from trading_simulator.Scraping.company_scraping import titles_scraping, articles_scraping, date_scraping
 
+# dataframe with the 20 first companies of the cac40 and their url
 cac40data = [['LVMH MOËT HENNESSY LOUIS VUITTON SE', 'MC', 'LVMH-MOET-HENNESSY-LOUIS-4669'],
              ["L'ORÉAL", 'OR', 'L-OREAL-4666'],
              ['HERMÈS INTERNATIONAL', 'RMS', 'HERMES-INTERNATIONAL-4657'],
@@ -29,15 +28,17 @@ cac40data = [['LVMH MOËT HENNESSY LOUIS VUITTON SE', 'MC', 'LVMH-MOET-HENNESSY-
              ['STMICROELECTRONICS N.V.', 'STMPA', 'STMICROELECTRONICS-N-V-4710'],
              ['CRÉDIT AGRICOLE S.A.', 'ACA', 'CREDIT-AGRICOLE-S-A-4735']]
 company_df = pd.DataFrame(cac40data, columns=['name', 'ticker', 'url'])
-quotes = []
 
+# Save the table quotes that contains the title, the content, the ticker and the date of the news
+#
+# quotes = []
 # def save_dataset_in_file(datas):
 #     filename = 'news.csv'
 #     df = pd.DataFrame(datas)
-#     # append the new data to the old file with the old data and delete the header and delete the duplicates
+#     # append the new data to the old file
 #     df.to_csv(filename, index=False, encoding='utf-8-sig', sep=';', mode='a')
 #     df = pd.read_csv(filename, sep=';')
-#     # delete the second header only
+#     # delete the second header
 #     df = df[df['title'] != 'title']
 #     # delete the duplicates
 #     df = df.drop_duplicates()
@@ -46,6 +47,7 @@ quotes = []
 #     return print('File saved')
 
 # TODO: tmp solution to fix the header problem
+# create the header of the dataset
 def create_news_file_header(filename):
     path = os.path.join('Data', filename)
     with open(path, 'a', newline='', encoding='utf-8-sig') as csvfile:
@@ -53,7 +55,7 @@ def create_news_file_header(filename):
         writer.writerow(['article', 'ticker', 'date'])
     return 0
 
-
+# save the current news in the file
 def save_news_in_file(news, filename):
     path = os.path.join('Data', filename)
     with open(path, 'a', newline='', encoding='utf-8-sig') as csvfile:
@@ -63,6 +65,7 @@ def save_news_in_file(news, filename):
     return 0
 
 
+# This function 
 def random_news_scraping(max_date):
     # for page_index in tqdm(range(1, number_of_pages_to_scrap + 1)):
     quote = {}
@@ -97,7 +100,7 @@ def random_news_scraping(max_date):
 
 def company_news_scraping(company_ticker, pages_number_to_scrap):
     company_url = company_df[company_df['ticker'] == company_ticker]['url'].values[0]
-    for i in tqdm(range(1, pages_number_to_scrap + 1)):
+    for i in range(1, pages_number_to_scrap + 1):
         print('Page ' + str(i))
         url = 'https://www.zonebourse.com/cours/action/' + company_url + '/actualite-historique/&nbstrat=0&&fpage=' + str(i)
         request = requests.get(url)
@@ -112,7 +115,7 @@ def company_news_scraping(company_ticker, pages_number_to_scrap):
                 quote['ticker'] = company_ticker
                 quote['date'] = date_scraping(row.a['href'])
                 # quotes.append(quote)
-                save_news_in_file(quote, 'test.csv')
+                save_news_in_file(quote, company_ticker + '_scraping.csv')
             except TypeError:
                 continue
     return quotes
