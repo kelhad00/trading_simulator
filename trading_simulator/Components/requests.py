@@ -1,5 +1,5 @@
 import pandas as pd
-from dash import html, dcc, Output, Input, State, Patch, ALL
+from dash import html, dcc, Output, Input, State, Patch, no_update
 
 import trading_simulator as ts
 from trading_simulator.app import app
@@ -23,31 +23,46 @@ def change_state_request_form(company):
 
 @app.callback(
 	Output("request-list", "data", allow_duplicate=True),
-	Output('many-request', 'displayed'),    # Error message if the user has too many requests
-	Output('form-not-filled', 'displayed'), # Error message if the form isn't filled correctly
+	Output('request-err', 'hidden'),
+	Output('request-err', 'children'),
+	# Form inputs
     Input("submit-button", "n_clicks"),
-    State("price-input", "value"),
-	State("nbr-share-input", "value"),
 	State("company-selector", "value"),
 	State("action-input","value"),
+    State("price-input", "value"),
+	State("nbr-share-input", "value"),
+	State('cashflow','data'),
+	# Needed to check if the user can execute the request
+	State('market-timestamp-value','data'),
+	State('price-dataframe','data'),
+	State('portfolio_shares','data'),
+	# Needed to update the request list
 	State("request-list", "data"),
     prevent_initial_call=True,
 )
-def add_request(btn,price,share,company,action,req):
+def add_request(btn, company, action, price, share, cash, timestamp, price_list, port_shares, req):
 
     # If the user has too many requests
 	if len(req) == ts.MAX_REQUESTS:
-		return req, True, False
+		return no_update, False, "Vous avez trop de requêtes en attente !"
 
 	# If the form isn't filled correctly
 	if price == 0 and btn != 0:
-		return req, False, True
+		return no_update, False, "Veuillez entrer un prix valide !"
 
-	# Add the request to the list
-	value = [action,share,company,price]
-	req.append(value)
+	stock_price = pd.DataFrame.from_dict(price_list)[company].loc[timestamp]
+	# If the request is to buy and the user doesn't have enough money
+	if action == 'Acheter' and cash < share * stock_price:
+		return no_update, False, "Vous n'avez pas assez d'argent !"
 
-	return req, False, False
+	# If the request is to sell and the user doesn't have enough shares
+	if action == 'Vendre' and share > port_shares[company]['Shares']:
+		return no_update, False, "Vous n'avez pas assez d'actions de "+ company +"!"
+
+	# Add the request to the request list
+	req.append([action,share,company,price])
+
+	return req, True, ''
 
 
 @app.callback(
@@ -113,6 +128,16 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 
 	return request_list, portfolio_info.to_dict(), cashflow
 
+@app.callback(
+	Output('clear-done-btn', 'children'),
+	Input('request-table', 'selected_rows'),
+)
+def switch_between_delete_and_delete_all(selected_rows):
+	if len(selected_rows) == 0:
+		return "Supprimer tout"
+	else:
+		return "Supprimer"
+
 
 # Callback to delete items marked as done
 @app.callback(
@@ -124,6 +149,9 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 )
 def remove_request(n, values_to_remove):
 	request_list = Patch()
+
+	if values_to_remove == []:
+		request_list = []
 
 	for v in values_to_remove:
 		del request_list[v]
