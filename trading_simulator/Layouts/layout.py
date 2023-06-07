@@ -1,7 +1,7 @@
 from dash import html, dcc, dash_table
 import pandas as pd
 
-from trading_simulator import MAX_INV_MONEY, UPDATE_TIME, COMP
+from trading_simulator import MAX_INV_MONEY, UPDATE_TIME, COMP, INDEX
 from trading_simulator.Components.candlestick_charts import PLOTLY_CONFIG
 
 # Layout of the app
@@ -15,8 +15,9 @@ main_layout = html.Div([
 	dcc.Store(id = 'news-dataframe'),
 	dcc.Store(id = 'news-index', data = 9),              # Display 10 news at the first load (0-9)
 	dcc.Store(id = 'cashflow', data = MAX_INV_MONEY),
-	dcc.Store(id = 'request-list', data = []), 
-	dcc.Store(id = 'portfolio_info', data = {c: {'Parts': 0, 'Total': 0} for c in COMP.keys()}),
+	dcc.Store(id = 'request-list', data = []),
+	dcc.Store(id = 'portfolio_shares', data = {c: {'Shares': 0} for c in COMP.keys()}), # Store only the number of shares for each company
+	dcc.Store(id = 'portfolio_totals', data = {c: {'Total': 0} for c in COMP.keys()}),   # Store only the total price for each company
 
 	# Periodic updater
 	dcc.Interval(
@@ -45,7 +46,11 @@ main_layout = html.Div([
 
 		# Company graph
 		html.Div(children=[
-			dcc.Dropdown(COMP, list(COMP.keys())[0], id='company-selector', clearable=False, style = {'padding-right' : 80, 'textAlign' : 'center'}),
+			dcc.Dropdown({**COMP, **INDEX}, list(COMP.keys())[0],
+				id='company-selector',
+				clearable=False,
+				style = {'padding-right' : 80, 'textAlign' : 'center'}
+			),
 			dcc.Graph(
 				id='company-graph',
 				figure={'layout': {'height': 300}},
@@ -63,8 +68,13 @@ main_layout = html.Div([
 			dash_table.DataTable(
 				id='news-table',
 				columns=[{'name': 'Date', 'id': 'date'}, {'name': 'Article', 'id': 'article'}],
-				style_cell={'textAlign': 'left', 'padding': '2px 10px'},
-				# fixed_rows={'headers': True, 'data': 0},
+				style_cell={
+					'padding': '2px 10px',
+					'maxWidth': '30vw',
+					'overflow': 'hidden',
+        			'textOverflow': 'ellipsis',
+					'textAlign': 'left',
+				},
 			)
 		], id ='news-container', style={'padding': 10, 'flex': 1}),
 
@@ -96,7 +106,7 @@ main_layout = html.Div([
 			html.H2('Listes Requêtes'),
 			html.Table([
 				html.Thead(
-					html.Tr(['Prix ','Parts ','Comp ','Actions '])
+					html.Th(['Actions ','Parts ','Comp ','Prix '])
 				)
 			],id="title-table"),
 			html.Div(id="request-container"),

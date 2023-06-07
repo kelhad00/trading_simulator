@@ -10,18 +10,19 @@ from trading_simulator.app import app
 	Output('news-index','data'),
 	Output('news-dataframe','data'),
 	Output('news-table','data'),
-	Input('market-timestamp-value','data'),
+	Input('periodic-updater','n_intervals'),
 	State('news-dataframe','data'),
 	State('news-index','data'),
 )
-def update_news_table(timestamp, news_df, idx, range=10):
-	""" Display one more news every time the timestamp is updated
+def update_news_table(n, news_df, idx, range=10):
+	""" Display one more news periodically
 		Limit the number of news displayed to the range parameter
 	"""
 	# If the news dataframe is not loaded yet, load it
 	if not news_df:
 		file_path = os.path.join('Data', 'news.csv')
 		news_df = pd.read_csv(file_path, sep=';', usecols=['article','date'])
+		news_df = news_df[::-1].reset_index(drop=True)
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
 
@@ -35,6 +36,7 @@ def update_news_table(timestamp, news_df, idx, range=10):
 	nl = news_df.iloc[idx - range : idx].iloc[::-1]
 
 	return idx, news_df.to_dict(), nl.to_dict('records')
+
 
 
 

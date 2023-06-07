@@ -4,6 +4,23 @@ from dash import html, dcc, Output, Input, State, Patch, ALL
 import trading_simulator as ts
 from trading_simulator.app import app
 
+
+@app.callback(
+	Output("price-input", "disabled"),
+	Output("nbr-share-input", "disabled"),
+	Output("submit-button", "disabled"),
+	Input("company-selector", "value"),
+)
+def change_state_request_form(company):
+	""" Disable the request form when an index is selected
+		And enable it want a company is selected
+	"""
+	if company in ts.INDEX.keys():
+		return True, True, True # Disable the form
+	else:
+		return False, False, False # Enable the form
+
+
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
 	Output("request-list", "data", allow_duplicate=True),
@@ -17,7 +34,7 @@ from trading_simulator.app import app
 	State("request-list", "data"),
     prevent_initial_call=True,
 )
-def ajouter_requetes(btn,price,share,company,action,req):
+def add_request(btn,price,share,company,action,req):
 	patched_list = Patch()
 
     # If the user has too many requests
@@ -29,7 +46,7 @@ def ajouter_requetes(btn,price,share,company,action,req):
 		return patched_list, req, False, True
 
 	# Add the request to the list
-	value = [price,share,company,action]
+	value = [action,share,company,price]
 	req.append(value)
 
 	def generate_line(value):
@@ -58,12 +75,12 @@ def ajouter_requetes(btn,price,share,company,action,req):
 @app.callback(
     Output("request-container", "children", allow_duplicate=True),
     Output("request-list", "data"),
-	Output("portfolio_info", "data"),
+	Output("portfolio_shares", "data"),
 	Output("cashflow", "data"),
 	Input('market-timestamp-value','data'),
     State("request-list", "data"),
 	State('price-dataframe','data'),
-	State('portfolio_info','data'),
+	State('portfolio_shares','data'),
 	State('cashflow','data'),
 	prevent_initial_call=True
 )
@@ -78,31 +95,28 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 		stock_price = list_price[req[2]].loc[timestamp]
 
 		# If the request is completed
-		if req[3] == 'Acheter' and req[0] >= stock_price:
+		if req[0] == 'Acheter' and req[3] >= stock_price:
 			# If the user has enough money
 			if req[1] * stock_price < cashflow:
-				portfolio_info.loc['Parts', req[2]] += req[1]
-				portfolio_info.loc['Total', req[2]] += req[1] * stock_price
+
+				# Update only the shares and the cashflow
+				# Because the total price will be updated in the portfolio callback
+				portfolio_info.loc['Shares', req[2]] += req[1]
 				cashflow -= req[1] * stock_price
+
 			# the request is removed, with or without the user having enough money
 			del patched_list[i]
 			request_list.remove(req)
 
 		# Same as above for the sell request
-		elif req[3] == 'Vendre' and req[0] <= stock_price:
+		elif req[0] == 'Vendre' and req[3] <= stock_price:
 			# If the user has enough shares
-			if portfolio_info.loc['Parts', req[2]] >= req[1]:
+			if portfolio_info.loc['Shares', req[2]] >= req[1]:
 
-				portfolio_info.loc['Parts', req[2]] -= req[1]
+				# Update only the shares and the cashflow
+				# Because the total price will be updated in the portfolio callback
+				portfolio_info.loc['Shares', req[2]] -= req[1]
 				cashflow += req[1] * stock_price
-
-				# TODO: Find another way to fix total not a 0 when selling all shares
-				# if portfolio_info.loc['Total', req[2]] < req[1] * stock_price :
-				# 	portfolio_info.loc['Total', req[2]] = 0
-				# else :
-				# 	portfolio_info.loc['Total', req[2]] -= req[1] * stock_price
-				if portfolio_info.loc['Parts', req[2]] == 0:
-					portfolio_info.loc['Total', req[2]] = 0
 
 			# the request is removed, with or without the user having enough shares
 			del patched_list[i]
