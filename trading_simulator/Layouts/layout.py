@@ -11,8 +11,8 @@ main_layout = html.Div([
 	dcc.Store(id = 'nbr-logs', data = 0), # Number of times the app state has been saved
 	# Store timestamp value in the browser
 	dcc.Store(id = 'market-timestamp-value', data = '', storage_type='local'),
-	dcc.Store(id = 'market-dataframe'),   # Store market data in the browser
-	dcc.Store(id = 'price-dataframe'),    # Store market data in the browser
+	dcc.Store(id = 'market-dataframe'),
+	dcc.Store(id = 'price-dataframe'),
 	dcc.Store(id = 'news-dataframe'),
 	# Display 10 news at the first load (0-9)
 	dcc.Store(id = 'news-index', data = 9, storage_type='local'),
@@ -53,12 +53,24 @@ main_layout = html.Div([
 				persistence_type = 'local',
 				style = {'padding-right' : 80, 'textAlign' : 'center'}
 			),
-			dcc.Graph(
-				id='company-graph',
-				figure={'layout': {'height': 300}},
-				config = PLOTLY_CONFIG,
-				style={'padding': 30}
-			)
+			dcc.Tabs(id="graph-tabs", value='tab-market', children=[
+				dcc.Tab(label='Analyse Technique', value='tab-market', children=[
+					dcc.Graph(
+						id='company-graph',
+						figure={'layout': {'height': 300}},
+						config = PLOTLY_CONFIG,
+						style={'padding': 30}
+					)
+				]),
+        		dcc.Tab(label='Revenue', value='tab-revenue', id='tab-revenue', children=[
+					dcc.Graph(
+						id='revenue-graph',
+						figure={'layout': {'height': 100}},
+						config = PLOTLY_CONFIG,
+						style={'padding': 30, 'height': 300}
+					)
+				]),
+    		], style={'height': '44px', 'width': '92%', 'margin': '5px'}),
 		], style={'padding-top': 30, 'flex': 3, 'margin-left' : 50})
 	], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh'}),
 

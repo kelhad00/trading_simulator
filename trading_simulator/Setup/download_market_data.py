@@ -26,6 +26,7 @@ tickers = Ticker(
     # country = 'France',   # set country to France to get the right timezone
     progress=True         # show progress bar
 )
+print('Download Historical Prices...')
 data = tickers.history(   # download data
     period   = periode_to_scrape,
     interval = each_time_interval,
@@ -61,7 +62,7 @@ if not os.path.exists("Data"):
 
 # # Save data to multily CSV file
 # for stock in stock_list:
-#     file_path = os.path.join('market_data', stock + '.csv')
+#     file_path = os.path.join('Data','market_data', stock + '.csv')
 #     data[stock].to_csv(file_path)
 
 # Save data to single CSV file
@@ -76,4 +77,17 @@ print("Checking if the data as been saved correctly:")
 
 assert_frame_equal(data, imported_data, check_dtype=False)
 
-print('Download done')
+print('Download Historical Prices done\n\n Download Total Revenue...')
+
+# Get company revenue
+data = tickers.get_financial_data(['TotalRevenue','NetIncome'], trailing=False)
+data = data.reset_index().set_index(['symbol','asOfDate']).T.drop('periodType')
+
+print("Overview of the data:\n", data.head(), '\n')
+
+# Save data to single CSV file
+print('Saving data to Data/revenue.csv')
+file_path = os.path.join('Data', 'revenue.csv')
+data.to_csv(file_path)
+
+print('Download Total Revenue done')
