@@ -75,6 +75,8 @@ main_layout = html.Div([
         			'textOverflow': 'ellipsis',
 					'textAlign': 'left',
 				},
+				# fixed_rows={'headers': True}, # for scrollbar (vertically) but doesn't work wih the update ??
+				page_size=5,
 			)
 		], id ='news-container', style={'padding': 10, 'flex': 1}),
 

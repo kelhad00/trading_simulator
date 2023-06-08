@@ -32,8 +32,12 @@ def update_news_table(n, news_df, idx, range=10):
 		raise PreventUpdate # Exit the callback without updating anything
 	else:
 		idx += 1
+		
+	# original version
+	# nl = news_df.iloc[idx - range : idx].iloc[::-1]
 
-	nl = news_df.iloc[idx - range : idx].iloc[::-1]
+	# version with scrollbar/pages
+	nl = news_df.iloc[: idx].iloc[::-1]
 
 	return idx, news_df.to_dict(), nl.to_dict('records')
 
@@ -45,18 +49,26 @@ def update_news_table(n, news_df, idx, range=10):
 	Output(component_id = 'news-container', component_property = 'style'),
 	Output(component_id = 'description-text', component_property = 'children'),
 	Input(component_id = 'news-table', component_property = 'active_cell'),
-	State(component_id = 'news-index', component_property = 'data'),
 	State(component_id = 'news-table', component_property = 'data'),
 	)
-def show_hide_element(cell_clicked, idx, table):
+def show_hide_element(cell_clicked, table):
 	"""Hide News table & Show News description when News table cell clicked
 	"""
-	# get the dataFrame for the summary and title (Setup > news_scrapping)
 	# get the index of the cell clicked (dict) /!\ callback err ??
 	index_clicked = cell_clicked['row']
 
-	# table = list & table[ind] = dict
-	text_description = table[index_clicked]['article']
+	# get the title of the cell clicked (table = list & table[ind] = dict)
+	article_clicked = table[index_clicked]['article']
+
+	# find the description in the dtf with the title /!\ news_df = DICT
+	# getting the news data to find the content 
+	file_path = os.path.join('Data', 'news.csv')
+	news_dtf = pd.read_csv(file_path, sep=';')
+
+	# getting the content of the corresponding article
+	www = news_dtf.loc[news_dtf['article'] == article_clicked]
+	text_description = www['ticker'] # change to the summary
+
 
 	# change the layout
 	if not cell_clicked :
@@ -64,6 +76,7 @@ def show_hide_element(cell_clicked, idx, table):
 		
 	if cell_clicked :
 		return {'display': 'block', 'padding': 10, 'flex': 1}, {'display': 'none'}, text_description
+
 
 
 # Button to go back to the Market News List
