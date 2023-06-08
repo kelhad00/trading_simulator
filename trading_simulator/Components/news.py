@@ -32,7 +32,7 @@ def update_news_table(n, news_df, idx, range=10):
 		raise PreventUpdate # Exit the callback without updating anything
 	else:
 		idx += 1
-		
+
 	# original version
 	# nl = news_df.iloc[idx - range : idx].iloc[::-1]
 
@@ -48,10 +48,12 @@ def update_news_table(n, news_df, idx, range=10):
 	Output(component_id = 'description-container', component_property = 'style'),
 	Output(component_id = 'news-container', component_property = 'style'),
 	Output(component_id = 'description-text', component_property = 'children'),
+	Output(component_id = 'news_historic', component_property = 'data'),
 	Input(component_id = 'news-table', component_property = 'active_cell'),
 	State(component_id = 'news-table', component_property = 'data'),
+	State(component_id = 'news_historic', component_property = 'data'),
 	)
-def show_hide_element(cell_clicked, table):
+def show_hide_element(cell_clicked, table, news_historic):
 	"""Hide News table & Show News description when News table cell clicked
 	"""
 	# get the index of the cell clicked (dict) /!\ callback err ??
@@ -69,13 +71,16 @@ def show_hide_element(cell_clicked, table):
 	www = news_dtf.loc[news_dtf['article'] == article_clicked]
 	text_description = www['ticker'] # change to the summary
 
+	# keeping an historic of the clicked articles
+	ww = www.values.tolist()
+	news_historic.append(ww[0])
 
 	# change the layout
 	if not cell_clicked :
-		return {'display': 'none'}, {'display': 'block', 'padding': 10, 'flex': 1}, text_description
+		return {'display': 'none'}, {'display': 'block', 'padding': 10, 'flex': 1}, text_description, news_historic
 		
 	if cell_clicked :
-		return {'display': 'block', 'padding': 10, 'flex': 1}, {'display': 'none'}, text_description
+		return {'display': 'block', 'padding': 10, 'flex': 1}, {'display': 'none'}, text_description, news_historic
 
 
 
