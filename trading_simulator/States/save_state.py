@@ -17,6 +17,7 @@ from trading_simulator.app import app
 	Input('cashflow', 'data'),
 	# Adding or removing a request doesn’t trigger other callbacks
 	Input('request-list', 'data'),
+	Input('graph-tabs', 'value'),
 	# Data triggered by those above
 	# The timestamp isn’t an input because
 	# we want to save the state after all changes are done
@@ -29,7 +30,7 @@ from trading_simulator.app import app
 	# ** End of data to save **
 	State('nbr-logs', 'data') # number of times the callback has been called
 )
-def save_state(company_id, news_id, cashflow, request_list, timestamp, shares, totals, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
+def save_state(company_id, news_id, cashflow, request_list, selected_tab, timestamp, shares, totals, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
@@ -46,6 +47,7 @@ def save_state(company_id, news_id, cashflow, request_list, timestamp, shares, t
 		"host-timestamp": [datetime.now().timestamp()],
 		"market-timestamp": [timestamp],
 		"selected-company": [company_id],
+		"selected-tab": [selected_tab],
 		"cashflow": [cashflow],
 		"last-news": [news_df.iloc[news_id - 1]['article']],
 		"last-news-id": [news_id],
