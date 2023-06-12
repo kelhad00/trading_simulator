@@ -14,7 +14,7 @@ from trading_simulator.Components.candlestick_charts import create_graph
 	Input('market-dataframe', 'data'),          # new company is selected
 	State('market-timestamp-value', 'data') 	# Last timestamp
 )
-def update_graph(n, df, timestamp, range=80):
+def update_graph(n, df, timestamp, range=100):
 	""" Update the graph with the latest market data
 		Periodicly updated or when the user selects a new company
 	"""

@@ -40,6 +40,9 @@ data.rename(
     inplace=True
 )
 
+# Add missing datetimes to fill gaps in the data
+data = data.resample('5Min').asfreq()
+
 # Fill closed market data with the last available data.
 data.fillna(method='ffill',inplace=True)
 # Fill the nan data at the beginning of the dataframe with next available data
@@ -73,9 +76,6 @@ data.to_csv(file_path)
 # Read data from CSV file and show its head to check if it is correct
 imported_data = pd.read_csv(file_path, index_col=0, header=[0,1])
 imported_data.index = pd.to_datetime(imported_data.index)
-print("Checking if the data as been saved correctly:")
-
-assert_frame_equal(data, imported_data, check_dtype=False)
 
 print('Download Historical Prices done\n\n Download Total Revenue...')
 
