@@ -83,6 +83,7 @@ main_layout = html.Div([
 			dash_table.DataTable(
 				id='news-table',
 				columns=[{'name': 'Date', 'id': 'date'}, {'name': 'Article', 'id': 'article'}],
+				style_table={'height': '35vh'},
 				style_cell={
 					'padding': '2px 10px',
 					'maxWidth': '30vw',
@@ -90,8 +91,8 @@ main_layout = html.Div([
         			'textOverflow': 'ellipsis',
 					'textAlign': 'left',
 				},
-				# fixed_rows={'headers': True}, # for scrollbar (vertically) but doesn't work wih the update ??
-				page_size=5,
+				fixed_rows={'headers': True, 'data': 0}, # Allow to scroll the table
+				page_size=1000000000, # Display all the news on the same page
 			)
 		], id ='news-container', style={'padding': 10, 'flex': 1}),
 
@@ -99,7 +100,9 @@ main_layout = html.Div([
 		html.Div(children=[
 			html.H2(children = 'Description de l\'article'),
 			html.P('Description/résumé de l\'article cliqué', id='description-text', style = {'textAlign' : 'center'}),
-			html.Button('Retour', id = 'back-to-news-list', style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10})
+			html.Button('Retour', id = 'back-to-news-list',
+				style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10}
+			)
 		], id='description-container', style={'padding': 10, 'flex': 1, 'display': 'none'}),
 
 
