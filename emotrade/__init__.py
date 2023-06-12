@@ -1,5 +1,5 @@
 # Constants for the trading simulator
-UPDATE_TIME = 8*1000 # in milliseconds
+UPDATE_TIME = 1*1000 # in milliseconds
 MAX_REQUESTS = 10    # Maximum number of requests
 MAX_INV_MONEY=100000 # Initial money
 COMP = { # List of stocks to download
@@ -23,6 +23,12 @@ COMP = { # List of stocks to download
 	"BN.PA" : "DANONE (BN)",
 	"STMPA.PA" : "STMICROELECTRONICS N.V. (STMPA)",
 	"ACA.PA": "CRÉDIT AGRICOLE S.A. (ACA)"
+}
+INDEX = {
+	"^GSPC" : "S&P 500",
+	"^DJI" : "Dow Jones Industrial Average",
+	"^FCHI" : "CAC 40",
+	"^SPGSGC" : "S&P GSCI Gold Index",
 }
 
 # When importing the package, import the app variable needed to run the app
