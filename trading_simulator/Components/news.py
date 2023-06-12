@@ -56,6 +56,9 @@ def update_news_table(n, news_df, idx, range=10):
 def show_hide_element(cell_clicked, table, news_historic):
 	"""Hide News table & Show News description when News table cell clicked
 	"""
+	if not cell_clicked :
+		return {'display': 'block', 'padding': 10, 'flex': 1}, '', {'display': 'none'}, news_historic
+
 	# get the index of the cell clicked (dict) /!\ callback err ??
 	index_clicked = cell_clicked['row']
 
@@ -76,11 +79,7 @@ def show_hide_element(cell_clicked, table, news_historic):
 	news_historic.append(ww[0])
 
 	# change the layout
-	if not cell_clicked :
-		return {'display': 'block', 'padding': 10, 'flex': 1}, text_description, {'display': 'none'}, news_historic
-
-	if cell_clicked :
-		return {'display': 'none'}, text_description, {'display': 'block', 'padding': 10, 'flex': 1}, news_historic
+	return {'display': 'none'}, text_description, {'display': 'block', 'padding': 10, 'flex': 1}, news_historic
 
 
 
