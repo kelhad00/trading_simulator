@@ -8,4 +8,4 @@ pandas==2.0.2
 plotly==5.14.1
 requests==2.31.0
 tqdm==4.65.0
-yfinance==0.2.18
+yahooquery==2.3.1
