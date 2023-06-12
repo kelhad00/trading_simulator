@@ -6,7 +6,7 @@ import csv
 from tqdm import tqdm
 from datetime import datetime
 
-from trading_simulator.Scraping.company_scraping import titles_scraping, articles_scraping, date_scraping
+from emotrade.Scraping.company_scraping import titles_scraping, articles_scraping, date_scraping
 
 cac40data = [['LVMH MOËT HENNESSY LOUIS VUITTON SE', 'MC', 'LVMH-MOET-HENNESSY-LOUIS-4669'],
              ["L'ORÉAL", 'OR', 'L-OREAL-4666'],

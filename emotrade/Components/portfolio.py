@@ -1,7 +1,7 @@
 import pandas as pd
 from dash import html, Output, Input, State
 
-from trading_simulator.app import app
+from emotrade.app import app
 
 @app.callback(
 	Output('portfolio_totals', 'data'),

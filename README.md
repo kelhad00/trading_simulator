@@ -1,4 +1,4 @@
-# trading_simulator
+# emotrade - the trading simulator to collect emotions
 
 The whole simulatior should be as light as possible to not disturb the data collection from the webcam and tobii pro spark.
 

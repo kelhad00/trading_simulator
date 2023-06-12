@@ -3,8 +3,8 @@ from datetime import datetime
 import pandas as pd
 from dash import Output, Input, State
 
-from trading_simulator import MAX_REQUESTS
-from trading_simulator.app import app
+from emotrade import MAX_REQUESTS
+from emotrade.app import app
 
 @app.callback(
 	Output('nbr-logs', 'data'),

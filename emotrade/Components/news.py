@@ -3,7 +3,7 @@ import pandas as pd
 from dash import Output, Input, State
 from dash.exceptions import PreventUpdate
 
-from trading_simulator.app import app
+from emotrade.app import app
 
 
 @app.callback(

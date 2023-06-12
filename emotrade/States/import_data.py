@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dash import Output, Input, State
 
-from trading_simulator.app import app
+from emotrade.app import app
 
 # Callbacks
 @app.callback(

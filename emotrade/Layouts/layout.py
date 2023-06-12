@@ -1,8 +1,8 @@
 from dash import html, dcc, dash_table
 import pandas as pd
 
-from trading_simulator import MAX_INV_MONEY, UPDATE_TIME, COMP
-from trading_simulator.Components.candlestick_charts import PLOTLY_CONFIG
+from emotrade import MAX_INV_MONEY, UPDATE_TIME, COMP
+from emotrade.Components.candlestick_charts import PLOTLY_CONFIG
 
 # Layout of the app
 main_layout = html.Div([

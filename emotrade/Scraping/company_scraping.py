@@ -3,7 +3,7 @@ import requests
 from datetime import datetime
 import re
 
-from trading_simulator.Scraping.convert_date import convert_date
+from emotrade.Scraping.convert_date import convert_date
 
 def titles_scraping(title_url):
     title_request = requests.get('https://www.zonebourse.com' + title_url)

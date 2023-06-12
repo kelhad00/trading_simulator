@@ -1,8 +1,8 @@
 import pandas as pd
 from dash import html, dcc, Output, Input, State, Patch, ALL
 
-import trading_simulator as ts
-from trading_simulator.app import app
+import emotrade as etd
+from emotrade.app import app
 
 @app.callback(
     Output(component_id="request-container", component_property="children", allow_duplicate=True),
@@ -21,7 +21,7 @@ def add_request(btn,price,share,company,action,req):
 	patched_list = Patch()
 
     # If the user has too many requests
-	if len(req) == ts.MAX_REQUESTS:
+	if len(req) == etd.MAX_REQUESTS:
 		return patched_list, req, True, False
 
 	# If the form isn't filled correctly

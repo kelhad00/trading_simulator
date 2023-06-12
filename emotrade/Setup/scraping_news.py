@@ -1,5 +1,5 @@
 from datetime import datetime
-from trading_simulator.Scraping.scrapping import random_news_scraping
+from emotrade.Scraping.scrapping import random_news_scraping
 
 
 def scraping_news(starting_date = '30/04/2023'):

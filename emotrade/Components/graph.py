@@ -1,8 +1,8 @@
 import pandas as pd
 from dash import Output, Input, State, ctx
 
-from trading_simulator.app import app
-from trading_simulator.Components.candlestick_charts import create_graph
+from emotrade.app import app
+from emotrade.Components.candlestick_charts import create_graph
 
 @app.callback(
 	Output('company-graph', 'figure'),          # new graph
