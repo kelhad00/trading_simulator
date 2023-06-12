@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "emotrade",
-    version = "0.1.dev1",
+    version = "0.2.dev1",
     author="Kevin EL HADDAD",
     author_email="kevin.elhaddad@umons.ac.be",
     maintainer="Gatien VILAIN",
@@ -24,7 +24,7 @@ setup(
     python_requires=">=3.10",
     packages=find_packages(),
     classifiers = [
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
         "Intended Audience :: Education",
         "Intended Audience :: Financial and Insurance Industry",
