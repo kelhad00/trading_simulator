@@ -51,19 +51,19 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
                 dftmp = dataframe.iloc[idx - 1 : idx]
             else:
                 dftmp = dataframe.iloc[idx - (range - 1) : idx + 1]
-    
+
     #creating the plot the long moving average
     long_mov_av = go.Scatter(
         x = dftmp.index,
         y = dftmp['long_MA'],
-        name = 'long MA'
+        name = 'longMA'
     )
 
     #creating the plot the short moving average
     short_mov_av = go.Scatter(
         x = dftmp.index,
         y = dftmp['short_MA'],
-        name = 'short MA'
+        name = 'shortMA'
     )
 
     #creating the plot the candlestick plot
@@ -73,54 +73,34 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
         high  = dftmp['High'],
         low   = dftmp['Low'],
         close = dftmp['Close'],
+        name = 'price',
         showlegend = False
     )
 
-
     # Create chart for the selected stock
     figure = go.Figure(data = [long_mov_av, short_mov_av, candelstick])
- 
-    # Define chart layout
-    figure.update_layout(
-        #title = company_id + ' stock price',
-        xaxis_title = 'Date',
-        yaxis_title = 'Prix',
-        yaxis_tickprefix = '€',
-        showlegend=True
-    )
 
     return figure, dftmp.index[-1]
+
 
 if __name__ == '__main__':
     import os
 
-    df = pd.read_csv('Data\market_data.csv', header=[0,1],index_col=0)
-    data = df['MC.PA','long_MA'].to_frame().droplevel(0, axis=1)
-    # print(data)
+    name = 'MC.PA'
 
-    trace = go.Scatter(
-        x=data.index,
-        y=data['long_MA']
-    )
+    file_path = os.path.join('Data' , 'market_data.csv')
+    df = pd.read_csv(file_path, header=[0,1],index_col=0)[name]
 
-    fig = go.Figure(data=trace)
-    # fig.show()
+    fig, endtime = create_graph(df)
+    fig.show(config=PLOTLY_CONFIG)
 
-    # name = 'TSLA'
+    testtime = 3
+    while testtime > 0:
+        time.sleep(5)
 
-    # file_path = os.path.join('market_data' , name + '.csv')
-    # print(file_path)
-    # df = pd.read_csv(file_path, index_col=0)
+        fig,endtime = create_graph(df, endtime)
+        print(endtime)
 
-    # fig,endtime = create_graph(df)
-    # fig.show()
+        fig.show(config=PLOTLY_CONFIG)
 
-    # testtime = 3
-    # while testtime > 0:
-    #     time.sleep(5)
-
-    #     fig,endtime = create_graph(df, endtime)
-    #     print(endtime)
-
-    #     fig.show()
-    #     testtime -= 1
+        testtime -= 1

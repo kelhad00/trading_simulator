@@ -1,11 +1,13 @@
 import os
 import pandas as pd
-from dash import Output, Input, State, ctx, no_update
+from dash import Output, Input, State, ctx, no_update, page_registry as dash_registry
 import plotly.graph_objects as go
 
 import emotrade as etd
 from emotrade.app import app
 from emotrade.Components.candlestick_charts import create_graph
+from emotrade.Locales import translations as tls
+
 
 @app.callback(
 	Output('company-graph', 'figure'),          # new graph
@@ -33,12 +35,22 @@ def update_graph(n, df, timestamp, range=100):
 		next_graph,
         range
     )
+	# Define chart layout
 	fig.update_layout(
+		# xaxis_title = tls[dash_registry['lang']]["market-graph"]['x'],
+        # yaxis_title = tls[dash_registry['lang']]["market-graph"]['y'],
+        yaxis_tickprefix = '€',
+        showlegend=True,
         margin_t = 0,
         margin_b = 0,
         height = 300,
 		legend=dict(x=0, y=1.0)
     )
+	# Change language on the legend
+	fig.for_each_trace(lambda t:
+		t.update(name = tls[dash_registry['lang']]["market-graph"]['legend'][t.name])
+	)
+
 	return fig, timestamp
 
 
@@ -66,8 +78,14 @@ def update_revenue( company):
 
 	# Create the graph
 	fig = go.Figure(data=[
-		go.Bar( name='Chiffre d’affaire', x=df['asOfDate'], y=df['TotalRevenue']),
-		go.Bar( name='Profit', x=df['asOfDate'], y=df['NetIncome'])
+		go.Bar(
+			name = tls[dash_registry['lang']]["revenue-graph"]['totalRevenue'],
+			x = df['asOfDate'], y = df['TotalRevenue']
+		),
+		go.Bar(
+			name = tls[dash_registry['lang']]["revenue-graph"]['netIncome'],
+			x = df['asOfDate'], y = df['NetIncome']
+		)
 	])
 	fig.update_layout(
         margin_t = 0,

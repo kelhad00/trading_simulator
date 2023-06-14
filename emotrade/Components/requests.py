@@ -1,8 +1,9 @@
 import pandas as pd
-from dash import html, dcc, Output, Input, State, Patch, no_update
+from dash import html, dcc, Output, Input, State, Patch, no_update, page_registry as dash_registry
 
 import emotrade as etd
 from emotrade.app import app
+from emotrade.Locales import translations as tls
 
 
 @app.callback(
@@ -44,20 +45,20 @@ def add_request(btn, company, action, price, share, cash, timestamp, price_list,
 
     # If the user has too many requests
 	if len(req) == etd.MAX_REQUESTS:
-		return no_update, False, "Vous avez trop de requêtes en attente !"
+		return no_update, False, tls[dash_registry['lang']]["err-too-many-requests"]
 
 	# If the form isn't filled correctly
 	if price == 0 and btn != 0:
-		return no_update, False, "Veuillez entrer un prix valide !"
+		return no_update, False, tls[dash_registry['lang']]["err-wrong-form"]
 
 	stock_price = pd.DataFrame.from_dict(price_list)[company].loc[timestamp]
 	# If the request is to buy and the user doesn't have enough money
-	if action == 'Acheter' and cash < share * stock_price:
-		return no_update, False, "Vous n'avez pas assez d'argent !"
+	if action == 'buy' and cash < share * stock_price:
+		return no_update, False, tls[dash_registry['lang']]["err-enough-money"]
 
 	# If the request is to sell and the user doesn't have enough shares
-	if action == 'Vendre' and share > port_shares[company]['Shares']:
-		return no_update, False, "Vous n'avez pas assez d'actions de "+ company +"!"
+	if action == 'sell' and share > port_shares[company]['Shares']:
+		return no_update, False, tls[dash_registry['lang']]["err-enough-shares"].format(company)
 
 	# Add the request to the request list
 	req.append([action,share,company,price])
@@ -72,7 +73,7 @@ def add_request(btn, company, action, price, share, cash, timestamp, price_list,
 def display_requests(req):
 	return  pd.DataFrame(req,
 		columns=['actions', 'shares', 'company', 'price']
-	).to_dict('records')
+	).replace(tls[dash_registry['lang']]['request-action']['choices']).to_dict('records')
 
 
 @app.callback(
@@ -95,7 +96,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 		stock_price = list_price[req[2]].loc[timestamp]
 
 		# If the request is completed
-		if req[0] == 'Acheter' and req[3] >= stock_price:
+		if req[0] == 'buy' and req[3] >= stock_price:
 			# If the user has enough money
 			if req[1] * stock_price < cashflow:
 
@@ -108,7 +109,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 			request_list.remove(req)
 
 		# Same as above for the sell request
-		elif req[0] == 'Vendre' and req[3] <= stock_price:
+		elif req[0] == 'sell' and req[3] <= stock_price:
 			# If the user has enough shares
 			if portfolio_info.loc['Shares', req[2]] >= req[1]:
 
@@ -134,9 +135,9 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 )
 def switch_between_delete_and_delete_all(selected_rows):
 	if len(selected_rows) == 0:
-		return "Supprimer tout"
+		return  tls[dash_registry['lang']]["clear-all-requests-button"]
 	else:
-		return "Supprimer"
+		return  tls[dash_registry['lang']]["clear-requests-button"]
 
 
 # Callback to delete items marked as done

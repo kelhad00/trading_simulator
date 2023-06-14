@@ -1,12 +1,16 @@
-from dash import Dash
+from dash import Dash, page_container as dash_page_container
 
-from emotrade.Layouts import layout
+from emotrade.Locales import translations as tls
+
 
 # Initialize Dash app
-app = Dash(__name__)
+app = Dash(__name__,
+    use_pages=True, # use_pages is used for multi-language support
+)
 
-# Import the layout
-app.layout = layout.main_layout
+# Set app layout
+# This will be replaced by the page content (layout with the selected language)
+app.layout = dash_page_container
 
 # Import callbacks
 # This is done after app initialization to avoid circular imports.

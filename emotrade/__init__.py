@@ -1,5 +1,5 @@
 # Constants for the trading simulator
-UPDATE_TIME = 1*1000 # in milliseconds
+UPDATE_TIME = 8*1000 # in milliseconds
 MAX_REQUESTS = 10    # Maximum number of requests
 MAX_INV_MONEY=100000 # Initial money
 COMP = { # List of stocks to download

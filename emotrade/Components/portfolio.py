@@ -1,7 +1,8 @@
 import pandas as pd
-from dash import html, Output, Input, State
+from dash import html, Output, Input, State, page_registry as dash_registry
 
 from emotrade.app import app
+from emotrade.Locales import translations as tls
 
 @app.callback(
 	Output('portfolio_totals', 'data'),
@@ -39,7 +40,7 @@ def generate_portfolio_table(stocks_info, shares):
 
 	column_size = 10
 	stock_size = len(df)
-	column_names = {'Actions':'Stock', 'Parts': 'Shares', 'Total': 'Total'}
+	column_names = tls[dash_registry['lang']]['portfolio-columns']
 	return html.Div([
 		html.Table([
 			html.Thead([
@@ -47,7 +48,7 @@ def generate_portfolio_table(stocks_info, shares):
 					html.Th(
 						col,
 						style={'padding-right': 50,'border-color': '#d3d3d3', 'border-style': 'solid','border-width': '1px'}
-					) for col in column_names.keys()
+					) for col in column_names.values()
 				], style = {'background-color': '#fafafa'})
 			]),
 			html.Tbody([
@@ -55,7 +56,7 @@ def generate_portfolio_table(stocks_info, shares):
 					html.Td(
 						df.iloc[i][col],
 						style={'border-color': '#d3d3d3', 'border-style': 'solid', 'border-width': '1px'}
-					) for col in column_names.values()
+					) for col in column_names.keys()
 				]) for i in range(j,column_size + j)
 			])
 		]) for j in range(0, stock_size, column_size)
@@ -71,7 +72,8 @@ def calcul_prix_tot_inv(stock_info, cash):
 	""" Update the portfolio total price
 	"""
 	totals = pd.DataFrame.from_dict(stock_info, orient='index')['Total']
+	text = tls[dash_registry['lang']]
 	return [
-		'Votre cash disponible : ', round(cash, 2),' eur.\n',
-		'Votre investissement total : ', round(cash + totals.sum(), 2),' eur.'
+		text['portfolio-cashflow'], round(cash, 2),' eur.\n',
+		text['portfolio-investment'], round(cash + totals.sum(), 2),' eur.'
 	]

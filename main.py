@@ -21,5 +21,5 @@ if __name__ == '__main__':
         scraping_news()
         print('Done\n')
 
-app.run_server(debug=True) #TODO: change to False when deploying
+    app.run_server(debug=True) #TODO: change to False when deploying
 

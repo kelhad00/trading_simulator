@@ -42,8 +42,6 @@ def update_news_table(n, news_df, idx, range=10):
 	return idx, news_df.to_dict(), nl.to_dict('records')
 
 
-
-
 @app.callback(
 	Output(component_id = 'news-container', component_property = 'style'),
 	Output(component_id = 'description-text', component_property = 'children'),
@@ -80,7 +78,6 @@ def show_hide_element(cell_clicked, table, news_historic):
 
 	# change the layout
 	return {'display': 'none'}, text_description, {'display': 'block', 'padding': 10, 'flex': 1}, news_historic
-
 
 
 # Button to go back to the Market News List
