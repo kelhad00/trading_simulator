@@ -1,7 +1,7 @@
-from dash import Dash, page_container as dash_page_container
+from dash import Dash, html
+import dash
 
-from emotrade.Locales import translations as tls
-
+from emotrade.Layouts import dashboard
 
 # Initialize Dash app
 app = Dash(__name__,
@@ -10,13 +10,10 @@ app = Dash(__name__,
 
 # Set app layout
 # This will be replaced by the page content (layout with the selected language)
-app.layout = dash_page_container
-
-# Import callbacks
-# This is done after app initialization to avoid circular imports.
-from emotrade.States import import_data, save_state
-from emotrade.Components import graph, portfolio, requests, news
-
+app.layout = html.Div([
+    *dashboard.global_variables,
+    dash.page_container
+])
 
 if __name__ == '__main__':
 	# Run app

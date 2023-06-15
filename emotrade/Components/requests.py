@@ -1,5 +1,6 @@
 import pandas as pd
 from dash import html, dcc, Output, Input, State, Patch, no_update, page_registry as dash_registry
+from dash.exceptions import PreventUpdate
 
 import emotrade as etd
 from emotrade.app import app
@@ -42,13 +43,14 @@ def change_state_request_form(company):
     prevent_initial_call=True,
 )
 def add_request(btn, company, action, price, share, cash, timestamp, price_list, port_shares, req):
+	if btn == 0: raise PreventUpdate # Avoid callback to be triggered at the first load
 
     # If the user has too many requests
 	if len(req) == etd.MAX_REQUESTS:
 		return no_update, False, tls[dash_registry['lang']]["err-too-many-requests"]
 
 	# If the form isn't filled correctly
-	if price == 0 and btn != 0:
+	if price == 0:
 		return no_update, False, tls[dash_registry['lang']]["err-wrong-form"]
 
 	stock_price = pd.DataFrame.from_dict(price_list)[company].loc[timestamp]
@@ -87,6 +89,8 @@ def display_requests(req):
 	State('cashflow','data'),
 )
 def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
+	if list_price == None: raise PreventUpdate # Avoid callback to be triggered at the first load
+
 	list_price = pd.DataFrame.from_dict(list_price)
 	portfolio_info = pd.DataFrame.from_dict(portfolio_info)
 
@@ -149,6 +153,8 @@ def switch_between_delete_and_delete_all(selected_rows):
 	prevent_initial_call=True
 )
 def remove_request(n, values_to_remove):
+	if n == None: raise PreventUpdate # Avoid callback to be triggered at the first load
+
 	request_list = Patch()
 
 	if values_to_remove == []:
