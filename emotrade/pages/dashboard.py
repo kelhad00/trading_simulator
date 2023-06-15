@@ -8,8 +8,6 @@ dash.register_page(
     __name__,
     path='/',
     path_template="/<lang>/",
-    suppress_callback_exceptions=True,  # Dash has to assume that the input is present
-                                    # in the app layout when the app is initialized.
 )
 
 
