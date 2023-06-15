@@ -11,7 +11,7 @@ from emotrade.app import app
 	# ** Data to save **
 	# Changing the company doesn’t trigger other callbacks in every case
 	Input('company-selector', 'value'),
-	Input('news-index', 'data'), # indepedent variable
+	Input('news-size', 'data'), # indepedent variable
 	# the cashflow is triggered by the timestamp so
 	# we use it to call the callback as late as possible
 	Input('cashflow', 'data'),
@@ -30,7 +30,7 @@ from emotrade.app import app
 	# ** End of data to save **
 	State('nbr-logs', 'data') # number of times the callback has been called
 )
-def save_state(company_id, news_id, cashflow, request_list, selected_tab, timestamp, shares, totals, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
+def save_state(company_id, news_size, cashflow, request_list, selected_tab, timestamp, shares, totals, news_df, n_logs, debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
@@ -49,8 +49,8 @@ def save_state(company_id, news_id, cashflow, request_list, selected_tab, timest
 		"selected-company": [company_id],
 		"selected-tab": [selected_tab],
 		"cashflow": [cashflow],
-		"last-news": [news_df.iloc[news_id - 1]['article']],
-		"last-news-id": [news_id],
+		# "last-news": [news_df.iloc[news_id - 1]['article']],
+		"news-displayed": [news_size],
 	})
 	# format portfolio info to be saved
 	df = pd.concat([
