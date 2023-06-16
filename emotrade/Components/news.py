@@ -7,7 +7,6 @@ from emotrade.app import app
 
 
 @app.callback(
-	Output('news-size','data'),
 	Output('news-dataframe','data'),
 	Output('news-table','data'),
 	Input('market-timestamp-value','data'),
@@ -18,12 +17,13 @@ def update_news_table(timestamp, news_df):
 		Limit the number of news displayed to the range parameter
 	"""
 	# If the news dataframe is not loaded yet, load it
-	if True:
+	if not news_df:
 		file_path = os.path.join('Data', 'news.csv')
-		news_df = pd.read_csv(file_path, sep=';', usecols=['article','date'])
+		news_df = pd.read_csv(file_path, sep=';')
 		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True)
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
+		news_df['date'] = pd.to_datetime(news_df['date'])
 
 	# Convert timestamp to datetime to the format used by the news dataframe
 	timestamp = pd.to_datetime(timestamp).tz_localize(None)
@@ -31,7 +31,7 @@ def update_news_table(timestamp, news_df):
 	# Get the news before the timestamp
 	nl = news_df.loc[news_df['date'] < timestamp].sort_values(by='date', ascending=False).astype(str)
 
-	return len(nl), news_df.to_dict(), nl.to_dict('records')
+	return news_df.to_dict(), nl.to_dict('records')
 
 
 @app.callback(
