@@ -43,6 +43,9 @@ data.rename(
 # Add missing datetimes to fill gaps in the data
 data = data.resample('5Min').asfreq()
 
+# Convert timezone to Paris
+data.index = pd.to_datetime(data.index, utc=True).tz_convert('Europe/Paris')
+
 # Fill closed market data with the last available data.
 data.fillna(method='ffill',inplace=True)
 # Fill the nan data at the beginning of the dataframe with next available data

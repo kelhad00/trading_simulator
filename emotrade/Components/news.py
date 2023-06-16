@@ -29,7 +29,7 @@ def update_news_table(timestamp, news_df):
 	timestamp = pd.to_datetime(timestamp).tz_localize(None)
 
 	# Get the news before the timestamp
-	nl = news_df.loc[news_df['date'] < timestamp].sort_values(by='date', ascending=False).astype(str)
+	nl = news_df.loc[news_df['date'] <= timestamp].sort_values(by='date', ascending=False).astype(str)
 
 	return news_df.to_dict(), nl.to_dict('records')
 
