@@ -15,8 +15,6 @@ global_variables = [
     dcc.Store(id = 'market-dataframe'),
     dcc.Store(id = 'price-dataframe'),
     dcc.Store(id = 'news-dataframe'),
-    # Display 10 news at the first load (0-9)
-    dcc.Store(id = 'news-index', data = 9, storage_type='local'),
     dcc.Store(id = 'cashflow', data = MAX_INV_MONEY, storage_type='local'),
     dcc.Store(id = 'request-list', data = [], storage_type='local'),
     dcc.Store(  # Store only the number of shares for each company
@@ -29,7 +27,6 @@ global_variables = [
         data = {c: {'Total': 0} for c in COMP.keys()},
         storage_type='local'
     ),
-    dcc.Store(id = 'news_historic', data = []),
 ]
 
 
