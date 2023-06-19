@@ -2,11 +2,13 @@ import os
 from datetime import datetime
 import pandas as pd
 from dash import Output, Input, State
+import dash
+
 
 from emotrade import MAX_REQUESTS
-from emotrade.app import app
 
-@app.callback(
+
+@dash.callback(
 	Output('nbr-logs', 'data'),
 	# ** Data to save **
 	# Changing the company doesn’t trigger other callbacks in every case

@@ -1,15 +1,15 @@
 import os
 import pandas as pd
 from dash import Output, Input, State, ctx, no_update, page_registry as dash_registry
+import dash
 import plotly.graph_objects as go
 
 import emotrade as etd
-from emotrade.app import app
 from emotrade.Components.candlestick_charts import create_graph
 from emotrade.Locales import translations as tls
 
 
-@app.callback(
+@dash.callback(
 	Output('company-graph', 'figure'),          # new graph
 	Output('market-timestamp-value', 'data'),   # new timestamp
 	Input('periodic-updater', 'n_intervals'), 	# periodicly updated
@@ -54,7 +54,7 @@ def update_graph(n, df, timestamp, range=100):
 	return fig, timestamp
 
 
-@app.callback(
+@dash.callback(
 	Output('revenue-graph', 'figure'),
 	Output('graph-tabs', 'value'),
 	Output('tab-revenue', 'style'),

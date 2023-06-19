@@ -9,7 +9,7 @@ def main_layout(lang="fr"):
 
         # Dropdown to change the language
         html.Div([
-			dcc.Link( l, href=f'/{l}/home', style = {
+			dcc.Link( l, href=f'/{l}/', style = {
 				'display': 'block',
 				'padding': '0.7em 0.5em',
 				'color': '#2f3238',

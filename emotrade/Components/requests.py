@@ -1,13 +1,13 @@
 import pandas as pd
 from dash import html, dcc, Output, Input, State, Patch, no_update, page_registry as dash_registry
 from dash.exceptions import PreventUpdate
+import dash
 
 import emotrade as etd
-from emotrade.app import app
 from emotrade.Locales import translations as tls
 
 
-@app.callback(
+@dash.callback(
 	Output("price-input", "disabled"),
 	Output("nbr-share-input", "disabled"),
 	Output("submit-button", "disabled"),
@@ -23,7 +23,7 @@ def change_state_request_form(company):
 		return False, False, False # Enable the form
 
 
-@app.callback(
+@dash.callback(
 	Output("request-list", "data", allow_duplicate=True),
 	Output('request-err', 'hidden'),
 	Output('request-err', 'children'),
@@ -68,7 +68,7 @@ def add_request(btn, company, action, price, share, cash, timestamp, price_list,
 	return req, True, ''
 
 
-@app.callback(
+@dash.callback(
 	Output("request-table", "data"),
 	Input("request-list", "data"),
 )
@@ -78,7 +78,7 @@ def display_requests(req):
 	).replace(tls[dash_registry['lang']]['request-action']['choices']).to_dict('records')
 
 
-@app.callback(
+@dash.callback(
     Output("request-list", "data"),
 	Output("portfolio_shares", "data"),
 	Output("cashflow", "data"),
@@ -133,7 +133,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 
 	return request_list, portfolio_info.to_dict(), cashflow
 
-@app.callback(
+@dash.callback(
 	Output('clear-done-btn', 'children'),
 	Input('request-table', 'selected_rows'),
 )
@@ -145,7 +145,7 @@ def switch_between_delete_and_delete_all(selected_rows):
 
 
 # Callback to delete items marked as done
-@app.callback(
+@dash.callback(
 	Output("request-list", "data", allow_duplicate=True),
 	Output("request-table", "selected_rows"),
 	Input('clear-done-btn', 'n_clicks'),

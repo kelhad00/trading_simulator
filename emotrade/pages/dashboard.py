@@ -12,13 +12,13 @@ dash.register_page(
 
 
 def layout(lang="fr"):
-    # Import callbacks
-    # This is done after app initialization to avoid circular imports.
-    from emotrade.States import import_data, save_state
-    from emotrade.Components import graph, portfolio, requests, news
-
     if lang not in tls.keys(): lang = "fr" # Handle invalid language
     dash.page_registry['lang'] = lang      # Provide the language to the callbacks
 
     return dashboard.main_layout(lang) # Import the layout with the selected language
+
+
+# Import callbacks
+from emotrade.States import import_data, save_state
+from emotrade.Components import graph, portfolio, requests, news
 

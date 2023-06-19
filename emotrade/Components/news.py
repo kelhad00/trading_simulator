@@ -2,11 +2,10 @@ import os
 import pandas as pd
 from dash import Output, Input, State
 from dash.exceptions import PreventUpdate
+import dash
 
-from emotrade.app import app
 
-
-@app.callback(
+@dash.callback(
 	Output('news-dataframe','data'),
 	Output('news-table','data'),
 	Input('market-timestamp-value','data'),
@@ -34,7 +33,7 @@ def update_news_table(timestamp, news_df):
 	return news_df.to_dict(), nl.to_dict('records')
 
 
-@app.callback(
+@dash.callback(
 	Output(component_id = 'news-container', component_property = 'style'),
 	Output(component_id = 'description-text', component_property = 'children'),
 	Output(component_id = 'description-container', component_property = 'style'),
@@ -67,7 +66,7 @@ def show_hide_element(cell_clicked, table):
 
 
 # Button to go back to the Market News List
-@app.callback(
+@dash.callback(
 	Output(component_id = 'description-container', component_property = 'style', allow_duplicate=True),
 	Output(component_id = 'news-container', component_property = 'style', allow_duplicate=True),
 	Input(component_id = 'back-to-news-list', component_property = 'n_clicks'),

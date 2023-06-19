@@ -1,11 +1,10 @@
 import os
 import pandas as pd
 from dash import Output, Input, State
-
-from emotrade.app import app
+import dash
 
 # Callbacks
-@app.callback(
+@dash.callback(
     Output("market-dataframe", "data"),
 	Output("price-dataframe", "data"),
     Input('company-selector', 'value'),

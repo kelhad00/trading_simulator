@@ -6,8 +6,8 @@ from emotrade.Locales import translations as tls
 
 dash.register_page(
     __name__,
-    path='/home',
-    path_template="/<lang>/home")
+    path_template="/<lang>/"
+)
 
 
 def layout(lang="fr"):

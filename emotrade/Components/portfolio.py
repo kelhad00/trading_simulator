@@ -1,10 +1,10 @@
 import pandas as pd
 from dash import html, Output, Input, State, page_registry as dash_registry
+import dash
 
-from emotrade.app import app
 from emotrade.Locales import translations as tls
 
-@app.callback(
+@dash.callback(
 	Output('portfolio_totals', 'data'),
 	Input('periodic-updater', 'n_intervals'),
 	Input('portfolio_shares', 'data'),
@@ -24,7 +24,7 @@ def update_porfolio_totals(n, shares, totals, price_df, timestamp):
 	return df.to_dict()
 
 
-@app.callback(
+@dash.callback(
 	Output('portfolio-table-container', 'children'),
 	Input('portfolio_totals', 'data'),
 	State('portfolio_shares', 'data')
@@ -63,7 +63,7 @@ def generate_portfolio_table(stocks_info, shares):
     ], style={'display': 'flex', 'flex-direction': 'row'})
 
 
-@app.callback(
+@dash.callback(
 	Output('portfolio-total-price', 'children'),
 	Input('portfolio_totals', 'data'),
 	State('cashflow', 'data')
