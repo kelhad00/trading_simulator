@@ -12,6 +12,8 @@ from emotrade.app import app
 	# Changing the company doesn’t trigger other callbacks in every case
 	Input('company-selector', 'value'),
 	Input('news-table', 'data'), # indepedent variable
+	# Clicking on a news doesn’t trigger other callbacks
+	Input('description-container', 'style'),
 	# the cashflow is triggered by the timestamp so
 	# we use it to call the callback as late as possible
 	Input('cashflow', 'data'),
@@ -26,10 +28,14 @@ from emotrade.app import app
 	State('market-timestamp-value','data'),
 	State('portfolio_shares', 'data'),
 	State('portfolio_totals', 'data'),
+	# Needed to save the current news description displayed
+	State('description-text', 'children'),
 	# ** End of data to save **
 	State('nbr-logs', 'data') # number of times the callback has been called
 )
-def save_state(company_id, news_df, cashflow, request_list, selected_tab, timestamp, shares, totals, n_logs, debug=False): #TODO: replace by debug=False when deploying
+def save_state(	company_id, news_df, news_description_style, cashflow, request_list, selected_tab,\
+				timestamp, shares, totals, description_title, n_logs,\
+				debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
 
@@ -46,11 +52,18 @@ def save_state(company_id, news_df, cashflow, request_list, selected_tab, timest
 		"host-timestamp": [datetime.now().timestamp()],
 		"market-timestamp": [timestamp],
 		"selected-company": [company_id],
-		"selected-tab": [selected_tab],
+		"selected-graph": [selected_tab],
 		"cashflow": [cashflow],
 		"last-news": [news_df.iloc[0]['article']],
 		"nbr-news-displayed": [len(news_df)],
+		"news-mode": ['news-table'],
+		"selected-news": '', # if no news is selected then the description is empty
 	})
+
+	# If a news is selected, save the description
+	if news_description_style['display'] == 'block':
+		df['news-mode'] = 'news-description'
+		df['selected-news'] = description_title
 
 	# format portfolio info to be saved
 	df = pd.concat([

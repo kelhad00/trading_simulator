@@ -38,16 +38,14 @@ def update_news_table(timestamp, news_df):
 	Output(component_id = 'news-container', component_property = 'style'),
 	Output(component_id = 'description-text', component_property = 'children'),
 	Output(component_id = 'description-container', component_property = 'style'),
-	Output(component_id = 'news_historic', component_property = 'data'),
 	Input(component_id = 'news-table', component_property = 'active_cell'),
 	State(component_id = 'news-table', component_property = 'data'),
-	State(component_id = 'news_historic', component_property = 'data'),
 	)
-def show_hide_element(cell_clicked, table, news_historic):
+def show_hide_element(cell_clicked, table):
 	"""Hide News table & Show News description when News table cell clicked
 	"""
 	if not cell_clicked :
-		return {'display': 'block', 'padding': 10, 'flex': 1}, '', {'display': 'none'}, news_historic
+		return {'display': 'block'}, '', {'display': 'none'}
 
 	# get the index of the cell clicked (dict) /!\ callback err ??
 	index_clicked = cell_clicked['row']
@@ -62,14 +60,10 @@ def show_hide_element(cell_clicked, table, news_historic):
 
 	# getting the content of the corresponding article
 	www = news_df.loc[news_df['article'] == article_clicked]
-	text_description = www['ticker'] # change to the summary
-
-	# keeping an historic of the clicked articles
-	ww = www.values.tolist()
-	news_historic.append(ww[0])
+	text_description = www['ticker'] #TODO: change to the summary
 
 	# change the layout
-	return {'display': 'none'}, text_description, {'display': 'block', 'padding': 10, 'flex': 1}, news_historic
+	return {'display': 'none'}, text_description, {'display': 'block'}
 
 
 # Button to go back to the Market News List
@@ -80,5 +74,5 @@ def show_hide_element(cell_clicked, table, news_historic):
 	prevent_initial_call=True,
 )
 def back_to_news(btn):
-	return {'display': 'none'}, {'display': 'block', 'padding': 10, 'flex': 1}
+	return {'display': 'none'}, {'display': 'block'}
 

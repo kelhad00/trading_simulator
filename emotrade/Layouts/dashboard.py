@@ -27,7 +27,6 @@ global_variables = [
         data = {c: {'Total': 0} for c in COMP.keys()},
         storage_type='local'
     ),
-    dcc.Store(id = 'news_historic', data = []),
 ]
 
 
