@@ -58,5 +58,10 @@ translation = {
         },
         "clear-all-requests-button": "Clear All",
         "clear-requests-button": "Clear",
+
+        # Home Page
+        "welcome": "Welcome to the Emotrade app !",
+        "info_txt": "To start the session, click on \'Dashboard\'. The interface is available in english and french.",
+        "signature": "The Emotrade team",
     }
 }
