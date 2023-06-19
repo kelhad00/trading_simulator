@@ -6,6 +6,7 @@ from emotrade.Layouts import dashboard
 # Initialize Dash app
 app = Dash(__name__,
     use_pages=True, # use_pages is used for multi-language support
+    suppress_callback_exceptions=True, # Disable ids check because we use dynamic layout
 )
 
 # Set app layout
@@ -17,7 +18,7 @@ app.layout = html.Div([
         [
             html.Div(
                 dcc.Link(
-                    f"{page['name']}", href=page["relative_path"], 
+                    f"{page['name']}", href=page["relative_path"],
                     style = {'text-decoration': 'none', 'color': 'black', 'font-weight': 'bold', 'font-size': 20}
                 ),style = {'display' : 'inline', 'margin' : 10}
             )

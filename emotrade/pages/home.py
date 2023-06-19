@@ -5,9 +5,9 @@ from emotrade.Layouts import home
 from emotrade.Locales import translations as tls
 
 dash.register_page(
-    __name__, 
-    path='/', 
-    path_template="/<lang>/")
+    __name__,
+    path='/home',
+    path_template="/<lang>/home")
 
 
 def layout(lang="fr"):

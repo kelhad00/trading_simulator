@@ -42,7 +42,7 @@ def main_layout(lang="fr"):
 		# TODO: Remove this temporary button
 		# Dropdown to change the language
 		html.Div([
-			dcc.Link( l, href=f'/{l}/', style = {
+			dcc.Link( l, href=f'/{l}/dashboard', style = {
 				'display': 'block',
 				'padding': '0.7em 0.5em',
 				'color': '#2f3238',
