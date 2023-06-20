@@ -7,19 +7,15 @@ import dash
 def main_layout(lang="fr"):
     return html.Div([
 
-        # Dropdown to change the language
-        html.Div([
-			dcc.Link( l, href=f'/{l}/', style = {
-				'display': 'block',
-				'padding': '0.7em 0.5em',
-				'color': '#2f3238',
-				'margin': '0.1em 0',
-				'text-decoration': 'none',
-				'background': '#fff',
-				'border-radius': '4px',
-				'border': '1px solid #ccc',
-			}) for l in tls.keys() if l != lang
-		], style = {'width' : '60px', 'position' : 'absolute', 'top': '10px', 'right': '10px'}),
+		# Dropdown to change the language
+		html.Div([
+			html.Button([
+				html.Span(lang), html.Span(className="arrow")
+			]),
+			html.Ul([
+				html.Li(dcc.Link(l, href=f'/{l}/')) for l in tls.keys() if l != lang
+			])
+		], className="switch-lang-btn"),
 
         # main content
         html.H1(children=tls[lang]['welcome'], style = {'margin-top' : 60}),

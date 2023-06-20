@@ -40,11 +40,9 @@ def update_graph(n, df, timestamp, range=100):
 		# xaxis_title = tls[dash_registry['lang']]["market-graph"]['x'],
         # yaxis_title = tls[dash_registry['lang']]["market-graph"]['y'],
         yaxis_tickprefix = '€',
-        showlegend=True,
-        margin_t = 0,
-        margin_b = 0,
+        margin = dict(l=0, r=0, t=0, b=0),
         height = 300,
-		legend=dict(x=0, y=1.0)
+		legend = dict(x=0, y=1.0)
     )
 	# Change language on the legend
 	fig.for_each_trace(lambda t:
@@ -88,8 +86,8 @@ def update_revenue( company):
 		)
 	])
 	fig.update_layout(
-        margin_t = 0,
-        margin_b = 0,
+		yaxis_tickprefix = '€',
+        margin = dict(l=0, r=0, t=0, b=0),
         height = 300,
 		legend=dict(x=0, y=1.0)
 	)

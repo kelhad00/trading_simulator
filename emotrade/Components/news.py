@@ -11,7 +11,7 @@ import dash
 	Input('market-timestamp-value','data'),
 	State('news-dataframe','data'),
 )
-def update_news_table(timestamp, news_df):
+def update_news_table(timestamp, news_df, range=2000):
 	""" Display one more news periodically
 		Limit the number of news displayed to the range parameter
 	"""
@@ -30,11 +30,12 @@ def update_news_table(timestamp, news_df):
 	# Get the news before the timestamp
 	nl = news_df.loc[news_df['date'] <= timestamp].sort_values(by='date', ascending=False).astype(str)
 
-	return news_df.to_dict(), nl.to_dict('records')
+	return news_df.to_dict(), nl.to_dict('records') #nl[:range].to_dict('records')
 
 
 @dash.callback(
 	Output(component_id = 'news-container', component_property = 'style'),
+	Output(component_id = 'description-title', component_property = 'children'),
 	Output(component_id = 'description-text', component_property = 'children'),
 	Output(component_id = 'description-container', component_property = 'style'),
 	Input(component_id = 'news-table', component_property = 'active_cell'),
@@ -44,7 +45,7 @@ def show_hide_element(cell_clicked, table):
 	"""Hide News table & Show News description when News table cell clicked
 	"""
 	if not cell_clicked :
-		return {'display': 'block'}, '', {'display': 'none'}
+		return {'display': 'block'}, '', '', {'display': 'none'}
 
 	# get the index of the cell clicked (dict) /!\ callback err ??
 	index_clicked = cell_clicked['row']
@@ -62,7 +63,7 @@ def show_hide_element(cell_clicked, table):
 	text_description = www['ticker'] #TODO: change to the summary
 
 	# change the layout
-	return {'display': 'none'}, text_description, {'display': 'block'}
+	return {'display': 'none'}, article_clicked, text_description, {'display': 'block'}
 
 
 # Button to go back to the Market News List

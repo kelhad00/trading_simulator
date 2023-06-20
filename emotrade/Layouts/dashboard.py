@@ -31,148 +31,127 @@ global_variables = [
 
 
 # Layout of the app
-def main_layout(lang="fr"):
+def main_layout(lang = "fr"):
 	return html.Div([
 		# Periodic updater
 		dcc.Interval(
-			id='periodic-updater',
-			interval=UPDATE_TIME, # in milliseconds
+			id = 'periodic-updater',
+			interval = UPDATE_TIME, # in milliseconds
 		),
 
-		# TODO: Remove this temporary button
 		# Dropdown to change the language
 		html.Div([
-			dcc.Link( l, href=f'/{l}/dashboard', style = {
-				'display': 'block',
-				'padding': '0.7em 0.5em',
-				'color': '#2f3238',
-				'margin': '0.1em 0',
-				'text-decoration': 'none',
-				'background': '#fff',
-				'border-radius': '4px',
-				'border': '1px solid #ccc',
-			}) for l in tls.keys() if l != lang
-		], style = {'width' : '60px', 'position' : 'absolute', 'top': '10px', 'right': '10px'}),
+			html.Button([
+				html.Span(lang), html.Span(className = "arrow")
+			]),
+			html.Ul([
+				html.Li(dcc.Link(l, href=f'/{l}/dashboard')) for l in tls.keys() if l != lang
+			])
+		], className = "switch-lang-btn"),
 
+		#### Upper part ####
 
-		# Upper part
+		# Portfolio
 		html.Div([
-			# Portfolio
-			html.Div(children=[
-				html.H2(children=tls[lang]['portfolio']),
-				html.Div(id='portfolio-table-container'),
-				dcc.Markdown(id='portfolio-total-price')
-			], style={'padding': 10, 'flex': 2}),
+			html.H2(tls[lang]['portfolio']),
+			html.Div(id = 'portfolio-table-container'),
+			dcc.Markdown(id = 'portfolio-total-price')
+		], className = "portfolio-container"),
 
-			# Company graph
-			html.Div(children=[
-				dcc.Dropdown({**COMP, **INDEX}, list(COMP.keys())[0],
-					id='company-selector',
-					clearable=False,
-					persistence = True,
-					persistence_type = 'local',
-					style = {'padding-right' : 80, 'textAlign' : 'center'}
-				),
-				dcc.Tabs(id="graph-tabs", value='tab-market', children=[
-					dcc.Tab(label=tls[lang]['tab-market'], value='tab-market', children=[
-						dcc.Graph(
-							id='company-graph',
-							figure={'layout': {'height': 300}},
-							# config = PLOTLY_CONFIG,
-							config = {**PLOTLY_CONFIG, "locale": lang},
-							style={'padding': 30}
-						)
-					]),
-					dcc.Tab(label=tls[lang]['tab-revenue'], value='tab-revenue', id='tab-revenue', children=[
-						dcc.Graph(
-							id='revenue-graph',
-							figure={'layout': {'height': 100}},
-							config = {**PLOTLY_CONFIG, "locale": lang},
-							style={'padding': 30, 'height': 300}
-						),
-					]),
-				], style={'height': '44px', 'width': '92%', 'margin': '5px'}),
-			], style={'padding-top': 30, 'flex': 3, 'margin-left' : 50})
-		], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh'}),
-
-		# Lower part
+		# Company graph
 		html.Div([
-			# News
-			html.Div(children=[
-				html.H2(children=tls[lang]['news']),
-				dash_table.DataTable(
-					id='news-table',
-					columns=[
-						{'name': tls[lang]['news-table']['date'], 'id': 'date'},
-						{'name': tls[lang]['news-table']['article'], 'id': 'article'}
-					],
-					style_table={'height': '35vh'},
-					style_cell={
-						'padding': '2px 10px',
-						'maxWidth': '30vw',
-						'overflow': 'hidden',
-						'textOverflow': 'ellipsis',
-						'textAlign': 'left',
-					},
-					fixed_rows={'headers': True, 'data': 0}, # Allow to scroll the table
-					page_size=1000000000, # Display all the news on the same page
-				)
-			], id ='news-container', style={'padding': 10, 'flex': 1}),
+			dcc.Dropdown({**COMP, **INDEX}, list(COMP.keys())[0],
+				id = 'company-selector',
+				clearable = False,
+				persistence = True,
+				persistence_type = 'local',
+			),
+			dcc.Tabs([
+				dcc.Tab([
+					dcc.Graph(
+						id = 'company-graph',
+						config = PLOTLY_CONFIG
+					)
+				], label = tls[lang]['tab-market'], value = 'tab-market'),
+				dcc.Tab([
+					dcc.Graph(
+						id = 'revenue-graph',
+						config = PLOTLY_CONFIG
+					),
+				], label = tls[lang]['tab-revenue'], value = 'tab-revenue', id = 'tab-revenue'),
+			], id = "graph-tabs", value='tab-market'),
+		], className="graph-container"),
 
-			# Add the component with the description
-			html.Div(children=[
-				html.H2(children = tls[lang]['title-news-description']),
-				html.P(id='description-text', style = {'textAlign' : 'center'}),
+		#### Lower part ####
+
+		# News
+		html.Div([
+			html.H2(tls[lang]['news']),
+
+			dash_table.DataTable(
+				id = 'news-table',
+				columns = [
+					{'name': tls[lang]['news-table']['date'], 'id': 'date'},
+					{'name': tls[lang]['news-table']['article'], 'id': 'article'}
+				],
+				fixed_rows = {'headers': True, 'data': 0}, # Allow to scroll the table
+				page_size = 1000000000, # Display all the news on the same page
+			)
+		], id = 'news-container', className = "news-container"),
+
+		# Add the component with the description
+		html.Div([
+			html.H2(tls[lang]['title-news-description']),
+
+			html.Article([
 				html.Button(tls[lang]['button-news-description'], id = 'back-to-news-list',
-					style={'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10}
-				)
-			], id='description-container', style={'padding': 10, 'flex': 1, 'display': 'none'}),
-
-
-			# Requests
-			html.Div(children=[
-				html.H2(tls[lang]['request-title']),
-
-				html.Label(tls[lang]['request-action']['label'], htmlFor='action-input'),
-				dcc.RadioItems(
-					options=tls[lang]['request-action']['choices'],
-					value='buy',
-					id="action-input",
-					inline=True
+					# style = {'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10}
 				),
+				html.H3(id = 'description-title'),
+				html.P(id ='description-text')
+			], className = "news-article"),
 
-				html.Label(tls[lang]['request-price'], htmlFor='price-input', style = {'margin-top' : 20}),
-				dcc.Input(id='price-input', value=0,type='number',min=0, step=0.1),
+		], id = 'description-container', className = "news-container", style = {'display': 'none'}),
 
-				html.Label(tls[lang]['request-shares'], htmlFor='nbr-share-input', style = {'margin-top' : 20}),
-				dcc.Input(id='nbr-share-input',value=1, type='number',min=1, step=1),
 
-				html.Button(tls[lang]['submit-request'],id='submit-button', n_clicks=0, style={'border' : 'none', 'padding' : '5px 30px', 'border-radius' : 10, 'margin' : '20px 70px'}),
+		# Requests
+		html.Div([
+			html.H2(tls[lang]['request-title']),
 
-				html.P(id='request-err', style = {'color' : 'red'})
-			], style={'padding': 10, 'flex': 1, 'display': 'flex', 'flex-direction': 'column', 'margin-left': '5%', 'margin-right': '5%'}),
+			html.Label(tls[lang]['request-action']['label'], htmlFor='action-input'),
+			dcc.RadioItems(
+				options = tls[lang]['request-action']['choices'],
+				value = 'buy',
+				id = "action-input",
+				inline = True
+			),
 
-			html.Div(children=[
-				html.H2(tls[lang]['requests-list-title']),
-				dash_table.DataTable(
-					id='request-table',
-					columns=[
-						{'name': tls[lang]['requests-table']['actions'], 'id':'actions'},
-						{'name': tls[lang]['requests-table']['shares'], 'id':'shares'},
-						{'name': tls[lang]['requests-table']['company'], 'id': 'company'},
-						{'name': tls[lang]['requests-table']['price'], 'id': 'price'}
-					],
-					row_selectable='multi',
-					selected_rows=[],
-					cell_selectable=False,
-					style_cell={'padding': '2px 10px'},
-					style_table={'width': '20vw'}
-				),
-				html.Button(tls[lang]['clear-all-requests-button'], id="clear-done-btn",
-					style={'border' : 'none', 'padding' : '5px 30px', 'border-radius' : 10, 'width': '8vw', 'margin' : '20px 70px'}
-				),
-			], style={'padding': 10, 'flex': 2})
+			html.Label(tls[lang]['request-price'], htmlFor='price-input'),
+			dcc.Input(id = 'price-input', value = 0, type = 'number', min = 0, step = 0.1),
 
-		], style={'display': 'flex', 'flex-direction': 'row', 'height': '48vh', 'margin-top' : 50})
+			html.Label(tls[lang]['request-shares'], htmlFor='nbr-share-input'),
+			dcc.Input(id = 'nbr-share-input', value = 1, type = 'number', min = 1, step = 1),
 
-	], style = {'font-family': 'Arial'})
+			html.Button(tls[lang]['submit-request'], id = 'submit-button', n_clicks = 0),
+
+			html.P(id = 'request-err')
+		], className = "request-form-container"),
+
+		html.Div([
+			html.H2(tls[lang]['requests-list-title']),
+			dash_table.DataTable(
+				id = 'request-table',
+				columns=[
+					{'name': tls[lang]['requests-table']['actions'], 'id': 'actions'},
+					{'name': tls[lang]['requests-table']['shares'], 'id': 'shares'},
+					{'name': tls[lang]['requests-table']['company'], 'id': 'company'},
+					{'name': tls[lang]['requests-table']['price'], 'id': 'price'}
+				],
+				row_selectable = 'multi',
+				selected_rows = [],
+				cell_selectable = False
+			),
+			html.Button(tls[lang]['clear-all-requests-button'], id = "clear-done-btn"),
+		], className = "request-list-container")
+
+	], className = "dashboard-container")

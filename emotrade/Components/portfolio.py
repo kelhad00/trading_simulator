@@ -45,22 +45,16 @@ def generate_portfolio_table(stocks_info, shares):
 		html.Table([
 			html.Thead([
 				html.Tr([
-					html.Th(
-						col,
-						style={'padding-right': 50,'border-color': '#d3d3d3', 'border-style': 'solid','border-width': '1px'}
-					) for col in column_names.values()
-				], style = {'background-color': '#fafafa'})
+					html.Th(col) for col in column_names.values()
+				])
 			]),
 			html.Tbody([
 				html.Tr([
-					html.Td(
-						df.iloc[i][col],
-						style={'border-color': '#d3d3d3', 'border-style': 'solid', 'border-width': '1px'}
-					) for col in column_names.keys()
+					html.Td( df.iloc[i][col] ) for col in column_names.keys()
 				]) for i in range(j,column_size + j)
 			])
 		]) for j in range(0, stock_size, column_size)
-    ], style={'display': 'flex', 'flex-direction': 'row'})
+    ], className="portfolio-table")
 
 
 @dash.callback(
