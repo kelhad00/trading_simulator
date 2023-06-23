@@ -150,6 +150,7 @@
     grid-area: text;
     padding: 20px;
     text-align: justify;
+    white-space: pre-line;
 }
 
 

@@ -11,15 +11,17 @@ import dash
 	Input('market-timestamp-value','data'),
 	State('news-dataframe','data'),
 )
-def update_news_table(timestamp, news_df, range=2000):
+def update_news_table(timestamp, news_df, range=3000):
 	""" Display one more news periodically
 		Limit the number of news displayed to the range parameter
 	"""
 	# If the news dataframe is not loaded yet, load it
 	if not news_df:
 		file_path = os.path.join('Data', 'news.csv')
-		news_df = pd.read_csv(file_path, sep=';')
-		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True)
+		news_df = pd.read_csv(file_path, sep=';')\
+					.drop_duplicates(subset=['title'], keep='first')\
+					.rename({'title':'article'}, axis=1)
+		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
 		news_df['date'] = pd.to_datetime(news_df['date'])
@@ -30,17 +32,17 @@ def update_news_table(timestamp, news_df, range=2000):
 	# Get the news before the timestamp
 	nl = news_df.loc[news_df['date'] <= timestamp].sort_values(by='date', ascending=False).astype(str)
 
-	return news_df.to_dict(), nl.to_dict('records') #nl[:range].to_dict('records')
+	return news_df.to_dict(), nl[:3000].to_dict('records')
 
 
 @dash.callback(
-	Output(component_id = 'news-container', component_property = 'style'),
-	Output(component_id = 'description-title', component_property = 'children'),
-	Output(component_id = 'description-text', component_property = 'children'),
-	Output(component_id = 'description-container', component_property = 'style'),
-	Input(component_id = 'news-table', component_property = 'active_cell'),
-	State(component_id = 'news-table', component_property = 'data'),
-	)
+	Output('news-container', 'style'),
+	Output('description-title', 'children'),
+	Output('description-text', 'children'),
+	Output('description-container', 'style'),
+	Input('news-table', 'active_cell'),
+	State('news-table', 'data'),
+)
 def show_hide_element(cell_clicked, table):
 	"""Hide News table & Show News description when News table cell clicked
 	"""
@@ -51,16 +53,17 @@ def show_hide_element(cell_clicked, table):
 	index_clicked = cell_clicked['row']
 
 	# get the title of the cell clicked (table = list & table[ind] = dict)
+	# article_clicked = table[index_clicked]['article']
+
+	# # find the description in the dtf with the title /!\ news_df = DICT
+	# # getting the news data to find the content
+	# file_path = os.path.join('Data', 'news.csv')
+	# news_df = pd.read_csv(file_path, sep=';', usecols=['title','content'])\
+
+	# # getting the content of the corresponding article
+	# text_description = news_df.loc[news_df['title'] == article_clicked]['content']
 	article_clicked = table[index_clicked]['article']
-
-	# find the description in the dtf with the title /!\ news_df = DICT
-	# getting the news data to find the content
-	file_path = os.path.join('Data', 'news.csv')
-	news_df = pd.read_csv(file_path, sep=';')
-
-	# getting the content of the corresponding article
-	www = news_df.loc[news_df['article'] == article_clicked]
-	text_description = www['ticker'] #TODO: change to the summary
+	text_description = table[index_clicked]['content']
 
 	# change the layout
 	return {'display': 'none'}, article_clicked, text_description, {'display': 'block'}
@@ -68,9 +71,9 @@ def show_hide_element(cell_clicked, table):
 
 # Button to go back to the Market News List
 @dash.callback(
-	Output(component_id = 'description-container', component_property = 'style', allow_duplicate=True),
-	Output(component_id = 'news-container', component_property = 'style', allow_duplicate=True),
-	Input(component_id = 'back-to-news-list', component_property = 'n_clicks'),
+	Output('description-container', 'style', allow_duplicate=True),
+	Output('news-container', 'style', allow_duplicate=True),
+	Input('back-to-news-list', 'n_clicks'),
 	prevent_initial_call=True,
 )
 def back_to_news(btn):
