@@ -61,7 +61,8 @@ translation = {
 
         # Home Page
         "welcome": "Bienvenue sur l\'app Emotrade !",
-        "info_txt": "Pour commencer la session, cliquer sur \'Dashboard\'. L\'interface est disponible en anglais et français.",
+        "info_txt": "Pour commencer la session, cliquer sur 'Démarrer l’expérience'. L\'interface est disponible en anglais et français.",
         "signature": "L\'équipe Emotrade",
+        "button-start": "Démarrer l’expérience",
     }
 }

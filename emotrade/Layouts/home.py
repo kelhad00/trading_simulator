@@ -26,6 +26,6 @@ def main_layout(lang="fr"):
 
 		html.P(tls[lang]['signature']),
 
-		dcc.Link('Dashboard', href='/' + lang + '/dashboard'),
+		dcc.Link(tls[lang]['button-start'], href='/' + lang + '/dashboard'),
 
 	], className="home-container")
