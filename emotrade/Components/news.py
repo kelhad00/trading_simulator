@@ -18,9 +18,10 @@ def update_news_table(timestamp, news_df, range=3000):
 	# If the news dataframe is not loaded yet, load it
 	if not news_df:
 		file_path = os.path.join('Data', 'news.csv')
-		news_df = pd.read_csv(file_path, sep=';')\
-					.drop_duplicates(subset=['title'], keep='first')\
-					.rename({'title':'article'}, axis=1)
+		news_df = pd.read_csv(file_path, sep=';') \
+					# TODO: uncomment when the news scaping method has been implemented
+					# .drop_duplicates(subset=['title'], keep='first')\
+					# .rename({'title':'article'}, axis=1)
 		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
@@ -32,7 +33,7 @@ def update_news_table(timestamp, news_df, range=3000):
 	# Get the news before the timestamp
 	nl = news_df.loc[news_df['date'] <= timestamp].sort_values(by='date', ascending=False).astype(str)
 
-	return news_df.to_dict(), nl[:3000].to_dict('records')
+	return news_df.to_dict(), nl[:range].to_dict('records')
 
 
 @dash.callback(
@@ -52,6 +53,7 @@ def show_hide_element(cell_clicked, table):
 	# get the index of the cell clicked (dict) /!\ callback err ??
 	index_clicked = cell_clicked['row']
 
+	# Previous version :
 	# get the title of the cell clicked (table = list & table[ind] = dict)
 	# article_clicked = table[index_clicked]['article']
 
@@ -62,8 +64,10 @@ def show_hide_element(cell_clicked, table):
 
 	# # getting the content of the corresponding article
 	# text_description = news_df.loc[news_df['title'] == article_clicked]['content']
+
 	article_clicked = table[index_clicked]['article']
-	text_description = table[index_clicked]['content']
+	text_description = table[index_clicked]['ticker'] # TODO: replace this line by the one below
+	# text_description = table[index_clicked]['content'] #TODO: add content to news.csv
 
 	# change the layout
 	return {'display': 'none'}, article_clicked, text_description, {'display': 'block'}
