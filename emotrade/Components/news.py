@@ -11,7 +11,7 @@ import dash
 	Input('market-timestamp-value','data'),
 	State('news-dataframe','data'),
 )
-def update_news_table(timestamp, news_df, range=3000):
+def update_news_table(timestamp, news_df, range=2000):
 	""" Display one more news periodically
 		Limit the number of news displayed to the range parameter
 	"""
