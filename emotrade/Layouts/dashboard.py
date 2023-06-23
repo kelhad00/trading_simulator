@@ -39,15 +39,6 @@ def main_layout(lang = "fr"):
 			interval = UPDATE_TIME, # in milliseconds
 		),
 
-		# Dropdown to change the language
-		html.Div([
-			html.Button([
-				html.Span(lang), html.Span(className = "arrow")
-			]),
-			html.Ul([
-				html.Li(dcc.Link(l, href=f'/{l}/dashboard')) for l in tls.keys() if l != lang
-			])
-		], className = "switch-lang-btn"),
 
 		#### Upper part ####
 
@@ -66,6 +57,17 @@ def main_layout(lang = "fr"):
 				persistence = True,
 				persistence_type = 'local',
 			),
+			# Pause button
+			dcc.Link(html.I(className = "pause-icon"), href='/' + lang, className = "pause-btn"),
+			# Dropdown to change the language
+			html.Div([
+				html.Button([
+					html.Span(lang), html.Span(className = "arrow")
+				]),
+				html.Ul([
+					html.Li(dcc.Link(l, href=f'/{l}/dashboard')) for l in tls.keys() if l != lang
+				])
+			], className = "switch-lang-btn"),
 			dcc.Tabs([
 				dcc.Tab([
 					dcc.Graph(

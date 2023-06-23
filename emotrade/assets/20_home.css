@@ -1,0 +1,43 @@
+.home-container {
+    text-align: center;
+}
+
+
+.home-container .switch-lang-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    text-align: left;
+}
+
+
+.home-container h1 {
+    margin-top: 60px;
+}
+
+
+.home-container img {
+    border-radius: 30px;
+    width: 500px;
+}
+
+
+.home-container p:last-of-type,
+.home-container img {
+    margin-top: 40px
+}
+
+
+.home-container p:last-of-type {
+    font-size: 15px;
+    font-style: italic;
+}
+
+
+.home-container > a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    font-size: 20px;
+    margin-right: 10px;
+}

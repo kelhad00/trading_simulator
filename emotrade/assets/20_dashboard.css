@@ -1,17 +1,3 @@
-h1, h2, h3,
-#company-selector {
-    margin: 0;
-    margin-bottom: 10px;
-}
-
-button,
-input,
-#portfolio-total-price > P {
-    border: 1px solid #d6d6d6;
-    background-color: white;
-    border-radius: 4px;
-}
-
 .dashboard-container {
     display: grid;
     grid-template:
@@ -24,42 +10,83 @@ input,
 
 
 /* PORTFOLIO */
-.portfolio-container {
+.dashboard-container .portfolio-container {
     grid-area: portfolio;
 }
 
-.portfolio-table {
+.dashboard-container .portfolio-table {
     display: flex;
 }
 
-.portfolio-table thread > tr {
+.dashboard-container .portfolio-table thread > tr {
     background-color: #fafafa;
 }
 
-.portfolio-table th,
-.portfolio-table td {
+.dashboard-container .portfolio-table th,
+.dashboard-container .portfolio-table td {
     border: 1px solid #d6d6d6;
     padding-right: 50px;
     box-sizing: inherit;
 }
 
-#portfolio-total-price > P {
+.dashboard-container #portfolio-total-price > P {
     min-width: 40%;
     width: fit-content;
     padding: 5px;
+    border: 1px solid #d6d6d6;
+    background-color: white;
+    border-radius: 4px;
 }
-
 
 /* GRAPH */
-.graph-container {
+.dashboard-container .graph-container {
     grid-area: graph;
+    display: grid;
+    grid-template:
+        "dropdown       menu" 40px
+        "graph-tabs graph-tabs" auto
+        /  auto        130px;
 }
 
-#company-selector {
+.dashboard-container #company-selector {
     text-align: center;
+    grid-area: dropdown;
+    margin: 0;
 }
 
-#graph-tabs > div {
+.dashboard-container .pause-btn {
+    grid-area: menu;
+    justify-self: right;
+    margin: auto 90px auto 0;
+    height: 30px;
+    width: 30px;
+    background-color: white;
+    border: 1px solid #d6d6d6;
+    border-radius: 50%;
+    color: #5B5B66;
+    text-decoration: none;
+}
+
+.dashboard-container .pause-icon {
+    box-sizing: border-box;
+    display: block;
+    width: 10px;
+    height: 12px;
+    border-left: 4px solid;
+    border-right: 4px solid;
+    margin: 30% auto;
+}
+
+.dashboard-container .switch-lang-btn {
+    grid-area: menu;
+    justify-self: end;
+}
+
+.dashboard-container #graph-tabs-parent  {
+    grid-area: graph-tabs;
+}
+
+.dashboard-container #graph-tabs > div {
     padding: 10px;
     border-radius: 4px 4px 0 0;
     /* The size of the graph is set by plotly.js and
@@ -68,7 +95,7 @@ input,
     */
 }
 
-#graph-tabs + .tab-content {
+.dashboard-container #graph-tabs + .tab-content {
     border: 1px solid #d6d6d6;
     border-top: none;
     border-radius: 0 0 4px 4px;
@@ -77,16 +104,16 @@ input,
 
 
 /* NEWS */
-.news-container {
+.dashboard-container .news-container {
     grid-area: news;
 }
 
-#news-table .dash-spreadsheet-container {
+.dashboard-container #news-table .dash-spreadsheet-container {
     height: 40vh;
 }
 
-#news-table .dash-cell,
-#news-table .dash-header {
+.dashboard-container #news-table .dash-cell,
+.dashboard-container #news-table .dash-header {
     padding: 2px 10px;
     max-width: 30vw;
     overflow: hidden;
@@ -94,7 +121,7 @@ input,
     text-align: left;
 }
 
-.news-article {
+.dashboard-container .news-article {
     display: grid;
     grid-template:
         "button  title" 10%
@@ -106,20 +133,20 @@ input,
     overflow: auto;
 }
 
-.news-article > button {
+.dashboard-container .news-article > button {
     grid-area: button;
     height: 36px;
     padding: 5px;
     margin: 5px;
 }
 
-.news-article > h3 {
+.dashboard-container .news-article > h3 {
     grid-area: title;
     margin: auto;
     text-align: center;
 }
 
-.news-article > p {
+.dashboard-container .news-article > p {
     grid-area: text;
     padding: 20px;
     text-align: justify;
@@ -127,35 +154,35 @@ input,
 
 
 /* REQUESTS */
-.request-form-container {
+.dashboard-container .request-form-container {
     grid-area: request-form;
     display: flex;
     flex-direction: column;
 }
 
-.request-list-container {
+.dashboard-container .request-list-container {
     grid-area: request-list;
 }
 
-.request-form-container > label {
+.dashboard-container .request-form-container > label {
     margin-top: 20px;
 }
 
-#request-err {
+.dashboard-container #request-err {
     color: red;
 }
 
-.request-form-container > button,
-.request-list-container > button {
+.dashboard-container .request-form-container > button,
+.dashboard-container .request-list-container > button {
     padding : 5px 30px;
     margin : 20px auto;
 }
 
-#request-table .dash-spreadsheet-container {
+.dashboard-container #request-table .dash-spreadsheet-container {
     max-width: 20vw;
 }
 
-#request-table .dash-cell,
-#request-table .dash-header {
+.dashboard-container #request-table .dash-cell,
+.dashboard-container #request-table .dash-header {
     padding: 2px 10px;
 }

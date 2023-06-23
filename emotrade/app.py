@@ -13,13 +13,6 @@ app = Dash(__name__,
 # This will be replaced by the page content (layout with the selected language)
 app.layout = html.Div([
     *dashboard.global_variables,
-
-    html.Div([
-        dcc.Link(
-            f"{page['name']}", href=page["relative_path"]
-        ) for page in dash.page_registry.values()
-    ], className="navbar"),
-
     dash.page_container
 ])
 

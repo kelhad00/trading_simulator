@@ -18,12 +18,14 @@ def main_layout(lang="fr"):
 		], className="switch-lang-btn"),
 
         # main content
-        html.H1(children=tls[lang]['welcome'], style = {'margin-top' : 60}),
-        
-        html.P(children=tls[lang]['info_txt']),
+        html.H1(tls[lang]['welcome']),
 
-		html.Img(src=dash.get_asset_url('photo_finance_2.png'), style = {'border-radius': 30, 'margin-top': 40, 'width': 500}),
+        html.P(tls[lang]['info_txt']),
 
-		html.P(children=tls[lang]['signature'], style = {'margin-top': 40, 'font-size': 15, 'font-style': 'italic'}),
-        
-        ], style = {'font-family': 'Arial', 'text-align' : 'center'})
+		html.Img(src=dash.get_asset_url('photo_finance_2.png')),
+
+		html.P(tls[lang]['signature']),
+
+		dcc.Link('Dashboard', href='/' + lang + '/dashboard'),
+
+	], className="home-container")

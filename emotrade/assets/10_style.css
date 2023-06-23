@@ -7,30 +7,25 @@ body {
     padding: 0;
 }
 
-/* Navbar */
-.navbar {
-    display: flex;
-    justify-content: start;
-    padding: 10px;
+h1,
+h2,
+h3 {
+    margin: 0;
+    margin-bottom: 10px;
 }
 
-.navbar a {
-    text-decoration: none;
-    color: black;
-    font-weight: bold;
-    font-size: 20px;
-    margin-right: 10px;
+button,
+input {
+    border: 1px solid #d6d6d6;
+    background-color: white;
+    border-radius: 4px;
 }
 
 /* Language button */
 
 .switch-lang-btn {
     max-width: 13em;
-    position: absolute;
-    top: 10px;
-    right: 10px;
     width: 80px;
-    z-index: 100;
 }
 
 .switch-lang-btn button {
@@ -79,7 +74,7 @@ body {
     left: 100%;
     width: 100%;
     transition: 0.5s;
-    position: absolute;
+    position: relative;
 }
 
 .switch-lang-btn button:focus + ul li {
