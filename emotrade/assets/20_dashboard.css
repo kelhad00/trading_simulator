@@ -177,7 +177,28 @@
 .dashboard-container .request-list-container > button {
     padding : 5px 30px;
     margin : 20px auto;
+    transition-duration: 0.4s;
+    background-color: white; 
+    color: black; 
+    border: 2px solid #555555;
+    cursor: pointer;
 }
+
+.dashboard-container .request-form-container > button:hover,
+.dashboard-container .request-list-container > button:hover {
+    padding : 5px 30px;
+    margin : 20px auto;
+    background-color: #555555;
+    color: white;
+
+}
+
+.dashboard-container .request-form-container > button:active,
+.dashboard-container .request-list-container > button:active {
+    background-color: #555555;
+    box-shadow: 0 5px #666;
+    transform: translateY(3px);
+  }
 
 .dashboard-container #request-table .dash-spreadsheet-container {
     max-width: 20vw;
