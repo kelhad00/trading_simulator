@@ -159,16 +159,16 @@
     grid-area: request-form;
     display: flex;
     flex-direction: column;
-    margin-top: 25px;
+    margin-top: 30px;
 }
 
 .dashboard-container .request-list-container {
     grid-area: request-list;
-    margin-top: 25px;
+    margin-top: 30px;
 }
 
 .dashboard-container .request-form-container > label {
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .dashboard-container #request-err {
