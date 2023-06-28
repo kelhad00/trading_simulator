@@ -14,7 +14,7 @@ translation = {
             'y': 'Prix',
             'legend': {
                 'longMA': 'Moyenne mobile simple (20)',
-                'shortMA': 'Moyenne mobile simple (5)',
+                'shortMA': 'Moyenne mobile simple (50)',
                 'price': 'Prix'
             },
         },

@@ -173,6 +173,7 @@
 
 .dashboard-container #request-err {
     color: red;
+    margin-top: 0px;
 }
 
 .dashboard-container .request-form-container > button,
