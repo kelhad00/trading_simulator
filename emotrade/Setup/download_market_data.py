@@ -54,7 +54,7 @@ data.fillna(method='bfill',inplace=True)
 # Add moving average using downloaded data
 for stock in stock_list:
     data[stock,'long_MA'] = data[stock,'Close'].rolling(int(20)).mean()
-    data[stock,'short_MA'] = data[stock,'Close'].rolling(int(5)).mean()
+    data[stock,'short_MA'] = data[stock,'Close'].rolling(int(50)).mean()
 
 data = data.dropna()
 

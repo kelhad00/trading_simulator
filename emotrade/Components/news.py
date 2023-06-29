@@ -19,9 +19,8 @@ def update_news_table(timestamp, news_df, range=2000):
 	if not news_df:
 		file_path = os.path.join('Data', 'news.csv')
 		news_df = pd.read_csv(file_path, sep=';') \
-					# TODO: uncomment when the news scaping method has been implemented
-					# .drop_duplicates(subset=['title'], keep='first')\
-					# .rename({'title':'article'}, axis=1)
+					.drop_duplicates(subset=['title'], keep='first')\
+					.rename({'title':'article'}, axis=1)
 		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
@@ -66,8 +65,7 @@ def show_hide_element(cell_clicked, table):
 	# text_description = news_df.loc[news_df['title'] == article_clicked]['content']
 
 	article_clicked = table[index_clicked]['article']
-	text_description = table[index_clicked]['ticker'] # TODO: replace this line by the one below
-	# text_description = table[index_clicked]['content'] #TODO: add content to news.csv
+	text_description = table[index_clicked]['content']
 
 	# change the layout
 	return {'display': 'none'}, article_clicked, text_description, {'display': 'block'}

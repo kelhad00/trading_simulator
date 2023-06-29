@@ -14,7 +14,7 @@ translation = {
             'y': 'Price',
             'legend': {
                 'longMA': ' Simple moving average (20)',
-                'shortMA': ' Simple moving average (5)',
+                'shortMA': ' Simple moving average (50)',
                 'price': 'Price'
             },
         },

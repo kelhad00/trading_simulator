@@ -3,7 +3,7 @@ This file is the main file for the project. It will run all the other files
 """
 import os
 from emotrade import app
-from emotrade.Setup import download_market_data, scraping_news
+from emotrade.Setup import download_market_data
 
 if __name__ == '__main__':
     # Run all setup files if not already done
@@ -17,9 +17,8 @@ if __name__ == '__main__':
         download_market_data()
 
     if not os.path.exists(os.path.join('Data', "news.csv")):
-        print('\nScrapping news...\n')
-        scraping_news()
-        print('Done\n')
+        print('\nYou need to add the `news.csv` file into the `Data` folder\n')
+        quit()
 
     app.run_server(debug=True) #TODO: change to False when deploying
 

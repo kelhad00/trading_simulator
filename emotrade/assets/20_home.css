@@ -33,8 +33,16 @@
     color: black;
     font-weight: bold;
     padding: 10px 20px;
+    cursor: pointer;
+    transition-duration: 0.4s;
 }
 
 .home-container > a:hover {
-    background-color: #c3c3c3;
+    background-color: #555555;
+    color: white;
 }
+
+.home-container > a:active {
+    background-color: #555555;
+    box-shadow: 0 5px #666;
+  }
