@@ -65,5 +65,6 @@ translation = {
         "signature": "L\'équipe Emotrade",
         "button-start": "Démarrer l’expérience",
         "button-start-info": "Veuillez patienter quelques instants...",
+        "quit-btn": "Quitter",
     }
 }

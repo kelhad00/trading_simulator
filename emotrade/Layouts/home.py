@@ -42,4 +42,6 @@ def main_layout(lang="fr"):
 			id='home-start-button'
 		),
 
+		html.Button(tls[lang]['quit-btn']),
+		
 	], className="home-container")
