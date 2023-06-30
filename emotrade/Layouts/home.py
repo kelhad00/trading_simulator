@@ -28,4 +28,6 @@ def main_layout(lang="fr"):
 
 		dcc.Link(tls[lang]['button-start'], href='/' + lang + '/dashboard'),
 
+		html.Button(tls[lang]['quit-btn']),
+		
 	], className="home-container")
