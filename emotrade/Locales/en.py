@@ -64,5 +64,6 @@ translation = {
         "info_txt": "To start the session, click on 'Start Session'. The interface is available in english and french.",
         "signature": "The Emotrade team",
         "button-start": "Start Session",
+        "button-start-info": "Please wait for the session to start...",
     }
 }

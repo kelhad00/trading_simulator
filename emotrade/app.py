@@ -16,6 +16,10 @@ app.layout = html.Div([
     dash.page_container
 ])
 
+# Variables used to disable the start button on the home page
+app.home_start_button_disabled = False
+
+
 if __name__ == '__main__':
 	# Run app
     app.run_server(debug=True) #TODO: change to False when deploying

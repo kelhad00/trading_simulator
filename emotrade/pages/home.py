@@ -19,3 +19,7 @@ def layout(lang="fr"):
     dash.page_registry['lang'] = lang      # Provide the language to the callbacks
 
     return home.main_layout(lang) # Import the layout with the selected language
+
+
+# Import callbacks
+from emotrade.Components import home as callbacks

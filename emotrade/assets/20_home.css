@@ -19,7 +19,7 @@
 }
 
 
-.home-container p:last-of-type {
+.home-container .signature {
     margin: 40px 0 60px 0;
     font-size: 15px;
     font-style: italic;

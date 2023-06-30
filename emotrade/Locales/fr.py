@@ -64,5 +64,6 @@ translation = {
         "info_txt": "Pour commencer la session, cliquer sur 'Démarrer l’expérience'. L\'interface est disponible en anglais et français.",
         "signature": "L\'équipe Emotrade",
         "button-start": "Démarrer l’expérience",
+        "button-start-info": "Veuillez patienter quelques instants...",
     }
 }

@@ -7,6 +7,11 @@ import dash
 def main_layout(lang="fr"):
     return html.Div([
 
+		dcc.Interval(
+			id = 'home-clock',
+			interval = 5000, # in milliseconds
+		),
+
 		# Dropdown to change the language
 		html.Div([
 			html.Button([
@@ -24,8 +29,17 @@ def main_layout(lang="fr"):
 
 		html.Img(src=dash.get_asset_url('photo_finance_2.png')),
 
-		html.P(tls[lang]['signature']),
+		html.P(tls[lang]['signature'], className="signature"),
 
-		dcc.Link(tls[lang]['button-start'], href='/' + lang + '/dashboard'),
+
+		html.P(tls[lang]['button-start-info'],
+			style={'display': 'none'},
+			id='home-start-button-info'
+		),
+		dcc.Link(
+			tls[lang]['button-start'],
+			href='/' + lang + '/dashboard',
+			id='home-start-button'
+		),
 
 	], className="home-container")
