@@ -1,7 +1,7 @@
 .dashboard-container {
     display: grid;
     grid-template:
-        "portfolio  .  graph graph graph      graph      graph" 45%
+        "portfolio  .  graph graph graph      graph      graph" 360px
         ".          .   .      .   .            .            ." 40px
         "news    news   news   .   request-form . request-list" auto
         / 35%    50px   10%  100px 15%        100px       auto;
