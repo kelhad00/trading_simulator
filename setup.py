@@ -23,6 +23,8 @@ setup(
     },
     python_requires=">=3.10",
     packages=find_packages(),
+    package_data={"emotrade": ["assets/*"]},
+    include_package_data=True,
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
