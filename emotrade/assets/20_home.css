@@ -68,3 +68,11 @@
     background-color: #555555;
     box-shadow: 0 5px #666;
   }
+
+
+.home-container #stop-msg {
+    color: red;
+    font-weight: bold;
+    font-style: italic;
+    margin-top: 10px;
+}

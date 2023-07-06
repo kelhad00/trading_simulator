@@ -64,6 +64,7 @@ translation = {
         "info_txt": "To start the session, click on 'Start Session'. The interface is available in english and french.",
         "signature": "The Emotrade team",
         "button-start": "Start Session",
-        "quit-btn": "Exit"
+        "quit-btn": "Exit",
+        "stop-msg": "Dash app stopped gracefully.",
     }
 }
