@@ -15,5 +15,6 @@ def layout(lang="fr"):
 
     return home.main_layout(lang) # Import the layout with the selected language 
 
-    #Import callbacks
-    from emotrade.States import stop_app
+
+#Import callbacks
+from emotrade.States import stop_app

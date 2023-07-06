@@ -28,7 +28,7 @@ def main_layout(lang="fr"):
 
 		dcc.Link(tls[lang]['button-start'], href='/' + lang + '/dashboard'),
 
-		html.Button(tls[lang]['quit-btn']),
+		html.Button(tls[lang]['quit-btn'], id = "quit-btn"),
 
 		html.P(id = 'stop-msg'),
 		
