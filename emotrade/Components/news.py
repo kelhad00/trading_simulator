@@ -4,6 +4,7 @@ from dash import Output, Input, State
 from dash.exceptions import PreventUpdate
 import dash
 
+from emotrade.defaults import defaults as dlt
 
 @dash.callback(
 	Output('news-dataframe','data'),
@@ -17,7 +18,7 @@ def update_news_table(timestamp, news_df, range=1000):
 	"""
 	# If the news dataframe is not loaded yet, load it
 	if not news_df:
-		file_path = os.path.join('Data', 'news.csv')
+		file_path = os.path.join(dlt.data_path, 'news.csv')
 		news_df = pd.read_csv(file_path, sep=';') \
 					.drop_duplicates(subset=['title'], keep='first')\
 					.rename({'title':'article'}, axis=1)
@@ -58,7 +59,7 @@ def show_hide_element(cell_clicked, table):
 
 	# # find the description in the dtf with the title /!\ news_df = DICT
 	# # getting the news data to find the content
-	# file_path = os.path.join('Data', 'news.csv')
+	# file_path = os.path.join(dlt.data_path, 'news.csv')
 	# news_df = pd.read_csv(file_path, sep=';', usecols=['title','content'])\
 
 	# # getting the content of the corresponding article

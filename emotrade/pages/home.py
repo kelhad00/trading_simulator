@@ -1,5 +1,5 @@
-import dash
 from dash import html, dcc
+import dash
 
 from emotrade.Layouts import home
 from emotrade.Locales import translations as tls

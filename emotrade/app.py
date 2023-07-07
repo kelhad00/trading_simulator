@@ -2,6 +2,7 @@ from dash import Dash, html, dcc
 import dash
 
 from emotrade.Layouts import dashboard
+from emotrade.defaults import defaults
 
 # Initialize Dash app
 app = Dash(__name__,
@@ -16,8 +17,15 @@ app.layout = html.Div([
     dash.page_container
 ])
 
-# Variables used to disable the start button on the home page
-app.home_start_button_disabled = False
+# Add default values to the app object
+# It is highly recommended to change them only before the server is started
+app.defaults = defaults
+app.d = defaults # Alias
+
+# It isn’t recommended to change default values after the server has been started
+# So we provide another way from the app object to change secure values
+# Manage the home page start button with the app object at runtime
+app.home_start_button_disabled = app.d.home_start_button_disabled
 
 
 if __name__ == '__main__':

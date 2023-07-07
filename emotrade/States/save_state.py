@@ -4,8 +4,7 @@ import pandas as pd
 from dash import Output, Input, State
 import dash
 
-
-from emotrade import MAX_REQUESTS
+from emotrade.defaults import defaults as dlt
 
 
 @dash.callback(
@@ -83,14 +82,14 @@ def save_state(	company_id, news_df, news_description_style, cashflow, request_l
 	], axis=1)
 
 	# Be sure that the request list has MAX_REQUESTS elements in the header (useful for the first time only)
-	for i in range(MAX_REQUESTS):
+	for i in range(dlt.max_requests):
 	    df[f'request {i+1}'] = None
 
 	# Prepare request list to be saved as columns
 	df = df.combine_first(
 		pd.DataFrame({
 			f'request {i+1}': f"{rq[0]} {rq[1]} {rq[2]} {rq[3]}" \
-			for i, rq in enumerate(request_list[:MAX_REQUESTS])
+			for i, rq in enumerate(request_list[:dlt.max_requests])
 		}, index = [0])
 	)
 
@@ -98,7 +97,7 @@ def save_state(	company_id, news_df, news_description_style, cashflow, request_l
 	df = df.reindex(sorted(df.columns), axis=1)
 
 	# Save the header only once and append the rest
-	file_path = os.path.join('Data', 'interface-logs.csv')
+	file_path = os.path.join(dlt.data_path, 'interface-logs.csv')
 	if os.path.isfile(file_path):
 		df.to_csv(file_path, mode='a', index=False, header=False)
 	else:

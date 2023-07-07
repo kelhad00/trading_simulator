@@ -3,6 +3,8 @@ import pandas as pd
 from dash import Output, Input, State
 import dash
 
+from emotrade.defaults import defaults as dlt
+
 # Callbacks
 @dash.callback(
     Output("market-dataframe", "data"),
@@ -14,7 +16,7 @@ def import_market_data(company_id, price_list):
 	""" Import market data from CSV file
 	"""
 	# Import market data
-	file_path = os.path.join('Data', 'market_data.csv')
+	file_path = os.path.join(dlt.data_path, 'market_data.csv')
 	df = pd.read_csv(file_path, index_col=0, header=[0,1])
 
 	# Extract price list from market data

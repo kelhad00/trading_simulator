@@ -1,8 +1,8 @@
 from dash import html, dcc, dash_table
 import pandas as pd
 
-from emotrade import MAX_INV_MONEY, UPDATE_TIME, COMP, INDEX
 from emotrade.Components.candlestick_charts import PLOTLY_CONFIG
+from emotrade.defaults import defaults as dlt
 from emotrade.Locales import translations as tls
 
 
@@ -15,16 +15,16 @@ global_variables = [
     dcc.Store(id = 'market-dataframe'),
     dcc.Store(id = 'price-dataframe'),
     dcc.Store(id = 'news-dataframe'),
-    dcc.Store(id = 'cashflow', data = MAX_INV_MONEY, storage_type='local'),
+    dcc.Store(id = 'cashflow', data = dlt.initial_money, storage_type='local'),
     dcc.Store(id = 'request-list', data = [], storage_type='local'),
     dcc.Store(  # Store only the number of shares for each company
         id = 'portfolio_shares',
-        data = {c: {'Shares': 0} for c in COMP.keys()},
+        data = {c: {'Shares': 0} for c in dlt.companies.keys()},
         storage_type='local'
     ),
     dcc.Store(    # Store only the total price for each company
         id = 'portfolio_totals',
-        data = {c: {'Total': 0} for c in COMP.keys()},
+        data = {c: {'Total': 0} for c in dlt.companies.keys()},
         storage_type='local'
     ),
 ]
@@ -36,7 +36,7 @@ def main_layout(lang = "fr"):
 		# Periodic updater
 		dcc.Interval(
 			id = 'periodic-updater',
-			interval = UPDATE_TIME, # in milliseconds
+			interval = dlt.update_time, # in milliseconds
 		),
 
 
@@ -51,7 +51,7 @@ def main_layout(lang = "fr"):
 
 		# Company graph
 		html.Div([
-			dcc.Dropdown({**COMP, **INDEX}, list(COMP.keys())[0],
+			dcc.Dropdown({**dlt.companies, **dlt.indexes}, list(dlt.companies.keys())[0],
 				id = 'company-selector',
 				clearable = False,
 				persistence = True,

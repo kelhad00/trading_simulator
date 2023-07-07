@@ -3,7 +3,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from yahooquery import Ticker
 
-from emotrade import COMP, INDEX
+from emotrade.defaults import defaults as dlt
 
 # Variables to set
 # stock_list = [ # List of stocks to download
@@ -12,7 +12,7 @@ from emotrade import COMP, INDEX
 #     "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
 #     "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
 # ]
-stock_list = list(COMP.keys()) + list(INDEX.keys())
+stock_list = list(dlt.companies.keys()) + list(dlt.indexes.keys())
 periode_to_scrape = " 1mo"
 each_time_interval = "5m"
 
@@ -62,18 +62,18 @@ data = data.dropna()
 print("Overview of the data:\n", data.head(), '\n')
 
 # Create directory to save data
-if not os.path.exists("Data"):
-    print('Creating directory Data')
-    os.mkdir("Data")
+if not os.path.exists(dlt.data_path):
+    print('Creating directory ' + dlt.data_path)
+    os.mkdir(dlt.data_path)
 
 # # Save data to multily CSV file
 # for stock in stock_list:
-#     file_path = os.path.join('Data','market_data', stock + '.csv')
+#     file_path = os.path.join(dlt.data_path, 'market_data', stock + '.csv')
 #     data[stock].to_csv(file_path)
 
 # Save data to single CSV file
-print('Saving data to Data/market_data.csv')
-file_path = os.path.join('Data', 'market_data.csv')
+print('Saving data to ' + dlt.data_path + '/market_data.csv')
+file_path = os.path.join(dlt.data_path, 'market_data.csv')
 data.to_csv(file_path)
 
 # Read data from CSV file and show its head to check if it is correct
@@ -89,8 +89,8 @@ data = data.reset_index().set_index(['symbol','asOfDate']).T.drop('periodType')
 print("Overview of the data:\n", data.head(), '\n')
 
 # Save data to single CSV file
-print('Saving data to Data/revenue.csv')
-file_path = os.path.join('Data', 'revenue.csv')
+print('Saving data to '+ dlt.data_path + '/revenue.csv')
+file_path = os.path.join(dlt.data_path, 'revenue.csv')
 data.to_csv(file_path)
 
 print('Download Total Revenue done')

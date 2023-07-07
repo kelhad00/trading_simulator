@@ -3,7 +3,7 @@ from dash import html, dcc, Output, Input, State, Patch, no_update, page_registr
 from dash.exceptions import PreventUpdate
 import dash
 
-import emotrade as etd
+from emotrade.defaults import defaults as dlt
 from emotrade.Locales import translations as tls
 
 
@@ -17,7 +17,7 @@ def change_state_request_form(company):
 	""" Disable the request form when an index is selected
 		And enable it want a company is selected
 	"""
-	if company in etd.INDEX.keys():
+	if company in dlt.indexes.keys():
 		return True, True, True # Disable the form
 	else:
 		return False, False, False # Enable the form
@@ -46,7 +46,7 @@ def add_request(btn, company, action, price, share, cash, timestamp, price_list,
 	if btn == 0: raise PreventUpdate # Avoid callback to be triggered at the first load
 
     # If the user has too many requests
-	if len(req) == etd.MAX_REQUESTS:
+	if len(req) == dlt.max_requests:
 		return no_update, False, tls[dash_registry['lang']]["err-too-many-requests"]
 
 	# If the form isn't filled correctly

@@ -1,7 +1,8 @@
 from dash import html, dcc
+import dash
+
 from emotrade.Locales import translations as tls
 
-import dash
 
 # Layout of the home page
 def main_layout(lang="fr"):

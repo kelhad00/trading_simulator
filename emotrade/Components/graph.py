@@ -4,8 +4,8 @@ from dash import Output, Input, State, ctx, no_update, page_registry as dash_reg
 import dash
 import plotly.graph_objects as go
 
-import emotrade as etd
 from emotrade.Components.candlestick_charts import create_graph
+from emotrade.defaults import defaults as dlt
 from emotrade.Locales import translations as tls
 
 
@@ -62,11 +62,11 @@ def update_revenue( company):
 	""" Display the revenue graph
 	"""
 	# If the user select an index, force the tab to be the market graph
-	if company in etd.INDEX.keys():
+	if company in dlt.indexes.keys():
 		return no_update, 'tab-market', {'display': 'none'}
 
 	# Import income data of the selected company
-	file_path = os.path.join('Data', 'revenue.csv')
+	file_path = os.path.join(dlt.data_path, 'revenue.csv')
 	df = pd.read_csv(file_path, index_col=0, header=[0,1])
 
 	# Format these data to be easily used
