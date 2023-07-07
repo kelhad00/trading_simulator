@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+
+import os
+import argparse
+from emotrade import app
+from emotrade.Setup import download_market_data
+
+
+# [Check parser arguments]
+def period(arg):
+    try:
+        i = int(eval(arg))
+        if i <= 0: raise argparse.ArgumentTypeError(
+            'must be a positive integer'
+        )
+        if i < 100: raise argparse.ArgumentTypeError(
+            'must be greater than 100 milliseconds'
+        )
+        return i
+    except (NameError, SyntaxError):
+        raise argparse.ArgumentTypeError(
+            'must be an integer or a maths expression'
+        )
+
+def usize(arg):
+    try:
+        i = int(eval(arg))
+        if i <= 0: raise argparse.ArgumentTypeError(
+            'must be a positive integer'
+        )
+        return i
+    except (NameError, SyntaxError):
+        raise argparse.ArgumentTypeError(
+            'must be an positive integer or a maths expression'
+        )
+
+def parse_dict(arg, name):
+    if len(arg) % 2 != 0:
+        print(f'''\
+{os.path.basename(__file__)}: error: argument {name}: must be a list of ticker and name
+(exemple: ... -c OR.PA \"L\'ORÉAL (OR)\" CS.PA \"AXA (CS)\" ...)
+        ''')
+        quit()
+    return dict(zip(arg[::2],arg[1::2]))
+
+
+# [Parse arguments]
+parser = argparse.ArgumentParser(
+    description='Command line interface for emotrade',
+    add_help=False,
+)
+
+parser.add_argument(
+    'data_path', type=str,
+    help='''
+        Specify the folder where the data will be stored.
+        Create it if it does not exist
+    ''',
+)
+
+group = parser.add_argument_group('optional arguments')
+group.add_argument(
+    '-p','--period', type=period, default=app.d.update_time, metavar='P',
+    help=f'Period of time used to update data on the dashboard (in milliseconds) (default: {app.d.update_time})'
+)
+group.add_argument(
+    '-r', '--max-requests', metavar='N',
+    type=int, choices=range(1, 12), default=app.d.max_requests,
+    help=f'Maximum number of requests the user can make on the dashboard (default: {app.d.max_requests})'
+)
+# group.add_argument(
+#     '-m', '--money', type=usize, default=app.d.initial_money, metavar='M',
+#     help=f'Initial money the user has (default: {app.d.initial_money})'
+# )
+# group.add_argument(
+#     '-c', '--companies', type=str, nargs='+', metavar='TICKER NAME',
+#     help='List of companies used in the interface (couple of ticker and name)'
+# )
+# group.add_argument(
+#     '-i', '--indexes', type=str, nargs='+', metavar='TICKER NAME',
+#     help='List of indexes used in the interface (couple of ticker and name)'
+# )
+
+other = parser.add_argument_group('other arguments')
+other.add_argument("-h", "--help", action="help", help="Show this help message and exit")
+other.add_argument('--debug', action='store_true', help='Run in debug mode')
+
+args = parser.parse_args()
+
+
+# [Update default values]
+app.d.data_path = args.data_path
+app.d.update_time = args.period
+app.d.max_requests = args.max_requests
+# # app.d.initial_money = args.money
+# if args.companies:
+#     app.d.companies = parse_dict(args.companies, '-c/--companies')
+# if args.indexes:
+#     app.d.indexes = parse_dict(args.indexes, '-i/--indexes')
+
+
+# [Setup]
+path = args.data_path
+if not os.path.exists(path):
+    print('Creating directory Data at root of the project')
+    os.makedirs(path)
+
+if not os.path.exists(os.path.join(path, "market_data.csv"))\
+    or not os.path.exists(os.path.join(path, "revenue.csv")):
+    print('\nDownloading market data...\n')
+    download_market_data()
+
+if not os.path.exists(os.path.join(path, "news.csv")):
+    print('\nYou need to add the `news.csv` file into the `Data` folder\n')
+    quit()
+
+
+# [Run Server]
+app.run_server(debug=args.debug)
+
+

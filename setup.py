@@ -25,6 +25,7 @@ setup(
     packages=find_packages(),
     package_data={"emotrade": ["assets/*"]},
     include_package_data=True,
+    scripts=["bin/emotrade"], # "Provide command-line scripts for the user to run"
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
