@@ -38,8 +38,8 @@ def generate_portfolio_table(stocks_info, shares):
 	]).transpose().round(2)
 	df['Stock'] = df.index
 
-	column_size = 10
 	stock_size = len(df)
+	column_size = stock_size // 2 + stock_size % 2
 	column_names = tls[dash_registry['lang']]['portfolio-columns']
 	return html.Div([
 		html.Table([
@@ -51,7 +51,7 @@ def generate_portfolio_table(stocks_info, shares):
 			html.Tbody([
 				html.Tr([
 					html.Td( df.iloc[i][col] ) for col in column_names.keys()
-				]) for i in range(j,column_size + j)
+				]) for i in range(j,column_size + j) if i < stock_size
 			])
 		]) for j in range(0, stock_size, column_size)
     ], className="portfolio-table")
