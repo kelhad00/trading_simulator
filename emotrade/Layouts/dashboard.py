@@ -6,28 +6,30 @@ from emotrade.defaults import defaults as dlt
 from emotrade.Locales import translations as tls
 
 
-# Global variables
-# Provide these components in global scope to keep their state between page changes
-global_variables = [
-    dcc.Store(id = 'nbr-logs', data = 0), # Number of times the app state has been saved
-    # Store timestamp value in the browser
-    dcc.Store(id = 'market-timestamp-value', data = '', storage_type='local'),
-    dcc.Store(id = 'market-dataframe'),
-    dcc.Store(id = 'price-dataframe'),
-    dcc.Store(id = 'news-dataframe'),
-    dcc.Store(id = 'cashflow', data = dlt.initial_money, storage_type='local'),
-    dcc.Store(id = 'request-list', data = [], storage_type='local'),
-    dcc.Store(  # Store only the number of shares for each company
-        id = 'portfolio_shares',
-        data = {c: {'Shares': 0} for c in dlt.companies.keys()},
-        storage_type='local'
-    ),
-    dcc.Store(    # Store only the total price for each company
-        id = 'portfolio_totals',
-        data = {c: {'Total': 0} for c in dlt.companies.keys()},
-        storage_type='local'
-    ),
-]
+def add_state_components():
+	""" Provide dcc.Store components in global scope
+		to keep their state between page changes
+	"""
+	return [
+		dcc.Store(id = 'nbr-logs', data = 0), # Number of times the app state has been saved
+		# Store timestamp value in the browser
+		dcc.Store(id = 'market-timestamp-value', data = '', storage_type='local'),
+		dcc.Store(id = 'market-dataframe'),
+		dcc.Store(id = 'price-dataframe'),
+		dcc.Store(id = 'news-dataframe'),
+		dcc.Store(id = 'cashflow', data = dlt.initial_money, storage_type='local'),
+		dcc.Store(id = 'request-list', data = [], storage_type='local'),
+		dcc.Store(  # Store only the number of shares for each company
+			id = 'portfolio_shares',
+			data = {c: {'Shares': 0} for c in dlt.companies.keys()},
+			storage_type='local'
+		),
+		dcc.Store(    # Store only the total price for each company
+			id = 'portfolio_totals',
+			data = {c: {'Total': 0} for c in dlt.companies.keys()},
+			storage_type='local'
+		),
+	]
 
 
 # Layout of the app

@@ -1,5 +1,6 @@
-# Default values used in the app
 class Defaults:
+    """Default values used in the app"""
+
     # Period of time used to update data on the dashboard
     update_time = 8*1000 # in milliseconds
 
