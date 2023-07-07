@@ -68,18 +68,18 @@ group.add_argument(
     type=int, choices=range(1, 12), default=app.d.max_requests,
     help=f'Maximum number of requests the user can make on the dashboard (default: {app.d.max_requests})'
 )
-# group.add_argument(
-#     '-m', '--money', type=usize, default=app.d.initial_money, metavar='M',
-#     help=f'Initial money the user has (default: {app.d.initial_money})'
-# )
-# group.add_argument(
-#     '-c', '--companies', type=str, nargs='+', metavar='TICKER NAME',
-#     help='List of companies used in the interface (couple of ticker and name)'
-# )
-# group.add_argument(
-#     '-i', '--indexes', type=str, nargs='+', metavar='TICKER NAME',
-#     help='List of indexes used in the interface (couple of ticker and name)'
-# )
+group.add_argument(
+    '-m', '--money', type=usize, default=app.d.initial_money, metavar='M',
+    help=f'Initial money the user has (default: {app.d.initial_money})'
+)
+group.add_argument(
+    '-c', '--companies', type=str, nargs='+', metavar='TICKER NAME',
+    help='List of companies used in the interface (couple of ticker and name)'
+)
+group.add_argument(
+    '-i', '--indexes', type=str, nargs='+', metavar='TICKER NAME',
+    help='List of indexes used in the interface (couple of ticker and name)'
+)
 
 other = parser.add_argument_group('other arguments')
 other.add_argument("-h", "--help", action="help", help="Show this help message and exit")
@@ -92,17 +92,17 @@ args = parser.parse_args()
 app.d.data_path = args.data_path
 app.d.update_time = args.period
 app.d.max_requests = args.max_requests
-# # app.d.initial_money = args.money
-# if args.companies:
-#     app.d.companies = parse_dict(args.companies, '-c/--companies')
-# if args.indexes:
-#     app.d.indexes = parse_dict(args.indexes, '-i/--indexes')
+app.d.initial_money = args.money
+if args.companies:
+    app.d.companies = parse_dict(args.companies, '-c/--companies')
+if args.indexes:
+    app.d.indexes = parse_dict(args.indexes, '-i/--indexes')
 
 
 # [Setup]
 path = args.data_path
 if not os.path.exists(path):
-    print('Creating directory Data at root of the project')
+    print('Creating directory ' + path)
     os.makedirs(path)
 
 if not os.path.exists(os.path.join(path, "market_data.csv"))\
@@ -111,11 +111,12 @@ if not os.path.exists(os.path.join(path, "market_data.csv"))\
     download_market_data()
 
 if not os.path.exists(os.path.join(path, "news.csv")):
-    print('\nYou need to add the `news.csv` file into the `Data` folder\n')
+    print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
     quit()
 
 
 # [Run Server]
+app.set_layout() # Load layout of the app
 app.run_server(debug=args.debug)
 
 
