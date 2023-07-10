@@ -39,18 +39,23 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
         else:
             dftmp = dataframe[:range]
     else: # if the graph is being updated
-        idx = dataframe.index.get_loc(timestamp)
-        if next_graph: # You want to see the graph with new data
+        idx = dataframe.index.get_loc(timestamp) + 1
+        if idx == 1: # if the timestamp is the first element of the dataframe
             if range == 0:
+                dftmp = dataframe[:1]
+            else:
+                dftmp = dataframe[:range]
+        elif next_graph: # You want to see the graph with new data
+            if range == 0 or idx < range:
                 dftmp = dataframe.iloc[:idx + 1]
             else:
-                dftmp = dataframe.iloc[idx - (range - 2) : idx + 2]
+                dftmp = dataframe.iloc[idx - (range - 1) : idx + 1]
         else: # You want to see the graph of another company
               # And so with the same timestamp as the previous graph
             if range == 0:
-                dftmp = dataframe.iloc[idx - 1 : idx]
+                dftmp = dataframe.iloc[: idx]
             else:
-                dftmp = dataframe.iloc[idx - (range - 1) : idx + 1]
+                dftmp = dataframe.iloc[idx - range : idx]
 
     #creating the plot the long moving average
     long_mov_av = go.Scatter(

@@ -13,8 +13,8 @@ from emotrade.defaults import defaults as dlt
 #     "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
 # ]
 stock_list = list(dlt.companies.keys()) + list(dlt.indexes.keys())
-periode_to_scrape = " 1mo"
-each_time_interval = "5m"
+periode_to_scrape = " 2y"
+each_time_interval = "1d"
 
 print('For these stocks:', stock_list, '\n')
 
@@ -34,14 +34,15 @@ data = tickers.history(   # download data
 )
 
 # Format data to be like yfinance output (previously used)
-data = data.drop(['dividends'],axis=1).unstack(level=0).swaplevel(axis=1)
+data = data.drop(['dividends', 'splits'],axis=1).unstack(level=0).swaplevel(axis=1)
 data.rename(
     columns={"open": "Open", "high": "High", "low": "Low", "close": "Close", "volume": "Volume"},
     inplace=True
 )
 
 # Add missing datetimes to fill gaps in the data
-data = data.resample('5Min').asfreq()
+data.index = pd.to_datetime(data.index, utc=True)
+data = data.resample('1D').asfreq()
 
 # Convert timezone to Paris
 data.index = pd.to_datetime(data.index, utc=True).tz_convert('Europe/Paris')
@@ -50,13 +51,15 @@ data.index = pd.to_datetime(data.index, utc=True).tz_convert('Europe/Paris')
 data.fillna(method='ffill',inplace=True)
 # Fill the nan data at the beginning of the dataframe with next available data
 data.fillna(method='bfill',inplace=True)
+# If a column is still empty, fill it with 0
+data.fillna(value=0, inplace=True)
 
 # Add moving average using downloaded data
 for stock in stock_list:
     data[stock,'long_MA'] = data[stock,'Close'].rolling(int(20)).mean()
     data[stock,'short_MA'] = data[stock,'Close'].rolling(int(50)).mean()
 
-data = data.dropna()
+data.dropna(inplace=True)
 
 # Show stucture of the downloaded data
 print("Overview of the data:\n", data.head(), '\n')

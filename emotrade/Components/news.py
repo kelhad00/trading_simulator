@@ -12,7 +12,7 @@ from emotrade.defaults import defaults as dlt
 	Input('market-timestamp-value','data'),
 	State('news-dataframe','data'),
 )
-def update_news_table(timestamp, news_df, range=1000):
+def update_news_table(timestamp, news_df, range=1000, daily = True):
 	""" Display one more news periodically
 		Limit the number of news displayed to the range parameter
 	"""
@@ -29,6 +29,9 @@ def update_news_table(timestamp, news_df, range=1000):
 
 	# Convert timestamp to datetime to the format used by the news dataframe
 	timestamp = pd.to_datetime(timestamp).tz_localize(None)
+
+	if daily:
+		timestamp = timestamp + pd.Timedelta(days=1)
 
 	# Get the news before the timestamp
 	nl = news_df.loc[news_df['date'] <= timestamp].sort_values(by='date', ascending=False).astype(str)

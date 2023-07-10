@@ -2,7 +2,7 @@ class Defaults:
     """Default values used in the app"""
 
     # Period of time used to update data on the dashboard
-    update_time = 8*1000 # in milliseconds
+    update_time = 60*1000 # in milliseconds
 
     # Maximum number of requests the user can make on the dashboard
     max_requests = 10
