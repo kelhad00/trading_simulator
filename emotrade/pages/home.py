@@ -1,5 +1,4 @@
 import dash
-from dash import html, dcc
 
 from emotrade.Layouts import home
 from emotrade.Locales import translations as tls
@@ -23,3 +22,5 @@ def layout(lang="fr"):
 
 # Import callbacks
 from emotrade.Components import home as callbacks
+from emotrade.States import stop_app
+

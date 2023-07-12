@@ -66,5 +66,7 @@ translation = {
         "button-start": "Start Session",
         "button-start-info": "Please wait for the session to start...",
         "quit-btn": "Exit",
+        "stop-msg": "Dash app stopped gracefully.",
+
     }
 }

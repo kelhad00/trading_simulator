@@ -1,4 +1,4 @@
-from dash import html, dcc
+from dash import html, dcc, Output, Input
 from emotrade.Locales import translations as tls
 
 import dash
@@ -31,7 +31,6 @@ def main_layout(lang="fr"):
 
 		html.P(tls[lang]['signature'], className="signature"),
 
-
 		html.P(tls[lang]['button-start-info'],
 			style={'display': 'none'},
 			id='home-start-button-info'
@@ -42,6 +41,9 @@ def main_layout(lang="fr"):
 			id='home-start-button'
 		),
 
-		html.Button(tls[lang]['quit-btn']),
+		html.Button(tls[lang]['quit-btn'], id = "quit-btn"),
+
+		html.P(id = 'stop-msg'),
+
 		
 	], className="home-container")

@@ -66,5 +66,6 @@ translation = {
         "button-start": "Démarrer l’expérience",
         "button-start-info": "Veuillez patienter quelques instants...",
         "quit-btn": "Quitter",
+        "stop-msg": "L'app Dash s'est arrêté gracieusement."
     }
 }
