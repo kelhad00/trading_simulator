@@ -28,9 +28,9 @@ def stop_app(stop_btn):
     if stop_btn == 0: raise PreventUpdate # Avoid callback to be triggered at the first load 
    
     # create a server instance
-    server = make_server("localhost", 8050, server)
+    # server = make_server("localhost", 8050, server)
     
-    stop_execution()
+    # stop_execution()
     
     return False, tls[dash_registry['lang']]["stop-msg"]
 
