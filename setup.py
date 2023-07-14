@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "emotrade",
-    version = "0.2.dev1",
+    version = "0.2.dev2",
     author="Kevin EL HADDAD",
     author_email="kevin.elhaddad@umons.ac.be",
     maintainer="Gatien VILAIN",
@@ -23,7 +23,7 @@ setup(
     },
     python_requires=">=3.10",
     packages=find_packages(),
-    package_data={"emotrade": ["assets/*"]},
+    package_data={"emotrade": ["assets/*", "Setup/*.ipynb"]},
     include_package_data=True,
     scripts=["bin/emotrade"], # "Provide command-line scripts for the user to run"
     classifiers = [

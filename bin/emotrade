@@ -3,7 +3,7 @@
 import os
 import argparse
 from emotrade import app
-from emotrade.Setup import download_market_data
+from emotrade.Setup import download_market_data, analyse_news_data
 
 
 # [Check parser arguments]
@@ -58,32 +58,39 @@ parser.add_argument(
     ''',
 )
 
-group = parser.add_argument_group('optional arguments')
-group.add_argument(
+default = parser.add_argument_group('Default values')
+default.add_argument(
     '-p','--period', type=period, default=app.d.update_time, metavar='P',
     help=f'Period of time used to update data on the dashboard (in milliseconds) (default: {app.d.update_time})'
 )
-group.add_argument(
+default.add_argument(
     '-r', '--max-requests', metavar='N',
     type=int, choices=range(1, 12), default=app.d.max_requests,
     help=f'Maximum number of requests the user can make on the dashboard (default: {app.d.max_requests})'
 )
-group.add_argument(
+default.add_argument(
     '-m', '--money', type=usize, default=app.d.initial_money, metavar='M',
     help=f'Initial money the user has (default: {app.d.initial_money})'
 )
-group.add_argument(
+default.add_argument(
     '-c', '--companies', type=str, nargs='+', metavar='TICKER NAME',
     help='List of companies used in the interface (couple of ticker and name)'
 )
-group.add_argument(
+default.add_argument(
     '-i', '--indexes', type=str, nargs='+', metavar='TICKER NAME',
     help='List of indexes used in the interface (couple of ticker and name)'
 )
 
+setup = parser.add_argument_group('Setup')
+setup.add_argument(
+    '-a', '--check-news', action='store_true',
+    help='Open a jupyter notebook to analyze the news data'
+)
+setup.add_argument('--debug', action='store_true', help='Run in debug mode')
+
+
 other = parser.add_argument_group('other arguments')
 other.add_argument("-h", "--help", action="help", help="Show this help message and exit")
-other.add_argument('--debug', action='store_true', help='Run in debug mode')
 
 args = parser.parse_args()
 
@@ -112,6 +119,11 @@ if not os.path.exists(os.path.join(path, "market_data.csv"))\
 
 if not os.path.exists(os.path.join(path, "news.csv")):
     print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
+    quit()
+
+if args.check_news:
+    print('\nOpening jupyter notebook to analyze news data...\n')
+    analyse_news_data(args.data_path)
     quit()
 
 
