@@ -1,5 +1,6 @@
 <!-- References -->
 [repo-url]: https://github.com/kelhad00/trading_simulator/
+[sensors-repo-url]: https://github.com/kelhad00/multisensor_biosignal_toolkit
 [library-exemple-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/main.py
 [requirements-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/requirements.txt
 <!-- [discussion-url]: https://github.com/kelhad00/trading_simulator/discussions -->
@@ -14,6 +15,13 @@ A stock market site simulator for collecting data on stocks carried out by the t
 ![emotrade interface home page](https://raw.githubusercontent.com/kelhad00/trading_simulator/main/.github/images/homepage.png)
 
 ![emotrade interface dashboard](https://raw.githubusercontent.com/kelhad00/trading_simulator/main/.github/images/dashboard.png)
+
+This simulation takes stock market data for a given period and presents it in an interface that evolves with time and the user's actions.
+
+The interface allows you to make buy or sell requests on a company's shares, view the company's share price and earnings per year via graphs, know your stock portfolio and consult the news.
+It's currently available in English and French, and we'd be delighted to extend it to more languages (see the [contributing](#contributing) section).
+
+The user's actions are recorded throughout the simulation in a data file in .csv format, enabling you to study the trader's behavior during the simulation.
 
 
 ## Table of contents
@@ -210,8 +218,7 @@ For legal reasons, we do not provide a way to generate the news.csv file. It is 
 
 ## Why was this project created?
 
-<!-- Add explanations here -->
-...
+In the financial laboratories of the University of Mons, a study has been launched to analyse the reactions of traders to the stock markets. To better understand which factors are most important in their choices, what is the "human" part of this equation, and many other questions. To improve their results, the researchers needed to create a controlled, automated data-gathering environment. `emotrade` is an independent part of this environment, to which several sensors have been added. To find out more, have a look at the corresponding repository [here](sensors-repo-url).
 
 
 <!-- ## Wiki
