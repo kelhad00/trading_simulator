@@ -2,8 +2,8 @@
 [repo-url]: https://github.com/kelhad00/trading_simulator/ "Project repository"
 [sensors-repo-url]: https://github.com/kelhad00/multisensor_biosignal_toolkit "Project repository with sensors"
 
-[library-exemple-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/main.py "Sample file to start the interface"
-[requirements-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/requirements.txt "Project requirements"
+[library-exemple-url]: https://github.com/kelhad00/trading_simulator/blob/main/main.py "Sample file to start the interface"
+[requirements-url]: https://github.com/kelhad00/trading_simulator/blob/main/requirements.txt "Project requirements"
 
 [dash-projet-url]: https://github.com/plotly/dash "dash project repository we use"
 [dash-documentation-url]: https://dash.plotly.com/reference#dash.dash "Dash object documentation"
@@ -243,7 +243,7 @@ Feel free to create an issue/PR if you want to see anything else implemented.
 <!-- If you have some question or need help with configuration, start a [discussion][discussion-url]. -->
 
 <!-- Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR. -->
-You can also help with documentation in the [wiki][wiki-url].
+<!-- You can also help with documentation in the [wiki][wiki-url]. -->
 
 
 <!-- ## Legal Stuff
