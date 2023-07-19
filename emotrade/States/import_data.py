@@ -19,8 +19,12 @@ def import_market_data(company_id, price_list, timestamp):
 	""" Import market data from CSV file
 	"""
 	# Import market data
-	file_path = os.path.join(dlt.data_path, 'market_data.csv')
-	df = pd.read_csv(file_path, index_col=0, header=[0,1])
+	try:
+		file_path = os.path.join(dlt.data_path, 'market_data.csv')
+		df = pd.read_csv(file_path, index_col=0, header=[0,1])
+	except :
+		print('ERROR: No market data found in ' + dlt.data_path + ' folder.')
+		raise FileNotFoundError
 
 	# Extract price list from market data
 	if not price_list: # if the dataframe has not been loaded yet
