@@ -1,11 +1,16 @@
 <!-- References -->
-[repo-url]: https://github.com/kelhad00/trading_simulator/
-[sensors-repo-url]: https://github.com/kelhad00/multisensor_biosignal_toolkit
-[library-exemple-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/main.py
-[requirements-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/requirements.txt
-<!-- [discussion-url]: https://github.com/kelhad00/trading_simulator/discussions -->
-[wiki-url]: https://github.com/kelhad00/trading_simulator/wiki
-<!-- [license-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/LICENSE -->
+[repo-url]: https://github.com/kelhad00/trading_simulator/ "Project repository"
+[sensors-repo-url]: https://github.com/kelhad00/multisensor_biosignal_toolkit "Project repository with sensors"
+
+[library-exemple-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/main.py "Sample file to start the interface"
+[requirements-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/requirements.txt "Project requirements"
+
+[dash-projet-url]: https://github.com/plotly/dash "dash project repository we use"
+[dash-documentation-url]: https://dash.plotly.com/reference#dash.dash "Dash object documentation"
+
+<!-- [discussion-url]: https://github.com/kelhad00/trading_simulator/discussions "Project thread" -->
+[wiki-url]: https://github.com/kelhad00/trading_simulator/wiki "Project wiki page"
+<!-- [license-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/LICENSE "Project license" -->
 
 
 # emotrade
@@ -42,7 +47,7 @@ The user's actions are recorded throughout the simulation in a data file in .csv
 ## Requirements
 
 - [Python](https://www.python.org/) == 3.10 (Has not been tested for more recent versions)
-- [dash](https://github.com/plotly/dash) >= 2.10.2 : Low-code framework for rapidly building data apps in Python.
+- [dash](dash-projet-url) >= 2.10.2 : Low-code framework for rapidly building data apps in Python.
 - [Pandas](https://pandas.pydata.org/) >= 2.0.2 : Fast, powerful, flexible and easy to use open source data analysis and manipulation tool
 
 ### Optional (if you want to use `emotrade.setup` tools)
@@ -190,6 +195,11 @@ app.home_start_button_disabled = false
 # It is therefore undefined until this happens.
 app.dashboardIsRunning
 ```
+
+### Dash object below app object
+
+The `app` object we provide is actually a `Dash` object, taken from the [`dash`](dash-projet-url) library, to which we have added our own functionalities, and therefore contains all the features of this object. Please refer to the corresponding [documentation](dash-documentation-url) for more information on all the features of this object.
+
 
 ## The `Setup` toolbox
 
