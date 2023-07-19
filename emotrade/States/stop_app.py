@@ -27,7 +27,7 @@ def stop_app(stop_btn):
     """
     if stop_btn == 0: raise PreventUpdate # Avoid callback to be triggered at the first load 
    
-    # create a server instance
+    # create a server instance - doesn't reconize make_server() as a function
     # server = make_server("localhost", 8050, server)
     
     # stop_execution()
@@ -46,21 +46,6 @@ def stop_execution():
     
     server_thread.join()
     print("Dash app stopped gracefully.")
-
-
-# if __name__ == "__main__":
-    
-
-    # start the Dash app in a separate thread
-    # def start_dash_app():
-    #     app.run_server(debug=True, use_reloader=False)
-
-    # dash_thread = threading.Thread(target=start_dash_app)
-    # dash_thread.start()
-
-    # while keepPlot:
-    #     time.sleep(1)  # keep the main thread alive while the other threads are running
-
 
 
 
