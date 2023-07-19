@@ -39,6 +39,7 @@ The user's actions are recorded throughout the simulation in a data file in .csv
 - [Handling the application](#handling-the-application)
     - [Modify default configuration](#default-configuration)
     - [Modify running application](#modify-application-status-during-operation)
+    - [Dash object below app object](#dash-object-below-app-object)
 - [The Setup toolbox](#the-setup-toolbox)
 - [Why was this project created?](#why-was-this-project-created)
 - [Contributing](#contributing)
@@ -47,13 +48,13 @@ The user's actions are recorded throughout the simulation in a data file in .csv
 ## Requirements
 
 - [Python](https://www.python.org/) == 3.10 (Has not been tested for more recent versions)
-- [dash](dash-projet-url) >= 2.10.2 : Low-code framework for rapidly building data apps in Python.
+- [dash][dash-projet-url] >= 2.10.2 : Low-code framework for rapidly building data apps in Python.
 - [Pandas](https://pandas.pydata.org/) >= 2.0.2 : Fast, powerful, flexible and easy to use open source data analysis and manipulation tool
 
 ### Optional (if you want to use `emotrade.setup` tools)
 - [yahooquery](https://yahooquery.dpguthrie.com/) >= 2.3.1 : Python wrapper for an unofficial Yahoo Finance API
 
-The complete list is in [requirements.txt](requirements-url)
+The complete list is in [requirements.txt][requirements-url]
 
 
 ## Installing
@@ -101,7 +102,7 @@ app.set_layout() # Import the layout before starting the server
 app.run_server() # Server startup blocks the next instruction until the user presses ctrl-c in the terminal.
 ```
 
-For a more realistic example, have a look at the [`main.py`](library-exemple-url) file in this repository.
+For a more realistic example, have a look at the [`main.py`][library-exemple-url] file in this repository.
 
 For more complex use, with other instructions during server operation, it's best to put your program in a different thread. Like this:
 ```python
@@ -198,7 +199,7 @@ app.dashboardIsRunning
 
 ### Dash object below app object
 
-The `app` object we provide is actually a `Dash` object, taken from the [`dash`](dash-projet-url) library, to which we have added our own functionalities, and therefore contains all the features of this object. Please refer to the corresponding [documentation](dash-documentation-url) for more information on all the features of this object.
+The `app` object we provide is actually a `Dash` object, taken from the [`dash`][dash-projet-url] library, to which we have added our own functionalities, and therefore contains all the features of this object. Please refer to the corresponding [documentation][dash-documentation-url] for more information on all the features of this object.
 
 
 ## The `Setup` toolbox
@@ -228,23 +229,23 @@ For legal reasons, we do not provide a way to generate the news.csv file. It is 
 
 ## Why was this project created?
 
-In the financial laboratories of the University of Mons, a study has been launched to analyse the reactions of traders to the stock markets. To better understand which factors are most important in their choices, what is the "human" part of this equation, and many other questions. To improve their results, the researchers needed to create a controlled, automated data-gathering environment. `emotrade` is an independent part of this environment, to which several sensors have been added. To find out more, have a look at the corresponding repository [here](sensors-repo-url).
+In the financial laboratories of the University of Mons, a study has been launched to analyse the reactions of traders to the stock markets. To better understand which factors are most important in their choices, what is the "human" part of this equation, and many other questions. To improve their results, the researchers needed to create a controlled, automated data-gathering environment. `emotrade` is an independent part of this environment, to which several sensors have been added. To find out more, have a look at the corresponding repository [here][sensors-repo-url].
 
 
 <!-- ## Wiki
 
-Check out the [wiki](wiki-url) for more info. -->
+Check out the [wiki][wiki-url] for more info. -->
 
 
 ## Contributing
 
 Feel free to create an issue/PR if you want to see anything else implemented.
-<!-- If you have some question or need help with configuration, start a [discussion](discussion-url). -->
+<!-- If you have some question or need help with configuration, start a [discussion][discussion-url]. -->
 
 <!-- Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR. -->
-You can also help with documentation in the [wiki](wiki-url).
+You can also help with documentation in the [wiki][wiki-url].
 
 
 <!-- ## Legal Stuff
 
-**emotrade** is distributed under the <Add license here> license. See the [LICENSE](license-url) file in the release for details. -->
+**emotrade** is distributed under the <Add license here> license. See the [LICENSE][license-url] file in the release for details. -->
