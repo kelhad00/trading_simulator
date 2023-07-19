@@ -28,15 +28,18 @@ def import_market_data(company_id, price_list, timestamp):
 		price_list = price_list.to_dict()
 
 	if timestamp == '':
-		file_path = os.path.join(dlt.data_path, 'news.csv')
-		news_df = pd.read_csv(file_path, sep=';', usecols=['date'])
-		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
+		try:
+			file_path = os.path.join(dlt.data_path, 'news.csv')
+			news_df = pd.read_csv(file_path, sep=';', usecols=['date'])
+			news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
 
-		# set the timestamp to the older shared date between news and market data
-		# if news_df is the newer one, set the timestamp to the first date share with news_df
-		if news_df.min().date.strftime('%Y-%m-%d') > df.index.min()[:10]:
-			timestamp = df.loc[df.index >= news_df.min().date.strftime('%Y-%m-%d')].index[0]
-		else:
+			# set the timestamp to the older shared date between news and market data
+			# if news_df is the newer one, set the timestamp to the first date share with news_df
+			if news_df.min().date.strftime('%Y-%m-%d') > df.index.min()[:10]:
+				timestamp = df.loc[df.index >= news_df.min().date.strftime('%Y-%m-%d')].index[0]
+			else:
+				timestamp = df.index.min()
+		except :
 			timestamp = df.index.min()
 
 	return df[company_id].to_dict(), price_list, timestamp

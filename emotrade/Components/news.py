@@ -18,11 +18,15 @@ def update_news_table(timestamp, news_df, range=1000, daily = True):
 	"""
 	# If the news dataframe is not loaded yet, load it
 	if not news_df:
-		file_path = os.path.join(dlt.data_path, 'news.csv')
-		news_df = pd.read_csv(file_path, sep=';') \
-					.drop_duplicates(subset=['title'], keep='first')\
-					.rename({'title':'article'}, axis=1)
-		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
+		try:
+			file_path = os.path.join(dlt.data_path, 'news.csv')
+			news_df = pd.read_csv(file_path, sep=';') \
+						.drop_duplicates(subset=['title'], keep='first')\
+						.rename({'title':'article'}, axis=1)
+			news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
+		except :
+			print('You need to add the `news.csv` file into the ' + dlt.data_path + ' folder')
+			raise PreventUpdate
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
 		news_df['date'] = pd.to_datetime(news_df['date'])

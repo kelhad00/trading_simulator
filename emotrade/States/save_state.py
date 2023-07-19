@@ -55,7 +55,7 @@ def save_state(	company_id, news_df, news_description_style, cashflow, request_l
 		"selected-company": [company_id],
 		"selected-graph": [selected_tab],
 		"cashflow": [cashflow],
-		"last-news": [news_df.iloc[0]['article']],
+		"last-news": [news_df.iloc[0]['article'] if not news_df.empty else ''],
 		"nbr-news-displayed": [len(news_df)],
 		"news-mode": ['news-table'],
 		"selected-news": '', # if no news is selected then the description is empty
