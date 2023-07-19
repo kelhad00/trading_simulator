@@ -25,7 +25,7 @@ def update_news_table(timestamp, news_df, range=1000, daily = True):
 						.rename({'title':'article'}, axis=1)
 			news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
 		except :
-			print('You need to add the `news.csv` file into the ' + dlt.data_path + ' folder')
+			print('WARNING: You must add the `news.csv` file to the ' + dlt.data_path + ' folder to display information in the news table.')
 			raise PreventUpdate
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
