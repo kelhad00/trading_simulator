@@ -12,7 +12,11 @@ def download_market_data():
     """ Download market data from Yahoo Finance and save it into a data folder
         You can change the default path and data to download from the app.defaults variables
     """
-    importlib.import_module('.download_market_data', __package__)
+    try:
+        importlib.import_module('.download_market_data', __package__)
+    except ModuleNotFoundError:
+        print('\nError while downloading market data.\nPlease make sure you have yahooquery installed and try again.')
+        quit()
 
 
 def analyse_news_data(data_path='Data'):

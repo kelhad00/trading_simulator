@@ -47,6 +47,13 @@ def parse_dict(arg, name):
 # [Parse arguments]
 parser = argparse.ArgumentParser(
     description='Command line interface for emotrade',
+    epilog='''
+    additional information:
+        The tools for manipulating market data are in the emotrade[extra] package.
+        Please install these additional dependencies by installing the extra package
+        or the yahooquery and notebook dependencies themselves,
+        if you don't intend to use your own data.
+    ''',
     add_help=False,
 )
 
@@ -86,6 +93,10 @@ setup.add_argument(
     '-a', '--check-news', action='store_true',
     help='Open a jupyter notebook to analyze the news data'
 )
+setup.add_argument(
+    '--no-news', action='store_true',
+    help='Start interface without news file'
+)
 setup.add_argument('--debug', action='store_true', help='Run in debug mode')
 
 
@@ -117,7 +128,7 @@ if not os.path.exists(os.path.join(path, "market_data.csv"))\
     print('\nDownloading market data...\n')
     download_market_data()
 
-if not os.path.exists(os.path.join(path, "news.csv")):
+if not os.path.exists(os.path.join(path, "news.csv")) and not args.no_news:
     print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
     quit()
 

@@ -71,6 +71,10 @@ cd trading_simulator # Move to project root
 pip install setuptools . # Don't forget the dot at the end to install emotrade from local files
 ```
 
+If you need the `Setup` toolkit, also install the additional dependencies:
+```bash
+pip install setuptools .[extra]
+```
 
 ## Usage
 ### Using the command line

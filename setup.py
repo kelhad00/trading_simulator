@@ -3,28 +3,21 @@ from setuptools import setup, find_packages
 
 
 setup(
+    # Check https://setuptools.pypa.io/en/latest/references/keywords.html for a full list of keywords
     name = "emotrade",
-    version = "0.2.dev2",
+    version = "0.2.0",
+    description = (
+        "A stock market site simulator for collecting data on stocks carried out by the trader."
+    ),
+    long_description=io.open("README.md", encoding="utf-8").read(),
+    long_description_content_type="text/markdown",
     author="Kevin EL HADDAD",
     author_email="kevin.elhaddad@umons.ac.be",
     maintainer="Gatien VILAIN",
     maintainer_email="gatien.vilain@outlook.fr",
-    # license="",
-    description = (
-        "A trading website interface to collect trader actions"
-    ),
-    keywords = ["Trading", "Interface", "Actions"],
-    long_description=io.open("README.md", encoding="utf-8").read(),
-    long_description_content_type="text/markdown",
     url = "https://github.com/kelhad00/trading_simulator",
-    project_urls={
-        "Source": "https://github.com/kelhad00/trading_simulator",
-        "Bug Tracker": "https://github.com/kelhad00/trading_simulator/issues",
-    },
-    python_requires=">=3.10",
+    # download_url =
     packages=find_packages(),
-    package_data={"emotrade": ["assets/*", "Setup/*.ipynb"]},
-    include_package_data=True,
     scripts=["bin/emotrade"], # "Provide command-line scripts for the user to run"
     classifiers = [
         "Development Status :: 3 - Alpha",
@@ -34,7 +27,25 @@ setup(
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
-        # "License :: OSI Approved :: Some License",
         "Operating System :: OS Independent",
     ],
+    # license="",
+    # license_files = ("LICENSE.txt",),
+    keywords = ["Trading", "Interface", "Actions"],
+    package_data={"emotrade": ["assets/*", "Setup/*.ipynb"]},
+    install_requires=[
+        'dash ==2.10.2',
+        'pandas ==2.0.2',
+    ],
+    extras_require={
+        'extra': [
+            'yahooquery ==2.3.1',
+            'notebook'
+        ],
+    },
+    python_requires="==3.10.*",
+    project_urls={
+        "Source": "https://github.com/kelhad00/trading_simulator",
+        "Bug Tracker": "https://github.com/kelhad00/trading_simulator/issues",
+    },
 )
