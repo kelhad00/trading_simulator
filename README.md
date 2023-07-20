@@ -10,16 +10,16 @@
 
 <!-- [discussion-url]: https://github.com/kelhad00/trading_simulator/discussions "Project thread" -->
 [wiki-url]: https://github.com/kelhad00/trading_simulator/wiki "Project wiki page"
-<!-- [license-url]: https://raw.githubusercontent.com/kelhad00/trading_simulator/main/LICENSE "Project license" -->
+<!-- [license-url]: https://github.com/kelhad00/trading_simulator/blod/main/LICENSE "Project license" -->
 
 
 # emotrade
 
 A stock market site simulator for collecting data on stocks carried out by the trader.
 
-![emotrade interface home page](https://raw.githubusercontent.com/kelhad00/trading_simulator/main/.github/images/homepage.png)
+![emotrade interface home page](https://github.com/kelhad00/trading_simulator/blob/main/.github/images/homepage.png)
 
-![emotrade interface dashboard](https://raw.githubusercontent.com/kelhad00/trading_simulator/main/.github/images/dashboard.png)
+![emotrade interface dashboard](https://github.com/kelhad00/trading_simulator/blob/main/.github/images/dashboard.png)
 
 This simulation takes stock market data for a given period and presents it in an interface that evolves with time and the user's actions.
 
