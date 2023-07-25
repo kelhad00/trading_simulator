@@ -52,7 +52,7 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
                 dftmp = dataframe.iloc[idx - (range - 1) : idx + 1]
         else: # You want to see the graph of another company
               # And so with the same timestamp as the previous graph
-            if range == 0:
+            if range == 0 or idx < range:
                 dftmp = dataframe.iloc[: idx]
             else:
                 dftmp = dataframe.iloc[idx - range : idx]

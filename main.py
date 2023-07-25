@@ -24,5 +24,5 @@ if __name__ == '__main__':
         quit()
 
     app.set_layout() # Set the layout of the app
-    app.run_server(debug=True) #TODO: change to False when deploying
+    app.run_server(debug=False) # Start the app
 
