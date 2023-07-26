@@ -15,6 +15,7 @@ translation = {
             'legend': {
                 'longMA': 'Moyenne mobile simple (20)',
                 'shortMA': 'Moyenne mobile simple (50)',
+                'twohunMA': 'Moyenne mobile simple (200)',
                 'price': 'Prix'
             },
         },

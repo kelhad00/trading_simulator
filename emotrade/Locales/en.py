@@ -15,6 +15,7 @@ translation = {
             'legend': {
                 'longMA': ' Simple moving average (20)',
                 'shortMA': ' Simple moving average (50)',
+                'twohunMA': ' Simple moving average (200)', 
                 'price': 'Price'
             },
         },

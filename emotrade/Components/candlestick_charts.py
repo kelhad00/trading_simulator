@@ -71,6 +71,13 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
         name = 'shortMA'
     )
 
+    #creating the plot the 200 moving average
+    twohun_mov_av = go.Scatter(
+        x = dftmp.index,
+        y = dftmp['200_MA'],
+        name = 'twohunMA'
+    )
+
     #creating the plot the candlestick plot
     candelstick = go.Candlestick(
         x = dftmp.index,
@@ -83,7 +90,7 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
     )
 
     # Create chart for the selected stock
-    figure = go.Figure(data = [long_mov_av, short_mov_av, candelstick])
+    figure = go.Figure(data = [long_mov_av, short_mov_av, twohun_mov_av, candelstick])
 
     return figure, dftmp.index[-1]
 

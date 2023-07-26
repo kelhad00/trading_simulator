@@ -58,6 +58,7 @@ data.fillna(value=0, inplace=True)
 for stock in stock_list:
     data[stock,'long_MA'] = data[stock,'Close'].rolling(int(20)).mean()
     data[stock,'short_MA'] = data[stock,'Close'].rolling(int(50)).mean()
+    data[stock,'200_MA'] = data[stock,'Close'].rolling(int(200)).mean()
 
 data.dropna(inplace=True)
 
