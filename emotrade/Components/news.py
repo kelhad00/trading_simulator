@@ -18,15 +18,24 @@ def update_news_table(timestamp, news_df, range=1000, daily = True):
 	"""
 	# If the news dataframe is not loaded yet, load it
 	if not news_df:
-		try:
+		try: # Try to load the news dataframe from the csv file
 			file_path = os.path.join(dlt.data_path, 'news.csv')
-			news_df = pd.read_csv(file_path, sep=';') \
-						.drop_duplicates(subset=['title'], keep='first')\
-						.rename({'title':'article'}, axis=1)
-			news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
-		except :
+			news_df = pd.read_csv(file_path, sep=';')
+		except FileNotFoundError:
 			print('WARNING: You must add the `news.csv` file to the ' + dlt.data_path + ' folder to display information in the news table.')
 			raise PreventUpdate
+
+		try: # If news_df contains a title column
+			news_df = news_df.drop_duplicates(subset=['title'], keep='first')\
+						.rename({'title':'article'}, axis=1)
+		except KeyError: # Else, if news_df contains an article column
+			try:
+				news_df = news_df.drop_duplicates(subset=['article'], keep='first')
+			except KeyError: # news _df is not correctly formatted
+				print('WARNING: The `news.csv` file must contain a `title` or `article` column.')
+				raise PreventUpdate
+
+		news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
 	else:
 		news_df = pd.DataFrame.from_dict(news_df)
 		news_df['date'] = pd.to_datetime(news_df['date'])
