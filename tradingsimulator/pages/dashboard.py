@@ -1,7 +1,7 @@
 import dash
 
-from emotrade.Layouts import dashboard
-from emotrade.Locales import translations as tls
+from tradingsimulator.Layouts import dashboard
+from tradingsimulator.Locales import translations as tls
 
 
 dash.register_page(
@@ -12,7 +12,7 @@ dash.register_page(
 
 
 def layout(lang="fr"):
-    from emotrade.app import app # Import here to avoid circular import
+    from tradingsimulator.app import app # Import here to avoid circular import
     app.dashboardIsRunning = True # Set the dashboard as running
 
     if lang not in tls.keys(): lang = "fr" # Handle invalid language
@@ -22,6 +22,6 @@ def layout(lang="fr"):
 
 
 # Import callbacks
-from emotrade.States import import_data, save_state
-from emotrade.Components import graph, portfolio, requests, news
+from tradingsimulator.States import import_data, save_state
+from tradingsimulator.Components import graph, portfolio, requests, news
 

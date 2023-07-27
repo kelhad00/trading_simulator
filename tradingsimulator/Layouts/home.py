@@ -1,7 +1,7 @@
 from dash import html, dcc
 import dash
 
-from emotrade.Locales import translations as tls
+from tradingsimulator.Locales import translations as tls
 
 
 # Layout of the home page
@@ -27,8 +27,6 @@ def main_layout(lang="fr"):
         html.H1(tls[lang]['welcome']),
 
         html.P(tls[lang]['info_txt']),
-
-		html.Img(src=dash.get_asset_url('photo_finance_2.png')),
 
 		html.P(tls[lang]['signature'], className="signature"),
 

@@ -61,9 +61,9 @@ translation = {
         "clear-requests-button": "Clear",
 
         # Home Page
-        "welcome": "Welcome to the Emotrade app !",
+        "welcome": "Welcome to the TradingSimulator app !",
         "info_txt": "To start the session, click on 'Start Session'. The interface is available in english and french.",
-        "signature": "The Emotrade team",
+        "signature": "The TradingSimulator team",
         "button-start": "Start Session",
         "button-start-info": "Please wait for the session to start...",
     }

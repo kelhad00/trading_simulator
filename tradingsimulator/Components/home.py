@@ -8,7 +8,7 @@ import dash
     Input('home-clock', 'n_intervals'),
 )
 def manage_home_start_button(n):
-    from emotrade.app import app
+    from tradingsimulator.app import app
 
     if app.home_start_button_disabled:
         return {'display': 'none'}, {'display': 'block'}

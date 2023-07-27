@@ -2,7 +2,7 @@ import pandas as pd
 from dash import html, Output, Input, State, page_registry as dash_registry
 import dash
 
-from emotrade.Locales import translations as tls
+from tradingsimulator.Locales import translations as tls
 
 @dash.callback(
 	Output('portfolio_totals', 'data'),

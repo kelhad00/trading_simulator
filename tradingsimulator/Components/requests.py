@@ -3,8 +3,8 @@ from dash import html, dcc, Output, Input, State, Patch, no_update, page_registr
 from dash.exceptions import PreventUpdate
 import dash
 
-from emotrade.defaults import defaults as dlt
-from emotrade.Locales import translations as tls
+from tradingsimulator.defaults import defaults as dlt
+from tradingsimulator.Locales import translations as tls
 
 
 @dash.callback(

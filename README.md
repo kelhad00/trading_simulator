@@ -10,16 +10,16 @@
 
 <!-- [discussion-url]: https://github.com/kelhad00/trading_simulator/discussions "Project thread" -->
 [wiki-url]: https://github.com/kelhad00/trading_simulator/wiki "Project wiki page"
-<!-- [license-url]: https://github.com/kelhad00/trading_simulator/blod/main/LICENSE "Project license" -->
+[license-url]: https://github.com/kelhad00/trading_simulator/blod/main/LICENSE "Project license"
 
 
-# emotrade
+# tradingsimulator
 
 A stock market site simulator for collecting data on stocks carried out by the trader.
 
-![emotrade interface home page](https://github.com/kelhad00/trading_simulator/blob/main/.github/images/homepage.png)
+![tradingsimulator interface home page](https://github.com/kelhad00/trading_simulator/blob/main/.github/images/homepage.png)
 
-![emotrade interface dashboard](https://github.com/kelhad00/trading_simulator/blob/main/.github/images/dashboard.png)
+![tradingsimulator interface dashboard](https://github.com/kelhad00/trading_simulator/blob/main/.github/images/dashboard.png)
 
 This simulation takes stock market data for a given period and presents it in an interface that evolves with time and the user's actions.
 
@@ -56,7 +56,7 @@ The user's actions are recorded throughout the simulation in a data file in .csv
 - [dash][dash-projet-url] >= 2.10.2 : Low-code framework for rapidly building data apps in Python.
 - [Pandas](https://pandas.pydata.org/) >= 2.0.2 : Fast, powerful, flexible and easy to use open source data analysis and manipulation tool
 
-### Optional (if you want to use `emotrade.setup` tools)
+### Optional (if you want to use `tradingsimulator.setup` tools)
 - [yahooquery](https://yahooquery.dpguthrie.com/) >= 2.3.1 : Python wrapper for an unofficial Yahoo Finance API
 
 The complete list is in [requirements.txt][requirements-url]
@@ -66,14 +66,14 @@ The complete list is in [requirements.txt][requirements-url]
 
 <!-- Install and update using pip:
 ```bash
-pip install -U emotrade
+pip install -U tradingsimulator
 ``` -->
 
 Download the latest version of the repository and install the package locally with pip:
 ```bash
 # Clone the repository or download the latest version on the corresponding page
 cd trading_simulator # Move to project root
-pip install setuptools . # Don't forget the dot at the end to install emotrade from local files
+pip install setuptools . # Don't forget the dot at the end to install tradingsimulator from local files
 ```
 
 If you need the `Setup` toolkit, also install the additional dependencies:
@@ -86,12 +86,12 @@ pip install setuptools .[extra]
 
 Simply use the command line tool.
 ```bash
-emotrade <data_directory>
+tradingsimulator <data_directory>
 ```
 
 For more information on the command line :
 ```bash
-emotrade -h
+tradingsimulator -h
 ```
 
 ### Integrating it into your program
@@ -99,8 +99,8 @@ emotrade -h
 If you want to integrate it into your program, here's a simple example:
 ```python
 # main.py
-from emotrade import app
-from emotrade.Setup import download_market_data
+from tradingsimulator import app
+from tradingsimulator.Setup import download_market_data
 
 download_market_data() # Prepare the minimum necessary for interface operation
 
@@ -116,7 +116,7 @@ For more complex use, with other instructions during server operation, it's best
 ```python
 # main.py
 from threading import Thread
-from emotrade import app
+from tradingsimulator import app
 
 download_market_data() # Prepare the minimum necessary for interface operation
 
@@ -132,7 +132,7 @@ app.run_server() # Starts the server and blocks the following instructions.
 
 ## Handling the application
 
-The application can be fully manipulated using the `app` object available from `emotrade`.
+The application can be fully manipulated using the `app` object available from `tradingsimulator`.
 
 ### Default configuration
 
@@ -213,7 +213,7 @@ The `app` object we provide is actually a `Dash` object, taken from the [`dash`]
 
 ## The `Setup` toolbox
 
-The `emotrade.Setup` toolbox provides additional functions for creating an interface environment.
+The `tradingsimulator.Setup` toolbox provides additional functions for creating an interface environment.
 Here's a list:
 
 ```python
@@ -296,7 +296,7 @@ If this still isn't clear to you. Use the [`download_market_data`](#the-setup-to
 
 ## Why was this project created?
 
-In the financial laboratories of the University of Mons, a study has been launched to analyse the reactions of traders to the stock markets. To better understand which factors are most important in their choices, what is the "human" part of this equation, and many other questions. To improve their results, the researchers needed to create a controlled, automated data-gathering environment. `emotrade` is an independent part of this environment, to which several sensors have been added. To find out more, have a look at the corresponding repository [here][sensors-repo-url].
+In the financial laboratories of the University of Mons, a study has been launched to analyse the reactions of traders to the stock markets. To better understand which factors are most important in their choices, what is the "human" part of this equation, and many other questions. To improve their results, the researchers needed to create a controlled, automated data-gathering environment. `tradingsimulator` is an independent part of this environment, to which several sensors have been added. To find out more, have a look at the corresponding repository [here][sensors-repo-url].
 
 
 <!-- ## Wiki
@@ -313,6 +313,6 @@ Feel free to create an issue/PR if you want to see anything else implemented.
 <!-- You can also help with documentation in the [wiki][wiki-url]. -->
 
 
-<!-- ## Legal Stuff
+## Legal Stuff
 
-**emotrade** is distributed under the <Add license here> license. See the [LICENSE][license-url] file in the release for details. -->
+**tradingsimulator** is distributed under the Apache License 2.0. See the [LICENSE][license-url] file in the release for details.

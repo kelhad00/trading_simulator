@@ -2,8 +2,8 @@
 This file is the main file for the project. It will run all the other files
 """
 import os
-from emotrade import app
-from emotrade.Setup import download_market_data
+from tradingsimulator import app
+from tradingsimulator.Setup import download_market_data
 
 if __name__ == '__main__':
     # Run all setup files if not already done

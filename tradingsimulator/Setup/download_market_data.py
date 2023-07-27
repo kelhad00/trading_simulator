@@ -3,7 +3,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from yahooquery import Ticker
 
-from emotrade.defaults import defaults as dlt
+from tradingsimulator.defaults import defaults as dlt
 
 # Variables to set
 # stock_list = [ # List of stocks to download

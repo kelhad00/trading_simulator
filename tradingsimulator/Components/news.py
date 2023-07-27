@@ -4,7 +4,7 @@ from dash import Output, Input, State
 from dash.exceptions import PreventUpdate
 import dash
 
-from emotrade.defaults import defaults as dlt
+from tradingsimulator.defaults import defaults as dlt
 
 @dash.callback(
 	Output('news-dataframe','data'),

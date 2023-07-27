@@ -4,7 +4,7 @@ import pandas as pd
 from dash import Output, Input, State
 import dash
 
-from emotrade.defaults import defaults as dlt
+from tradingsimulator.defaults import defaults as dlt
 
 
 @dash.callback(

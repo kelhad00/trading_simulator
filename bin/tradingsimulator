@@ -2,8 +2,8 @@
 
 import os
 import argparse
-from emotrade import app
-from emotrade.Setup import download_market_data, analyse_news_data
+from tradingsimulator import app
+from tradingsimulator.Setup import download_market_data, analyse_news_data
 
 
 # [Check parser arguments]
@@ -46,10 +46,10 @@ def parse_dict(arg, name):
 
 # [Parse arguments]
 parser = argparse.ArgumentParser(
-    description='Command line interface for emotrade',
+    description='Command line interface for tradingsimulator',
     epilog='''
     additional information:
-        The tools for manipulating market data are in the emotrade[extra] package.
+        The tools for manipulating market data are in the tradingsimulator[extra] package.
         Please install these additional dependencies by installing the extra package
         or the yahooquery and notebook dependencies themselves,
         if you don't intend to use your own data.
@@ -123,11 +123,6 @@ if not os.path.exists(path):
     print('Creating directory ' + path)
     os.makedirs(path)
 
-if not os.path.exists(os.path.join(path, "market_data.csv"))\
-    or not os.path.exists(os.path.join(path, "revenue.csv")):
-    print('\nDownloading market data...\n')
-    download_market_data()
-
 if not os.path.exists(os.path.join(path, "news.csv")) and not args.no_news:
     print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
     quit()
@@ -137,6 +132,10 @@ if args.check_news:
     analyse_news_data(args.data_path)
     quit()
 
+if not os.path.exists(os.path.join(path, "market_data.csv"))\
+    or not os.path.exists(os.path.join(path, "revenue.csv")):
+    print('\nDownloading market data...\n')
+    download_market_data()
 
 # [Run Server]
 app.set_layout() # Load layout of the app

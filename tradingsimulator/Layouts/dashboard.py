@@ -1,9 +1,9 @@
 from dash import html, dcc, dash_table
 import pandas as pd
 
-from emotrade.Components.candlestick_charts import PLOTLY_CONFIG
-from emotrade.defaults import defaults as dlt
-from emotrade.Locales import translations as tls
+from tradingsimulator.Components.candlestick_charts import PLOTLY_CONFIG
+from tradingsimulator.defaults import defaults as dlt
+from tradingsimulator.Locales import translations as tls
 
 
 def add_state_components():

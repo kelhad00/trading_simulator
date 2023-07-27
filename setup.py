@@ -4,8 +4,8 @@ from setuptools import setup, find_packages
 
 setup(
     # Check https://setuptools.pypa.io/en/latest/references/keywords.html for a full list of keywords
-    name = "emotrade",
-    version = "0.2.0",
+    name = "tradingsimulator",
+    version = "0.2.1",
     description = (
         "A stock market site simulator for collecting data on stocks carried out by the trader."
     ),
@@ -13,26 +13,27 @@ setup(
     long_description_content_type="text/markdown",
     author="Kevin EL HADDAD",
     author_email="kevin.elhaddad@umons.ac.be",
-    maintainer="Gatien VILAIN",
-    maintainer_email="gatien.vilain@outlook.fr",
     url = "https://github.com/kelhad00/trading_simulator",
-    # download_url =
+    download_url = "https://github.com/kelhad00/trading_simulator/releases",
     packages=find_packages(),
-    scripts=["bin/emotrade"], # "Provide command-line scripts for the user to run"
+    scripts=["bin/tradingsimulator"], # "Provide command-line scripts for the user to run"
     classifiers = [
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Environment :: Web Environment",
+        "Framework :: Dash",
+        "Framework :: Flask",
         "Intended Audience :: Education",
         "Intended Audience :: Financial and Insurance Industry",
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent",
+        'License :: OSI Approved :: Apache Software License',
+        "Topic :: Scientific/Engineering",
     ],
-    # license="",
-    # license_files = ("LICENSE.txt",),
-    keywords = ["Trading", "Interface", "Actions"],
-    package_data={"emotrade": ["assets/*", "Setup/*.ipynb"]},
+    license='Apache 2.0',
+    license_files = ("LICENSE",),
+    package_data={"tradingsimulator": ["assets/*", "Setup/*.ipynb"]},
     install_requires=[
         'dash ==2.10.2',
         'pandas ==2.0.2',
