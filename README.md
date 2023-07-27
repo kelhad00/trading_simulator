@@ -10,7 +10,7 @@
 
 <!-- [discussion-url]: https://github.com/kelhad00/trading_simulator/discussions "Project thread" -->
 [wiki-url]: https://github.com/kelhad00/trading_simulator/wiki "Project wiki page"
-[license-url]: https://github.com/kelhad00/trading_simulator/blod/main/LICENSE "Project license"
+[license-url]: https://github.com/kelhad00/trading_simulator/blob/main/LICENSE "Project license"
 
 
 # tradingsimulator
