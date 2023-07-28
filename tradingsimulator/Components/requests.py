@@ -83,7 +83,7 @@ def display_requests(req):
 	Output("portfolio_shares", "data"),
 	Output("cashflow", "data"),
 	Input('market-timestamp-value','data'),
-    State("request-list", "data"),
+    Input("request-list", "data"),
 	State('price-dataframe','data'),
 	State('portfolio_shares','data'),
 	State('cashflow','data'),
