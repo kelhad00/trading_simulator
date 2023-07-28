@@ -1,6 +1,6 @@
 ## File Tree Structure
 
-The tradingsimulator directory contains the necessary files and folders to run the trading simulator. Here is a description of the main directories:
+The tradesim directory contains the necessary files and folders to run the trading simulator. Here is a description of the main directories:
 
 - `app.py`: The main application file. This is the entry point to launch the trading simulator.
 

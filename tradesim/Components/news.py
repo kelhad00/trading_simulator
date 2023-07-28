@@ -4,7 +4,7 @@ from dash import Output, Input, State
 from dash.exceptions import PreventUpdate
 import dash
 
-from tradingsimulator.defaults import defaults as dlt
+from tradesim.defaults import defaults as dlt
 
 @dash.callback(
 	Output('news-dataframe','data'),

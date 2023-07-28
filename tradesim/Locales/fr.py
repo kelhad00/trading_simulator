@@ -61,9 +61,9 @@ translation = {
         "clear-requests-button": "Supprimer",
 
         # Home Page
-        "welcome": "Bienvenue sur l\'app TradingSimulator !",
+        "welcome": "Bienvenue sur l\'app TradeSim !",
         "info_txt": "Pour commencer la session, cliquer sur 'Démarrer l’expérience'. L\'interface est disponible en anglais et français.",
-        "signature": "L\'équipe TradingSimulator",
+        "signature": "L\'équipe TradeSim",
         "button-start": "Démarrer l’expérience",
         "button-start-info": "Veuillez patienter quelques instants...",
     }

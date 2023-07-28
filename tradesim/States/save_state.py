@@ -4,7 +4,7 @@ import pandas as pd
 from dash import Output, Input, State
 import dash
 
-from tradingsimulator.defaults import defaults as dlt
+from tradesim.defaults import defaults as dlt
 
 
 @dash.callback(

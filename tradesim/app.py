@@ -1,8 +1,8 @@
 from dash import Dash, html, dcc
 import dash
 
-from tradingsimulator.Layouts.dashboard import add_state_components
-from tradingsimulator.defaults import defaults
+from tradesim.Layouts.dashboard import add_state_components
+from tradesim.defaults import defaults
 
 # Initialize Dash app
 app = Dash(__name__,

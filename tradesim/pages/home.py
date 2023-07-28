@@ -1,8 +1,8 @@
 from dash import html, dcc
 import dash
 
-from tradingsimulator.Layouts import home
-from tradingsimulator.Locales import translations as tls
+from tradesim.Layouts import home
+from tradesim.Locales import translations as tls
 
 
 dash.register_page(
@@ -12,7 +12,7 @@ dash.register_page(
 
 
 def layout(lang="fr"):
-    from tradingsimulator.app import app # Import here to avoid circular import
+    from tradesim.app import app # Import here to avoid circular import
     app.dashboardIsRunning = False # Disable the dashboard
 
     if lang not in tls.keys(): lang = "fr" # Handle invalid language
@@ -22,4 +22,4 @@ def layout(lang="fr"):
 
 
 # Import callbacks
-from tradingsimulator.Components import home as callbacks
+from tradesim.Components import home as callbacks

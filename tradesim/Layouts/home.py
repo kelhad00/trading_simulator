@@ -1,7 +1,7 @@
 from dash import html, dcc
 import dash
 
-from tradingsimulator.Locales import translations as tls
+from tradesim.Locales import translations as tls
 
 
 # Layout of the home page

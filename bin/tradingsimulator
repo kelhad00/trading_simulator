@@ -2,8 +2,8 @@
 
 import os
 import argparse
-from tradingsimulator import app
-from tradingsimulator.Setup import download_market_data, analyse_news_data
+from tradesim import app
+from tradesim.Setup import download_market_data, analyse_news_data
 
 
 # [Check parser arguments]
@@ -46,10 +46,10 @@ def parse_dict(arg, name):
 
 # [Parse arguments]
 parser = argparse.ArgumentParser(
-    description='Command line interface for tradingsimulator',
+    description='Command line interface for tradesim',
     epilog='''
     additional information:
-        The tools for manipulating market data are in the tradingsimulator[extra] package.
+        The tools for manipulating market data are in the tradesim[extra] package.
         Please install these additional dependencies by installing the extra package
         or the yahooquery and notebook dependencies themselves,
         if you don't intend to use your own data.

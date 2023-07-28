@@ -8,7 +8,7 @@ import dash
     Input('home-clock', 'n_intervals'),
 )
 def manage_home_start_button(n):
-    from tradingsimulator.app import app
+    from tradesim.app import app
 
     if app.home_start_button_disabled:
         return {'display': 'none'}, {'display': 'block'}

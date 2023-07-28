@@ -3,8 +3,8 @@ from dash import html, dcc, Output, Input, State, Patch, no_update, page_registr
 from dash.exceptions import PreventUpdate
 import dash
 
-from tradingsimulator.defaults import defaults as dlt
-from tradingsimulator.Locales import translations as tls
+from tradesim.defaults import defaults as dlt
+from tradesim.Locales import translations as tls
 
 
 @dash.callback(

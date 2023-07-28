@@ -1,9 +1,9 @@
 from dash import html, dcc, dash_table
 import pandas as pd
 
-from tradingsimulator.Components.candlestick_charts import PLOTLY_CONFIG
-from tradingsimulator.defaults import defaults as dlt
-from tradingsimulator.Locales import translations as tls
+from tradesim.Components.candlestick_charts import PLOTLY_CONFIG
+from tradesim.defaults import defaults as dlt
+from tradesim.Locales import translations as tls
 
 
 def add_state_components():
