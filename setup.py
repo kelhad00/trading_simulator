@@ -5,14 +5,14 @@ from setuptools import setup, find_packages
 setup(
     # Check https://setuptools.pypa.io/en/latest/references/keywords.html for a full list of keywords
     name = "tradesim",
-    version = "0.2.1",
+    version = "0.2.2",
     description = (
         "A stock market site simulator for collecting data on stocks carried out by the trader."
     ),
     long_description=io.open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
-    author="Kevin EL HADDAD, Capucine FOUILLARD, Paul HERBEAU, Gatien VILAIN",
-    author_email="kevin.elhaddad@umons.ac.be, capucine.fouillard@student.junia.com, paul.herbeau01@gmail.com, gatien.vilain@outlook.fr",
+    author="Gatien VILAIN, Capucine FOUILLARD, Paul HERBEAU, Kevin EL HADDAD",
+    author_email="kevin.elhaddad@umons.ac.be, gatien.vilain@outlook.fr, capucine.fouillard@student.junia.com, paul.herbeau01@gmail.com",
     url = "https://github.com/kelhad00/trading_simulator",
     download_url = "https://github.com/kelhad00/trading_simulator/releases",
     packages=find_packages(),
