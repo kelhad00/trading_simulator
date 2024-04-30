@@ -102,12 +102,12 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 		# If the request is completed
 		if req[0] == 'buy' and req[3] >= stock_price:
 			# If the user has enough money
-			if req[1] * stock_price < cashflow:
+			if req[1] * req[3] < cashflow:
 
 				# Update only the shares and the cashflow
 				# Because the total price will be updated in the portfolio callback
 				portfolio_info.loc['Shares', req[2]] += req[1]
-				cashflow -= req[1] * stock_price
+				cashflow -= req[1] * req[3]
 
 			# the request is removed, with or without the user having enough money
 			request_list.remove(req)
@@ -120,7 +120,7 @@ def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 				# Update only the shares and the cashflow
 				# Because the total price will be updated in the portfolio callback
 				portfolio_info.loc['Shares', req[2]] -= req[1]
-				cashflow += req[1] * stock_price
+				cashflow += req[1] * req[3]
 
 			# the request is removed, with or without the user having enough shares
 			request_list.remove(req)
