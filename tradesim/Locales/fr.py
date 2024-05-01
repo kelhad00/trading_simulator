@@ -66,5 +66,6 @@ translation = {
         "signature": "L\'équipe TradeSim",
         "button-start": "Démarrer l’expérience",
         "button-start-info": "Veuillez patienter quelques instants...",
+        "button-restart-sim": "Réinitialiser la simulation",
     }
 }

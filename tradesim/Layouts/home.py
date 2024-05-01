@@ -3,7 +3,6 @@ import dash
 
 from tradesim.Locales import translations as tls
 
-
 # Layout of the home page
 def main_layout(lang="fr"):
     return html.Div([
@@ -30,7 +29,6 @@ def main_layout(lang="fr"):
 
 		html.P(tls[lang]['signature'], className="signature"),
 
-
 		html.P(tls[lang]['button-start-info'],
 			style={'display': 'none'},
 			id='home-start-button-info'
@@ -40,5 +38,8 @@ def main_layout(lang="fr"):
 			href='/' + lang + '/dashboard',
 			id='home-start-button'
 		),
+
+		html.Br(),
+		html.Button(tls[lang]['button-restart-sim'], id='restart_sim'),
 
 	], className="home-container")
