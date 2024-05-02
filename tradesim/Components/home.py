@@ -27,6 +27,10 @@ def manage_home_start_button(n):
     prevent_initial_call=True,
 )
 def reset_data(btn):
+    if btn is None:
+        raise PreventUpdate
+    
+    # Import here to prevent circular import
     from tradesim.defaults import defaults as dlt
 
     # Reset the data of each dcc.Store component
