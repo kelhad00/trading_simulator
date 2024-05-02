@@ -42,8 +42,9 @@ def update_graph(n, df, timestamp, range=100):
         # yaxis_title = tls[dash_registry['lang']]["market-graph"]['y'],
         yaxis_tickprefix = '€',
         margin = dict(l=0, r=0, t=0, b=0),
-        height = 300,
-		legend = dict(x=0, y=1.0)
+		legend = dict(x=0, y=1.0),
+		xaxis_rangeslider_visible=False,
+		height = 400
     )
 	# Change language on the legend
 	fig.for_each_trace(lambda t:

@@ -4,7 +4,7 @@ import time
 
 PLOTLY_CONFIG = {
     'displaylogo': False,
-    'modeBarButtonsToRemove': ['toImage', 'select','lasso2d']
+    'modeBarButtonsToRemove': ['toImage', 'select','lasso2d'],
 }
 
 def create_graph(dataframe, timestamp='', next_graph=True, range=10):

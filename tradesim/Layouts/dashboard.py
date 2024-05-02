@@ -43,14 +43,58 @@ def main_layout(lang = "fr"):
 
 
 		#### Upper part ####
+  
+		#### Left part ####
 
-		# Portfolio
-		html.Div([
-			html.H2(tls[lang]['portfolio']),
-			html.Div(id = 'portfolio-table-container'),
-			dcc.Markdown(id = 'portfolio-total-price')
-		], className = "portfolio-container"),
+		# Portfolio and news tabs
+		dcc.Tabs([
+			dcc.Tab([
+				html.Div(id='portfolio-table-container'),
+				dcc.Markdown(id='portfolio-total-price')
+			], label=tls[lang]['portfolio'], id="portfolio-container"),
 
+			dcc.Tab([
+				# Component to display the news description
+				html.Div([
+					html.Article([
+						html.Button(tls[lang]['button-news-description'], id = 'back-to-news-list',
+							# style = {'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10}
+						),
+						html.H3(id = 'description-title'),
+						html.P(id ='description-text')
+					], className = "news-article"),
+				], id = 'description-container', style = {'display': 'none'}),
+
+				# News list
+				dash_table.DataTable(
+					id = 'news-table',
+					columns = [
+						{'name': tls[lang]['news-table']['date'], 'id': 'date'},
+						{'name': tls[lang]['news-table']['article'], 'id': 'article'}
+					],
+					fixed_rows = {'headers': True, 'data': 0}, # Fix the header
+					page_size = 1000000000, # Display all the news on the same page
+					style_data={'height': 'auto', 'whiteSpace': 'normal'}, # Set the data cell style
+					style_cell={
+						'height': 'auto',
+						'maxWidth': '180px',
+						'whiteSpace': 'normal',
+						'font-family': 'Verdana, sans-serif'
+					},
+					style_cell_conditional=[
+						{
+							'if': {'column_id': 'date'},
+							'width': '100px',
+							'font-size': '12px'
+						}
+					],
+				)
+			], label=tls[lang]['news'], id='news-container')
+		]),
+
+
+		#### Right part ####
+  
 		# Company graph
 		html.Div([
 			dcc.Dropdown({**dlt.companies, **dlt.indexes}, list(dlt.companies.keys())[0],
@@ -86,37 +130,8 @@ def main_layout(lang = "fr"):
 			], id = "graph-tabs", value='tab-market'),
 		], className="graph-container"),
 
+
 		#### Lower part ####
-
-		# News
-		html.Div([
-			html.H2(tls[lang]['news']),
-
-			dash_table.DataTable(
-				id = 'news-table',
-				columns = [
-					{'name': tls[lang]['news-table']['date'], 'id': 'date'},
-					{'name': tls[lang]['news-table']['article'], 'id': 'article'}
-				],
-				fixed_rows = {'headers': True, 'data': 0}, # Allow to scroll the table
-				page_size = 1000000000, # Display all the news on the same page
-			)
-		], id = 'news-container', className = "news-container"),
-
-		# Add the component with the description
-		html.Div([
-			html.H2(tls[lang]['title-news-description']),
-
-			html.Article([
-				html.Button(tls[lang]['button-news-description'], id = 'back-to-news-list',
-					# style = {'border' : 'none', 'padding-top' : 5, 'padding-bottom' : 5, 'border-radius' : 10}
-				),
-				html.H3(id = 'description-title'),
-				html.P(id ='description-text')
-			], className = "news-article"),
-
-		], id = 'description-container', className = "news-container", style = {'display': 'none'}),
-
 
 		# Requests
 		html.Div([
