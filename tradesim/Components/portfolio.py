@@ -68,6 +68,6 @@ def calcul_prix_tot_inv(stock_info, cash):
 	totals = pd.DataFrame.from_dict(stock_info, orient='index')['Total']
 	text = tls[dash_registry['lang']]
 	return [
-		text['portfolio-cashflow'], round(cash, 2),' eur.\n',
-		text['portfolio-investment'], round(cash + totals.sum(), 2),' eur.'
+		text['portfolio-cashflow'], round(cash, 2),' €\n',
+		text['portfolio-investment'], round(cash + totals.sum(), 2),' €'
 	]

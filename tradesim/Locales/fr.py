@@ -2,7 +2,7 @@ translation = {
     'fr' : {
         # Portfolio
         "portfolio": "Portefeuille",
-        'portfolio-columns': {'Stock': 'Actions', 'Shares': 'Parts', 'Total': 'Totals'},
+        'portfolio-columns': {'Stock': 'Actions', 'Shares': 'Parts', 'Total': 'Prix'},
         "portfolio-cashflow": "Trésorie :",
         "portfolio-investment": "Investissement total :",
 
