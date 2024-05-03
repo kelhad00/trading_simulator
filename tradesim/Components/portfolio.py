@@ -3,7 +3,6 @@ from dash import html, Output, Input, State, page_registry as dash_registry
 import dash
 
 from tradesim.Locales import translations as tls
-from tradesim.defaults import defaults as dlt
 
 @dash.callback(
 	Output('portfolio_totals', 'data'),
@@ -33,18 +32,14 @@ def update_porfolio_totals(n, shares, totals, price_df, timestamp):
 def generate_portfolio_table(stocks_info, shares):
 	""" Update the portfolio table with the latest user's portfolio information
 	"""
-
 	df = pd.concat([
 		pd.DataFrame.from_dict(shares),
 		pd.DataFrame.from_dict(stocks_info)
 	]).transpose().round(2)
 	df['Stock'] = df.index
 
-	# Replace the stock name by the company name
-	df['Stock'] = df['Stock'].apply(lambda x: dlt.companies[x])
-
 	stock_size = len(df)
-	column_size = stock_size
+	column_size = stock_size // 2 + stock_size % 2
 	column_names = tls[dash_registry['lang']]['portfolio-columns']
 	return html.Div([
 		html.Table([
