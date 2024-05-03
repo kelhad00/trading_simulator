@@ -114,16 +114,12 @@
     justify-self: end;
 }
 
-.dashboard-container #graph-tabs-parent  {
-    grid-area: graph-tabs;
-}
-
 .dashboard-container #graph-tabs > div {
     padding: 10px;
     border-radius: 4px 4px 0 0;
-    /* The size of the graph is set by plotly.js and
-       can only be set with fig.update_layout().
-       (eg: Components/graph.py)
+    /* The size of the graph can only be set in dashboard.py
+       In the function dcc.Graph
+       The size is set by the width and height parameters
     */
 }
 
