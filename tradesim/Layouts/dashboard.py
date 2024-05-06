@@ -74,13 +74,15 @@ def main_layout(lang = "fr"):
 				dcc.Tab([
 					dcc.Graph(
 						id = 'company-graph',
-						config = PLOTLY_CONFIG
+						config = PLOTLY_CONFIG,
+						style={'width': '100%', 'height': '40vh'},
 					)
 				], label = tls[lang]['tab-market'], value = 'tab-market'),
 				dcc.Tab([
 					dcc.Graph(
 						id = 'revenue-graph',
-						config = PLOTLY_CONFIG
+						config = PLOTLY_CONFIG,
+						style={'width': '100%', 'height': '40vh'},
 					),
 				], label = tls[lang]['tab-revenue'], value = 'tab-revenue', id = 'tab-revenue'),
 			], id = "graph-tabs", value='tab-market'),
