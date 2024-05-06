@@ -24,7 +24,7 @@ def change_state_request_form(company):
 
 
 @dash.callback(
-	Output("request-list", "data", allow_duplicate=True),
+	Output("request-list", "data"),
 	Output('request-err', 'hidden'),
 	Output('request-err', 'children'),
 	# Form inputs
@@ -79,7 +79,7 @@ def display_requests(req):
 
 
 @dash.callback(
-    Output("request-list", "data"),
+    Output("request-list", "data", allow_duplicate=True),
 	Output("portfolio_shares", "data"),
 	Output("cashflow", "data"),
 	Input('market-timestamp-value','data'),
@@ -87,6 +87,7 @@ def display_requests(req):
 	State('price-dataframe','data'),
 	State('portfolio_shares','data'),
 	State('cashflow','data'),
+	prevent_initial_call=True,
 )
 def exec_request(timestamp, request_list, list_price, portfolio_info, cashflow):
 	if list_price == None: raise PreventUpdate # Avoid callback to be triggered at the first load

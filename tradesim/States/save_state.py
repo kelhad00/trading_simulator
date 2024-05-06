@@ -15,27 +15,21 @@ from tradesim.defaults import defaults as dlt
 	Input('news-table', 'data'), # indepedent variable
 	# Clicking on a news doesn’t trigger other callbacks
 	Input('description-container', 'style'),
-	# the cashflow is triggered by the timestamp so
-	# we use it to call the callback as late as possible
-	Input('cashflow', 'data'),
 	# Adding or removing a request doesn’t trigger other callbacks
-	Input('request-list', 'data'),
+	Input("request-list", "data"),
 	Input('graph-tabs', 'value'),
 	# Data triggered by those above
-	# The timestamp isn’t an input because
-	# we want to save the state after all changes are done
-	# ( A callback is not triggered multiple times
-	#   if multiple inputs change at the same time )
+	# The timestamp isn’t an input because we want to save user moves
+	# Others states that we need
 	State('market-timestamp-value','data'),
+	State('cashflow', 'data'),
 	State('portfolio_shares', 'data'),
 	State('portfolio_totals', 'data'),
-	# Needed to save the current news description displayed
 	State('description-text', 'children'),
-	# ** End of data to save **
 	State('nbr-logs', 'data') # number of times the callback has been called
 )
-def save_state(	company_id, news_df, news_description_style, cashflow, request_list, selected_tab,\
-				timestamp, shares, totals, description_title, n_logs,\
+def save_state(	company_id, news_df, news_description_style, request_list, selected_tab,\
+				timestamp, cashflow, shares, totals, description_title, n_logs,\
 				debug=False): #TODO: replace by debug=False when deploying
 	""" Periodically save state of the app into csv
 	"""
@@ -83,7 +77,7 @@ def save_state(	company_id, news_df, news_description_style, cashflow, request_l
 
 	# Be sure that the request list has MAX_REQUESTS elements in the header (useful for the first time only)
 	for i in range(dlt.max_requests):
-	    df[f'request {i+1}'] = None
+		df[f'request {i+1}'] = None
 
 	# Prepare request list to be saved as columns
 	df = df.combine_first(
