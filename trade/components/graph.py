@@ -54,16 +54,14 @@ def update_graph(n, company, timestamp, range=100):
 
 @callback(
     Output('revenue-graph', 'figure'),
-    Output('graph-tabs', 'value'),
-    Output('tab-revenue', 'style'),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
     State('timestamp', 'data')
 )
 def update_revenue(n, company, timestamp):
     # If the user select an index, force the tab to be the market graph
-    if company in dlt.indexes.keys():
-        return no_update, 'tab-market', {'display': 'none'}
+    # if company in dlt.indexes.keys():
+    #     return no_update
 
     timestamp = pd.to_datetime(timestamp)
 
@@ -112,8 +110,23 @@ def update_revenue(n, company, timestamp):
 
     if ctx.triggered_id == 'company-selector':
         # Go back to the market graph when the user selects a new company
-        return fig, 'tab-market', {'display': 'block'}
+        return fig
     else:
         # If new information has been added, add it to the revenue graph,
         # but don't change anything else.
-        return fig, no_update, no_update
+        return fig
+
+
+@callback(
+    Output('revenue-graph', 'style'),
+    Output('company-graph', 'style'),
+    Input('segmented', "value")
+)
+def update_graph_style(value):
+    lang = page_registry['lang']
+
+    if value == tls[lang]['tab-market']:
+        return {'display': 'none'}, {'display': 'block'}
+    else:
+        return {'display': 'block'}, {'display': 'none'}
+

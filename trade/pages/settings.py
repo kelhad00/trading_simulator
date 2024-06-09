@@ -1,9 +1,7 @@
 import dash
-from dash import html, dcc
+from dash import html
 
-from trade.Locales import translations as tls
-
-
+from trade.layouts import settings
 
 dash.register_page(
     __name__,
@@ -13,4 +11,4 @@ dash.register_page(
 def layout(lang="fr", **kwargs):
     dash.page_registry['lang'] = lang
 
-    return html.Span("Settings")
+    return settings.main_layout(lang)

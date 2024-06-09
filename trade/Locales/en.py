@@ -60,9 +60,9 @@ translation = {
         # Requests list
         "requests-list-title": "Request List",
         "requests-table": {
-            "actions": "Actions",
+            "actions": "Type",
             "shares": "Shares",
-            "company": "Company",
+            "company": "Stocks",
             "price": "Price"
         },
         "clear-all-requests-button": "Clear All",

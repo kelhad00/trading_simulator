@@ -7,6 +7,8 @@ from trade.defaults import defaults as dlt
 
 import dash_mantine_components as dmc
 
+from trade.layouts.shared import header
+
 
 def main_layout(lang="fr"):
     return html.Div([
@@ -34,7 +36,7 @@ def options(lang="fr"):
             dcc.Link(tls[lang]["button-settings"], href="/settings?lang=" + lang),
             variant="solid", color="dark", radius="md", size="lg"
         ),
-        dmc.Button(tls[lang]["button-restart-sim"], variant="outline", color="dark", radius="md", size="lg", n_clicks=0, id="restart_simu"),
+        dmc.Button(tls[lang]["button-restart-sim"], variant="outline", color="dark", radius="md", size="lg", n_clicks=0, id="reset-button"),
     ], className="flex gap-4 flex-col max-w-xs")
 
 
@@ -57,46 +59,3 @@ def welcome(lang="fr"):
     ])
 
 
-def header(lang="fr"):
-    return html.Div([
-        dmc.Text("TradeSim", className='font-bold text-xl'),
-        html.Div([
-            dmc.Button(
-                dcc.Link("Github", href="https://github.com/kelhad00/trading_simulator", target="_blank"), color="dark", radius="md", leftIcon=DashIconify(icon="mdi:github"), size="sm"),
-            menu(lang)
-        ], className="flex gap-4 items-center"),
-    ], className="flex justify-between")
-
-
-def menu(lang="fr"):
-    en_bg = ""
-    fr_bg = ""
-
-    if lang == "fr" :
-        icon = "twemoji:flag-france"
-        fr_bg = "bg-gray-100"
-    else:
-        icon = "twemoji:flag-united-states"
-        en_bg = "bg-gray-100"
-
-    return dmc.Menu(
-        [
-            dmc.MenuTarget(
-                dmc.ActionIcon(
-                    DashIconify(icon=icon),
-                    size="lg",
-                    radius="md",
-                    variant="outline",
-                    color="dark",
-                    className="h-full"
-                )
-            ),
-            dmc.MenuDropdown(
-                [
-                    dmc.MenuLabel("Language"),
-                    dmc.MenuItem("Français", icon=DashIconify(icon="twemoji:flag-france"), href="/?lang=fr", n_clicks=0, className=fr_bg),
-                    dmc.MenuItem("English", icon=DashIconify(icon="twemoji:flag-united-states"), href="/?lang=en", n_clicks=0, className=en_bg),
-                ], pos="bottom-end"
-            )
-        ]
-    )

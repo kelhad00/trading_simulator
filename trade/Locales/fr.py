@@ -60,9 +60,9 @@ translation = {
         # Requests list
         "requests-list-title": "Liste d'attente",
         "requests-table": {
-            "actions": "Actions",
+            "actions": "Type",
             "shares": "Parts",
-            "company": "Compagnie",
+            "company": "Actions",
             "price": "Prix "
         },
         "clear-all-requests-button": "Supprimer tout",
@@ -72,12 +72,12 @@ translation = {
         # "welcome": "Bienvenue sur l\'trade-legacy TradeSim !",
         # "info_txt": "Pour commencer la session, cliquer sur 'Démarrer l’expérience'. L\'interface est disponible en anglais et français.",
         # "signature": "L\'équipe TradeSim",
-        "button-start": "Démarrer l’expérience",
+        "button-start": "Démarrer la simulation",
         "button-settings": "Paramètres",
         "button-restart-sim": "Réinitialiser la simulation",
         # "button-start-info": "Veuillez patienter quelques instants...",
         "welcome": ["Bienvenue sur", "TradeSim"],
-        "description": ["Cliquer sur ", "'Démarrer l’expérience'", ", pour commencer la session. L\'interface est disponible en ", "anglais ", "et ", "français", "."],
+        "description": ["Cliquer sur ", "'Démarrer la simulation'", ", pour commencer la session. L\'interface est disponible en ", "anglais ", "et ", "français", "."],
 
 
     }

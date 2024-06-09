@@ -19,8 +19,10 @@ news_df = get_news_dataframe()
     prevent_initial_call=True,
 )
 def reset_data(btn):
-    if btn is None:
+    if btn is None or btn == 0:
         raise PreventUpdate
+    print("reset_data")
+    print(btn)
 
     # Reset the data of each dcc.Store component
     marketTimestampValue = get_first_timestamp(market_df, news_df, 100)

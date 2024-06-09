@@ -43,15 +43,15 @@ def menu(lang="fr"):
             dmc.MenuDropdown(
                 [
                     dmc.MenuLabel("Simulation"),
-                    dmc.MenuItem("Pause", icon=DashIconify(icon="carbon:pause"), id="pause-button", href="/"),
+                    dmc.MenuItem("Pause", icon=DashIconify(icon="carbon:pause"), id="pause-button", href=f"/?lang={lang}"),
                     dmc.MenuItem("Reset", icon=DashIconify(icon="carbon:reset"), id="reset-button", n_clicks=0, color="red"),
                     dmc.MenuDivider(),
                     dmc.MenuLabel("Language"),
                     dmc.MenuItem("Français", icon=DashIconify(icon="twemoji:flag-france"), href="/dashboard?lang=fr", n_clicks=0, className=fr_bg),
                     dmc.MenuItem("English", icon=DashIconify(icon="twemoji:flag-united-states"), href="/dashboard?lang=en", n_clicks=0, className=en_bg),
-                ], pos="bottom-end"
+                ],
             )
-        ]
+        ], position="left-start"
     )
 
 
@@ -85,7 +85,7 @@ def portfolio(lang="fr"):
 def portfolio_cashflow(lang="fr"):
     return dmc.Paper([
             dmc.Text(tls[lang]['portfolio-cashflow'], weight=700,
-                     className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
+                     className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="sm"),
             dmc.Text(weight=500, size="xl", id="portfolio-cashflow"),
         ],
         p="sm", radius="md", shadow="xs", withBorder=True,
@@ -96,11 +96,11 @@ def portfolio_cashflow(lang="fr"):
 def portfolio_investment(lang="fr"):
     return dmc.Paper([
             dmc.Text(tls[lang]['portfolio-investment'], weight=700,
-                     className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
+                     className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="sm"),
             dmc.Text(weight=500, size="xl", id="portfolio-investment"),
         ],
         p="sm", radius="md", shadow="xs", withBorder=True,
-        className="flex-1 flex flex-col justify-between",
+        className="flex-1 flex flex-col gap-2 justify-between",
     )
 
 
@@ -158,9 +158,13 @@ def graph(lang="fr"):
                     id='company-graph',
                     config=PLOTLY_CONFIG,
                     className="w-full h-full",
+                ),
+                dcc.Graph(
+                    id='revenue-graph',
+                    config=PLOTLY_CONFIG,
+                    className="w-full h-full",
                 )
-            ]
-                     ),
+            ]),
         ])
 
 
