@@ -69,12 +69,16 @@ translation = {
         "clear-requests-button": "Supprimer",
 
         # Home Page
-        "welcome": "Bienvenue sur l\'trade-legacy TradeSim !",
-        "info_txt": "Pour commencer la session, cliquer sur 'Démarrer l’expérience'. L\'interface est disponible en anglais et français.",
-        "signature": "L\'équipe TradeSim",
+        # "welcome": "Bienvenue sur l\'trade-legacy TradeSim !",
+        # "info_txt": "Pour commencer la session, cliquer sur 'Démarrer l’expérience'. L\'interface est disponible en anglais et français.",
+        # "signature": "L\'équipe TradeSim",
         "button-start": "Démarrer l’expérience",
         "button-settings": "Paramètres",
-        "button-start-info": "Veuillez patienter quelques instants...",
         "button-restart-sim": "Réinitialiser la simulation",
+        # "button-start-info": "Veuillez patienter quelques instants...",
+        "welcome": ["Bienvenue sur", "TradeSim"],
+        "description": ["Cliquer sur ", "'Démarrer l’expérience'", ", pour commencer la session. L\'interface est disponible en ", "anglais ", "et ", "français", "."],
+
+
     }
 }

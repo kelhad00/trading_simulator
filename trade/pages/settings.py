@@ -10,5 +10,7 @@ dash.register_page(
     path="/settings",
 )
 
-def layout():
+def layout(lang="fr", **kwargs):
+    dash.page_registry['lang'] = lang
+
     return html.Span("Settings")

@@ -69,12 +69,15 @@ translation = {
         "clear-requests-button": "Clear",
 
         # Home Page
-        "welcome": "Welcome to the TradeSim trade-legacy !",
-        "info_txt": "To start the session, click on 'Start Session'. The interface is available in english and french.",
-        "signature": "The TradeSim team",
+        # "welcome": "Welcome to the TradeSim trade-legacy !",
+        # "info_txt": "To start the session, click on 'Start Session'. The interface is available in english and french.",
+        # "signature": "The TradeSim team",
         "button-start": "Start Session",
         "button-settings" : "Settings",
-        "button-start-info": "Please wait for the session to start...",
         "button-restart-sim": "Restart the simulation",
+        # "button-start-info": "Please wait for the session to start...",
+        "welcome": ["Welcome to", "TradeSim"],
+        "description": ["Click on ", "'Start Session'", ", to start the session. The interface is available in ", "english ", "and ", "french", "."]
+
     }
 }
