@@ -139,9 +139,10 @@ The application can be fully manipulated using the `app` object available from `
 The default values are available from `app.defaults` or its abbreviated version `app.d`. It is strongly recommended not to modify them after calling `app.set_layout()` and/or `app.run_server()`.
 
 Here is a description of the default values used:
+
 ```python
 # Period of time used to update data on the dashboard
-app.d.update_time = 60*1000 # in milliseconds
+app.d.update_time = 60 * 1000  # in milliseconds
 
 # Maximum number of requests the user can make on the dashboard
 app.d.max_requests = 10
@@ -150,42 +151,42 @@ app.d.max_requests = 10
 app.d.initial_money = 100000
 
 # Path to the data folder
-app.d.data_path = "Data"
+app.d.data_path = "legacy/Data"
 
 # Stocks used in the interface
 # They are also used to download data with the download_market_data setup tool
 # The key is the ticker and the value is the name of the company
 # So the data provided in the Data folder must have the same name as the symbol
 app.d.companies = {
-    "MC.PA" : "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
-    "OR.PA" : "L'ORÉAL (OR)",
-    "RMS.PA" : "HERMÈS INTERNATIONAL (RMS)",
-    "TTE.PA" : "TOTALENERGIES SE (TTE)",
-    "SAN.PA" : "SANOFI (SAN)",
-    "AIR.PA" : "AIRBUS SE (AIR)",
-    "SU.PA" : "SCHNEIDER ELECTRIC SE (SU)",
-    "AI.PA" : "AIR LIQUIDE (AI)",
-    "EL.PA" : "ESSILORLUXOTTICA (EL)",
-    "BNP.PA" : "BNP PARIBAS (BNP)",
-    "KER.PA" : "KERING (KER)",
-    "DG.PA" : "VINCI (DG)",
-    "CS.PA" : "AXA (CS)",
-    "SAF.PA" : "SAFRAN (SAF)",
-    "RI.PA" : "PERNOD RICARD (RI)",
-    "DSY.PA" : "DASSAULT SYSTÈMES SE (DSY)",
-    "STLAM.MI" : "STELLANTIS N.V. (STLAM)",
-    "BN.PA" : "DANONE (BN)",
-    "STMPA.PA" : "STMICROELECTRONICS N.V. (STMPA)",
+    "MC.PA": "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
+    "OR.PA": "L'ORÉAL (OR)",
+    "RMS.PA": "HERMÈS INTERNATIONAL (RMS)",
+    "TTE.PA": "TOTALENERGIES SE (TTE)",
+    "SAN.PA": "SANOFI (SAN)",
+    "AIR.PA": "AIRBUS SE (AIR)",
+    "SU.PA": "SCHNEIDER ELECTRIC SE (SU)",
+    "AI.PA": "AIR LIQUIDE (AI)",
+    "EL.PA": "ESSILORLUXOTTICA (EL)",
+    "BNP.PA": "BNP PARIBAS (BNP)",
+    "KER.PA": "KERING (KER)",
+    "DG.PA": "VINCI (DG)",
+    "CS.PA": "AXA (CS)",
+    "SAF.PA": "SAFRAN (SAF)",
+    "RI.PA": "PERNOD RICARD (RI)",
+    "DSY.PA": "DASSAULT SYSTÈMES SE (DSY)",
+    "STLAM.MI": "STELLANTIS N.V. (STLAM)",
+    "BN.PA": "DANONE (BN)",
+    "STMPA.PA": "STMICROELECTRONICS N.V. (STMPA)",
     "ACA.PA": "CRÉDIT AGRICOLE S.A. (ACA)"
 }
 
 # Indexes used in the interface
 # Same use as the companies variable
 app.d.indexes = {
-    "^GSPC" : "S&P 500",
-    "^DJI" : "Dow Jones Industrial Average",
-    "^FCHI" : "CAC 40",
-    "^SPGSGC" : "S&P GSCI Gold Index",
+    "^GSPC": "S&P 500",
+    "^DJI": "Dow Jones Industrial Average",
+    "^FCHI": "CAC 40",
+    "^SPGSGC": "S&P GSCI Gold Index",
 }
 ```
 
@@ -219,9 +220,9 @@ Here's a list:
 ```python
 def download_market_data():
     """ Download daily stock market data for companies and indexes
-        defined respectively by `app.d.companies` and `app.d.indexes`
+        defined respectively by `trade.d.companies` and `trade.d.indexes`
         over the last two years, then save them in the folder defined
-        by `app.d.data_path`.
+        by `trade.d.data_path`.
     """
     pass
 

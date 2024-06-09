@@ -1,0 +1,94 @@
+body {
+    height: 100vh; /* All the trade is contained inside the size of the screen */
+    width: 100vw;
+    overflow: hidden; /* Hide the scroll bar */
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+button,
+input {
+    border: 1px solid #d6d6d6;
+    background-color: white;
+    border-radius: 4px;
+}
+
+/* Language button */
+
+.switch-lang-btn {
+    max-width: 13em;
+    width: 80px;
+}
+
+.switch-lang-btn button {
+    font-size: 18px;
+    width: 100%;
+    color: #2f3238;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7em 0.5em;
+    cursor: pointer;
+    background-color: white;
+    border: 1px solid #d6d6d6;
+    border-radius: 4px;
+    height: 36px;
+}
+
+.arrow {
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #2f3238;
+    transition: transform ease-in-out 0.3s;
+}
+
+.switch-lang-btn button:focus > .arrow {
+    transform: rotate(180deg);
+}
+
+.switch-lang-btn ul {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    visibility: hidden;
+    overflow: hidden;
+}
+
+.switch-lang-btn button:focus + ul {
+    visibility: visible;
+}
+
+.switch-lang-btn ul li {
+    background-color: white;
+    border: 1px solid #d6d6d6;
+    border-radius: 4px;
+    height: 36px;
+    left: 100%;
+    width: 100%;
+    transition: 0.5s;
+    position: relative;
+}
+
+.switch-lang-btn button:focus + ul li {
+    left: 0;
+}
+
+.switch-lang-btn li:hover {
+    background: #c7c7c7;
+}
+
+.switch-lang-btn a {
+    display: block;
+    padding: 0.7em 0.5em;
+    color: #2f3238;
+    margin: 0.1em 0;
+    text-decoration: none;
+}
