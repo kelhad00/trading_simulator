@@ -1,6 +1,8 @@
 import dash
 from dash import html
 
+from trade.components import settings as callbacks
+
 from trade.layouts import settings
 
 dash.register_page(

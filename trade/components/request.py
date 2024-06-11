@@ -160,15 +160,12 @@ def request_handler(btn, n, company, action, price, share, cash, timestamp, port
     if btn == 0:
         raise PreventUpdate  # Avoid callback to be triggered at the first load
 
-    print(ctx.triggered_id)
     # if context is the button
     if ctx.triggered_id == 'submit-button':
         req, notification = process_submit_button(company, action, price, share, cash, timestamp, port_shares, req)
         req, port_shares, cash, port_totals = exec_request(n, req, timestamp, port_shares, cash, port_totals)
-
         df = pd.DataFrame(req)
         table = get_request_table(df)
-
         return req, notification, table, port_shares, cash, port_totals
 
     else:
