@@ -33,6 +33,5 @@ def get_first_timestamp(market_df, news_df, range=0):
 
     
     timestamp = market_df.index[range]
-    print('First timestamp:', timestamp)
 
     return timestamp
