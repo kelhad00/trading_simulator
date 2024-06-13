@@ -2,6 +2,10 @@ from dash import Dash, html, dcc
 import dash
 import dash_mantine_components as dmc
 
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
+
 from trade.defaults import defaults as dlt
 from trade.utils.market import get_first_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe

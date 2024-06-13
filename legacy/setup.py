@@ -9,7 +9,7 @@ setup(
     description = (
         "A stock market site simulator for collecting data on stocks carried out by the trader."
     ),
-    long_description=io.open("../README.md", encoding="utf-8").read(),
+    long_description=io.open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="Gatien VILAIN, Capucine FOUILLARD, Paul HERBEAU, Kevin EL HADDAD",
     author_email="kevin.elhaddad@umons.ac.be, gatien.vilain@outlook.fr, capucine.fouillard@student.junia.com, paul.herbeau01@gmail.com",
