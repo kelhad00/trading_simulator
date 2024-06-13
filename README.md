@@ -1,6 +1,5 @@
 ## Create "Data" dir in root folder
-
-### It should contain the following files:
+#### It should contain the following files:
 - CAC40.csv
 - market_data.csv
 - news.csv

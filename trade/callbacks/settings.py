@@ -1,17 +1,12 @@
 import os.path
-
-from dash import callback, Input, Output, State, ALL, no_update, callback_context, ctx
-
 import pandas as pd
 
-from dash import callback_context, exceptions
-
-from trade.layouts.settings import timeline_item, ordinal
+from dash import callback, Input, Output, State, ALL, no_update
 
 from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, add_pattern
 from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
-
+from trade.layouts.settings import timeline_item, ordinal
 from trade.defaults import defaults as dlt
 
 
