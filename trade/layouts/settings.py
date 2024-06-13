@@ -1,24 +1,26 @@
-from dash import html, dcc, callback, Output, Input, callback_context, no_update
+from dash import html, dcc, callback, Output, Input, callback_context, no_update, page_registry
 import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
 
 from trade.layouts.shared import header
 
+from trade.Locales import translations as tls
+
 
 def main_layout(lang="fr"):
     return html.Div([
         header(lang, url="/settings"),
-        dmc.Title("Settings", order=1, className="font-bold leading-none w-full max-w-2xl"),
+        dmc.Title(tls[lang]["settings-title"], order=1, className="font-bold leading-none w-full max-w-2xl"),
 
-        section("Market data creation", [
-            slider("Select alpha value", "slider-alpha", 0, 2000, 500),
-            slider("Select length value", "slider-length", 0, 500, 100)
+        section(tls[lang]["settings-subtitles"]["market-data"], [
+            slider(tls[lang]["settings-sliders"]["alpha"], "slider-alpha", 0, 2000, 500),
+            slider(tls[lang]["settings-sliders"]["length"], "slider-length", 0, 500, 100)
         ]),
 
-        section("Charts trends", [
+        section(tls[lang]["settings-subtitles"]["charts-trends"], [
             dmc.NumberInput(
                 id="number-trends",
-                label="Number of charts trends",
+                label=tls[lang]["settings-number-inputs"]["number-trends"],
                 min=1,
                 max=5,
                 value=2,
@@ -29,10 +31,10 @@ def main_layout(lang="fr"):
             timeline('timeline', 2)
         ]),
 
-        section("Charts patterns", [
+        section(tls[lang]["settings-subtitles"]["charts-patterns"], [
             dmc.NumberInput(
                 id="number-patterns",
-                label="Number of patterns",
+                label=tls[lang]["settings-number-inputs"]["number-patterns"],
                 min=0,
                 max=4,
                 value=0,
@@ -42,7 +44,7 @@ def main_layout(lang="fr"):
             )
         ]),
 
-        section("Final charts", [
+        section(tls[lang]["settings-subtitles"]["final-charts"], [
             dmc.Paper(
                 dcc.Graph(
                     id="final-chart",
@@ -58,13 +60,15 @@ def main_layout(lang="fr"):
 
 
 def timeline_item(id, index, title):
+    label = tls[page_registry["lang"]]["settings-radio"]["trend"]
+    options = tls[page_registry["lang"]]["settings-radio"]["options"]
     return dmc.TimelineItem(
         title=title,
         children=[
             dmc.RadioGroup(
                 [dmc.Radio(l, value=k, color="dark") for k, l in
-                 [("bull", "Bull 📈"), ("bear", "Bear 📉"), ("flat", "Flat")]],
-                label="Select an option" + str(id),
+                 [("bull", options[0]), ("bear", options[1]), ("flat", options[2])]],
+                label=label,
                 id={"type": f"{id}-radio", "index": index},
                 # orientation="vertical",
                 # value="bull",

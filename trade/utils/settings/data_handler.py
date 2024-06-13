@@ -3,6 +3,8 @@ import random
 import glob
 import os
 
+from trade.defaults import defaults as dlt
+
 
 def scale_market_data(df, previous_close):
     '''
@@ -48,7 +50,7 @@ def random_file():
     Function get a random file from the data path
     '''
 
-    DATA_PATH = './data/patterns'
+    DATA_PATH = os.path.join(dlt.data_path, 'patterns')
 
     # Folder list
     folders = glob.glob(DATA_PATH + '/*')

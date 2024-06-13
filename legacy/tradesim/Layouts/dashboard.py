@@ -7,7 +7,7 @@ from tradesim.Locales import translations as tls
 
 
 def add_state_components():
-    """ Provide dcc.Store components in global scope
+    """ Provide dcc.Store callbacks in global scope
 		to keep their state between page changes
 	"""
     return [

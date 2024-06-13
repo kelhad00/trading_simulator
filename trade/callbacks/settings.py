@@ -1,12 +1,12 @@
 import os.path
 
-from dash import callback, Input, Output, State, ALL, no_update, callback_context
+from dash import callback, Input, Output, State, ALL, no_update, callback_context, ctx
 
 import pandas as pd
 
 from dash import callback_context, exceptions
 
-from trade.layouts.settings import timeline_item
+from trade.layouts.settings import timeline_item, ordinal
 
 from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, add_pattern
 from trade.utils.settings.display import display_chart
@@ -32,7 +32,8 @@ def update_timeline(nb, children):
                     timeline_item(
                         id=f"timeline",
                         index=len(children) + 1,
-                        title=f"Chart {len(children) + 1}"
+                        title=f"{ordinal(len(children) + 1)} market movement"
+
                     )
                 )
             else:

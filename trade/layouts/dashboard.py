@@ -35,7 +35,7 @@ def menu(lang="fr"):
         [
             dmc.MenuTarget(
                 dmc.ActionIcon(
-                    DashIconify(icon="carbon:settings-check"),
+                    DashIconify(icon="carbon:settings"),
                     size="lg",
                     variant="outline",
                 )
@@ -88,7 +88,7 @@ def portfolio_cashflow(lang="fr"):
                      className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="sm"),
             dmc.Text(weight=500, size="xl", id="portfolio-cashflow"),
         ],
-        p="sm", radius="md", shadow="xs", withBorder=True,
+        p="sm", radius="md",  withBorder=True,
         className="flex-1 flex flex-col justify-between",
     )
 
@@ -99,7 +99,7 @@ def portfolio_investment(lang="fr"):
                      className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="sm"),
             dmc.Text(weight=500, size="xl", id="portfolio-investment"),
         ],
-        p="sm", radius="md", shadow="xs", withBorder=True,
+        p="sm", radius="md",  withBorder=True,
         className="flex-1 flex flex-col gap-2 justify-between",
     )
 
@@ -111,7 +111,7 @@ def portfolio_table(lang="fr"):
         ],
         p="sm",
         radius="md",
-        shadow="xs",
+        
         withBorder=True,
         className="flex-1 overflow-hidden flex flex-col gap-2"
     )
@@ -126,7 +126,6 @@ def graph(lang="fr"):
         className="col-span-5 row-span-3 col-start-3 flex flex-col gap-2",
         p="sm",
         radius="md",
-        shadow="xs",
         withBorder=True,
         children=[
             html.Div([
@@ -178,7 +177,7 @@ def news(lang="fr"):
         className="col-span-3 row-span-2 row-start-4 overflow-scroll flex flex-col gap-4",
         p="sm",
         radius="md",
-        shadow="xs",
+        
         withBorder=True,
     )
 
@@ -228,7 +227,7 @@ def request_form(lang="fr"):
         className="flex flex-col justify-between flex-1",
         p="sm",
         radius="md",
-        shadow="xs",
+        
         withBorder=True,
     )
 
@@ -242,7 +241,7 @@ def request_list(lang="fr"):
         className="flex flex-col gap-2 flex-[2] overflow-hidden",
         p="sm",
         radius="md",
-        shadow="xs",
+        
         withBorder=True,
     )
 

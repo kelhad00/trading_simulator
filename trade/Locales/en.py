@@ -69,15 +69,32 @@ translation = {
         "clear-requests-button": "Clear",
 
         # Home Page
-        # "welcome": "Welcome to the TradeSim trade-legacy !",
-        # "info_txt": "To start the session, click on 'Start Session'. The interface is available in english and french.",
-        # "signature": "The TradeSim team",
         "button-start": "Start Session",
         "button-settings" : "Settings",
-        "button-restart-sim": "Restart the simulation",
-        # "button-start-info": "Please wait for the session to start...",
+        "button-restart-sim": "Reset",
         "welcome": ["Welcome to", "TradeSim"],
-        "description": ["Click on ", "'Start Session'", ", to start the session. The interface is available in ", "english ", "and ", "french", "."]
+        "description": ["Click on ", "'Start Session'", ", to start the session. The interface is available in ", "english ", "and ", "french", "."],
+
+        # Settings Page
+        "settings-title": "Settings",
+        "settings-subtitles": {
+            "market-data": "Market data creation",
+            "charts-trends": "Charts trends",
+            "charts-patterns": "Charts patterns",
+            "final-charts": "Final charts"
+        },
+        "settings-sliders": {
+            "alpha": "Select alpha value",
+            "length": "Select length value"
+        },
+        "settings-radio": {
+            "trend": "Select trend",
+            "options": ["Bull 📈", "Bear 📉", "Flat"]
+        },
+        "settings-number-inputs": {
+            "number-trends": "Number of charts trends",
+            "number-patterns": "Number of patterns"
+        },
 
     }
 }

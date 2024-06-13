@@ -22,19 +22,16 @@ def create_selectable_table(df, id="selectable-table"):
         )]
 
     rows = [
-        html.Tr(
-            [html.Td(
+        html.Tr([
+            html.Td(
                 dmc.Checkbox(
                     checked=False,
                     persistence='session',
                     size='sm',
                     id={'type': id, 'index': index}
                 )
-            )] + [html.Td(cell) for cell in row]
+            ), *[html.Td(cell) for cell in row]]
         ) for index, row in enumerate(values)]
 
-    table = [
-        html.Thead(header),
-        html.Tbody(rows)
-    ]
+    table = [html.Thead(header), html.Tbody(rows)]
     return table

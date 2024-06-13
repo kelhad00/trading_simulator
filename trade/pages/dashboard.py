@@ -2,7 +2,7 @@ import dash
 from trade.layouts import dashboard
 
 # Callbacks
-from trade.components import portfolio, graph, news, request, menu
+from trade.callbacks import portfolio, graph, news, request, menu
 
 
 dash.register_page(

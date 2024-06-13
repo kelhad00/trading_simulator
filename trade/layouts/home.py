@@ -30,13 +30,18 @@ def options(lang="fr"):
     return html.Div([
         dmc.Button(
             dcc.Link(tls[lang]["button-start"], href="/dashboard?lang=" + lang),
+            leftIcon=DashIconify(icon="carbon:play-filled-alt"),
             variant="solid", color="dark", radius="md", size="lg"
         ),
         dmc.Button(
             dcc.Link(tls[lang]["button-settings"], href="/settings?lang=" + lang),
+            leftIcon=DashIconify(icon="carbon:settings"),
             variant="solid", color="dark", radius="md", size="lg"
         ),
-        dmc.Button(tls[lang]["button-restart-sim"], variant="outline", color="dark", radius="md", size="lg", n_clicks=0, id="reset-button"),
+        dmc.Button(
+            tls[lang]["button-restart-sim"],
+            leftIcon=DashIconify(icon="carbon:reset"),
+            variant="outline", color="dark", radius="md", size="lg", n_clicks=0, id="reset-button"),
     ], className="flex gap-4 flex-col max-w-xs")
 
 

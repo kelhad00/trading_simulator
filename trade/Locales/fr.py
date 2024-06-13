@@ -74,10 +74,32 @@ translation = {
         # "signature": "L\'équipe TradeSim",
         "button-start": "Démarrer la simulation",
         "button-settings": "Paramètres",
-        "button-restart-sim": "Réinitialiser la simulation",
+        "button-restart-sim": "Réinitialiser",
         # "button-start-info": "Veuillez patienter quelques instants...",
         "welcome": ["Bienvenue sur", "TradeSim"],
         "description": ["Cliquer sur ", "'Démarrer la simulation'", ", pour commencer la session. L\'interface est disponible en ", "anglais ", "et ", "français", "."],
+
+        # Settings Page
+        "settings-title": "Paramètres",
+        "settings-subtitles": {
+            "market-data": "Paramètrage des données de marché",
+            "charts-trends": "Tendances des graphiques",
+            "charts-patterns": "Motifs des graphiques",
+            "final-charts": "Résultat"
+        },
+        "settings-sliders": {
+            "alpha": "Sélectionner la valeur d'alpha",
+            "length": "Sélectionner la longueur"
+        },
+        "settings-radio": {
+            "trend": "Sélectionner la tendance",
+            "options": ["Hausse 📈", "Baisse 📉", "Stable"]
+        },
+        "settings-number-inputs": {
+            "number-trends": "Nombre de tendances",
+            "number-patterns": "Nombre de motifs"
+        },
+
 
 
     }

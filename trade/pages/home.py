@@ -6,7 +6,7 @@ from trade.Locales import translations as tls
 
 from trade.layouts import home
 
-from trade.components import menu
+from trade.callbacks import menu
 
 
 dash.register_page(
