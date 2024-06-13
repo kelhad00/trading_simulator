@@ -16,6 +16,12 @@
     - pattern3.csv
     - pattern4.csv
 
+## Install required packages
+- Run the following command in the root folder:
+```bash
+pip install -r requirements.txt
+```
+
 ## Start the app
 - Run the following command in the root folder:
 ```bash
