@@ -9,8 +9,13 @@ import dash_mantine_components as dmc
 
 from trade.layouts.shared import header
 
+import os
+
 
 def main_layout(lang="fr"):
+
+    button = disable_button()
+
     return html.Div([
 
         html.Div([
@@ -21,17 +26,17 @@ def main_layout(lang="fr"):
             ], className="flex flex-col gap-8"),
         ], className="flex flex-col gap-8"),
 
-        options(lang)
+        options(button, lang)
 
     ], className="pt-8 pb-20 px-12 bg-gray-100 h-screen w-screen flex flex-col gap-8 justify-between")
 
 
-def options(lang="fr"):
+def options(disable_button, lang="fr"):
     return html.Div([
         dmc.Button(
             dcc.Link(tls[lang]["button-start"], href="/dashboard?lang=" + lang),
             leftIcon=DashIconify(icon="carbon:play-filled-alt"),
-            variant="solid", color="dark", radius="md", size="lg"
+            variant="solid", color="dark", radius="md", size="lg", disabled=disable_button,
         ),
         dmc.Button(
             dcc.Link(tls[lang]["button-settings"], href="/settings?lang=" + lang),
@@ -41,7 +46,7 @@ def options(lang="fr"):
         dmc.Button(
             tls[lang]["button-restart-sim"],
             leftIcon=DashIconify(icon="carbon:reset"),
-            variant="outline", color="dark", radius="md", size="lg", n_clicks=0, id="reset-button"),
+            variant="outline", color="dark", radius="md", size="lg", n_clicks=0),
     ], className="flex gap-4 flex-col max-w-xs")
 
 
@@ -64,3 +69,9 @@ def welcome(lang="fr"):
     ])
 
 
+def disable_button():
+    if os.path.exists(os.path.join(dlt.data_path, 'market_data.csv')) and os.path.exists(
+            os.path.join(dlt.data_path, 'news.csv')):
+        return False
+    else:
+        return True
