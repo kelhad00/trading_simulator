@@ -1,6 +1,10 @@
+import os.path
+
 import numpy as np
 import pandas as pd
 from trade.utils.settings.data_handler import scale_market_data, random_number, load_data, random_file
+
+from trade.defaults import defaults as dlt
 
 
 def bull_trend(data, data_size, alpha=500, length=100):
@@ -122,3 +126,42 @@ def add_pattern(chart, nbr_pattern):
     final_chart = pd.concat(split_chart).reset_index(drop=True)
 
     return final_chart
+
+
+def get_generated_data():
+    file_path = os.path.join(dlt.data_path, 'generated_data.csv')
+    try:
+        existing_df = pd.read_csv(file_path, index_col=[0, 1])
+    except Exception as e:
+        print(e)
+        print('ERROR: No generated data found in ' + dlt.data_path + ' folder.')
+        existing_df = pd.DataFrame()
+
+    return existing_df
+
+
+
+def export_generated_data(df, stock):
+    '''
+    Export the generated data
+    '''
+
+    data = df.copy()
+    data.index = pd.MultiIndex.from_product([[stock], data.index])
+    data.index = data.index.set_names(['Stock', 'Row'])
+
+    existing_df = get_generated_data()
+    stocks = existing_df.index.get_level_values('Stock').unique()
+    print(stocks)
+
+    if stock in stocks:
+        print('Stock already exists in the generated data')
+        existing_df = existing_df[existing_df.index.get_level_values('Stock') != stock]
+
+    data = pd.concat([existing_df, data], axis=0)
+
+    file_path = os.path.join(dlt.data_path, 'generated_data.csv')
+    data.to_csv(file_path, index=True)
+
+    return None
+

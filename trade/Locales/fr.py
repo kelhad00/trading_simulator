@@ -84,8 +84,8 @@ translation = {
         "settings-subtitles": {
             "market-data": "Paramètrage des données de marché",
             "charts-trends": "Tendances des graphiques",
-            "charts-patterns": "Motifs des graphiques",
-            "final-charts": "Résultat"
+            "charts-patterns": "Choix de l'action",
+            "final-charts": "Prévisualisation"
         },
         "settings-sliders": {
             "alpha": "Sélectionner la valeur d'alpha",
@@ -97,7 +97,7 @@ translation = {
         },
         "settings-number-inputs": {
             "number-trends": "Nombre de tendances",
-            "number-patterns": "Nombre de motifs"
+            "number-patterns": "Sélectionner un action"
         },
 
 

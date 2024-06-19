@@ -1,9 +1,9 @@
 import dash
 from dash import html
 
-from trade.callbacks import settings as callbacks
+from trade.callbacks import settings as callbacks, stocks as stocks_callbacks
 
-from trade.layouts import settings
+from trade.layouts.settings import settings
 
 dash.register_page(
     __name__,

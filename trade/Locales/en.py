@@ -80,20 +80,20 @@ translation = {
         "settings-subtitles": {
             "market-data": "Market data creation",
             "charts-trends": "Charts trends",
-            "charts-patterns": "Charts patterns",
-            "final-charts": "Final charts"
+            "charts-patterns": "Stock choice",
+            "final-charts": "Preview"
         },
         "settings-sliders": {
             "alpha": "Select alpha value",
             "length": "Select length value"
         },
         "settings-radio": {
-            "trend": "Select trend",
+            "trend": "Select a trend",
             "options": ["Bull 📈", "Bear 📉", "Flat"]
         },
         "settings-number-inputs": {
             "number-trends": "Number of charts trends",
-            "number-patterns": "Number of patterns"
+            "number-patterns": "Select a stock"
         },
 
     }

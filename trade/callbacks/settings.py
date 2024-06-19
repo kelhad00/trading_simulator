@@ -3,10 +3,10 @@ import pandas as pd
 
 from dash import callback, Input, Output, State, ALL, no_update
 
-from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, add_pattern
+from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
-from trade.layouts.settings import timeline_item, ordinal
+from trade.layouts.settings.charts import timeline_item, ordinal
 from trade.defaults import defaults as dlt
 
 
@@ -28,7 +28,6 @@ def update_timeline(nb, children):
                         id=f"timeline",
                         index=len(children) + 1,
                         title=f"{ordinal(len(children) + 1)} market movement"
-
                     )
                 )
             else:
@@ -44,23 +43,23 @@ def update_timeline(nb, children):
 )
 def update_values(values):
     if None in values:
-        return values.index(None)
+        return values.index(None) - 1
     else:
-        return len(values)-1
+        return len(values) - 1
 
 
 
 
 @callback(
-    Output("final-chart", "figure"),
+    Output("modify-final-chart", "figure"),
+    Output("market", "data"),
     Input("slider-alpha", "value"),
     Input("slider-length", "value"),
-    Input("number-trends", "value"),
-    Input({"type": f"timeline-radio", "index": ALL}, "value"),
-    Input("number-patterns", "value"),
+    Input("slider-start", "value"),
+    Input({"type": "timeline-radio", "index": ALL}, "value"),
     prevent_initial_call=True
 )
-def update_chart(alpha, length, nb_trends, radio_trends, nb_patterns):
+def update_chart(alpha, length, start_value, radio_trends):
     if None in radio_trends:
         return no_update
 
@@ -85,24 +84,68 @@ def update_chart(alpha, length, nb_trends, radio_trends, nb_patterns):
 
         for index, trend in enumerate(data_list):
             if index == 0:
-                data_list[0] = trend
+                data_list[0] = scale_market_data(trend, start_value)
             else:
                 data_list[index] = scale_market_data(trend, data_list[index-1].at[length-1, 'Close'])
 
-        # Concatenate the data
+        # Concatenate the data and update the Date column
         final_chart = pd.concat(data_list).reset_index(drop=True)
-
-        if nb_patterns > 0:
-            final_chart = add_pattern(final_chart, nb_patterns)
-
-        # Chnage the Date column
         final_chart['Date'] = pd.date_range(start='1/1/2005', periods=final_chart.shape[0], freq='D')
 
-        # Plot the final chart
-        return display_chart(final_chart, 0, final_chart.shape[0], 'Final Chart')
+        # Get the chart
+        fig = display_chart(final_chart, 0, final_chart.shape[0], 'Final Chart')
+
+        return fig, final_chart.to_dict()
 
     except Exception as e:
         print(e)
         return no_update
+
+
+
+@callback(
+    Output("market", "data", allow_duplicate=True),
+    Output("modal", "opened", allow_duplicate=True),
+    Output({"type": "timeline-radio", "index": ALL}, "value"),
+
+    Input("generate-button", "n_clicks"),
+    State("market", "data"),
+    State("select-company", "value"),
+    State("number-trends", "value"),
+    prevent_initial_call=True
+)
+def cb_export_generated_data(n, data, company, nb_radio):
+    if data is None or data == []:
+        return no_update
+
+    df = pd.DataFrame.from_dict(data)
+    export_generated_data(df, company)
+
+    return list(), False, [None] * nb_radio
+
+
+@callback(
+    Output("final-chart", "figure"),
+    Input("select-company", "value"),
+    Input("market", "data"),
+)
+def update_graph(company, data):
+    try:
+        df = get_generated_data().loc[company]
+        fig = display_chart(df, 0, df.shape[0], company)
+        return fig
+
+    except Exception as e:
+        return {"data": [], "layout": {}, "frames": []}
+
+
+@callback(
+    Output("modal", "opened"),
+    Input("modify-button", "n_clicks"),
+    State("modal", "opened"),
+    prevent_initial_call=True
+)
+def open_modal(n, opened):
+    return not opened
 
 
