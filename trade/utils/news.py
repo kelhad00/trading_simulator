@@ -8,8 +8,8 @@ def get_news_dataframe():
         file_path = os.path.join(dlt.data_path, 'news.csv')
         news_df = pd.read_csv(file_path, sep=';')
         news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
+
+        return news_df
     except:
         print('ERROR: No news data found in ' + dlt.data_path + ' folder.')
-        raise FileNotFoundError
-
-    return news_df
+        #raise FileNotFoundError
