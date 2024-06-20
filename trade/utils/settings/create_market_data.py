@@ -135,10 +135,23 @@ def get_generated_data():
     except Exception as e:
         print(e)
         print('ERROR: No generated data found in ' + dlt.data_path + ' folder.')
-        existing_df = pd.DataFrame()
+        existing_df = None
 
     return existing_df
 
+def delete_generated_data(stock):
+    '''
+    Delete the generated data
+    '''
+
+    existing_df = get_generated_data()
+    if existing_df is not None:
+        existing_df = existing_df[existing_df.index.get_level_values('Stock') != stock]
+
+    file_path = os.path.join(dlt.data_path, 'generated_data.csv')
+    existing_df.to_csv(file_path, index=True)
+
+    return None
 
 
 def export_generated_data(df, stock):
@@ -151,14 +164,15 @@ def export_generated_data(df, stock):
     data.index = data.index.set_names(['Stock', 'Row'])
 
     existing_df = get_generated_data()
-    stocks = existing_df.index.get_level_values('Stock').unique()
-    print(stocks)
+    if existing_df is not None:
+        stocks = existing_df.index.get_level_values('Stock').unique()
+        print(stocks)
 
-    if stock in stocks:
-        print('Stock already exists in the generated data')
-        existing_df = existing_df[existing_df.index.get_level_values('Stock') != stock]
+        if stock in stocks:
+            print('Stock already exists in the generated data')
+            existing_df = existing_df[existing_df.index.get_level_values('Stock') != stock]
 
-    data = pd.concat([existing_df, data], axis=0)
+        data = pd.concat([existing_df, data], axis=0)
 
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
     data.to_csv(file_path, index=True)

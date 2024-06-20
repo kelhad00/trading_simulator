@@ -5,7 +5,8 @@ from dash import callback, Input, Output, State, ALL, no_update, html
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
-from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, get_generated_data
+from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, \
+    get_generated_data, delete_generated_data
 from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
 from trade.layouts.settings.charts import timeline_item, ordinal
@@ -58,12 +59,19 @@ def display_companies(companies):
 
 @callback(
     Output("select-company", "data"),
-    Input("companies", "data")
+    Output("select-company-modal", "data"),
+    Output("select-company", "value"),
+    Input("companies", "data"),
+    State("select-company", "value"),
 )
-def update_select_company_options(companies):
+def update_select_company_options(companies, company):
     options = {**companies, **dlt.indexes}
-    return [{"label": v, "value": k} for k, v in options.items()]
+    if company not in options.keys():
+        company = list(options.keys())[0]
 
+    options = [{"label": v, "value": k} for k, v in options.items()]
+
+    return options, options, company
 
 @callback(
     Output("list-companies", "children", allow_duplicate=True),
@@ -77,8 +85,10 @@ def update_select_company_options(companies):
 def delete_companies(clicks, companies, children):
     children = [child for index, child in enumerate(children) if not clicks[index]]
 
-    for index, click in enumerate(clicks):
-        if click:
-            del companies[list(companies.keys())[index]]
+    if 1 in clicks:
+        index = clicks.index(1)
+        stock = list(companies.keys())[index]
+        del companies[stock]
+        delete_generated_data(stock)
 
     return children, companies, [0] * len(clicks)

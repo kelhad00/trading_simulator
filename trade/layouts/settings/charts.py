@@ -13,8 +13,6 @@ def generate_charts(lang="fr"):
             dmc.Select(
                 id="select-company",
                 label=tls[lang]["settings-number-inputs"]["number-patterns"],
-                value=list(dlt.companies.keys())[0],
-                data=[{"label": v, "value": k} for k, v in options.items()],
                 radius="md",
                 className="w-full"
             )
@@ -46,6 +44,15 @@ def modal(lang="fr"):
         zIndex=10000,
         children=[
             html.Div([
+                section(tls[lang]["settings-subtitles"]["charts-patterns"], [
+                    dmc.MultiSelect(
+                        id="select-company-modal",
+                        label=tls[lang]["settings-number-inputs"]["number-patterns"],
+                        radius="md",
+                        className="w-full"
+                    )
+                ]),
+
                 section(tls[lang]["settings-subtitles"]["market-data"], [
                     slider(tls[lang]["settings-sliders"]["alpha"], "slider-alpha", 0, 2000, 500),
                     slider(tls[lang]["settings-sliders"]["length"], "slider-length", 0, 500, 100),
@@ -67,8 +74,9 @@ def modal(lang="fr"):
                 ]),
                 section(tls[lang]["settings-subtitles"]["final-charts"], [
                     dmc.Paper(
-                        dcc.Graph(
-                            id="modify-final-chart",
+                        html.Div(
+                            dcc.Graph(id="modify-final-chart"),
+                            id="modify-final-chart-container",
                         ),
                         p="xs",
                         radius="md",

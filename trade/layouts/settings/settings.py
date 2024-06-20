@@ -22,8 +22,8 @@ def main_layout(lang="fr"):
                 dmc.TabsPanel(generate_charts(lang), value="charts"),
                 dmc.TabsPanel(stocks_settings(lang), value="stocks"),
             ],
-            # value="charts",
-            value="stocks",
+            value="charts",
+            # value="stocks",
             color="dark",
             radius="md",
             className="w-full max-w-2xl flex flex-col gap-8"
