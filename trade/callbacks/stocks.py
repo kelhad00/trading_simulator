@@ -14,15 +14,24 @@ from trade.defaults import defaults as dlt
 
 @callback(
     Output("companies", "data"),
+    Output("notifications", "children"),
     Input("add-company", "n_clicks"),
     State("input-stock", "value"),
     State("input-company", "value"),
     State("companies", "data"),
 )
 def update_companies(n, stock, company, companies):
+    notif = no_update
     if n:
         companies[stock] = company
-    return companies
+        notif = dmc.Notification(
+            id="notification-company-added",
+            title="Company added",
+            action="show",
+            color="green",
+            message=f"{company} has been added to the list of companies",
+        )
+    return companies, notif
 
 @callback(
     Output("list-companies", "children"),

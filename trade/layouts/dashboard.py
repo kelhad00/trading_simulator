@@ -9,7 +9,7 @@ import dash_mantine_components as dmc
 
 
 def main_layout(lang="fr"):
-    return dmc.NotificationsProvider(
+    return html.Div(
         html.Div([
             store(),
             html.Div(id="notifications-container"),

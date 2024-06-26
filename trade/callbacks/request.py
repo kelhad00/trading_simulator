@@ -11,14 +11,15 @@ from trade.defaults import defaults as dlt
 from trade.Locales import translations as tls
 from trade.utils.create_table import create_table, create_selectable_table
 from trade.utils.market import get_price_dataframe
+from trade.utils.store.export import export_data
 
 
 # ==========Request callbacks==========
 
-def exec_request(n, request_list,  timestamp, portfolio_info, cashflow, portfolio_totals):
+def exec_request(request_list,  timestamp, port_shares, cashflow, port_totals):
     price_list = get_price_dataframe()
-    portfolio_info = pd.DataFrame.from_dict(portfolio_info, orient='index', columns=['Shares'])
-    totals = pd.DataFrame.from_dict(portfolio_totals, orient='index', columns=['Totals'])
+    port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
+    port_totals = pd.DataFrame.from_dict(port_totals, orient='index', columns=['Totals'])
 
     i = 0
     while i < len(request_list):
@@ -31,7 +32,7 @@ def exec_request(n, request_list,  timestamp, portfolio_info, cashflow, portfoli
             if req['shares'] * req['price'] < cashflow:
                 # Update only the shares and the cashflow
                 # Because the total price will be updated in the portfolio callback
-                portfolio_info.loc[req['company']] += req['shares']
+                port_shares.loc[req['company']] += req['shares']
                 cashflow -= req["shares"] * req["price"]
 
             # the request is removed, with or without the user having enough money
@@ -40,11 +41,10 @@ def exec_request(n, request_list,  timestamp, portfolio_info, cashflow, portfoli
         # Same as above for the sell request
         elif req['action'] == 'sell' and req['price'] <= stock_price:
             # If the user has enough shares
-            # if portfolio_info.loc[req['company']] >= req["shares"]:
-            if portfolio_info.at[req['company'], 'Shares'] >= req["shares"]:
+            if port_shares.at[req['company'], 'Shares'] >= req["shares"]:
                 # Update only the shares and the cashflow
                 # Because the total price will be updated in the portfolio callback
-                portfolio_info.loc[req['company']] -= req["shares"]
+                port_shares.loc[req['company']] -= req["shares"]
                 cashflow += req['shares'] * req['price']
 
             # the request is removed, with or without the user having enough shares
@@ -58,16 +58,16 @@ def exec_request(n, request_list,  timestamp, portfolio_info, cashflow, portfoli
 
     if not timestamp == "":
         # Update the total price of each stock
-        totals['Totals'] = portfolio_info['Shares'] * price_list.loc[timestamp, totals.index]
+        port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
 
-    return request_list, portfolio_info['Shares'].to_dict(), cashflow, totals['Totals'].to_dict()
+    return request_list, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict()
 
 
 
 
 def get_request_table(df):
-    buy = tls[dash_registry['lang']]['request-action']['choices'][0]['label']
-    sell = tls[dash_registry['lang']]['request-action']['choices'][1]['label']
+    sell = tls[dash_registry['lang']]['request-action']['choices'][0]['label']
+    buy = tls[dash_registry['lang']]['request-action']['choices'][1]['label']
 
     if not df.empty:
         # replace all the 'buy' and 'sell' by their translated version
@@ -126,7 +126,7 @@ def process_submit_button(company, action, price, share, cash, timestamp, port_s
             color="red",
             icon=DashIconify(icon="material-symbols:error"),
             message=message,
-        ), no_update
+        )
     else:
         # the request list has been returned
         req = message
@@ -154,25 +154,30 @@ def process_submit_button(company, action, price, share, cash, timestamp, port_s
     State('portfolio-shares', 'data'),
     State("requests", "data"),
     State("portfolio-totals", "data"),
+
+    #only used for export data
+    State('news-container', 'style'),
+    State('segmented', "value"),
     prevent_initial_call=True,
 )
-def request_handler(btn, n, company, action, price, share, cash, timestamp, port_shares, req, port_totals):
-    if btn == 0:
-        raise PreventUpdate  # Avoid callback to be triggered at the first load
+def request_handler(btn, n, company, action, price, share, cash, timestamp, port_shares, req, port_totals, news_style, graph_choice):
+    # if btn == 0:
+    #     raise PreventUpdate  # Avoid callback to be triggered at the first load
+
+
 
     # if context is the button
     if ctx.triggered_id == 'submit-button':
         req, notification = process_submit_button(company, action, price, share, cash, timestamp, port_shares, req)
-        req, port_shares, cash, port_totals = exec_request(n, req, timestamp, port_shares, cash, port_totals)
-        df = pd.DataFrame(req)
-        table = get_request_table(df)
-        return req, notification, table, port_shares, cash, port_totals
+        if notification is not no_update:
+            return no_update, notification, no_update, no_update, no_update, no_update
+        export_data(timestamp, req, cash, port_shares, port_totals, company, news_style, graph_choice, action, ctx.triggered_id)
 
-    else:
-        req, port_shares, cash, port_totals = exec_request(n, req, timestamp, port_shares, cash, port_totals)
-        df = pd.DataFrame(req)
-        table = get_request_table(df)
-        return req, no_update, table, port_shares, cash, port_totals
+    req, port_shares, cash, port_totals = exec_request(req, timestamp, port_shares, cash, port_totals)
+    df = pd.DataFrame(req)
+    table = get_request_table(df)
+    export_data(timestamp, req, cash, port_shares, port_totals, company, news_style, graph_choice, action, ctx.triggered_id)
+    return req, no_update, table, port_shares, cash, port_totals
 
 
 

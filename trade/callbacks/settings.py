@@ -164,3 +164,13 @@ def open_modal(n, opened, company):
     return not opened, [company]
 
 
+
+@callback(
+    Output("select-company-modal", "value", allow_duplicate=True),
+    Input("select-all-stocks", "n_clicks"),
+    State("companies", "data"),
+    prevent_initial_call=True
+)
+def select_all_stocks(n, companies):
+    return list(companies.keys())
+

@@ -130,3 +130,4 @@ def update_graph_style(value):
     else:
         return {'display': 'block'}, {'display': 'none'}
 
+

@@ -45,18 +45,21 @@ def modal(lang="fr"):
         children=[
             html.Div([
                 section(tls[lang]["settings-subtitles"]["charts-patterns"], [
-                    dmc.MultiSelect(
-                        id="select-company-modal",
-                        label=tls[lang]["settings-number-inputs"]["number-patterns"],
-                        radius="md",
-                        className="w-full"
-                    )
+                    html.Div([
+                        dmc.MultiSelect(
+                            id="select-company-modal",
+                            label=tls[lang]["settings-number-inputs"]["number-patterns"],
+                            radius="md",
+                            className="flex-1"
+                        ),
+                        dmc.Button("Select All", id="select-all-stocks", color="dark", size="sm", radius="md"),
+                    ], className="flex gap-4 w-full items-end")
                 ]),
 
                 section(tls[lang]["settings-subtitles"]["market-data"], [
                     slider(tls[lang]["settings-sliders"]["alpha"], "slider-alpha", 0, 2000, 500),
                     slider(tls[lang]["settings-sliders"]["length"], "slider-length", 0, 500, 100),
-                    slider(tls[lang]["settings-sliders"]["length"], "slider-start", 0, 1000, 250)
+                    slider("Selectionner la valeur de départ", "slider-start", 0, 1000, 250)
                 ]),
 
                 section(tls[lang]["settings-subtitles"]["charts-trends"], [
