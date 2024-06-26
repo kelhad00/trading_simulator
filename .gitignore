@@ -163,6 +163,8 @@ cython_debug/
 Data/market_data.csv
 Data/news.csv
 Data/revenue.csv
+Data/generated_data.csv
+Data/news_dataset.csv
 
 .idea/
 

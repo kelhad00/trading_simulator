@@ -5,13 +5,13 @@ from trade.defaults import defaults as dlt
 
 def get_market_dataframe():
     try:
-        file_path = os.path.join(dlt.data_path, 'market_data.csv')
+        file_path = os.path.join(dlt.data_path, 'generated_data.csv')
         df = pd.read_csv(file_path, index_col=0, header=[0, 1])
 
         return df
     except:
         print('ERROR: No market data found in ' + dlt.data_path + ' folder.')
-        #raise FileNotFoundError
+        raise FileNotFoundError
 
 
 def get_price_dataframe():
