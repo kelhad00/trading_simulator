@@ -20,7 +20,7 @@ from trade.utils.store.export import export_data
     Output("export", "children"),
 
     Input("company-selector", "value"),
-    Input('news-container', 'style'),
+    Input('description-title', 'children'),
     Input('segmented', "value"),
     Input("action-input", "value"),
 
@@ -30,6 +30,7 @@ from trade.utils.store.export import export_data
     State("portfolio-totals", "data"),
     State("requests", "data"),
 )
-def export_display_update(company, news_style, graph_segmented, request_segmented, cashflow, timestamp, shares, totals, requests):
-    export_data(timestamp, requests, cashflow, shares, totals, company, news_style, graph_segmented, request_segmented, ctx.triggered_id)
+def export_display_update(company, title, graph_segmented, request_segmented, cashflow, timestamp, shares, totals, requests):
+    print("title", title)
+    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, ctx.triggered_id)
     return no_update

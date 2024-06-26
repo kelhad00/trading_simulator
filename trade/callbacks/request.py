@@ -156,27 +156,22 @@ def process_submit_button(company, action, price, share, cash, timestamp, port_s
     State("portfolio-totals", "data"),
 
     #only used for export data
-    State('news-container', 'style'),
+    State('description-title', 'children'),
     State('segmented', "value"),
     prevent_initial_call=True,
 )
-def request_handler(btn, n, company, action, price, share, cash, timestamp, port_shares, req, port_totals, news_style, graph_choice):
-    # if btn == 0:
-    #     raise PreventUpdate  # Avoid callback to be triggered at the first load
+def request_handler(btn, n, company, action, price, share, cash, timestamp, port_shares, req, port_totals, news_title, graph_choice):
 
-
-
-    # if context is the button
     if ctx.triggered_id == 'submit-button':
         req, notification = process_submit_button(company, action, price, share, cash, timestamp, port_shares, req)
         if notification is not no_update:
             return no_update, notification, no_update, no_update, no_update, no_update
-        export_data(timestamp, req, cash, port_shares, port_totals, company, news_style, graph_choice, action, ctx.triggered_id)
+        export_data(timestamp, req, cash, port_shares, port_totals, company, news_title, graph_choice, action, ctx.triggered_id)
 
     req, port_shares, cash, port_totals = exec_request(req, timestamp, port_shares, cash, port_totals)
     df = pd.DataFrame(req)
     table = get_request_table(df)
-    export_data(timestamp, req, cash, port_shares, port_totals, company, news_style, graph_choice, action, ctx.triggered_id)
+    export_data(timestamp, req, cash, port_shares, port_totals, company, news_title, graph_choice, action, ctx.triggered_id)
     return req, no_update, table, port_shares, cash, port_totals
 
 

@@ -184,13 +184,12 @@ def news(lang="fr"):
 
 def news_description(lang="fr"):
 
-    test = "ST-Micro prend +3,8% ce 1er mars, s'adjugeant ainsi +3,9% en hebdo : tout s'est joué ce vendredi et le cours soulève la résistance des 43,2E du 12 février: les prochains objectifs à la hausse se situent vers 45E (résistance oblique moyen terme) puis 46,8E, le zénith du 15 décembre 2023."
     return dmc.Paper(
         html.Div([
             dmc.Text(tls[lang]['title-news-description'], weight=700, className="text-[rgb(73,80,87)]", size="xl"),
             html.Div([
-                dmc.Text("ST-Micro: prend +3,8% vers 43,3E ce 1er mars, +3,9% en hebdo", id="description-title", weight=500, className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="md"),
-                dmc.Text(test, id='description-text', size="xs"),
+                dmc.Text(id="description-title", weight=500, className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="md"),
+                dmc.Text(id='description-text', size="xs"),
             ], className="flex flex-col gap-2 flex-1"),
             dmc.Button(tls[lang]['button-news-description'], id='back-to-news-list', n_clicks=0, variant="outline", color="gray", fullWidth=True),
         ], className="flex flex-col gap-4"),

@@ -60,6 +60,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     Input({"type": "news-lines", "index": ALL}, 'n_clicks'),
     Input('back-to-news-list', 'n_clicks'),
     State('news-table', 'children'),
+    prevent_initial_call=True,
 
 )
 def show_hide_element(cell_clicked, n_back_button, table):
@@ -67,7 +68,7 @@ def show_hide_element(cell_clicked, n_back_button, table):
 
     if ctx.triggered_id == 'back-to-news-list':
         print('back button clicked')
-        return {'display': 'block'}, '', '', {'display': 'none'}, [0] * len(cell_clicked)
+        return {'display': 'block'}, None, None, {'display': 'none'}, [0] * len(cell_clicked)
 
     else:
         if cell_clicked == [] or 1 not in cell_clicked:
@@ -79,7 +80,6 @@ def show_hide_element(cell_clicked, n_back_button, table):
             titles = [row['props']['children'][0]['props']['children'] for row in rows]
             news_df = get_news_dataframe()
             article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]
-            print(article_clicked)
             return {'display': 'none'}, article_clicked['title'], article_clicked['content'], {'display': 'block'}, no_update
         except Exception as e:
             print(e)

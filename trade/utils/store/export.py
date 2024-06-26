@@ -46,7 +46,7 @@ def export_data(
         shares,
         totals,
         company_id,
-        news_style,  # used to know if a news is displayed
+        news_title,
         graph_type,  # used to know which type of charts is displayed
         form_type,  # used to know if user is going to buy or sell
         trigger=None
@@ -65,7 +65,9 @@ def export_data(
         "selected-company": [company_id],
         "cashflow": [cashflow],
         "form-action": [form_type],
-        "chart-type": [charts]
+        "chart-type": [charts],
+        "is_news_description_displayed" : [False if news_title is None else True],
+        "news_title" : [news_title]
     })
 
     df = df.merge(shares, how='left', left_index=True, right_index=True)
