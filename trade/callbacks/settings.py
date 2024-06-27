@@ -143,7 +143,10 @@ def cb_export_generated_data(n, datas, companies, nb_radio):
 )
 def update_graph(company, data):
     try:
-        df = get_generated_data().loc[company]
+        df = get_generated_data()[company]
+        print('hello')
+        print(df.head())
+
         fig = display_chart(df, 0, df.shape[0], company)
         return fig
 

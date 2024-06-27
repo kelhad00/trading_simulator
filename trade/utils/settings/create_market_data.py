@@ -131,9 +131,8 @@ def add_pattern(chart, nbr_pattern):
 def get_generated_data():
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
     try:
-        existing_df = pd.read_csv(file_path, index_col=[0, 1])
+        existing_df = pd.read_csv(file_path, index_col=0, header=[0, 1])
     except Exception as e:
-        print(e)
         print('ERROR: No generated data found in ' + dlt.data_path + ' folder.')
         existing_df = None
 
@@ -146,12 +145,45 @@ def delete_generated_data(stock):
 
     existing_df = get_generated_data()
     if existing_df is not None:
-        existing_df = existing_df[existing_df.index.get_level_values('Stock') != stock]
+        symbols = existing_df.columns.get_level_values('symbol').unique()
+        if stock in symbols:
+            existing_df = existing_df.drop(stock, axis=1, level='symbol')
 
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
     existing_df.to_csv(file_path, index=True)
 
     return None
+
+
+def format_generated_data(data, stock):
+    '''
+    Format the generated data
+    '''
+    data.set_index('Date', inplace=True)
+    data.index.name = 'date'
+
+    data['long_MA'] = data['Close'].rolling(int(20)).mean()
+    data['short_MA'] = data['Close'].rolling(int(50)).mean()
+    data['200_MA'] = data['Close'].rolling(int(200)).mean()
+
+    #rename col Adj Close to adjclose
+    data.rename(columns={'Adj Close': 'adjclose'}, inplace=True)
+
+    columns = pd.MultiIndex.from_tuples(
+        [(stock, col) for col in data.columns],
+        names=['symbol', None]
+    )
+
+    df = pd.DataFrame(index=data.index, columns=columns)
+
+    for col in data.columns:
+        df.loc[:, (stock, col)].update(data[col])
+
+
+
+    return df
+
+
 
 
 def export_generated_data(df, stock):
@@ -160,22 +192,18 @@ def export_generated_data(df, stock):
     '''
 
     data = df.copy()
-    data.index = pd.MultiIndex.from_product([[stock], data.index])
-    data.index = data.index.set_names(['Stock', 'Row'])
-
+    df = format_generated_data(data, stock)
     existing_df = get_generated_data()
     if existing_df is not None:
-        stocks = existing_df.index.get_level_values('Stock').unique()
-        print(stocks)
-
-        if stock in stocks:
+        symbols = existing_df.columns.get_level_values('symbol').unique()
+        if stock in symbols:
             print('Stock already exists in the generated data')
-            existing_df = existing_df[existing_df.index.get_level_values('Stock') != stock]
+            existing_df = existing_df.drop(stock, axis=1, level='symbol')
 
-        data = pd.concat([existing_df, data], axis=0)
+    combined_df = pd.concat([existing_df, df], axis=1)
 
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
-    data.to_csv(file_path, index=True)
+    combined_df.to_csv(file_path, index=True)
 
     return None
 

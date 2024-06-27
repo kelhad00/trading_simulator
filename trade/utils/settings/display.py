@@ -18,7 +18,7 @@ def display_chart(data, index, length, data_name):
 
     # Chart
     fig = go.Figure(data=[go.Candlestick(
-                x=data['Date'],
+                x=data.index,
                 open=data['Open'],
                 high=data['High'],
                 low=data['Low'],
