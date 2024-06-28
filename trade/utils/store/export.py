@@ -16,15 +16,19 @@ def format_portfolio_dataframe(df, name):
 def format_requests_dataframe(request_list):
     new_columns_data = {}
     df = pd.DataFrame(request_list, columns=['action', 'shares', 'company', 'price']).T
-    for i in range(1, len(request_list)):  # Parcourir les 10 actions (de 1 à 10)
-        action_data = df[i]  # Extraire les données pour l'action i
+    for i in range(0, 10):  # Parcourir les 10 actions (de 1 à 10)
         action_col_name = f"action-{i}"
         price_col_name = f"price-{i}"
         share_col_name = f"shares-{i}"
-
-        new_columns_data[action_col_name] = action_data['action']
-        new_columns_data[price_col_name] = action_data['price']
-        new_columns_data[share_col_name] = action_data['shares']
+        try:
+            action_data = df[i]  # Extraire les données pour l'action i
+            new_columns_data[action_col_name] = action_data['action']
+            new_columns_data[price_col_name] = action_data['price']
+            new_columns_data[share_col_name] = action_data['shares']
+        except:
+            new_columns_data[action_col_name] = None
+            new_columns_data[price_col_name] = None
+            new_columns_data[share_col_name] = None
 
     return pd.DataFrame.from_dict(new_columns_data, orient="index").T
 
@@ -49,10 +53,13 @@ def export_data(
         news_title,
         graph_type,  # used to know which type of charts is displayed
         form_type,  # used to know if user is going to buy or sell
+        deleted_request=None,
         trigger=None
 ):
     """ Periodically save state of the trade into csv
     """
+    if deleted_request is None:
+        deleted_request = []
 
     charts = format_charts_type(graph_type)
     requests = format_requests_dataframe(request_list)
@@ -67,7 +74,8 @@ def export_data(
         "form-action": [form_type],
         "chart-type": [charts],
         "is_news_description_displayed" : [False if news_title is None else True],
-        "news_title" : [news_title]
+        "news_title" : [news_title],
+        "deleted-request": [deleted_request],
     })
 
     df = df.merge(shares, how='left', left_index=True, right_index=True)

@@ -32,5 +32,5 @@ from trade.utils.store.export import export_data
 )
 def export_display_update(company, title, graph_segmented, request_segmented, cashflow, timestamp, shares, totals, requests):
     print("title", title)
-    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, ctx.triggered_id)
+    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented)
     return no_update

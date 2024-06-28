@@ -11,16 +11,18 @@ def stocks_settings(lang="fr"):
     return html.Div([
         section(tls[lang]["settings-subtitles"]["charts-patterns"], [
             html.Div([
-                dmc.TextInput(
+                dmc.Select(
                     id="input-company",
-                    label="Company name",
+                    label="Company",
                     radius="md",
+                    creatable=True,
+                    searchable=True,
                     className="flex-1"
                 ),
                 html.Div([
                     dmc.TextInput(
                         id="input-stock",
-                        label="Stock name",
+                        label="Ticker",
                         radius="md",
                         className="flex-1"
                     ),

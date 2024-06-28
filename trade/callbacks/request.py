@@ -166,12 +166,12 @@ def request_handler(btn, n, company, action, price, share, cash, timestamp, port
         req, notification = process_submit_button(company, action, price, share, cash, timestamp, port_shares, req)
         if notification is not no_update:
             return no_update, notification, no_update, no_update, no_update, no_update
-        export_data(timestamp, req, cash, port_shares, port_totals, company, news_title, graph_choice, action, ctx.triggered_id)
+        export_data(timestamp, req, cash, port_shares, port_totals, company, news_title, graph_choice, action)
 
     req, port_shares, cash, port_totals = exec_request(req, timestamp, port_shares, cash, port_totals)
     df = pd.DataFrame(req)
     table = get_request_table(df)
-    export_data(timestamp, req, cash, port_shares, port_totals, company, news_title, graph_choice, action, ctx.triggered_id)
+    export_data(timestamp, req, cash, port_shares, port_totals, company, news_title, graph_choice, action)
     return req, no_update, table, port_shares, cash, port_totals
 
 
@@ -206,23 +206,55 @@ def cb_switch_between_delete_and_delete_all(selected_rows):
 
 @callback(
     Output("requests", "data", allow_duplicate=True),
+    Output('request-table', 'children', allow_duplicate=True),
+
     Input('clear-done-btn', 'n_clicks'),
+
     State({'type': 'requests-selectable-table', 'index': ALL}, "checked"),
     State("requests", "data"),
+
+    #only used for export data
+    State("company-selector", "value"),
+    State("action-input", "value"),
+    State('cashflow', 'data'),
+    State('timestamp', 'data'),
+    State('portfolio-shares', 'data'),
+    State("portfolio-totals", "data"),
+    State('description-title', 'children'),
+    State('segmented', "value"),
+
     prevent_initial_call=True
 )
-def cb_remove_request(n, values_to_remove, request_list):
+def cb_remove_request(n, values_to_remove, request_list, company, action, cash, timestamp, port_shares, port_totals, news_title, graph_choice):
     if n is None:
         raise PreventUpdate  # Avoid callback to be triggered at the first load
 
     if not True in values_to_remove:
-        request_list = []
+        req = []
 
-    for index, v in enumerate(values_to_remove):
-        if v is True:
-            del request_list[index]
+    else:  # Remove the selected requests
+        req = []
+        for index, v in enumerate(values_to_remove):
+            if v is not True:
+                req.append(request_list[index])
 
-    return request_list
+    df = pd.DataFrame(req)
+    table = get_request_table(df)
+
+    export_data(timestamp, req, cash, port_shares, port_totals, company, news_title, graph_choice, action, values_to_remove)
+
+    return req, table
+
+
+def count_rows_in_table(table):
+    # Parcourir les enfants de l'objet table
+    for child in table['props']['children']:
+        # Vérifier si l'enfant est le 'Tbody' du tableau
+        if child['type'] == 'Tbody':
+            # Retourner le nombre de lignes dans le 'Tbody'
+            return len(child['props']['children'])
+    # Retourner 0 si aucun 'Tbody' n'est trouvé
+    return 0
 
 
 @callback(

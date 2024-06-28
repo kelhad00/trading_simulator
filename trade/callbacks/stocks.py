@@ -41,7 +41,7 @@ def display_companies(companies):
     return [
         dmc.Paper([
             html.Div([
-                dmc.Text("Stock", weight=500),
+                dmc.Text("Ticker", weight=500),
                 dmc.Text(stock, size="sm"),
             ], className="flex flex-col flex-1"),
             html.Div([
@@ -70,6 +70,7 @@ def display_companies(companies):
     Output("select-company", "data"),
     Output("select-company-modal", "data"),
     Output("select-company", "value"),
+    Output("input-company", "data"),
     Input("companies", "data"),
     State("select-company", "value"),
 )
@@ -80,7 +81,7 @@ def update_select_company_options(companies, company):
 
     options = [{"label": v, "value": k} for k, v in options.items()]
 
-    return options, options, company
+    return options, options, company, options
 
 @callback(
     Output("list-companies", "children", allow_duplicate=True),
