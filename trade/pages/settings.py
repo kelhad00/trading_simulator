@@ -2,6 +2,7 @@ import dash
 from trade.layouts.settings.layout import main_layout
 
 # Don't delete this import
+from trade.callbacks.settings import settings, stocks
 
 dash.register_page(__name__, path="/settings",)
 
