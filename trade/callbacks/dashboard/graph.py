@@ -6,25 +6,42 @@ import os
 
 from trade.candlestick_charts import create_graph
 from trade.utils.market import get_market_dataframe
-from trade.Locales import translations as tls
+from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
 
 @callback(
+    Output("timer", "children"),
+    Input("timestamp", "data"),
+)
+def cb_update_timestamp(timestamp):
+    """Function to update the timestamp displayed on the page"""
+    timestamp = pd.to_datetime(timestamp)
+    return timestamp.strftime("%Y-%m-%d")
+
+
+@callback(
     Output('timestamp', 'data'),
-    Output('company-graph', 'figure'),  # new graph
-    Input('periodic-updater', 'n_intervals'),  # periodicly updated
+    Output('company-graph', 'figure'),
+    Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
-    State('timestamp', 'data')  # Last timestamp
+    State('timestamp', 'data')
 )
 def update_graph(n, company, timestamp, range=100):
+    """
+    Function to update the market graph with the latest data and timestamp
+    Args:
+        company: The selected company
+        timestamp: The last timestamp
+    Returns:
+        The updated timestamp and the new graph
+    """
+
     # Determining which callback input changed
     if ctx.triggered_id == 'periodic-updater':
         next_graph = True
     else:
-        # If the user selected a new company
-        # Don’t change the timestamp.
-        next_graph = False
+        next_graph = False  # Don't update the timestamp if the user selects a new company
 
     dftmp = get_market_dataframe()[company]
 
@@ -37,15 +54,15 @@ def update_graph(n, company, timestamp, range=100):
 
     # Define chart layouts
     fig.update_layout(
-        # xaxis_title = tls[dash_registry['lang']]["market-graph"]['x'],
-        # yaxis_title = tls[dash_registry['lang']]["market-graph"]['y'],
+        xaxis_title=tls[page_registry['lang']]["market-graph"]['x'],
+        yaxis_title=tls[page_registry['lang']]["market-graph"]['y'],
         yaxis_tickprefix='€',
         margin=dict(l=0, r=0, t=0, b=0),
         legend=dict(x=0, y=1.0),
         xaxis_rangeslider_visible=False,
     )
-    # Change language on the legend
 
+    # Change language on the legend
     fig.for_each_trace(
         lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]['legend'][t.name])
     )
@@ -122,7 +139,14 @@ def update_revenue(n, company, timestamp):
     Output('company-graph', 'style'),
     Input('segmented', "value")
 )
-def update_graph_style(value):
+def toggle_graph_type(value):
+    """
+    Function to toggle between the market graph and the revenue graph
+    Args:
+        value: The value of the segmented control
+    Returns:
+        The style of the revenue graph and the market graph
+    """
     lang = page_registry['lang']
 
     if value == tls[lang]['tab-market']:

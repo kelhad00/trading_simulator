@@ -19,16 +19,22 @@ news_df = get_news_dataframe()
     prevent_initial_call=True,
 )
 def reset_data(btn):
+    """
+    Function to reset the simulation data
+    Args:
+        btn: The reset button
+    Returns:
+        The initial data of the simulation
+    """
+
     if btn is None or btn == 0:
         raise PreventUpdate
-    print("reset_data")
-    print(btn)
 
     # Reset the data of each dcc.Store component
-    marketTimestampValue = get_first_timestamp(market_df, news_df, 100)
+    timestamp = get_first_timestamp(market_df, news_df, 100)
     cashflow = dlt.initial_money
-    requestList = []
-    portfolioShares = {c: 0 for c in dlt.companies.keys()}
-    portfolioTotals = {c: 0 for c in dlt.companies.keys()}
+    shares = {c: 0 for c in dlt.companies.keys()}
+    totals = {c: 0 for c in dlt.companies.keys()}
+    requests = []
 
-    return marketTimestampValue, cashflow, requestList, portfolioShares, portfolioTotals
+    return timestamp, cashflow, requests, shares, totals

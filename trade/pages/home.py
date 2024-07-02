@@ -1,18 +1,11 @@
 import dash
-from dash import html, dcc, Input, Output, callback
-from dash.exceptions import PreventUpdate
-
-from trade.Locales import translations as tls
-
 from trade.layouts import home
 
-from trade.callbacks import menu
+# Don't delete this import
+from trade.callbacks import reset
 
+dash.register_page(__name__, path="/")
 
-dash.register_page(
-    __name__,
-	path="/",
-)
 
 def layout(lang="fr", **kwargs):
 	dash.page_registry['lang'] = lang

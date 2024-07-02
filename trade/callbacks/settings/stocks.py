@@ -1,15 +1,8 @@
-import os.path
-import pandas as pd
-
 from dash import callback, Input, Output, State, ALL, no_update, html
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
-from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, \
-    get_generated_data, delete_generated_data
-from trade.utils.settings.display import display_chart
-from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
-from trade.layouts.settings.charts import timeline_item, ordinal
+from trade.utils.settings.create_market_data import delete_generated_data
 from trade.defaults import defaults as dlt
 
 @callback(

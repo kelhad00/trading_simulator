@@ -3,11 +3,12 @@ import pandas as pd
 
 from dash import callback, Input, Output, State, ALL, no_update, dcc
 
+from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, \
-    get_generated_data, add_pattern
+    get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
-from trade.layouts.settings.charts import timeline_item, ordinal
+from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
 
 

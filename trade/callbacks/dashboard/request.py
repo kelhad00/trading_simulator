@@ -8,7 +8,7 @@ from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from trade.defaults import defaults as dlt
-from trade.Locales import translations as tls
+from trade.locales import translations as tls
 from trade.utils.create_table import create_table, create_selectable_table
 from trade.utils.market import get_price_dataframe
 from trade.utils.store.export import export_data
@@ -136,7 +136,7 @@ def process_submit_button(company, action, price, share, cash, timestamp, port_s
 
 @callback(
     Output("requests", "data"),
-    Output('notifications-container', 'children'),
+    Output('notifications', 'children', allow_duplicate=True),
     Output('request-table', 'children', allow_duplicate=True),
     Output('portfolio-shares', 'data'),
     Output('cashflow', 'data'),

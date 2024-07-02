@@ -21,6 +21,18 @@ app = Dash(
     external_scripts=external_scripts
 )
 
+theme = {
+    "defaultRadius": "md",
+    "components": {
+        "Paper": {
+            "defaultProps": {
+                "p": "xs",
+                "withBorder": True,
+            }
+        }
+    },
+}
+
 market_df = get_market_dataframe()
 news_df = get_news_dataframe()
 
@@ -40,7 +52,7 @@ app.layout = dmc.MantineProvider([
 
         dash.page_container
     ])
-])
+], theme=theme)
 
 if __name__ == '__main__':
     app.run_server(debug=True)

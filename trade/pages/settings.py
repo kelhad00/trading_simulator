@@ -1,16 +1,11 @@
 import dash
-from dash import html
+from trade.layouts.settings.layout import main_layout
 
-from trade.callbacks import settings as callbacks, stocks as stocks_callbacks
+# Don't delete this import
 
-from trade.layouts.settings import settings
+dash.register_page(__name__, path="/settings",)
 
-dash.register_page(
-    __name__,
-    path="/settings",
-)
 
 def layout(lang="fr", **kwargs):
     dash.page_registry['lang'] = lang
-
-    return settings.main_layout(lang)
+    return main_layout(lang)

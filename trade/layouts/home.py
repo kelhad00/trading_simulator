@@ -1,23 +1,16 @@
-from dash import html, dcc, dash_table
+from dash import html, dcc
 from dash_iconify import DashIconify
+import dash_mantine_components as dmc
+import os
 
-from trade.Locales import translations as tls
-from trade.candlestick_charts import PLOTLY_CONFIG
+from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
-import dash_mantine_components as dmc
-
-from trade.layouts.shared import header
-
-import os
+from trade.components.header import header
 
 
 def main_layout(lang="fr"):
-
-    button = disable_button()
-
     return html.Div([
-
         html.Div([
             header(lang),
             html.Div([
@@ -25,47 +18,47 @@ def main_layout(lang="fr"):
                 description(lang)
             ], className="flex flex-col gap-8"),
         ], className="flex flex-col gap-8"),
-
-        options(button, lang)
-
+        options(lang)
     ], className="pt-8 pb-20 px-12 bg-gray-100 h-screen w-screen flex flex-col gap-8 justify-between")
 
 
-def options(disable_button, lang="fr"):
+def options(lang="fr"):
+    disabled = disable_button()
+
+    def option(label, href, icon, disabled=False):
+        return dmc.Button(
+            dcc.Link(label, href=href),
+            leftIcon=DashIconify(icon=icon),
+            variant="solid", color="dark", radius="md", size="lg", disabled=disabled,
+        )
+
     return html.Div([
-        dmc.Button(
-            dcc.Link(tls[lang]["button-start"], href="/dashboard?lang=" + lang),
-            leftIcon=DashIconify(icon="carbon:play-filled-alt"),
-            variant="solid", color="dark", radius="md", size="lg", disabled=disable_button,
-        ),
-        dmc.Button(
-            dcc.Link(tls[lang]["button-settings"], href="/settings?lang=" + lang),
-            leftIcon=DashIconify(icon="carbon:settings"),
-            variant="solid", color="dark", radius="md", size="lg"
-        ),
-        dmc.Button(
-            tls[lang]["button-restart-sim"],
-            leftIcon=DashIconify(icon="carbon:reset"),
-            variant="outline", color="dark", radius="md", size="lg", n_clicks=0),
+        option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled),
+        option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings"),
+        option(tls[lang]["button-restart-sim"], "#", "carbon:reset", disabled),
     ], className="flex gap-4 flex-col max-w-xs")
 
 
 def description(lang="fr"):
+    def variant(content):
+        return html.Span(content, className="text-3xl font-semibold text-[rgb(73,80,87)]")
+
     return dmc.Text([
         tls[lang]["description"][0],
-        html.Span(tls[lang]["description"][1], className="text-3xl font-semibold text-[rgb(73,80,87)]"),
+        variant(tls[lang]["description"][1]),
         tls[lang]["description"][2],
-        html.Span(tls[lang]["description"][3], className="text-3xl font-semibold text-[rgb(73,80,87)]"),
+        variant(tls[lang]["description"][3]),
         tls[lang]["description"][4],
-        html.Span(tls[lang]["description"][5], className="text-3xl font-semibold text-[rgb(73,80,87)]"),
+        variant(tls[lang]["description"][5]),
         tls[lang]["description"][6],
     ], className="text-3xl font-semibold max-w-2xl")
 
 
 def welcome(lang="fr"):
+    className = "text-8xl font-bold leading-none"
     return html.Div([
-        dmc.Title(tls[lang]["welcome"][0], order=1, className="text-8xl font-bold text-[rgb(73,80,87)] leading-none	"),
-        dmc.Title(tls[lang]["welcome"][1], order=1, className="text-8xl font-bold leading-none	"),
+        dmc.Title(tls[lang]["welcome"][0], order=1, className=f"{className} text-[rgb(73,80,87)]"),
+        dmc.Title(tls[lang]["welcome"][1], order=1, className=className),
     ])
 
 

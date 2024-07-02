@@ -1,10 +1,8 @@
 from dash import html
 import dash_mantine_components as dmc
 
-from trade.layouts.settings.charts import section
-from trade.Locales import translations as tls
-from trade.defaults import defaults as dlt
-
+from trade.components.sections import section
+from trade.locales import translations as tls
 
 
 def stocks_settings(lang="fr"):
@@ -14,7 +12,6 @@ def stocks_settings(lang="fr"):
                 dmc.Select(
                     id="input-company",
                     label="Company",
-                    radius="md",
                     creatable=True,
                     searchable=True,
                     className="flex-1"
@@ -23,19 +20,17 @@ def stocks_settings(lang="fr"):
                     dmc.TextInput(
                         id="input-stock",
                         label="Ticker",
-                        radius="md",
                         className="flex-1"
                     ),
                     dmc.Select(
                         id="input-activity",
                         label="Activity",
-                        radius="md",
                         className="flex-1"
                     ),
                 ], className="flex gap-4 w-full justify-between"),
             ], className="flex flex-col gap-2"),
 
-            dmc.Button("Add", id="add-company", color="dark", size="md", radius="md"),
+            dmc.Button("Add", id="add-company", color="dark", size="md"),
         ]),
         section(tls[lang]["settings-subtitles"]["charts-patterns"], [
             html.Div(id="list-companies", className="flex flex-col gap-4"),

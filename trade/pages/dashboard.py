@@ -1,19 +1,14 @@
 import dash
-from trade.layouts import dashboard
+from trade.layouts.dashboard.layout import main_layout
 
-# Callbacks
-from trade.callbacks import portfolio, graph, news, request, menu, export
+# Don't delete this import
 
-
-dash.register_page(
-    __name__,
-    path="/dashboard",
-)
+dash.register_page(__name__, path="/dashboard")
 
 
 def layout(lang="fr", **kwargs):
     dash.page_registry['lang'] = lang
-    return dashboard.main_layout(lang)
+    return main_layout(lang)
 
 
 

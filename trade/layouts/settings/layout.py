@@ -1,11 +1,11 @@
 from dash import html
 import dash_mantine_components as dmc
 
-from trade.layouts.settings.charts import generate_charts
-from trade.layouts.settings.stocks import stocks_settings
-from trade.layouts.shared import header
+from trade.layouts.settings.sections.charts import generate_charts
+from trade.layouts.settings.sections.stocks import stocks_settings
+from trade.components.header import header
 
-from trade.Locales import translations as tls
+from trade.locales import translations as tls
 
 
 def main_layout(lang="fr"):
@@ -23,7 +23,6 @@ def main_layout(lang="fr"):
                 dmc.TabsPanel(stocks_settings(lang), value="stocks"),
             ],
             value="charts",
-            # value="stocks",
             color="dark",
             radius="md",
             className="w-full max-w-2xl flex flex-col gap-8"
