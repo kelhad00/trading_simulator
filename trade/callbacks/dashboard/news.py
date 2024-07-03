@@ -1,4 +1,4 @@
-from dash import html, dcc, callback, Output, Input, State, page_registry, ALL, no_update, ctx
+from dash import callback, Output, Input, State, page_registry, ALL, no_update, ctx
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 import pandas as pd

@@ -40,7 +40,6 @@ news_df = get_news_dataframe()
 app.layout = dmc.MantineProvider([
     dmc.NotificationsProvider([
         html.Div(id="notifications"),
-        html.Div(id="export"),
 
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, news_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),

@@ -1,4 +1,4 @@
-from dash import Output, Input, State, html, callback, no_update
+from dash import Output, Input, State, callback, no_update, ALL
 from trade.utils.store.export import export_data
 
 
@@ -9,17 +9,21 @@ from trade.utils.store.export import export_data
     Input('description-title', 'children'),
     Input('segmented', "value"),
     Input("action-input", "value"),
+    Input("requests", "data"),
 
     State('cashflow', 'data'),
     State('timestamp', 'data'),
     State('portfolio-shares', 'data'),
     State("portfolio-totals", "data"),
-    State("requests", "data"),
+    State({'type': 'requests-selectable-table', 'index': ALL}, "checked"),
+
+    prevent_initial_call=True
+
 )
-def export_display_update(company, title, graph_segmented, request_segmented, cashflow, timestamp, shares, totals, requests):
+def export_display_update(company, title, graph_segmented, request_segmented, requests, cashflow, timestamp, shares, totals, deleted_request):
     """
     Function triggered when the user interacts with the dashboard
     Update the logs with the latest data
     """
-    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented)
+    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, deleted_request)
     return no_update
