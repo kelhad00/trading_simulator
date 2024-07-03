@@ -1,7 +1,7 @@
 from dash import Output, Input, callback, page_registry
 import dash_mantine_components as dmc
 
-from trade.utils.create_table import create_table
+from trade.components.table import create_table
 from trade.locales import translations as tls
 
 import pandas as pd

@@ -35,13 +35,12 @@ theme = {
 }
 
 market_df = get_market_dataframe()
-news_df = get_news_dataframe()
 
 app.layout = dmc.MantineProvider([
     dmc.NotificationsProvider([
         html.Div(id="notifications"),
 
-        dcc.Store(id='timestamp', data=get_first_timestamp(market_df, news_df, 100), storage_type="session"),
+        dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
         dcc.Store(id='portfolio-shares', data={c: 0 for c in dlt.companies.keys()}, storage_type="session"),
         dcc.Store(id='portfolio-totals', data={c: 0 for c in dlt.companies.keys()}, storage_type="session"),

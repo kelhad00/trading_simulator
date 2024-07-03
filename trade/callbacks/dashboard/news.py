@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 import pandas as pd
 
 from trade.locales import translations as tls
-from trade.utils.create_table import create_table
+from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
 
 

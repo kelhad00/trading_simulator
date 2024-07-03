@@ -1,18 +1,14 @@
 import pandas as pd
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, no_update, page_registry as dash_registry, ALL, ctx
+from dash import Output, Input, State, callback, no_update, page_registry as dash_registry, ALL
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
-from trade.utils.create_table import create_selectable_table
+from trade.components.table import create_selectable_table
 from trade.utils.market import get_price_dataframe
-from trade.utils.store.export import export_data
-
-
-
 
 
 def add_request(req, company, action, price, share, cash, timestamp, port_shares):

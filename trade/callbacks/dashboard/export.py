@@ -1,5 +1,5 @@
 from dash import Output, Input, State, callback, no_update, ALL
-from trade.utils.store.export import export_data
+from trade.utils.export import export_data
 
 
 @callback(
