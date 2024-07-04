@@ -25,7 +25,7 @@ def generate_charts(lang="fr"):
             dmc.Paper(
                 dcc.Graph(id="final-chart")
             )
-        ], action_id="modify-button", action="Modify"),
+        ], action_id="modify-button", action=tls[lang]["settings-button"]["modify"]),
     ], className="flex flex-col gap-8 w-full")
 
 
@@ -34,7 +34,7 @@ def generate_charts(lang="fr"):
 def generate_charts_modal(lang="fr"):
     return modal(
         id="modal",
-        title="Modify Market Data",
+        title=tls[lang]["settings-subtitles"]["generate-modal"],
         children=[
             html.Div([
                 section(tls[lang]["settings-subtitles"]["charts-patterns"], [
@@ -44,7 +44,7 @@ def generate_charts_modal(lang="fr"):
                             label=tls[lang]["settings-number-inputs"]["number-patterns"],
                             className="flex-1"
                         ),
-                        dmc.Button("Select All", id="select-all-stocks", color="dark", size="sm"),
+                        dmc.Button(tls[lang]["settings-button"]["select-all"], id="select-all-stocks", color="dark", size="sm"),
                     ], className="flex gap-4 w-full items-end")
                 ]),
 
@@ -69,7 +69,7 @@ def generate_charts_modal(lang="fr"):
                         html.Div(dcc.Graph(), id="modify-final-chart-container"),
                     )
                 ]),
-                dmc.Button("Modify", id="generate-button", color="dark", size="md", ),
+                dmc.Button(tls[lang]["settings-button"]["modify"], id="generate-button", color="dark", size="md", ),
             ], className="flex flex-col gap-8 w-full"),
         ]
     )
@@ -94,6 +94,10 @@ def timeline_item(id, index, title):
 
 
 def timeline(id, nb=5):
+    def format_title(i):
+        lang = page_registry["lang"]
+        title = tls[lang]["settings-timeline"]
+        return f"{ordinal(i, lang)} {title}"
 
     return dmc.Timeline(
         id=id,
@@ -105,10 +109,12 @@ def timeline(id, nb=5):
             *[timeline_item(
                 id=id,
                 index=i,
-                title=f"{ordinal(i)} market movement"
+                title=format_title(i)
             ) for i in range(1, nb + 1)],
         ]
     )
+
+
 
 
 

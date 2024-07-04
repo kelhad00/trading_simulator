@@ -11,8 +11,6 @@ PLOTLY_CONFIG = {
 }
 
 
-
-
 def create_graph(dataframe, timestamp='', next_graph=True, range=10):
     """
     Create a candlestick chart for the selected stock or update an existing one

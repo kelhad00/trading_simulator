@@ -85,22 +85,36 @@ translation = {
             "market-data": "Paramètrage des données de marché",
             "charts-trends": "Tendances des graphiques",
             "charts-patterns": "Choix de l'action",
-            "final-charts": "Prévisualisation"
+            "final-charts": "Prévisualisation",
+            "generate-modal": "Générer des données de marché"
         },
         "settings-sliders": {
             "alpha": "Sélectionner la valeur d'alpha",
-            "length": "Sélectionner la longueur"
+            "length": "Sélectionner la longueur d'un mouvement de marché"
         },
         "settings-radio": {
             "trend": "Sélectionner la tendance",
             "options": ["Hausse 📈", "Baisse 📉", "Stable"]
         },
+        "settings-button": {
+            "modify": "Modifier",
+            "select-all": "Tout sélectionner",
+            "add": "Ajouter"
+        },
         "settings-number-inputs": {
             "number-trends": "Nombre de tendances",
             "number-patterns": "Sélectionner un action"
         },
-
-
+        "settings-timeline": "mouvement du marché",
+        "settings-stocks-input": {
+            "company": "Entreprise",
+            "ticker": "Mnémonique",
+            "activity": "Catégorie"
+        },
+        "settings-tabs": {
+            "stock": "Actions",
+            "chart": "Graphiques",
+        },
 
     }
 }

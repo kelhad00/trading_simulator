@@ -1,5 +1,6 @@
 import dash_mantine_components as dmc
 
+
 def modal(id, title, children):
     return dmc.Modal(
         id=id,

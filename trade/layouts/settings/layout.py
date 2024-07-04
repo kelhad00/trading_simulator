@@ -15,8 +15,8 @@ def main_layout(lang="fr"):
         dmc.Tabs(
             [
                 dmc.TabsList([
-                    dmc.Tab("Charts", value="charts"),
-                    dmc.Tab("Stocks", value="stocks"),
+                    dmc.Tab(tls[lang]["settings-tabs"]["chart"], value="charts"),
+                    dmc.Tab(tls[lang]["settings-tabs"]["stock"], value="stocks"),
                 ], grow=True),
 
                 dmc.TabsPanel(generate_charts(lang), value="charts"),

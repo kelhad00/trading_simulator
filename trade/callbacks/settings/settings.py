@@ -1,7 +1,7 @@
 import os.path
 import pandas as pd
 
-from dash import callback, Input, Output, State, ALL, no_update, dcc
+from dash import callback, Input, Output, State, ALL, no_update, dcc, page_registry
 
 from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, \
@@ -10,6 +10,7 @@ from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
 from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
+from trade.locales import translations as tls
 
 
 
@@ -29,7 +30,7 @@ def update_timeline(nb, children):
                     timeline_item(
                         id=f"timeline",
                         index=len(children) + 1,
-                        title=f"{ordinal(len(children) + 1)} market movement"
+                        title=f"{ordinal(len(children) + 1, page_registry['lang'])} {tls[page_registry['lang']]['settings-timeline']}"
                     )
                 )
             else:
