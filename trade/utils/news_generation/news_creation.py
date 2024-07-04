@@ -1,9 +1,13 @@
-from modules import load_data, save_data
-from modules import random_number, percentage_change
 from time import sleep
 from groq import Groq
 import pandas as pd
 
+from trade.utils.news_generation.modules import load_data, save_data
+from trade.utils.news_generation.modules import random_number, percentage_change
+from trade.utils.market import get_market_dataframe
+
+DATASET_PATH = "../Data/news_dataset.csv"
+NEWS_PATH = "../Data/news.csv"
 
 def get_news_position_rand(market_data, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta):
     '''
@@ -89,10 +93,13 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta):
 
     return (positive_positions, negative_positions)
 
-def create_news(dataset_path, marketdata_path, company_name, company_sector, news_position, model, api):
+def create_news(company_name, company_sector, news_position, model, api):
     '''
     Create news for a company based on the position in market data given
     '''
+
+    # Market data
+    market_data = get_market_dataframe()[company_name]
 
     # Create a Groq client
     client = Groq(
@@ -100,15 +107,14 @@ def create_news(dataset_path, marketdata_path, company_name, company_sector, new
     )
 
     # Load the dataset
-    dataset = load_data(dataset_path)
-    market_data = load_data(marketdata_path, ',')
+    dataset = load_data(DATASET_PATH)
 
     # Create a dataframe to store the news we have created
     news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
 
     # Browse the positive positions
     sentiment = 'positive'
-    sector = company_sector # TODO : Voir comment ça fonctionne
+    sector = company_sector
     subset = dataset.query('sector == @sector & sentiment == @sentiment')
     # Check if the subset is well represented in the dataset
     if len(subset) >= len(news_position[0]):
@@ -135,7 +141,7 @@ def create_news(dataset_path, marketdata_path, company_name, company_sector, new
 
     # Browse the negative positions
     sentiment = 'negative'
-    sector = company_sector # TODO : Voir comment ça fonctionne
+    sector = company_sector
     subset = dataset.query('sector == @sector & sentiment == @sentiment')
     # Check if the subset is well represented in the dataset
     if len(subset) >= len(news_position[1]):
@@ -164,8 +170,8 @@ def create_news(dataset_path, marketdata_path, company_name, company_sector, new
         # The sector is not in the dataset or there are not enough of them
         print('There are not enough negative news for the sector of ' + company_name + ' in the dataset')
 
-    # Return the news created dataframe
-    return news_created
+    # Save the news created
+    save_data(news_created, NEWS_PATH)
 
 
 def transform_news_content(content, company, client, model, sentiment):
