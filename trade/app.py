@@ -65,8 +65,8 @@ if __name__ == '__main__':
         print('\nDownloading market data...\n')
         download_market_data()
 
-    if not os.path.exists(os.path.join(path, "news.csv")):
+    """if not os.path.exists(os.path.join(path, "news.csv")):
         print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
-        quit()
+        quit()"""
 
     app.run_server(debug=True)

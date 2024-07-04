@@ -111,6 +111,7 @@ translation = {
         "settings-tabs": {
             "stock": "Stocks",
             "chart": "Charts",
+            "news": "News"
         },
 
     }

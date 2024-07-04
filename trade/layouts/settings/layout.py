@@ -3,6 +3,7 @@ import dash_mantine_components as dmc
 
 from trade.layouts.settings.sections.charts import generate_charts
 from trade.layouts.settings.sections.stocks import stocks_settings
+from trade.layouts.settings.sections.news import news_settings
 from trade.components.header import header
 
 from trade.locales import translations as tls
@@ -17,10 +18,12 @@ def main_layout(lang="fr"):
                 dmc.TabsList([
                     dmc.Tab(tls[lang]["settings-tabs"]["chart"], value="charts"),
                     dmc.Tab(tls[lang]["settings-tabs"]["stock"], value="stocks"),
+                    dmc.Tab(tls[lang]["settings-tabs"]["news"], value="news"),
                 ], grow=True),
 
                 dmc.TabsPanel(generate_charts(lang), value="charts"),
                 dmc.TabsPanel(stocks_settings(lang), value="stocks"),
+                dmc.TabsPanel(news_settings(lang), value="news"),
             ],
             value="charts",
             color="dark",

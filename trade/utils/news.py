@@ -11,5 +11,4 @@ def get_news_dataframe():
 
         return news_df
     except:
-        print('ERROR: No news data found in ' + dlt.data_path + ' folder.')
-        #raise FileNotFoundError
+        raise FileNotFoundError
