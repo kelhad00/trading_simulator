@@ -82,8 +82,9 @@ translation = {
             "charts-trends": "Charts trends",
             "charts-patterns": "Stock choice",
             "final-charts": "Preview",
-            "generate-modal": "Generate market data"
-
+            "generate-modal": "Generate market data",
+            "api": "Groq api key",
+            "news-generation-param": "News generation parameters"
         },
         "settings-sliders": {
             "alpha": "Select alpha value",
@@ -107,6 +108,15 @@ translation = {
             "company": "Company",
             "ticker": "Ticker",
             "activity": "Activity"
+        },
+        "settings-api" : "API key",
+        "news-settings": {
+            "alpha": "Alpha : The alpha parameter is a percentage of variation between two days.",
+            "alpha-day-interval": "Alpha day interval : The alpha day interval is the interval between the two days used for the calculation of alpha.",
+            "delta": "Delta : The delta value shifts the news days by a certain number of days.",
+            "mode": "News generation mode",
+            "linear-mode": "Linear generation mode",
+            "random-mode": "Random generation mode",
         },
         "settings-tabs": {
             "stock": "Stocks",

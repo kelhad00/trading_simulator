@@ -7,34 +7,56 @@ from trade.locales import translations as tls
 
 def news_settings(lang="fr"):
     return html.Div([
-        section(tls[lang]["settings-subtitles"]["charts-patterns"], [
+        section(tls[lang]["settings-subtitles"]["api"], [
             html.Div([
-                dmc.Select(
-                    id="input-company",
-                    label=tls[lang]["settings-stocks-input"]["company"],
-                    creatable=True,
-                    searchable=True,
-                    className="flex-1"
+                dmc.TextInput(
+                    id="input-api-key",
+                    label=tls[lang]["settings-api"],
+                    className="flex-1",
+                    value="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", # TODO: REMOVE IT
                 ),
-                html.Div([
-                    dmc.TextInput(
-                        id="input-stock",
-                        label=tls[lang]["settings-stocks-input"]["ticker"],
-                        className="flex-1"
-                    ),
-                    dmc.Select(
-                        id="input-activity",
-                        label=tls[lang]["settings-stocks-input"]["activity"],
-                        className="flex-1"
-                    ),
-                ], className="flex gap-4 w-full justify-between"),
-            ], className="flex flex-col gap-2"),
-
-            dmc.Button(tls[lang]["settings-button"]["add"], id="add-company", color="dark", size="md"),
+            ], className="flex w-full"),
         ]),
-        section(tls[lang]["settings-subtitles"]["charts-patterns"], [
-            html.Div(id="list-companies", className="flex flex-col gap-4"),
+        section(tls[lang]["settings-subtitles"]["news-generation-param"], [
+            html.Div([
+                dmc.NumberInput(
+                    id="input-alpha",
+                    label=tls[lang]["news-settings"]["alpha"],
+                    className="flex-1",
+                    value=3,
+                ),
+            ], className="flex w-full"),
+
+            html.Div([
+                dmc.NumberInput(
+                    id="input-alpha-day-interval",
+                    label=tls[lang]["news-settings"]["alpha-day-interval"],
+                    className="flex-1",
+                    value=3,
+                ),
+            ], className="flex w-full"),
+
+            html.Div([
+                dmc.NumberInput(
+                    id="input-delta",
+                    label=tls[lang]["news-settings"]["delta"],
+                    className="flex-1",
+                    value=0,
+                ),
+            ], className="flex w-full"),
+
+            html.Div([
+                dmc.RadioGroup(
+                    id="input-mode",
+                    label=tls[lang]["news-settings"]["mode"],
+                    children=[
+                        dmc.Radio(value="random", label=tls[lang]["news-settings"]["random-mode"]),
+                        dmc.Radio(value="linear", label=tls[lang]["news-settings"]["linear-mode"]),
+                    ],
+                    value="random",
+                ),
+            ], className="flex w-full"),
+
+            # TODO : Add a section for the number of news only in random mode
         ]),
-
-
     ], className="flex flex-col gap-8 w-full")

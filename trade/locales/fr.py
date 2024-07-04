@@ -86,7 +86,9 @@ translation = {
             "charts-trends": "Tendances des graphiques",
             "charts-patterns": "Choix de l'action",
             "final-charts": "Prévisualisation",
-            "generate-modal": "Générer des données de marché"
+            "generate-modal": "Générer des données de marché",
+            "api": "Clé api Groq",
+            "news-generation-param": "Paramètres de génération des actualités"
         },
         "settings-sliders": {
             "alpha": "Sélectionner la valeur d'alpha",
@@ -110,6 +112,15 @@ translation = {
             "company": "Entreprise",
             "ticker": "Mnémonique",
             "activity": "Catégorie"
+        },
+        "settings-api" : "Clé API",
+        "news-settings": {
+            "alpha": "Alpha : Le paramètre alpha est un pourcentage de variation entre deux jours.",
+            "alpha-day-interval": "Intervalle de jours alpha : L'intervalle de jours alpha est l'intervalle entre les deux jours utilisés pour le calcul de l'alpha.",
+            "delta": "Delta : La valeur delta décale les jours de nouvelles de quelques jours.",
+            "mode": "Mode de génération des actualités",
+            "linear-mode": "Mode de génération linéaire",
+            "random-mode": "Mode de génération aléatoire",
         },
         "settings-tabs": {
             "stock": "Actions",
