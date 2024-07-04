@@ -33,17 +33,7 @@ def get_price_dataframe():
     return price_list
 
 
-def get_first_timestamp(market_df, news_df, range=0):
-    # try:
-    #     # set the timestamp to the older shared date between news and market data
-    #     # if news_df is the newer one, set the timestamp to the first date share with news_df
-    #     if news_df.min().date.strftime('%Y-%m-%d') > market_df.index.min()[:10]:
-    #         timestamp = market_df.loc[market_df.index >= news_df.min().date.strftime('%Y-%m-%d')].index[0]
-    #     else:
-    #         timestamp = market_df.index.min()
-    # except:
-    #     timestamp = market_df.index.min()
-
+def get_first_timestamp(market_df, range=0):
     try:
         timestamp = market_df.index[range]
         return timestamp

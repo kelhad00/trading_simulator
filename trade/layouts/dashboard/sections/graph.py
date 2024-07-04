@@ -3,7 +3,7 @@ import dash_mantine_components as dmc
 
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
-from trade.candlestick_charts import PLOTLY_CONFIG
+from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
 
 from trade.components.menu import dashboard_menu as menu
 

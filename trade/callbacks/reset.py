@@ -6,7 +6,6 @@ from trade.utils.market import get_first_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
 
 market_df = get_market_dataframe()
-news_df = get_news_dataframe()
 
 
 @callback(
@@ -31,7 +30,7 @@ def reset_data(btn):
         raise PreventUpdate
 
     # Reset the data of each dcc.Store component
-    timestamp = get_first_timestamp(market_df, news_df, 100)
+    timestamp = get_first_timestamp(market_df, 100)
     cashflow = dlt.initial_money
     shares = {c: 0 for c in dlt.companies.keys()}
     totals = {c: 0 for c in dlt.companies.keys()}

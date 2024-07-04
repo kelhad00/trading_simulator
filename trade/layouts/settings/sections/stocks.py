@@ -11,7 +11,7 @@ def stocks_settings(lang="fr"):
             html.Div([
                 dmc.Select(
                     id="input-company",
-                    label="Company",
+                    label=tls[lang]["settings-stocks-input"]["company"],
                     creatable=True,
                     searchable=True,
                     className="flex-1"
@@ -19,18 +19,18 @@ def stocks_settings(lang="fr"):
                 html.Div([
                     dmc.TextInput(
                         id="input-stock",
-                        label="Ticker",
+                        label=tls[lang]["settings-stocks-input"]["ticker"],
                         className="flex-1"
                     ),
                     dmc.Select(
                         id="input-activity",
-                        label="Activity",
+                        label=tls[lang]["settings-stocks-input"]["activity"],
                         className="flex-1"
                     ),
                 ], className="flex gap-4 w-full justify-between"),
             ], className="flex flex-col gap-2"),
 
-            dmc.Button("Add", id="add-company", color="dark", size="md"),
+            dmc.Button(tls[lang]["settings-button"]["add"], id="add-company", color="dark", size="md"),
         ]),
         section(tls[lang]["settings-subtitles"]["charts-patterns"], [
             html.Div(id="list-companies", className="flex flex-col gap-4"),

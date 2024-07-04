@@ -1,10 +1,10 @@
-from dash import Output, Input, State, callback, page_registry, ctx, no_update
+from dash import Output, Input, State, callback, page_registry, ctx
 import plotly.graph_objects as go
 
 import pandas as pd
 import os
 
-from trade.candlestick_charts import create_graph
+from trade.utils.graph.candlestick_charts import create_graph
 from trade.utils.market import get_market_dataframe
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt

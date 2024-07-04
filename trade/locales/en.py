@@ -81,19 +81,36 @@ translation = {
             "market-data": "Market data creation",
             "charts-trends": "Charts trends",
             "charts-patterns": "Stock choice",
-            "final-charts": "Preview"
+            "final-charts": "Preview",
+            "generate-modal": "Generate market data"
+
         },
         "settings-sliders": {
             "alpha": "Select alpha value",
-            "length": "Select length value"
+            "length": "Select length of a market movement"
         },
         "settings-radio": {
             "trend": "Select a trend",
             "options": ["Bull 📈", "Bear 📉", "Flat"]
         },
+        "settings-button": {
+            "modify": "Modify",
+            "select-all": "Select all",
+            "add": "Ajouter"
+        },
         "settings-number-inputs": {
             "number-trends": "Number of charts trends",
             "number-patterns": "Select a stock"
+        },
+        "settings-timeline": "market movement",
+        "settings-stocks-input": {
+            "company": "Company",
+            "ticker": "Ticker",
+            "activity": "Activity"
+        },
+        "settings-tabs": {
+            "stock": "Stocks",
+            "chart": "Charts",
         },
 
     }

@@ -1,9 +1,11 @@
-from dash import callback, Input, Output, State, ALL, no_update, html
+from dash import callback, Input, Output, State, ALL, no_update, html, page_registry
 import dash_mantine_components as dmc
+from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from trade.utils.settings.create_market_data import delete_generated_data
 from trade.defaults import defaults as dlt
+from trade.locales import translations as tls
 
 @callback(
     Output("companies", "data"),
@@ -26,19 +28,21 @@ def update_companies(n, stock, company, companies):
         )
     return companies, notif
 
+
 @callback(
     Output("list-companies", "children"),
     Input("companies", "data"),
 )
 def display_companies(companies):
+    lang = page_registry["lang"]
     return [
         dmc.Paper([
             html.Div([
-                dmc.Text("Ticker", weight=500),
+                dmc.Text(tls[lang]["settings-stocks-input"]["ticker"], weight=500),
                 dmc.Text(stock, size="sm"),
             ], className="flex flex-col flex-1"),
             html.Div([
-                dmc.Text("Company", weight=500),
+                dmc.Text(tls[lang]["settings-stocks-input"]["company"], weight=500),
                 dmc.Text(company, size="sm"),
             ], className="flex flex-col flex-[2]"),
             dmc.ActionIcon(
@@ -86,6 +90,9 @@ def update_select_company_options(companies, company):
     prevent_initial_call=True
 )
 def delete_companies(clicks, companies, children):
+    if not clicks or not 1 in clicks:
+        raise PreventUpdate
+
     children = [child for index, child in enumerate(children) if not clicks[index]]
 
     if 1 in clicks:

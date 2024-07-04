@@ -6,4 +6,4 @@ def radio(options, label, id):
         label=label,
         id=id,
         size="sm",
-    ),
+    )

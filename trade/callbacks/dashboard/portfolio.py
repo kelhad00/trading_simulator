@@ -1,14 +1,9 @@
-from dash import Output, Input, State, callback, html, page_registry
-
-from trade.utils.create_table import create_table
-from trade.utils.market import get_market_dataframe, get_first_timestamp, get_price_dataframe
-from trade.utils.news import get_news_dataframe
-
-from trade.locales import translations as tls
-
+from dash import Output, Input, callback, page_registry
 import dash_mantine_components as dmc
 
-import numpy as np
+from trade.components.table import create_table
+from trade.locales import translations as tls
+
 import pandas as pd
 
 
