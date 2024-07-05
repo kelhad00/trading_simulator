@@ -17,12 +17,12 @@ def save_data(data, data_path, separator=';'):
     data.to_csv(data_path, sep=separator, index=False)
 
 
-def get_sectors(data):
+def get_total_of_sectors(data):
     '''
-    Get the sectors available in the dataset
+    Get the total number of sectors in the dataset
     '''
 
-    return data['sector'].unique()
+    return len(data['sector'].unique())
 
 
 def get_nbr_news_per_sector(data):
