@@ -102,3 +102,14 @@ def delete_companies(clicks, companies, children):
         delete_generated_data(stock)
 
     return children, companies, [0] * len(clicks)
+
+
+@callback(
+    Output("company-activity", "data"),
+    Output("notifications", "children"),
+    Input("input-company", "value"),
+)
+def set_company_activity():
+    # TODO: Implement this function
+    # There is a fonction to list all the activities in utils > news_generation > modules > get_sectors()
+    pass
