@@ -181,7 +181,7 @@ def select_all_stocks(n, companies):
     State('nbr-news-container', 'children')
 )
 def update_nbr_news_container(mode, children):
-    # TODO : ça marche pas
+    # TODO : ça marche pas, disparait bien en mode linéaire mais ne réapparait pas après en mode random
     if mode == 'random':
         return html.Div(children, style={'display': 'block'})
     else:
