@@ -15,9 +15,10 @@ market_df = get_market_dataframe()
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
     Input('reset-button', 'n_clicks'),
+    State('initial-cashflow', 'data'),
     prevent_initial_call=True,
 )
-def reset_data(btn):
+def reset_data(btn, initial_cashflow):
     """
     Function to reset the simulation data
     Args:
@@ -31,7 +32,7 @@ def reset_data(btn):
 
     # Reset the data of each dcc.Store component
     timestamp = get_first_timestamp(market_df, 100)
-    cashflow = dlt.initial_money
+    cashflow = initial_cashflow
     shares = {c: 0 for c in dlt.companies.keys()}
     totals = {c: 0 for c in dlt.companies.keys()}
     requests = []

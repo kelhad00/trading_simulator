@@ -50,6 +50,20 @@ class Defaults:
         "^SPGSGC" : "S&P GSCI Gold Index",
     }
 
+    activities = {
+        "Financial Services": [ "BNP.PA", "CS.PA", "ACA.PA" ],
+        "Healthcare": [ "SAN.PA" ],
+        "Consumer Goods": [ "MC.PA", "OR.PA", "RMS.PA", "RI.PA", "EL.PA" ],
+        "Industrials": [ "TTE.PA", "AIR.PA", "SU.PA", "AI.PA", "SAF.PA", "DSY.PA" ],
+        "Technology": [ "STMPA.PA" ],
+        "Automobile": [ "STLAM.MI" ],
+        "Aerospace": [ "AIR.PA" ],
+        "Construction": [ "DG.PA" ],
+        "Food": [ "BN.PA" ],
+        "Luxury": [ "KER.PA" ],
+        "Indexes": [ "^GSPC", "^DJI", "^FCHI", "^SPGSGC" ]
+    }
+
     # Variables used to disable the start button on the home page
     home_start_button_disabled = False
 

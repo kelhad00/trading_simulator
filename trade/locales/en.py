@@ -82,7 +82,8 @@ translation = {
             "charts-trends": "Charts trends",
             "charts-patterns": "Stock choice",
             "final-charts": "Preview",
-            "generate-modal": "Generate market data"
+            "generate-modal": "Generate market data",
+            "advanced-init": "Initialisation"
 
         },
         "settings-sliders": {
@@ -96,7 +97,9 @@ translation = {
         "settings-button": {
             "modify": "Modify",
             "select-all": "Select all",
-            "add": "Ajouter"
+            "add": "Ajouter",
+            "confirm": "Confirm",
+            "update": "Update"
         },
         "settings-number-inputs": {
             "number-trends": "Number of charts trends",
@@ -108,9 +111,15 @@ translation = {
             "ticker": "Ticker",
             "activity": "Activity"
         },
+        "settings-advanced-init-input": {
+            "update-time": "Time between updates (ms)",
+            "requests": "Max requests",
+            "cashflow": "Initial cashflow"
+        },
         "settings-tabs": {
             "stock": "Stocks",
             "chart": "Charts",
+            "advanced": "Advanced"
         },
 
     }

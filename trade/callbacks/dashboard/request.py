@@ -1,13 +1,13 @@
 import pandas as pd
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, no_update, page_registry as dash_registry, ALL
+from dash import Output, Input, State, callback, no_update, page_registry as dash_registry, ALL, ctx
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
-from trade.components.table import create_selectable_table
+from trade.components.table import create_selectable_table, create_table_delete
 from trade.utils.market import get_price_dataframe
 
 
@@ -143,6 +143,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         cashflow: the updated money of the user
         port_totals: the updated dictionary of the total price of the user
     """
+    old_req = request_list
 
     price_list = get_price_dataframe()
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
@@ -187,7 +188,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         # Update the total price of each stock
         port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
 
-    return request_list, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict()
+    return request_list if old_req != request_list else no_update, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict()
 
 
 @callback(
@@ -221,38 +222,39 @@ def cb_display_requests(req):
 
     return dmc.Table(
         highlightOnHover=True,
-        children=create_selectable_table(df, "requests-selectable-table"),
+        children=create_table_delete(df, "requests-selectable-table"),
     )
 
-
-@callback(
-    Output('clear-done-btn', 'children'),
-    Input({'type': 'requests-selectable-table', 'index': ALL}, 'checked')
-)
-def switch_label_delete_button(selected_rows):
-    """
-    Switch the label of the delete button.
-    Between "Clear all requests" and "Clear requests".
-    Args:
-        selected_rows: the selected rows
-    Returns:
-        str: the label of the delete button
-    """
-
-    if len(selected_rows) == 0 or True not in selected_rows:
-        return tls[dash_registry['lang']]["clear-all-requests-button"]
-    else:
-        return tls[dash_registry['lang']]["clear-requests-button"]
+#
+# @callback(
+#     Output('clear-done-btn', 'children'),
+#     Input({'type': 'requests-selectable-table', 'index': ALL}, 'n_clicks'),
+# )
+# def switch_label_delete_button(selected_rows):
+#     """
+#     Switch the label of the delete button.
+#     Between "Clear all requests" and "Clear requests".
+#     Args:
+#         selected_rows: nb clicks on all the delete button
+#     Returns:
+#         str: the label of the delete button
+#     """
+#
+#     if len(selected_rows) == 0 or True not in selected_rows:
+#         return tls[dash_registry['lang']]["clear-all-requests-button"]
+#     else:
+#         return tls[dash_registry['lang']]["clear-requests-button"]
 
 
 @callback(
     Output("requests", "data", allow_duplicate=True),
+    # Output({'type': 'requests-selectable-table', 'index': ALL}, "n_clicks"),
     Input('clear-done-btn', 'n_clicks'),
-    State({'type': 'requests-selectable-table', 'index': ALL}, "checked"),
+    Input({'type': 'requests-selectable-table', 'index': ALL}, "n_clicks"),
     State("requests", "data"),
     prevent_initial_call=True
 )
-def remove_request(n, values_to_remove, request_list):
+def remove_request(n, values_to_remove, req):
     """
     Remove the selected requests.
     Args:
@@ -261,14 +263,17 @@ def remove_request(n, values_to_remove, request_list):
         request_list: the list of requests
     Returns:
         request_list: the updated list of requests
+        list: reset the nb of clicks of each delete button
     """
-    if n is None or n == 0:
-        raise PreventUpdate
+    old_req = req
 
-    req = []
-    if True in values_to_remove:
-        for index, v in enumerate(values_to_remove):
-            if v is not True:
-                req.append(request_list[index])
-    return req
+    if ctx.triggered_id == 'clear-done-btn':
+        return []
+    else:
+        if 1 in values_to_remove:
+            index = values_to_remove.index(1)
+            del req[index]
+            return req
+        else:
+            return no_update
 

@@ -5,7 +5,6 @@ from tradesim.Locales import translations as tls
 
 
 def select_locale(lang, url="/"):
-    print("select_locale")
     return html.Div([
         html.Button([
             html.Span(lang),

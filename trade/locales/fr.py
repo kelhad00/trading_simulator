@@ -86,7 +86,8 @@ translation = {
             "charts-trends": "Tendances des graphiques",
             "charts-patterns": "Choix de l'action",
             "final-charts": "Prévisualisation",
-            "generate-modal": "Générer des données de marché"
+            "generate-modal": "Générer des données de marché",
+            "advanced-init": "Initialisation"
         },
         "settings-sliders": {
             "alpha": "Sélectionner la valeur d'alpha",
@@ -99,7 +100,9 @@ translation = {
         "settings-button": {
             "modify": "Modifier",
             "select-all": "Tout sélectionner",
-            "add": "Ajouter"
+            "add": "Ajouter",
+            "confirm": "Valider",
+            "update": "Mettre à jour"
         },
         "settings-number-inputs": {
             "number-trends": "Nombre de tendances",
@@ -111,9 +114,15 @@ translation = {
             "ticker": "Mnémonique",
             "activity": "Catégorie"
         },
+        "settings-advanced-init-input": {
+            "update-time": "Temps pour une journée (ms)",
+            "requests": "Requêtes max",
+            "cashflow": "Trésorie initiale"
+        },
         "settings-tabs": {
             "stock": "Actions",
             "chart": "Graphiques",
+            "advanced": "Avancé"
         },
 
     }

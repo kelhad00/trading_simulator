@@ -38,6 +38,14 @@ def format_charts_type(chart_type):
         return "revenue"
 
 
+def format_deleted_requests(deleted_request):
+    if deleted_request is None:
+        deleted_request = []
+    else:
+        deleted_request = list(deleted_request)
+    return deleted_request
+
+
 def export_data(
         timestamp,
         request_list,
@@ -53,11 +61,8 @@ def export_data(
 ):
     """ Periodically save state of the trade into csv
     """
-    if deleted_request is None:
-        deleted_request = []
-    else:
-        deleted_request = list(deleted_request)
 
+    deleted_request = format_deleted_requests(deleted_request)
     charts = format_charts_type(graph_type)
     requests = format_requests_dataframe(request_list)
     shares = format_portfolio_dataframe(shares, "-shares")

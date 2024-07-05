@@ -1,4 +1,4 @@
-from dash import Output, Input, State, callback, no_update, ALL
+from dash import Output, Input, State, callback, no_update, ALL, ctx
 from trade.utils.export import export_data
 
 
@@ -10,20 +10,39 @@ from trade.utils.export import export_data
     Input('segmented', "value"),
     Input("action-input", "value"),
     Input("requests", "data"),
+    Input({'type': 'requests-selectable-table', 'index': ALL}, "n_clicks"),
+    Input('clear-done-btn', 'n_clicks'),
 
     State('cashflow', 'data'),
     State('timestamp', 'data'),
     State('portfolio-shares', 'data'),
     State("portfolio-totals", "data"),
-    State({'type': 'requests-selectable-table', 'index': ALL}, "checked"),
 
     prevent_initial_call=True
 
 )
-def export_display_update(company, title, graph_segmented, request_segmented, requests, cashflow, timestamp, shares, totals, deleted_request):
+def export_display_update(company, title, graph_segmented, request_segmented, requests, delete_requests, delete_all_requests, cashflow, timestamp, shares, totals):
     """
     Function triggered when the user interacts with the dashboard
     Update the logs with the latest data
     """
-    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, deleted_request)
+    if ctx.triggered_id == 'clear-done-btn':
+        delete = ["all"]
+    else:
+        try:
+            index = ctx.triggered_id['index']
+            if delete_requests[index] is not None:
+                delete = [index]
+            else:
+                return no_update
+        except:
+            delete = []
+
+    print(ctx.triggered_id)
+
+
+
+
+
+    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, delete)
     return no_update
