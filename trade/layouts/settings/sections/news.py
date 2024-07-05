@@ -57,6 +57,16 @@ def news_settings(lang="fr"):
                 ),
             ], className="flex w-full"),
 
-            # TODO : Add a section for the number of news only in random mode
+            # Display the number of news input only in random mode
+            html.Div([
+                dmc.NumberInput(
+                    id="input-nbr-news",
+                    label="Number of news",
+                    className="flex-1",
+                    value=10,
+                ),
+            ], className="flex w-full", id="nbr-news-container"),
+
+            dmc.Button(tls[lang]["settings-button"]["modify"], id="modify-news", color="dark", size="md"),
         ]),
     ], className="flex flex-col gap-8 w-full")
