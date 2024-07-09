@@ -6,14 +6,17 @@ import pandas as pd
 from trade.locales import translations as tls
 from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
+from trade.utils.news_generation.news_creation import get_news_position_lin, create_news
+from trade.utils.market import get_market_dataframe
 
 
 @callback(
     Output('news-table', 'children'),
     Input('periodic-updater', 'n_intervals'),
+    Input('company-selector', 'value'),
     State('timestamp', 'data'),
 )
-def cb_update_news_table(n, timestamp, range=50, daily=True):
+def cb_update_news_table(n, company, timestamp, range=50, daily=True):
     """
     Function to display the latest news in the table from the timestamp
     Args:
@@ -22,7 +25,17 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         The updated news table
     """
 
-    news_df = get_news_dataframe()
+    try:
+        news_df = get_news_dataframe()
+    except FileNotFoundError:
+        print('Creating news ...')
+        news_position = get_news_position_lin(get_market_dataframe()[company], 3, 3, 0)
+        #create_news(company, #compny_sector, news_position, 3, 3, 0)
+        # TODO : Implémenter les secteurs des entreprises
+        # TODO : Créer une section news dans les paramètres pour les paramètres de news
+        # TODO : + Créer un champ pour les API
+        news_df = get_news_dataframe()
+
     lang = page_registry['lang']
 
     # Format the news dataframe

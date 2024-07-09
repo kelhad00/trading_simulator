@@ -1,7 +1,7 @@
 import os.path
 import pandas as pd
 
-from dash import callback, Input, Output, State, ALL, no_update, dcc, page_registry
+from dash import callback, Input, Output, State, ALL, no_update, dcc, html, page_registry
 
 from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, \
@@ -11,7 +11,6 @@ from trade.utils.settings.data_handler import scale_market_data, load_data, get_
 from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
-
 
 
 @callback(
@@ -49,8 +48,6 @@ def update_values(values):
         return values.index(None) - 1
     else:
         return len(values) - 1
-
-
 
 
 @callback(
@@ -114,7 +111,6 @@ def update_chart(alpha, length, start_value, radio_trends, companies):
         return no_update
 
 
-
 @callback(
     Output("market", "data", allow_duplicate=True),
     Output("modal", "opened", allow_duplicate=True),
@@ -165,7 +161,6 @@ def open_modal(n, opened, company):
     return not opened, [company]
 
 
-
 @callback(
     Output("select-company-modal", "value", allow_duplicate=True),
     Input("select-all-stocks", "n_clicks"),
@@ -175,3 +170,15 @@ def open_modal(n, opened, company):
 def select_all_stocks(n, companies):
     return list(companies.keys())
 
+
+@callback(
+    Output('nbr-news-container', 'children'),
+    Input('input-mode', 'value'),
+    State('nbr-news-container', 'children')
+)
+def update_nbr_news_container(mode, children):
+    # TODO : ça marche pas, disparait bien en mode linéaire mais ne réapparait pas après en mode random
+    if mode == 'random':
+        return html.Div(children, style={'display': 'block'})
+    else:
+        return html.Div(children, style={'display': 'none'})
