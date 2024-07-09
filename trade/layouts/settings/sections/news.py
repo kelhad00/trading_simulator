@@ -61,7 +61,7 @@ def news_settings(lang="fr"):
             html.Div([
                 dmc.NumberInput(
                     id="input-nbr-news",
-                    label="Number of news",
+                    label=tls[lang]["news-settings"]["nbr-news"],
                     className="flex-1",
                     value=10,
                 ),

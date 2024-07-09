@@ -120,6 +120,7 @@ translation = {
             "mode": "News generation mode",
             "linear-mode": "Linear generation mode",
             "random-mode": "Random generation mode",
+            "nbr-news": "Number of news"
         },
         "settings-advanced-init-input": {
             "update-time": "Time between updates (ms)",
