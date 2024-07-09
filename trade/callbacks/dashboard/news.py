@@ -28,13 +28,7 @@ def cb_update_news_table(n, company, timestamp, range=50, daily=True):
     try:
         news_df = get_news_dataframe()
     except FileNotFoundError:
-        print('Creating news ...')
-        news_position = get_news_position_lin(get_market_dataframe()[company], 3, 3, 0)
-        #create_news(company, #compny_sector, news_position, 3, 3, 0)
-        # TODO : Implémenter les secteurs des entreprises
-        # TODO : Créer une section news dans les paramètres pour les paramètres de news
-        # TODO : + Créer un champ pour les API
-        news_df = get_news_dataframe()
+        raise "The news.csv file was not generated."
 
     lang = page_registry['lang']
 
@@ -119,4 +113,26 @@ def toggle_news_display_type(n, cell_clicked, table):
         except Exception as e:
             print(e)
             return no_update, no_update, no_update, no_update, no_update
+        
 
+@callback(
+    Output('url', 'pathname'),
+    Input('start-button', 'n_clicks'),
+    prevent_initial_call=True
+)
+def on_start_button_clicked(n):
+    if n is None:
+        raise PreventUpdate
+
+    # TODO : Créer un visuel de chargement
+    print("Chargement ...")
+    
+    #news_position = get_news_position_lin(get_market_dataframe()[company], 3, 3, 0)
+    #create_news(company, #compny_sector, news_position, 3, 3, 0)
+    # TODO : Implémenter les secteurs des entreprises
+    # TODO : Créer une section news dans les paramètres pour les paramètres de news
+
+    # Redirect the user to the dashboard
+    path = "/dashboard"
+
+    return path

@@ -12,6 +12,8 @@ from trade.components.header import header
 def main_layout(lang="fr"):
     return html.Div([
         html.Div([
+            # Application url for routing when the user clicks on the start button
+            dcc.Location(id='url', refresh=True),
             header(lang),
             html.Div([
                 welcome(lang),
@@ -25,15 +27,15 @@ def main_layout(lang="fr"):
 def options(lang="fr"):
     disabled = disable_button()
 
-    def option(label, href, icon, disabled=False):
+    def option(label, href, icon, disabled=False, id=""):
         return dmc.Button(
             dcc.Link(label, href=href),
             leftIcon=DashIconify(icon=icon),
-            variant="solid", color="dark", radius="md", size="lg", disabled=disabled,
+            variant="solid", color="dark", radius="md", size="lg", disabled=disabled, id=id
         )
 
     return html.Div([
-        option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled),
+        option(tls[lang]["button-start"], "", "carbon:play-filled-alt", disabled, "start-button"),
         option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings"),
         option(tls[lang]["button-restart-sim"], "#", "carbon:reset", disabled),
     ], className="flex gap-4 flex-col max-w-xs")
