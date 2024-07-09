@@ -85,6 +85,7 @@ translation = {
             "generate-modal": "Generate market data",
             "api": "Groq api key",
             "news-generation-param": "News generation parameters"
+            "advanced-init": "Initialisation"
         },
         "settings-sliders": {
             "alpha": "Select alpha value",
@@ -97,7 +98,9 @@ translation = {
         "settings-button": {
             "modify": "Modify",
             "select-all": "Select all",
-            "add": "Ajouter"
+            "add": "Ajouter",
+            "confirm": "Confirm",
+            "update": "Update"
         },
         "settings-number-inputs": {
             "number-trends": "Number of charts trends",
@@ -117,11 +120,16 @@ translation = {
             "mode": "News generation mode",
             "linear-mode": "Linear generation mode",
             "random-mode": "Random generation mode",
+        "settings-advanced-init-input": {
+            "update-time": "Time between updates (ms)",
+            "requests": "Max requests",
+            "cashflow": "Initial cashflow"
         },
         "settings-tabs": {
             "stock": "Stocks",
             "chart": "Charts",
             "news": "News"
+            "advanced": "Advanced"
         },
 
     }

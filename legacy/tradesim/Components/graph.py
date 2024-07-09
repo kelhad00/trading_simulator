@@ -29,7 +29,6 @@ def update_graph(n, df, timestamp, range=100):
 		# Don’t change the timestamp.
 		next_graph = False
 
-	print(timestamp)
 
 	dftmp = pd.DataFrame.from_dict(df)
 	fig, timestamp = create_graph(

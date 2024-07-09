@@ -101,7 +101,6 @@ def update_chart(alpha, length, start_value, radio_trends, companies):
             figures.append(fig)
             dataframes.append(final_chart.to_dict())
 
-        print(len(figures))
 
         children = [dcc.Graph(figure=fig) for fig in figures]
 
@@ -142,8 +141,6 @@ def cb_export_generated_data(n, datas, companies, nb_radio):
 def update_graph(company, data):
     try:
         df = get_generated_data()[company]
-        print('hello')
-        print(df.head())
 
         fig = display_chart(df, 0, df.shape[0], company)
         return fig
@@ -161,7 +158,6 @@ def update_graph(company, data):
     prevent_initial_call=True
 )
 def open_modal(n, opened, company):
-    print("comp", company)
     return not opened, [company]
 
 

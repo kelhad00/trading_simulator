@@ -89,6 +89,7 @@ translation = {
             "generate-modal": "Générer des données de marché",
             "api": "Clé api Groq",
             "news-generation-param": "Paramètres de génération des actualités"
+            "advanced-init": "Initialisation"
         },
         "settings-sliders": {
             "alpha": "Sélectionner la valeur d'alpha",
@@ -101,7 +102,9 @@ translation = {
         "settings-button": {
             "modify": "Modifier",
             "select-all": "Tout sélectionner",
-            "add": "Ajouter"
+            "add": "Ajouter",
+            "confirm": "Valider",
+            "update": "Mettre à jour"
         },
         "settings-number-inputs": {
             "number-trends": "Nombre de tendances",
@@ -121,11 +124,16 @@ translation = {
             "mode": "Mode de génération des actualités",
             "linear-mode": "Mode de génération linéaire",
             "random-mode": "Mode de génération aléatoire",
+        "settings-advanced-init-input": {
+            "update-time": "Temps pour une journée (ms)",
+            "requests": "Requêtes max",
+            "cashflow": "Trésorie initiale"
         },
         "settings-tabs": {
             "stock": "Actions",
             "chart": "Graphiques",
             "news": "Actualités"
+            "advanced": "Avancé"
         },
 
     }

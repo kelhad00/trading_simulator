@@ -11,6 +11,15 @@ from trade.defaults import defaults as dlt
 
 
 @callback(
+    Output("periodic-updater", "interval"),
+    Input("update-time", "data"),
+)
+def update_interval(update_time):
+    """Function to update the interval of the periodic updater"""
+    return int(update_time)
+
+
+@callback(
     Output("timer", "children"),
     Input("timestamp", "data"),
 )

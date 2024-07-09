@@ -9,15 +9,22 @@ from trade.locales import translations as tls
 
 @callback(
     Output("companies", "data"),
+    Output("activities", "data"),
     Output("notifications", "children"),
     Input("add-company", "n_clicks"),
     State("input-stock", "value"),
     State("input-company", "value"),
+    State("input-activity", "value"),
     State("companies", "data"),
+    State("activities", "data"),
 )
-def update_companies(n, stock, company, companies):
+def update_companies(n, stock, company, activity, companies, activities):
     notif = no_update
     if n:
+        try:
+            activities[activity].append(stock)
+        except:
+            activities[activity] = [stock]
         companies[stock] = company
         notif = dmc.Notification(
             id="notification-company-added",
@@ -26,7 +33,8 @@ def update_companies(n, stock, company, companies):
             color="green",
             message=f"{company} has been added to the list of companies",
         )
-    return companies, notif
+    print(activities)
+    return companies, activities, notif
 
 
 @callback(
@@ -102,3 +110,14 @@ def delete_companies(clicks, companies, children):
         delete_generated_data(stock)
 
     return children, companies, [0] * len(clicks)
+
+
+@callback(
+    Output("input-activity", "data"),
+    Input("activities", "data"),
+)
+def update_activities(data):
+    data = [{"label": activity, "value": activity} for activity in list(data.keys())]
+    return data
+
+
