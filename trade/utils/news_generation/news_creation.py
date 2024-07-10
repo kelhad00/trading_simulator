@@ -1,16 +1,35 @@
 from time import sleep
 from groq import Groq
 import pandas as pd
+import os
 
 from trade.utils.news_generation.modules import load_data, save_data
 from trade.utils.news_generation.modules import random_number, percentage_change
 from trade.utils.market import get_market_dataframe
+from trade.utils.news_generation.modules import find_sector_for_company
+from trade.defaults import defaults as dlt
 
-DATASET_PATH = "../Data/news_dataset.csv"
-NEWS_PATH = "../Data/news.csv"
 
+def create_news_for_companies(companies, activities, news_position, api):
+    model = 'llama3-70b-8192'
+    news_path = os.path.join(dlt.data_path, 'news.csv')
 
-def get_news_position_for_companies(companies, mode):
+    # Create a dataframe to store the news we have created
+    news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
+
+    for ticker, company_name in companies.items():
+        company_sector = find_sector_for_company(ticker, activities)
+        
+        n = create_news(ticker, company_name, company_sector, news_position[ticker], model, api)
+
+        news_created = pd.concat([news_created, n])
+
+    # Save the news created
+    save_data(news_created, news_path)
+    print('News created and saved in ' + news_path)
+        
+
+def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta):
     '''
     Get the position of the news for all companies
     Parameters:
@@ -28,11 +47,9 @@ def get_news_position_for_companies(companies, mode):
         # Generate the news position for the generated data companies
         if company in generated_market_data.keys():
             if mode == "random":
-                news_positions[company] = get_news_position_rand(generated_market_data[company], 5, 5, 1, 3, 0) # TODO : change the parameters
+                news_positions[company] = get_news_position_rand(generated_market_data[company], nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
             else:
-                news_positions[company] = get_news_position_lin(generated_market_data[company], 3, 3, 0)
-
-
+                news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta)
 
     return news_positions
 
@@ -121,21 +138,23 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta):
 
     return (positive_positions, negative_positions)
 
-def create_news(company_name, company_sector, news_position, model, api):
+def create_news(company_ticker, company_name, company_sector, news_position, model, api):
     '''
     Create news for a company based on the position in market data given
     '''
 
-    # Market data
-    market_data = get_market_dataframe()[company_name]
+    # Paths
+    dataset_path = os.path.join(dlt.data_path, 'news_dataset.csv')
 
     # Create a Groq client
     client = Groq(
         api_key=api,
     )
 
-    # Load the dataset
-    dataset = load_data(DATASET_PATH)
+    # Load the dataset & market data
+    dataset = load_data(dataset_path)
+    market_data = get_market_dataframe()[company_ticker]
+    market_data = market_data.reset_index(drop=False)
 
     # Create a dataframe to store the news we have created
     news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
@@ -155,7 +174,7 @@ def create_news(company_name, company_sector, news_position, model, api):
             title = transform_news_title(content, client, model)
 
             # Create a new row in news_created
-            news_created.loc[len(news_created)] = [market_data.iloc[position]['Date'], company_name, sector, title, content, sentiment]
+            news_created.loc[len(news_created)] = [market_data.iloc[position]['date'], company_name, sector, title, content, sentiment]
  
             print("News created for " + company_name)
             i += 1
@@ -165,7 +184,7 @@ def create_news(company_name, company_sector, news_position, model, api):
 
     else:
         # The sector is not in the dataset or there are not enough of them
-        print('There are not enough positive news for the sector of ' + company_name + ' in the dataset')
+        raise Exception('There are not enough positive news for the sector of ' + company_name + ' in the dataset')
 
     # Browse the negative positions
     sentiment = 'negative'
@@ -186,7 +205,7 @@ def create_news(company_name, company_sector, news_position, model, api):
                 content = transform_news_content(news[1]['content'], row['name'], client, model, sentiment)"""
 
             # Create a new row in news_created
-            news_created.loc[len(news_created)] = [market_data.iloc[position]['Date'], company_name, sector, title, content, sentiment]
+            news_created.loc[len(news_created)] = [market_data.iloc[position]['date'], company_name, sector, title, content, sentiment]
  
             print("News created for " + company_name)
             i += 1
@@ -196,10 +215,9 @@ def create_news(company_name, company_sector, news_position, model, api):
 
     else:
         # The sector is not in the dataset or there are not enough of them
-        print('There are not enough negative news for the sector of ' + company_name + ' in the dataset')
+        raise Exception('There are not enough negative news for the sector of ' + company_name + ' in the dataset')
 
-    # Save the news created
-    save_data(news_created, NEWS_PATH)
+    return news_created
 
 
 def transform_news_content(content, company, client, model, sentiment):

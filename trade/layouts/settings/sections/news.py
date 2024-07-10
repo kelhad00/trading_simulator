@@ -63,13 +63,13 @@ def news_settings(lang="fr"):
                     id="input-nbr-positive-news",
                     label=tls[lang]["news-settings"]["nbr-positive-news"],
                     className="flex-1",
-                    value=10,
+                    value=5,
                 ),
                 dmc.NumberInput(
                     id="input-nbr-negative-news",
                     label=tls[lang]["news-settings"]["nbr-negative-news"],
                     className="flex-1",
-                    value=10,
+                    value=5,
                 ),
             ], className="flex w-full", id="nbr-news-container"),
 

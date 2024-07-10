@@ -17,20 +17,11 @@ def save_data(data, data_path, separator=';'):
     data.to_csv(data_path, sep=separator, index=False)
 
 
-def get_total_of_sectors(data):
-    '''
-    Get the total number of sectors in the dataset
-    '''
-
-    return len(data['sector'].unique())
-
-
-def get_nbr_news_per_sector(data):
-    '''
-    Get the number of news per sector
-    '''
-
-    return data['sector'].value_counts()
+def find_sector_for_company(company, activities):
+    for sector, companies in activities.items():
+        if company in companies:
+            return sector
+    return None
 
 
 def random_number(data_size):

@@ -25,8 +25,8 @@ class Defaults:
     # Generation mode of the news (random or linear)
     generation_mode = "random"
     # Number of news to generate
-    nbr_positive_news = 10
-    nbr_negative_news = 10
+    nbr_positive_news = 5
+    nbr_negative_news = 5
 
     # Stocks used in the interface
     # They are also used to download data with the download_market_data setup tool

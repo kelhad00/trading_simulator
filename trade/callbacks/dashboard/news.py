@@ -6,7 +6,7 @@ import pandas as pd
 from trade.locales import translations as tls
 from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
-from trade.utils.news_generation.news_creation import get_news_position_for_companies
+from trade.utils.news_generation.news_creation import get_news_position_for_companies, create_news_for_companies
 
 
 @callback(
@@ -117,6 +117,7 @@ def toggle_news_display_type(n, cell_clicked, table):
 @callback(
     Output('news-notification-container', 'children'),
     State('companies', 'data'),
+    State('activities', 'data'),
     State('api-key', 'data'),
     State('alpha', 'data'),
     State('alpha-day-interval', 'data'),
@@ -127,15 +128,15 @@ def toggle_news_display_type(n, cell_clicked, table):
     Input('generate-news', 'n_clicks'),
     prevent_initial_call=True
 )
-def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta, generation_mode, nbr_positive_news, nbr_negative_news, n):
+def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_interval, delta, generation_mode, nbr_positive_news, nbr_negative_news, n):
     if n is None:
         raise PreventUpdate
 
     # TODO : Créer un visuel de chargement
     print("Chargement ...")
     
-    positions = get_news_position_for_companies(companies, generation_mode)
-    print(positions)
-
+    news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
+    
+    create_news_for_companies(companies, activities, news_position, api_key)
 
     return ""
