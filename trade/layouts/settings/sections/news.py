@@ -47,7 +47,7 @@ def news_settings(lang="fr"):
 
             html.Div([
                 dmc.RadioGroup(
-                    id="input-mode",
+                    id="input-generation-mode",
                     label=tls[lang]["news-settings"]["mode"],
                     children=[
                         dmc.Radio(value="random", label=tls[lang]["news-settings"]["random-mode"]),

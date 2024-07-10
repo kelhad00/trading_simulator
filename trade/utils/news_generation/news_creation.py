@@ -9,9 +9,37 @@ from trade.utils.market import get_market_dataframe
 DATASET_PATH = "../Data/news_dataset.csv"
 NEWS_PATH = "../Data/news.csv"
 
+
+def get_news_position_for_companies(mode):
+    '''
+    Get the position of the news for all companies in the market data
+    Parameters:
+        - market_data_path : the path to the market data
+        - mode : the mode to generate the news position
+    '''
+
+    # Load the market data
+    market_data = get_market_dataframe()
+
+    """ # Get the list of companies
+    companies = market_data.columns[1:]
+
+    # Get the position of the news for each company
+    news_positions = {}
+    for company in companies:
+        if mode == 'random':
+            news_positions[company] = get_news_position_rand(market_data, 1, 1, 3, 3, 0)
+        elif mode == 'linear':
+            news_positions[company] = get_news_position_lin(market_data, 3, 3, 0)
+
+    return news_positions"""
+
+    return 0
+
+
 def get_news_position_rand(market_data, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta):
     '''
-    Get difined numbers of random possible position of the news in the market data
+    Get a defined numbers of random possible position of the news in the market data
     Parameters:
         - alpha : the minimum percentage of market variation to place a news
         - alpha_day_interval : the number of days between the two days used to calculate the percentage change

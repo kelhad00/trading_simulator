@@ -50,9 +50,19 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="companies", data={**dlt.companies, **dlt.indexes}, storage_type="session"),
         dcc.Store(id="activities", data=dlt.activities, storage_type="session"),
 
+        # News settings
+        dcc.Store(id="api-key", storage_type="session", data=dlt.api_key),
+        dcc.Store(id="alpha", storage_type="session", data=dlt.alpha),
+        dcc.Store(id="alpha-day-interval", storage_type="session", data=dlt.alpha_day_interval),
+        dcc.Store(id="delta", storage_type="session", data=dlt.delta),
+        dcc.Store(id="generation-mode", storage_type="session", data=dlt.generation_mode),
+        dcc.Store(id="nbr-news", storage_type="session", data=dlt.nbr_news),
+
+        # Advanced settings
         dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="session"),
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="session"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="session"),
+
 
         dash.page_container
     ])

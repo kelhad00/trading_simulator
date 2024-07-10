@@ -6,7 +6,7 @@ import pandas as pd
 from trade.locales import translations as tls
 from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
-from trade.utils.news_generation.news_creation import get_news_position_lin, create_news
+from trade.utils.news_generation.news_creation import get_news_position_lin, get_news_position_rand, create_news
 from trade.utils.market import get_market_dataframe
 
 
@@ -117,17 +117,23 @@ def toggle_news_display_type(n, cell_clicked, table):
 
 @callback(
     Output('url', 'pathname'),
+    State('api-key', 'data'),
+    State('alpha', 'data'),
+    State('alpha-day-interval', 'data'),
+    State('delta', 'data'),
+    State('generation-mode', 'data'),
+    State('nbr-news', 'data'),
     Input('start-button', 'n_clicks'),
     prevent_initial_call=True
 )
-def on_start_button_clicked(n):
+def on_start_button_clicked(api_key, alpha, alpha_day_interval, delta, generation_mode, nbr_news, n):
     if n is None:
         raise PreventUpdate
 
     # TODO : Créer un visuel de chargement
     print("Chargement ...")
     
-    #news_position = get_news_position_lin(get_market_dataframe()[company], 3, 3, 0)
+
     #create_news(company, #compny_sector, news_position, 3, 3, 0)
     # TODO : Implémenter les secteurs des entreprises
     # TODO : Créer une section news dans les paramètres pour les paramètres de news

@@ -14,6 +14,19 @@ class Defaults:
     # Path to the data folder
     data_path = "../Data"
 
+    # News settings
+    api_key = "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"
+    # Alpha is the minimum percentage of market variation to place a news
+    alpha = 3
+    # Alpha day interval is the number of days between the two days used to calculate the percentage change
+    alpha_day_interval = 3
+    # Delta is the number of days to shift the news position
+    delta = 0
+    # Generation mode of the news (random or linear)
+    generation_mode = "random"
+    # Number of news to generate
+    nbr_news = 10
+
     # Stocks used in the interface
     # They are also used to download data with the download_market_data setup tool
     # The key is the ticker and the value is the name of the company
