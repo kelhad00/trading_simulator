@@ -13,7 +13,6 @@ def main_layout(lang="fr"):
     return html.Div([
         html.Div([
             # Application url for routing when the user clicks on the start button
-            dcc.Location(id='url', refresh=True),
             header(lang),
             html.Div([
                 welcome(lang),
@@ -27,15 +26,15 @@ def main_layout(lang="fr"):
 def options(lang="fr"):
     disabled = disable_button()
 
-    def option(label, href, icon, disabled=False, id=""):
+    def option(label, href, icon, disabled=False):
         return dmc.Button(
             dcc.Link(label, href=href),
             leftIcon=DashIconify(icon=icon),
-            variant="solid", color="dark", radius="md", size="lg", disabled=disabled, id=id
+            variant="solid", color="dark", radius="md", size="lg", disabled=disabled
         )
 
     return html.Div([
-        option(tls[lang]["button-start"], "", "carbon:play-filled-alt", disabled, "start-button"),
+        option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled),
         option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings"),
         option(tls[lang]["button-restart-sim"], "#", "carbon:reset", disabled),
     ], className="flex gap-4 flex-col max-w-xs")
@@ -65,7 +64,7 @@ def welcome(lang="fr"):
 
 
 def disable_button():
-    if os.path.exists(os.path.join(dlt.data_path, 'generated_data.csv')):
+    if os.path.exists(os.path.join(dlt.data_path, 'generated_data.csv')) and os.path.exists(os.path.join(dlt.data_path, 'news.csv')):
         return False
     else:
         return True

@@ -10,31 +10,31 @@ DATASET_PATH = "../Data/news_dataset.csv"
 NEWS_PATH = "../Data/news.csv"
 
 
-def get_news_position_for_companies(mode):
+def get_news_position_for_companies(companies, mode):
     '''
-    Get the position of the news for all companies in the market data
+    Get the position of the news for all companies
     Parameters:
-        - market_data_path : the path to the market data
+        - companies : the companies to generate the news position
         - mode : the mode to generate the news position
     '''
 
     # Load the market data
-    market_data = get_market_dataframe()
+    generated_market_data = get_market_dataframe()
 
-    """ # Get the list of companies
-    companies = market_data.columns[1:]
-
-    # Get the position of the news for each company
+    # Create a dictionary to store the news positions
     news_positions = {}
-    for company in companies:
-        if mode == 'random':
-            news_positions[company] = get_news_position_rand(market_data, 1, 1, 3, 3, 0)
-        elif mode == 'linear':
-            news_positions[company] = get_news_position_lin(market_data, 3, 3, 0)
 
-    return news_positions"""
+    for company in companies.keys():
+        # Generate the news position for the generated data companies
+        if company in generated_market_data.keys():
+            if mode == "random":
+                news_positions[company] = get_news_position_rand(generated_market_data[company], 5, 5, 1, 3, 0) # TODO : change the parameters
+            else:
+                news_positions[company] = get_news_position_lin(generated_market_data[company], 3, 3, 0)
 
-    return 0
+
+
+    return news_positions
 
 
 def get_news_position_rand(market_data, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta):

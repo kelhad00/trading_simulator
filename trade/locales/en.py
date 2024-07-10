@@ -100,7 +100,8 @@ translation = {
             "select-all": "Select all",
             "add": "Ajouter",
             "confirm": "Confirm",
-            "update": "Update"
+            "update": "Update",
+            "generate": "Generate news",
         },
         "settings-number-inputs": {
             "number-trends": "Number of charts trends",
@@ -120,7 +121,8 @@ translation = {
             "mode": "News generation mode",
             "linear-mode": "Linear generation mode",
             "random-mode": "Random generation mode",
-            "nbr-news": "Number of news"
+            "nbr-positive-news": "Number of positive news",
+            "nbr-negative-news" : "Number of negative news",
         },
         "settings-advanced-init-input": {
             "update-time": "Time between updates (ms)",

@@ -104,7 +104,8 @@ translation = {
             "select-all": "Tout sélectionner",
             "add": "Ajouter",
             "confirm": "Valider",
-            "update": "Mettre à jour"
+            "update": "Mettre à jour",
+            "generate": "Générer les news",
         },
         "settings-number-inputs": {
             "number-trends": "Nombre de tendances",
@@ -124,7 +125,8 @@ translation = {
             "mode": "Mode de génération des actualités",
             "linear-mode": "Mode de génération linéaire",
             "random-mode": "Mode de génération aléatoire",
-            "nbr-news": "Nombre d'actualités"
+            "nbr-positive-news": "Nombre d'actualités positives",
+            "nbr-negative-news" : "Nombre d'actualités négatives",
         },
         "settings-advanced-init-input": {
             "update-time": "Temps pour une journée (ms)",

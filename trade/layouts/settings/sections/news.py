@@ -60,13 +60,25 @@ def news_settings(lang="fr"):
             # Display the number of news input only in random mode
             html.Div([
                 dmc.NumberInput(
-                    id="input-nbr-news",
-                    label=tls[lang]["news-settings"]["nbr-news"],
+                    id="input-nbr-positive-news",
+                    label=tls[lang]["news-settings"]["nbr-positive-news"],
+                    className="flex-1",
+                    value=10,
+                ),
+                dmc.NumberInput(
+                    id="input-nbr-negative-news",
+                    label=tls[lang]["news-settings"]["nbr-negative-news"],
                     className="flex-1",
                     value=10,
                 ),
             ], className="flex w-full", id="nbr-news-container"),
 
             dmc.Button(tls[lang]["settings-button"]["modify"], id="modify-news", color="dark", size="md"),
+
+            dmc.Button(tls[lang]["settings-button"]["generate"], id="generate-news", color="dark", size="md"),
+
+            html.Div([
+                # Display a graph with the news timestamp
+            ], id="news-notification-container"),
         ]),
     ], className="flex flex-col gap-8 w-full")
