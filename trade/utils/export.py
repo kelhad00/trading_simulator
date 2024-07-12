@@ -15,10 +15,10 @@ def format_portfolio_dataframe(df, name):
     df.rename(columns=columns, inplace=True)
     return df
 
-def format_requests_dataframe(request_list):
+def format_requests_dataframe(request_list, max_requests):
     new_columns_data = {}
     df = pd.DataFrame(request_list, columns=['action', 'shares', 'company', 'price']).T
-    for i in range(0, 10):  # Parcourir les 10 actions (de 1 à 10)
+    for i in range(0, max_requests):  # Parcourir les 10 actions (de 1 à 10)
         action_col_name = f"request-{i+1}"
         try:
             action_data = df[i]  # Extraire les données pour l'action i
@@ -57,14 +57,15 @@ def export_data(
         graph_type,  # used to know which type of charts is displayed
         form_type,  # used to know if user is going to buy or sell
         deleted_request=None,
-        trigger=None
+        trigger=None,
+        max_requests=dlt.max_requests
 ):
     """ Periodically save state of the trade into csv
     """
 
     deleted_request = format_deleted_requests(deleted_request)
     charts = format_charts_type(graph_type)
-    requests = format_requests_dataframe(request_list)
+    requests = format_requests_dataframe(request_list, max_requests)
     shares = format_portfolio_dataframe(shares, "-shares")
     totals = format_portfolio_dataframe(totals, "-totals")
 

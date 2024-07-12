@@ -11,7 +11,7 @@ from trade.components.table import create_selectable_table, create_table_delete
 from trade.utils.market import get_price_dataframe
 
 
-def add_request(req, company, action, price, share, cash, timestamp, port_shares):
+def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests):
     """
     Add a request to the list of requests.
     Args:
@@ -29,7 +29,7 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
     """
 
     # If the user has too many requests
-    if len(req) == dlt.max_requests:
+    if len(req) == max_requests:
         return True, tls[dash_registry['lang']]["err-too-many-requests"]
 
     # If the form isn't filled correctly
@@ -70,9 +70,10 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
     State('timestamp', 'data'),
     State('portfolio-shares', 'data'),
     State("requests", "data"),
+    State("max-requests", "data"),
     prevent_initial_call=True,
 )
-def process_submit_button(btn, company, action, price, share, cash, timestamp, port_shares, req):
+def process_submit_button(btn, company, action, price, share, cash, timestamp, port_shares, req, max_requests):
     """
     Process the submit button.
     Add the request to the list of requests.
@@ -95,7 +96,7 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     if btn is None or btn == 0:
         raise PreventUpdate
 
-    error, message = add_request(req, company, action, price, share, cash, timestamp, port_shares)
+    error, message = add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests)
 
     if error is True:
         return no_update, dmc.Notification(

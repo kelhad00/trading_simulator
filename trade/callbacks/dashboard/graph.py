@@ -5,9 +5,50 @@ import pandas as pd
 import os
 
 from trade.utils.graph.candlestick_charts import create_graph
-from trade.utils.market import get_market_dataframe
+from trade.utils.market import get_market_dataframe, get_last_timestamp
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
+
+
+@callback(
+    Output("modal", "opened", allow_duplicate=True),
+    Input("modal-close", "n_clicks"),
+    prevent_initial_call=True
+)
+def close_modal(n_clicks):
+    """
+    Function to close the modal when the user clicks on the close button
+    Args:
+        n_clicks: The number of clicks on the close button
+    Returns:
+        The new state of the modal
+    """
+    # if n_clicks:
+    #     return False
+    # else:
+    #     raise PreventUpdate
+
+
+
+@callback(
+    Output("modal", "opened", allow_duplicate=True),
+    Input("timestamp", "data"),
+    prevent_initial_call=True
+)
+def update_modal(timestamp):
+    """
+    Function to update the modal when the timestamp changes
+    Args:
+        timestamp: The new timestamp
+        is_open: The current state of the modal
+    Returns:
+        The new state of the modal
+    """
+    if timestamp == get_last_timestamp(get_market_dataframe()):
+        return True
+    else:
+        return False
+
 
 
 @callback(

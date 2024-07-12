@@ -1,3 +1,5 @@
+import os
+
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
 from dash.exceptions import PreventUpdate
 
@@ -14,11 +16,14 @@ market_df = get_market_dataframe()
     Output('requests', 'data', allow_duplicate=True),
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
+    Output('nb_export', 'data'),
     Input('reset-button', 'n_clicks'),
     State('initial-cashflow', 'data'),
+    State("nb_export", "data"),
+
     prevent_initial_call=True,
 )
-def reset_data(btn, initial_cashflow):
+def reset_data(btn, initial_cashflow, nb_export):
     """
     Function to reset the simulation data
     Args:
@@ -30,6 +35,7 @@ def reset_data(btn, initial_cashflow):
     if btn is None or btn == 0:
         raise PreventUpdate
 
+
     # Reset the data of each dcc.Store component
     timestamp = get_first_timestamp(market_df, 100)
     cashflow = initial_cashflow
@@ -37,4 +43,36 @@ def reset_data(btn, initial_cashflow):
     totals = {c: 0 for c in dlt.companies.keys()}
     requests = []
 
-    return timestamp, cashflow, requests, shares, totals
+    print("hello")
+
+    # create dir named nb_export in data folder
+    session_path = os.path.join(dlt.data_path, "exports", str(nb_export))
+    print(session_path)
+    os.makedirs(session_path, exist_ok=True)
+
+    content_path = os.path.join(dlt.data_path, "export")
+
+    # move all files from data/export to data/exports/nb_export
+    for file in os.listdir(content_path):
+        os.rename(os.path.join(content_path, file), os.path.join(session_path, file))
+
+    nb_export = len(os.listdir(os.path.join(dlt.data_path, "exports")))
+
+    return timestamp, cashflow, requests, shares, totals, nb_export
+
+
+
+@callback(
+    Output('timestamp', 'data', allow_duplicate=True),
+    Output('cashflow', 'data', allow_duplicate=True),
+    Output('requests', 'data', allow_duplicate=True),
+    Output('portfolio-shares', 'data', allow_duplicate=True),
+    Output('portfolio-totals', 'data', allow_duplicate=True),
+    Input('reset-button-1', 'n_clicks'),
+    State('initial-cashflow', 'data'),
+    State("nb_export", "data"),
+
+    prevent_initial_call=True,
+)
+def reset_modal(btn, initial_cashflow, nb_export):
+    return reset_data(btn, initial_cashflow, nb_export)

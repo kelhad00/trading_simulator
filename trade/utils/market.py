@@ -39,3 +39,11 @@ def get_first_timestamp(market_df, range=0):
         return timestamp
     except:
         return 0
+
+
+def get_last_timestamp(market_df):
+    try:
+        timestamp = market_df.index[-1]
+        return timestamp
+    except:
+        return 0

@@ -36,7 +36,8 @@ def options(lang="fr"):
     return html.Div([
         option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled),
         option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings"),
-        option(tls[lang]["button-restart-sim"], "#", "carbon:reset", disabled),
+        dmc.Button(tls[lang]["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"), id="reset-button", color="dark", size="lg")
+
     ], className="flex gap-4 flex-col max-w-xs")
 
 
