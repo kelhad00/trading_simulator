@@ -117,7 +117,6 @@ if __name__ == '__main__':
         time.sleep(5)
 
         fig, endtime = create_graph(df, endtime)
-        print("end", endtime)
 
         fig.show(config=PLOTLY_CONFIG)
 

@@ -43,11 +43,8 @@ def reset_data(btn, initial_cashflow, nb_export):
     totals = {c: 0 for c in dlt.companies.keys()}
     requests = []
 
-    print("hello")
-
     # create dir named nb_export in data folder
     session_path = os.path.join(dlt.data_path, "exports", str(nb_export))
-    print(session_path)
     os.makedirs(session_path, exist_ok=True)
 
     content_path = os.path.join(dlt.data_path, "export")

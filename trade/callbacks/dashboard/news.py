@@ -110,7 +110,7 @@ def toggle_news_display_type(n, cell_clicked, table):
             article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]  # get the news clicked
             return {'display': 'none'}, article_clicked['title'], article_clicked['content'], {'display': 'block'}, no_update
         except Exception as e:
-            print(e)
+            print('Error :', e)
             return no_update, no_update, no_update, no_update, no_update
         
 

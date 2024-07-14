@@ -33,7 +33,6 @@ def update_companies(n, stock, company, activity, companies, activities):
             color="green",
             message=f"{company} has been added to the list of companies",
         )
-    print(activities)
     return companies, activities, notif
 
 

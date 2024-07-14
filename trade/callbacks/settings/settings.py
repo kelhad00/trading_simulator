@@ -107,7 +107,7 @@ def update_chart(alpha, length, start_value, radio_trends, companies):
         return children, dataframes
 
     except Exception as e:
-        print(e)
+        print('Error :', e)
         return no_update
 
 
