@@ -42,12 +42,7 @@ def export_display_update(company, title, graph_segmented, request_segmented, re
         except:
             delete = []
 
-
     print(ctx.triggered_id)
-
-
-
-
 
     export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, delete, max_requests=max_requests)
     return no_update
