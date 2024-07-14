@@ -19,7 +19,7 @@ def download_market_data():
         quit()
 
 
-def analyse_news_data(data_path='Data'):
+def analyse_news_data(data_path='data'):
     """ Open a jupyter notebook to analyse the news data
     """
     notebook_file = "analyze.ipynb"

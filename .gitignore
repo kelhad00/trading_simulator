@@ -160,15 +160,15 @@ cython_debug/
 #.idea/
 
 ## Data
-#Data/legacy/market_data.csv
-#Data/news.csv
-#Data/legacy/revenue.csv
-#Data/generated_data.csv
-#Data/news_dataset.csv
+#data/legacy/market_data.csv
+#data/news.csv
+#data/legacy/revenue.csv
+#data/generated_data.csv
+#data/news_dataset.csv
 
-# Ignore all .csv files in Data folder and its subfolders
-Data/**/*.csv
-Data/export/*.csv
+# Ignore all .csv files in data folder and its subfolders
+#Data/**/*.csv
+#Data/export/*.csv
 
 
 .idea/

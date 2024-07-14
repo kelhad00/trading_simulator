@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
     name = 'MC.PA'
 
-    file_path = os.path.join('Data' , 'market_data.csv')
+    file_path = os.path.join('data' , 'market_data.csv')
     df = pd.read_csv(file_path, header=[0,1],index_col=0)[name]
 
     fig, endtime = create_graph(df)

@@ -156,7 +156,7 @@ app.d.data_path = "Data"
 # Stocks used in the interface
 # They are also used to download data with the download_market_data setup tool
 # The key is the ticker and the value is the name of the company
-# So the data provided in the Data folder must have the same name as the symbol
+# So the data provided in the data folder must have the same name as the symbol
 app.d.companies = {
   "MC.PA": "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
   "OR.PA": "L'ORÉAL (OR)",
@@ -226,7 +226,7 @@ def download_market_data():
     """
     pass
 
-def analyse_news_data(data_path='Data'):
+def analyse_news_data(data_path='data'):
     """ Opens a jupyter notebook at the location
         defined by the data_path argument
         to analyze the data it contains in the form of graphs.

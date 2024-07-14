@@ -11,12 +11,12 @@ class Defaults:
     initial_money = 100000
 
     # Path to the data folder
-    data_path = "Data"
+    data_path = "data"
 
     # Stocks used in the interface
     # They are also used to download data with the download_market_data setup tool
     # The key is the ticker and the value is the name of the company
-    # So the data provided in the Data folder must have the same name as the symbol
+    # So the data provided in the data folder must have the same name as the symbol
     companies = {
         "MC.PA" : "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
         "OR.PA" : "L'ORÉAL (OR)",

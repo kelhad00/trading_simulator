@@ -9,7 +9,7 @@ from tradesim.defaults import defaults as dlt
 
 @dash.callback(
 	Output('nbr-logs', 'data'),
-	# ** Data to save **
+	# ** data to save **
 	# Changing the company doesn’t trigger other callbacks in every case
 	Input('company-selector', 'value'),
 	Input('news-table', 'data'), # indepedent variable
@@ -18,7 +18,7 @@ from tradesim.defaults import defaults as dlt
 	# Adding or removing a request doesn’t trigger other callbacks
 	Input("request-list", "data"),
 	Input('graph-tabs', 'value'),
-	# Data triggered by those above
+	# data triggered by those above
 	# The timestamp isn’t an input because we want to save user moves
 	# Others states that we need
 	State('market-timestamp-value','data'),
