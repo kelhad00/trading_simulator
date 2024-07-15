@@ -1,4 +1,4 @@
-from dash import html
+from dash import html, dcc
 import dash_mantine_components as dmc
 
 from trade.components.sections import section
@@ -74,6 +74,18 @@ def news_settings(lang="fr"):
                     value=5,
                 ),
             ], className="flex w-full", id="nbr-news-container"),
+        ]),
+
+
+        section(tls[lang]["settings-subtitles"]["final-charts"], [
+            dmc.Select(
+                id="news-select-company",
+                label=tls[lang]["settings-number-inputs"]["number-patterns"],
+                className="w-full"
+            ),
+            dmc.Paper(
+                dcc.Graph(id="news-chart")
+            )
         ]),
 
         dmc.Button(tls[lang]["settings-button"]["generate"], id="generate-news", color="dark", size="md"),
