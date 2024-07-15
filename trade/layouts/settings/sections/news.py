@@ -44,7 +44,9 @@ def news_settings(lang="fr"):
                     value=0,
                 ),
             ], className="flex w-full"),
+        ]),
 
+        section(tls[lang]["settings-subtitles"]["news-generation-mode"], [
             html.Div([
                 dmc.RadioGroup(
                     id="input-generation-mode",
@@ -72,13 +74,11 @@ def news_settings(lang="fr"):
                     value=5,
                 ),
             ], className="flex w-full", id="nbr-news-container"),
-
-            dmc.Button(tls[lang]["settings-button"]["modify"], id="modify-news", color="dark", size="md"),
-
-            dmc.Button(tls[lang]["settings-button"]["generate"], id="generate-news", color="dark", size="md"),
-
-            html.Div([
-                # Display a graph with the news timestamp
-            ], id="news-notification-container"),
         ]),
+
+        dmc.Button(tls[lang]["settings-button"]["generate"], id="generate-news", color="dark", size="md"),
+        html.Div([
+            # Display a graph with the news timestamp
+        ], id="news-notification-container"),
+        
     ], className="flex flex-col gap-8 w-full")

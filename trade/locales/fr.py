@@ -88,7 +88,8 @@ translation = {
             "final-charts": "Prévisualisation",
             "generate-modal": "Générer des données de marché",
             "api": "Clé api Groq",
-            "news-generation-param": "Paramètres de génération des actualités",
+            "news-generation-param": "Paramètrage de la génération des actualités",
+            "news-generation-mode": "Mode de génération",
             "advanced-init": "Initialisation"
         },
         "settings-sliders": {
@@ -119,9 +120,9 @@ translation = {
         },
         "settings-api" : "Clé API",
         "news-settings": {
-            "alpha": "Alpha : Le paramètre alpha est un pourcentage de variation entre deux jours.",
-            "alpha-day-interval": "Intervalle de jours alpha : L'intervalle de jours alpha est l'intervalle entre les deux jours utilisés pour le calcul de l'alpha.",
-            "delta": "Delta : La valeur delta décale les jours de nouvelles de quelques jours.",
+            "alpha": "Selectionner la sensibilité",
+            "alpha-day-interval": "Selectionner l'intervalle de jours",
+            "delta": "Selection un décallage",
             "mode": "Mode de génération des actualités",
             "linear-mode": "Mode de génération linéaire",
             "random-mode": "Mode de génération aléatoire",

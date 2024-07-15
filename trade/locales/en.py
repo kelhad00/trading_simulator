@@ -85,6 +85,7 @@ translation = {
             "generate-modal": "Generate market data",
             "api": "Groq api key",
             "news-generation-param": "News generation parameters",
+            "news-generation-mode": "Generation mode",
             "advanced-init": "Initialisation"
         },
         "settings-sliders": {

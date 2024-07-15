@@ -115,16 +115,16 @@ def toggle_news_display_type(n, cell_clicked, table):
         
 
 @callback(
-    Output('news-notification-container', 'children'),
+    Output('notifications', 'children'),
     State('companies', 'data'),
     State('activities', 'data'),
-    State('api-key', 'data'),
-    State('alpha', 'data'),
-    State('alpha-day-interval', 'data'),
-    State('delta', 'data'),
-    State('generation-mode', 'data'),
-    State('nbr-positive-news', 'data'),
-    State('nbr-negative-news', 'data'),
+    State('input-api-key', 'value'),
+    State('input-alpha', 'value'),
+    State('input-alpha-day-interval', 'value'),
+    State('input-delta', 'value'),
+    State('input-generation-mode', 'value'),
+    State('input-nbr-positive-news', 'value'),
+    State('input-nbr-negative-news', 'value'),
     Input('generate-news', 'n_clicks'),
     prevent_initial_call=True
 )
@@ -134,9 +134,15 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
 
     # TODO : Créer un visuel de chargement
     print("Chargement ...")
-    
+
     news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
     
     create_news_for_companies(companies, activities, news_position, api_key)
 
-    return ""
+    return dmc.Notification(
+            id="notification-news-generated",
+            title="News",
+            action="show",
+            color="green",
+            message=f"Generation complete !",
+    )
