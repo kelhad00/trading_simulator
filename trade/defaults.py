@@ -104,7 +104,7 @@ class Defaults:
         "Biens de consommation non durables": [],
         "Internet": [],
         "Nanotechnologie": [],
-        "Indices": [ "^GSPC", "^DJI", "^FCHI", "^SPGSGC" ],
+        "Indice": [ "^GSPC", "^DJI", "^FCHI", "^SPGSGC" ],
     }
 
     # Variables used to disable the start button on the home page
