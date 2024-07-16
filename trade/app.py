@@ -46,7 +46,6 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id='portfolio-totals', data={c: 0 for c in dlt.companies.keys()}, storage_type="session"),
         dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
 
-        dcc.Store(id="market", storage_type="session"),
         dcc.Store(id="companies", data={**dlt.companies, **dlt.indexes}, storage_type="session"),
         dcc.Store(id="activities", data=dlt.activities, storage_type="session"),
         dcc.Store(id="nb_export", data=len(os.listdir(os.path.join(dlt.data_path, "exports"))), storage_type="session"),

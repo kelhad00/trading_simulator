@@ -23,7 +23,8 @@ def get_market_dataframe(generated=True):
         return df
     except:
         print('ERROR: No market data found in ' + dlt.data_path + ' folder.')
-        raise FileNotFoundError
+        return None
+        # raise FileNotFoundError
 
 
 

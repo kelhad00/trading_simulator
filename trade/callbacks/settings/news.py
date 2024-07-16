@@ -12,7 +12,10 @@ from trade.utils.news_generation.display import display_chart
     Input('input-generation-mode', 'value'),
     State('nbr-news-container', 'children')
 )
-def update_nbr_news_container(mode, children):
+def update_display_container_nbr_news(mode, children):
+    """
+    Switch the display of inputs (number of positive and negative news) depending on the generation mode
+    """
     if mode == 'random':
         return {'display': 'block'}
     else:
@@ -21,6 +24,7 @@ def update_nbr_news_container(mode, children):
 
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
+
     State('companies', 'data'),
     State('activities', 'data'),
     State('input-api-key', 'value'),
@@ -30,20 +34,38 @@ def update_nbr_news_container(mode, children):
     State('input-generation-mode', 'value'),
     State('input-nbr-positive-news', 'value'),
     State('input-nbr-negative-news', 'value'),
+
     Input('generate-news', 'n_clicks'),
     prevent_initial_call=True
 )
 def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_interval, delta, generation_mode,
                             nbr_positive_news, nbr_negative_news, n):
+    """
+    Generate news for all the companies
+    Args:
+        companies: The list of companies
+        activities: The activities
+        api_key: The API key
+        alpha: The alpha value
+        alpha_day_interval: The alpha day interval
+        delta: The delta value
+        generation_mode: The generation mode
+        nbr_positive_news: The number of positive news
+        nbr_negative_news: The number of negative news
+        n: The number of clicks on the button
+    Returns:
+        A notification to inform the user when the generation is complete
+    """
     if n is None:
         raise PreventUpdate
 
     # TODO : Créer un visuel de chargement
-    print("Chargement ...")
 
+    # Get the news position (timestamp) for all the companies
     news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news,
                                                     alpha, alpha_day_interval, delta)
 
+    # Create the news for all the companies
     create_news_for_companies(companies, activities, news_position, api_key)
 
     return dmc.Notification(
@@ -62,6 +84,10 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
 )
 def update_options_news_companies(tabs):
     data = get_generated_data()
+
+    if data is None:
+        return no_update
+
     symbols = data.columns.get_level_values('symbol').unique()
     options = [{"label": symbol, "value": symbol} for symbol in symbols]
     return options

@@ -13,6 +13,7 @@ options = {**dlt.companies, **dlt.indexes}
 
 def generate_charts(lang="fr"):
     return html.Div([
+        dcc.Store(id="figures"),  # Store the generated data before being stored in the csv file
         generate_charts_modal(lang=lang),
         section(tls[lang]["settings-subtitles"]["charts-patterns"], [
             dmc.Select(
@@ -23,7 +24,7 @@ def generate_charts(lang="fr"):
         ]),
         section(tls[lang]["settings-subtitles"]["final-charts"], [
             dmc.Paper(
-                dcc.Graph(id="final-chart")
+                dcc.Graph(id="chart")
             )
         ], action_id="modify-button", action=tls[lang]["settings-button"]["modify"]),
     ], className="flex flex-col gap-8 w-full")
@@ -40,7 +41,7 @@ def generate_charts_modal(lang="fr"):
                 section(tls[lang]["settings-subtitles"]["charts-patterns"], [
                     html.Div([
                         dmc.MultiSelect(
-                            id="select-company-modal",
+                            id="modal-select-companies",
                             label=tls[lang]["settings-number-inputs"]["number-patterns"],
                             className="flex-1"
                         ),
@@ -66,7 +67,7 @@ def generate_charts_modal(lang="fr"):
 
                 section(tls[lang]["settings-subtitles"]["final-charts"], [
                     dmc.Paper(
-                        html.Div(dcc.Graph(), id="modify-final-chart-container"),
+                        html.Div(dcc.Graph(), id="modal-generated-charts-container"),
                     )
                 ]),
                 dmc.Button(tls[lang]["settings-button"]["modify"], id="generate-button", color="dark", size="md", ),

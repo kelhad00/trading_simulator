@@ -140,7 +140,7 @@ def get_generated_data():
 
 def delete_generated_data(stock):
     '''
-    Delete the generated data
+    Delete a specific stock in generated data csv
     '''
 
     existing_df = get_generated_data()
