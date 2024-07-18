@@ -55,6 +55,112 @@ class Defaults:
         "ACA.PA": "CRÉDIT AGRICOLE S.A. (ACA)"
     }
 
+
+    companies_list = {
+        "MC.PA": {
+            "label": "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
+            "activity": "Textile Habillement Accessoires",
+            "got_charts": False,
+        },
+        "OR.PA": {
+            "label": "L'ORÉAL (OR)",
+            "activity": "Chimie Pharmacie Cosmétiques",
+            "got_charts": False,
+        },
+        "RMS.PA": {
+            "label": "HERMÈS INTERNATIONAL (RMS)",
+            "activity": "Textile Habillement Accessoires",
+            "got_charts": False,
+        },
+        "TTE.PA": {
+            "label": "TOTALENERGIES SE (TTE)",
+            "activity": "Energie et Produits de base",
+            "got_charts": False,
+        },
+        "SAN.PA": {
+            "label": "SANOFI (SAN)",
+            "activity": "Chimie Pharmacie Cosmétiques",
+            "got_charts": False,
+        },
+        "AIR.PA": {
+            "label": "AIRBUS SE (AIR)",
+            "activity": "Aéronautique Espace Armement",
+            "got_charts": False,
+        },
+        "SU.PA": {
+            "label": "SCHNEIDER ELECTRIC SE (SU)",
+            "activity": "Electricité Electronique",
+            "got_charts": False,
+        },
+        "AI.PA": {
+            "label": "AIR LIQUIDE (AI)",
+            "activity": "Energie et Produits de base",
+            "got_charts": False,
+        },
+        "EL.PA": {
+            "label": "ESSILORLUXOTTICA (EL)",
+            "activity": "Biens d'équipement domestique",
+            "got_charts": False,
+        },
+        "BNP.PA": {
+            "label": "BNP PARIBAS (BNP)",
+            "activity": "Banque",
+            "got_charts": False,
+        },
+        "KER.PA": {
+            "label": "KERING (KER)",
+            "activity": "Textile Habillement Accessoires",
+            "got_charts": False,
+        },
+        "DG.PA": {
+            "label": "VINCI (DG)",
+            "activity": "BTP Génie Civil",
+            "got_charts": False,
+        },
+        "CS.PA": {
+            "label": "AXA (CS)",
+            "activity": "Banque",
+            "got_charts": False,
+        },
+        "SAF.PA": {
+            "label": "SAFRAN (SAF)",
+            "activity": "Electricité Electronique",
+            "got_charts": False,
+        },
+        "RI.PA": {
+            "label": "PERNOD RICARD (RI)",
+            "activity": "Agroalimentaire",
+            "got_charts": False,
+        },
+        "DSY.PA": {
+            "label": "DASSAULT SYSTÈMES SE (DSY)",
+            "activity": "Services informatiques",
+            "got_charts": False,
+        },
+        "STLAM.MI": {
+            "label": "STELLANTIS N.V. (STLAM)",
+            "activity": "Automobile",
+            "got_charts": False,
+        },
+        "BN.PA": {
+            "label": "DANONE (BN)",
+            "activity": "Agroalimentaire",
+            "got_charts": False,
+        },
+        "STMPA.PA": {
+            "label": "STMICROELECTRONICS N.V. (STMPA)",
+            "activity": "Electricité Electronique",
+            "got_charts": False,
+        },
+        "ACA.PA": {
+            "label": "CRÉDIT AGRICOLE S.A. (ACA)",
+            "activity": "Banque",
+            "got_charts": False,
+        }
+    }
+
+
+
     # Indexes used in the interface
     # Same use as the companies variable
     indexes = {

@@ -42,22 +42,13 @@ app.layout = dmc.MantineProvider([
 
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
-        dcc.Store(id='portfolio-shares', data={c: 0 for c in dlt.companies.keys()}, storage_type="session"),
-        dcc.Store(id='portfolio-totals', data={c: 0 for c in dlt.companies.keys()}, storage_type="session"),
+        dcc.Store(id='portfolio-shares', storage_type="session"),
+        dcc.Store(id='portfolio-totals', storage_type="session"),
         dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
 
-        dcc.Store(id="companies", data={**dlt.companies, **dlt.indexes}, storage_type="session"),
+        dcc.Store(id="companies", data=dlt.companies_list, storage_type="session"),
         dcc.Store(id="activities", data=dlt.activities, storage_type="session"),
         dcc.Store(id="nb_export", data=len(os.listdir(os.path.join(dlt.data_path, "exports"))), storage_type="session"),
-
-        # News settings
-        dcc.Store(id="api-key", storage_type="session", data=dlt.api_key),
-        dcc.Store(id="alpha", storage_type="session", data=dlt.alpha),
-        dcc.Store(id="alpha-day-interval", storage_type="session", data=dlt.alpha_day_interval),
-        dcc.Store(id="delta", storage_type="session", data=dlt.delta),
-        dcc.Store(id="generation-mode", storage_type="session", data=dlt.generation_mode),
-        dcc.Store(id="nbr-positive-news", storage_type="session", data=dlt.nbr_positive_news),
-        dcc.Store(id="nbr-negative-news", storage_type="session", data=dlt.nbr_negative_news),
 
         # Advanced settings
         dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="session"),

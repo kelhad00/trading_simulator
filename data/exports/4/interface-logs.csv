@@ -1,0 +1,5 @@
+uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart-type,is_news_description_displayed,news_title
+e864e570-4047-4022-af1c-77e4ee35fc1a,2005-04-11T00:00:00,1721136235.992138,100000,TTE.PA,sell,market,False,
+395622e2-9048-46b4-8b6d-b6983b85d864,2005-04-12T00:00:00,1721136262.727275,100000,,sell,market,False,
+d9489684-1eea-4794-9d01-0064bdedce61,2005-04-12T00:00:00,1721136392.90721,100000,SAN.PA,sell,market,False,
+8a0804aa-56eb-4eee-99ea-ba580a062220,2005-04-12T00:00:00,1721136393.69034,100000,SAN.PA,sell,market,False,

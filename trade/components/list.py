@@ -29,3 +29,4 @@ def stock_list_element(stock, company, lang="fr"):
         p="xs",
         withBorder=True,
     )
+

@@ -6,6 +6,7 @@ from trade.components.list import stock_list_element
 from trade.utils.settings.create_market_data import delete_generated_data
 from trade.defaults import defaults as dlt
 
+
 @callback(
     Output("companies", "data"),
     Output("activities", "data"),
@@ -18,6 +19,7 @@ from trade.defaults import defaults as dlt
     State("input-activity", "value"),
     State("companies", "data"),
     State("activities", "data"),
+    prevent_initial_call=True
 )
 def add_company_and_activity(n, stock, company, activity, companies, activities):
     """
@@ -45,7 +47,11 @@ def add_company_and_activity(n, stock, company, activity, companies, activities)
         activities[activity] = [stock]
 
     # add stock to companies
-    companies[stock] = company
+    companies[stock] = {
+        "label": company,
+        "activity": activity,
+        "got_charts": False,
+    }
 
     # Success notification
     notif = dmc.Notification(
@@ -55,6 +61,7 @@ def add_company_and_activity(n, stock, company, activity, companies, activities)
         color="green",
         message=f"{company} has been added to the list of companies",
     )
+
     return companies, activities, notif
 
 
@@ -73,7 +80,7 @@ def display_companies(companies, tabs):
         list of companies displayed
     """
     lang = page_registry["lang"]
-    return [stock_list_element(stock, company, lang) for stock, company in companies.items()]
+    return [stock_list_element(stock, company["label"], lang) for stock, company in companies.items()]
 
 
 @callback(
@@ -90,30 +97,54 @@ def display_companies(companies, tabs):
 def update_select_company_options(companies, tabs, company):
     # join companies and indexes
     # TODO : handle indexes
-    options = {**companies, **dlt.indexes}
+    # options = {**companies, **dlt.indexes}
+    options = companies
 
     # if company not in options, select first company
     if company not in options.keys():
         company = list(options.keys())[0]
 
     # create options for selects
-    options = [{"label": v, "value": k} for k, v in options.items()]
+    options = [{"label": v["label"], "value": k} for k, v in options.items()]
 
     return options, options, options, company
+
+
+@callback(
+    Output("portfolio-shares", "data", allow_duplicate=True),
+    Output("portfolio-totals", "data", allow_duplicate=True),
+    Input("companies", "data"),
+    prevent_initial_call=True
+)
+def update_portfolio(companies):
+    """
+    Update the portfolio shares and totals
+    Args:
+        companies: dictionary of companies
+    Returns:
+        portfolio_shares: updated portfolio shares
+        portfolio_totals: updated portfolio totals
+    """
+    value = {stock: 0 for stock, company in companies.items() if company["got_charts"]}
+    return value, value
 
 
 @callback(
     Output("list-companies", "children", allow_duplicate=True),
     Output("companies", "data", allow_duplicate=True),
     Output({"type": "delete-stock", "index": ALL}, "n_clicks"),
+    Output("portfolio-shares", "data", allow_duplicate=True),
+    Output("portfolio-totals", "data", allow_duplicate=True),
 
     Input({"type": "delete-stock", "index": ALL}, "n_clicks"),
 
     State("companies", "data"),
     State("list-companies", "children"),
+    State("portfolio-shares", "data"),
+    State("portfolio-totals", "data"),
     prevent_initial_call=True
 )
-def delete_companies(clicks, companies, children):
+def delete_companies(clicks, companies, children, portfolio_shares, portfolio_totals):
     """
     Delete a specific stock in the store and the csv file
     Args:
@@ -143,9 +174,17 @@ def delete_companies(clicks, companies, children):
         del companies[stock]
         delete_generated_data(stock)
 
+        # Delete the stock from the portfolio
+        try:
+            del portfolio_shares[stock]
+            del portfolio_totals[stock]
+        except:
+            # if the stock is not in the portfolio, pass
+            pass
+
     clicks = [0] * len(clicks)  # reset all the clicks
 
-    return children, companies, clicks
+    return children, companies, clicks, portfolio_shares, portfolio_totals
 
 
 @callback(
@@ -164,5 +203,3 @@ def update_activities(data, tabs):
     """
     data = [{"label": activity, "value": activity} for activity in list(data.keys())]
     return data
-
-

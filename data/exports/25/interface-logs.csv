@@ -1,0 +1,6 @@
+uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart-type,is_news_description_displayed,news_title
+88486ac3-2ca5-4d00-91ab-8ae4e95f3ab7,2005-04-11T00:00:00,1721139312.283466,100000,MC.PA,sell,market,False,
+9e35a35a-69c9-48d5-aa00-ff3d697595e1,2005-04-11T00:00:00,1721139316.983705,100000,ANT,sell,market,False,
+b455440a-a881-4bd6-8cd0-77887fa4b291,2005-04-11T00:00:00,1721139383.092117,100000,MC.PA,sell,market,False,
+ef8d0780-7e2f-4c23-a41c-c6a93d99aa35,2005-04-11T00:00:00,1721139384.499459,100000,ANT,sell,market,False,
+bec4a5f1-1b6a-4297-a46a-db7fad11b010,2005-04-11T00:00:00,1721140354.39512,100000,MC.PA,sell,market,False,

@@ -2,7 +2,7 @@ import dash
 from trade.layouts.settings.layout import main_layout
 
 # Don't delete this import
-from trade.callbacks.settings import stocks, advanced, news
+from trade.callbacks.settings import stocks, advanced, news, upload, revenues
 from trade.callbacks.settings.charts import charts, modal
 
 dash.register_page(__name__, path="/settings",)

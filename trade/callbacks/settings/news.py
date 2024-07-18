@@ -81,15 +81,11 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
 @callback(
     Output("news-select-company", "data"),
     Input("settings-tabs", "value"),
+    Input("companies", "data"),
 )
-def update_options_news_companies(tabs):
-    data = get_generated_data()
+def update_options_news_companies(tabs, companies):
 
-    if data is None:
-        return no_update
-
-    symbols = data.columns.get_level_values('symbol').unique()
-    options = [{"label": symbol, "value": symbol} for symbol in symbols]
+    options = [{"label": company["label"], "value": stock} for stock, company in companies.items() if company["got_charts"]]
     return options
 
 @callback(

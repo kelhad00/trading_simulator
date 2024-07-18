@@ -2,6 +2,7 @@ import os.path
 import pandas as pd
 
 from dash import callback, Input, Output, State, ALL, no_update, dcc, html, page_registry
+from dash.exceptions import PreventUpdate
 
 from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, \
@@ -96,14 +97,16 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies):
     Output("figures", "data", allow_duplicate=True),
     Output("modal", "opened", allow_duplicate=True),
     Output({"type": "timeline-radio", "index": ALL}, "value"),
+    Output("companies", "data", allow_duplicate=True),
 
     Input("generate-button", "n_clicks"),
     State("figures", "data"),
     State("modal-select-companies", "value"),
     State("number-trends", "value"),
+    State("companies", "data"),
     prevent_initial_call=True
 )
-def export_generated_charts(n, datas, companies, nb_radio):
+def export_generated_charts(n, datas, companies_selected, nb_radio, companies):
     """
     Export the generated charts in the data folder (generated_data.csv) when the generate button is clicked
     Args:
@@ -117,15 +120,17 @@ def export_generated_charts(n, datas, companies, nb_radio):
         list: list of the radio input values (reset the trends)
     """
     if datas is None or datas == []:
-        return no_update, no_update, no_update
+        raise PreventUpdate
 
     # Export each graph in the csv file
     for index, data in enumerate(datas):
         df = pd.DataFrame.from_dict(data)
-        export_generated_data(df, companies[index])
+        company = companies_selected[index]
+        export_generated_data(df, company)
+        companies[company]['got_charts'] = True
 
     # Reset the store and close the modal
-    return list(), False, [None] * nb_radio
+    return list(), False, [None] * nb_radio, companies
 
 
 @callback(

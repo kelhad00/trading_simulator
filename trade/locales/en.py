@@ -134,7 +134,9 @@ translation = {
             "stock": "Stocks",
             "chart": "Charts",
             "news": "News",
-            "advanced": "Advanced"
+            "advanced": "Advanced",
+            "import": "Import",
+            "revenues": "Revenues"
         },
 
     }

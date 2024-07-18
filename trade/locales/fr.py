@@ -138,7 +138,9 @@ translation = {
             "stock": "Actions",
             "chart": "Graphiques",
             "news": "Actualités",
-            "advanced": "Avancé"
+            "advanced": "Avancé",
+            "revenues": "Revenus",
+            "import": "Importation",
         },
     },
 }

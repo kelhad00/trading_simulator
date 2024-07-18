@@ -26,16 +26,17 @@ def main_layout(lang="fr"):
 def options(lang="fr"):
     disabled = disable_button()
 
-    def option(label, href, icon, disabled=False):
+    def option(label, href, icon, disabled=False, id=""):
         return dmc.Button(
             dcc.Link(label, href=href),
+            id=id,
             leftIcon=DashIconify(icon=icon),
             variant="solid", color="dark", radius="md", size="lg", disabled=disabled
         )
 
     return html.Div([
         option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled),
-        option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings"),
+        option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings", id="settings-button"),
         dmc.Button(tls[lang]["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"), id="reset-button", color="dark", size="lg")
 
     ], className="flex gap-4 flex-col max-w-xs")

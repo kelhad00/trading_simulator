@@ -17,8 +17,6 @@ def graph(lang="fr"):
             html.Div([
                 dmc.Select(
                     id='company-selector',
-                    value=list(dlt.companies.keys())[0],
-                    data=[{"label": v, "value": k} for k, v in options.items()],
                     clearable=False,
                     persistence=True,
                     persistence_type='local',

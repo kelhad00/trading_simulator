@@ -1,4 +1,4 @@
-from dash import callback, Input, Output, State
+from dash import callback, Input, Output, State, no_update
 
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
@@ -8,6 +8,7 @@ from trade.utils.settings.display import display_chart
     Output("chart", "figure"),
     Input("select-company", "value"),
     Input("figures", "data"),
+    prevent_initial_call=True
 )
 def update_graph(company, data):
     """
@@ -19,10 +20,17 @@ def update_graph(company, data):
         The updated graph
     """
     try:
-        df = get_generated_data()[company]  # Get the data of the selected company
-        return display_chart(df, 0, df.shape[0], company)  # Display the chart
+        df = get_generated_data()  # Get the data of all companies
+
+        # companies = df.columns.get_level_values('symbol').unique()
+        # portfolio_value = {c: 0 for c in companies}
+
+        df = df[company]  # Get the data of the selected company
+
+        return display_chart(df, 0, df.shape[0], company) # Display the chart
 
     except Exception as e:
+        print('Error :', e)
         return {"data": [], "layout": {}, "frames": []}
 
 

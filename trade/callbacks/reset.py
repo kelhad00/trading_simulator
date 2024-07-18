@@ -6,8 +6,20 @@ from dash.exceptions import PreventUpdate
 from trade.defaults import defaults as dlt
 from trade.utils.market import get_first_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
+from trade.utils.settings.create_market_data import get_generated_data
 
 market_df = get_market_dataframe()
+
+
+@callback(
+    Output("settings-button", "disabled"),
+    Input("timestamp", "data"),
+)
+def disable_button(timestamp):
+    if timestamp == get_first_timestamp(market_df, 100):
+        return False
+    else:
+        return True
 
 
 @callback(
@@ -20,7 +32,6 @@ market_df = get_market_dataframe()
     Input('reset-button', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
-
     prevent_initial_call=True,
 )
 def reset_data(btn, initial_cashflow, nb_export):
@@ -39,8 +50,11 @@ def reset_data(btn, initial_cashflow, nb_export):
     # Reset the data of each dcc.Store component
     timestamp = get_first_timestamp(market_df, 100)
     cashflow = initial_cashflow
-    shares = {c: 0 for c in dlt.companies.keys()}
-    totals = {c: 0 for c in dlt.companies.keys()}
+
+    df = get_generated_data()  # Get the data of all companies
+    companies = df.columns.get_level_values('symbol').unique()
+    portfolio_value = {c: 0 for c in companies}
+
     requests = []
 
     # create dir named nb_export in data folder
@@ -55,7 +69,7 @@ def reset_data(btn, initial_cashflow, nb_export):
 
     nb_export = len(os.listdir(os.path.join(dlt.data_path, "exports")))
 
-    return timestamp, cashflow, requests, shares, totals, nb_export
+    return timestamp, cashflow, requests, portfolio_value, portfolio_value, nb_export
 
 
 
