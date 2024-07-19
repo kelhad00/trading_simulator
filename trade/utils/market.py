@@ -14,6 +14,13 @@ from trade.defaults import defaults as dlt
 #         print('ERROR: No market data found in ' + dlt.data_path + ' folder.')
 #         raise FileNotFoundError
 
+def get_revenues_dataframe():
+    # Import income data of the selected company
+    file_path = os.path.join(dlt.data_path, 'revenue.csv')
+    df = pd.read_csv(file_path, index_col=0, header=[0, 1])
+    return df
+
+
 def get_market_dataframe(generated=True):
     file = 'generated_data.csv' if generated else 'market_data.csv'
 

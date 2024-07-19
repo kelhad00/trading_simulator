@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 from trade.utils.graph.candlestick_charts import create_graph
-from trade.utils.market import get_market_dataframe, get_last_timestamp
+from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
@@ -181,9 +181,7 @@ def update_revenue(n, company, timestamp):
         # unless it's the first week of the year.
         # TODO: So we need to find another way of optimizing
 
-        # Import income data of the selected company
-        file_path = os.path.join(dlt.data_path, 'revenue.csv')
-        df = pd.read_csv(file_path, index_col=0, header=[0, 1])
+        df = get_revenues_dataframe()
 
         # Format these data to be easily used
         df = df[company].T.reset_index()
