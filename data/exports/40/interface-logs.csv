@@ -1,0 +1,6 @@
+uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart-type,is_news_description_displayed,news_title
+5a057907-21ce-4f51-b890-c62539f9a153,2021-04-11T00:00:00,1721381871.155097,100000,MC.PA,sell,market,False,
+962f4261-c276-41c4-963b-414b55433f6c,2021-04-11T00:00:00,1721381874.16408,100000,MC.PA,sell,revenue,False,
+7f39d676-67e7-4dd6-94af-2743a78067f8,2021-04-12T00:00:00,1721381878.516117,100000,MC.PA,sell,market,False,
+dc94d23c-9383-4c73-ab2a-5a7a6d3a10ba,2021-04-12T00:00:00,1721381879.597434,100000,MC.PA,sell,revenue,False,
+a7f87868-2976-4d60-bcf0-35b2ed2a4b1a,2021-04-14T00:00:00,1721381890.035363,100000,MC.PA,sell,market,False,
