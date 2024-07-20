@@ -1,4 +1,4 @@
-from dash import Output, Input, State, html, callback, no_update
+from dash import Output, Input, State, html, callback, no_update, clientside_callback
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 from trade.utils.news_generation.news_creation import get_news_position_for_companies, create_news_for_companies, \
@@ -24,6 +24,7 @@ def update_display_container_nbr_news(mode, children):
 
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
+    Output("generate-news", "loading"),
 
     State('companies', 'data'),
     State('activities', 'data'),
@@ -74,7 +75,18 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
         action="show",
         color="green",
         message=f"Generation complete !",
-    )
+    ), False
+
+@callback(
+    Output("generate-news", "loading", allow_duplicate=True),
+    Input("generate-news", "n_clicks"),
+    prevent_initial_call=True
+)
+def update_loading(n):
+    if n is None:
+        raise PreventUpdate
+
+    return True
 
 
 

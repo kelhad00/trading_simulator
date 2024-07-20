@@ -16,6 +16,10 @@ def display_chart(data, index, length, data_name):
     # Slice the data
     data = data.iloc[index:index+length]
 
+    # delete the index where col contains a NaN
+    data = data.dropna()
+    print("display", data)
+
     # Chart
     fig = go.Figure(data=[go.Candlestick(
                 x=data.index,

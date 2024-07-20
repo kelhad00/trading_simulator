@@ -67,7 +67,7 @@ if __name__ == '__main__':
         print('Creating directory ' + path + ' at root of the project')
         os.mkdir(path)
 
-    if not os.path.exists(os.path.join(path, "market_data.csv")) \
+    if not os.path.exists(os.path.join(path, "generated_data.csv")) \
             or not os.path.exists(os.path.join(path, "revenue.csv")):
         print('\nDownloading market data...\n')
         download_market_data()

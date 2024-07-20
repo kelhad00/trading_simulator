@@ -4,6 +4,7 @@ import pandas as pd
 from dash import callback, Input, Output, State, ALL, no_update, dcc, html, page_registry
 from dash.exceptions import PreventUpdate
 
+from trade.utils.market import get_first_timestamp
 from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import bull_trend, bear_trend, flat_trend, export_generated_data, \
     get_generated_data
@@ -51,8 +52,18 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, sta
         dataframes = []  # Store the dataframes to export them later
         figures = []  # Store the figures to display them
 
-        for company in companies:
+        try:
+            # Put the same day as the generated_data file
+            df = get_generated_data()
+            first_timestamp = get_first_timestamp(df)
+        except:
+            # if there is no data, put start_date
+            first_timestamp = start_date
 
+
+        print(first_timestamp)
+
+        for company in companies:
             # Get the trends
             trends = []
             for i in radio_trends:
@@ -77,7 +88,7 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, sta
 
             # Concatenate the data and update the Date column
             final_chart = pd.concat(data_list).reset_index(drop=True)
-            final_chart['Date'] = pd.date_range(start=start_date, periods=final_chart.shape[0], freq='D')
+            final_chart['Date'] = pd.date_range(start=first_timestamp, periods=final_chart.shape[0], freq='D')
 
             # Get the chart
             fig = display_chart(final_chart, 0, final_chart.shape[0], company)

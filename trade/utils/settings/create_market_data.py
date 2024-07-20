@@ -159,12 +159,27 @@ def format_generated_data(data, stock):
     '''
     Format the generated data
     '''
+
+
     data.set_index('Date', inplace=True)
     data.index.name = 'date'
+    data.index = pd.to_datetime(data.index, utc=True)
+    data.index = data.index.tz_convert('Europe/Paris')
 
-    data['long_MA'] = data['Close'].rolling(int(20)).mean()
-    data['short_MA'] = data['Close'].rolling(int(50)).mean()
-    data['200_MA'] = data['Close'].rolling(int(200)).mean()
+    # Ensure there are at least 20 non-NaN values in the 'Close' column
+    if data['Close'].dropna().shape[0] < 20:
+        print("Not enough non-NaN values to compute the rolling mean")
+
+    # Compute the rolling mean for 'long_MA'
+    data['long_MA'] = data['Close'].rolling(window=20, min_periods=1).mean()
+    data['short_MA'] = data['Close'].rolling(window=50, min_periods=1).mean()
+    data['200_MA'] = data['Close'].rolling(window=200, min_periods=1).mean()
+
+    # data['long_MA'] = data['Close'].rolling(int(20)).mean()
+    # data['short_MA'] = data['Close'].rolling(int(50)).mean()
+    # data['200_MA'] = data['Close'].rolling(int(200)).mean()
+
+
 
     #rename col Adj Close to adjclose
     data.rename(columns={'Adj Close': 'adjclose'}, inplace=True)
@@ -192,15 +207,27 @@ def export_generated_data(df, stock):
     '''
 
     data = df.copy()
+    print("copy", df)
     df = format_generated_data(data, stock)
     existing_df = get_generated_data()
+
+    existing_df.index = pd.to_datetime(existing_df.index, utc=True)
+    existing_df.index = existing_df.index.tz_convert('Europe/Paris')
+
+
     if existing_df is not None:
         symbols = existing_df.columns.get_level_values('symbol').unique()
         if stock in symbols:
             print('Stock already exists in the generated data')
             existing_df = existing_df.drop(stock, axis=1, level='symbol')
 
+
+    # combined_df = existing_df[stock] = df
+    print(df.index)
+    print(existing_df.index)
+
     combined_df = pd.concat([existing_df, df], axis=1)
+
 
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
     combined_df.to_csv(file_path, index=True)

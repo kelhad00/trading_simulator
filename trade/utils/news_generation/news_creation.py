@@ -2,6 +2,7 @@ from time import sleep
 from groq import Groq
 import pandas as pd
 import os
+from datetime import datetime
 
 from trade.utils.news_generation.modules import load_data, save_data
 from trade.utils.news_generation.modules import random_number, percentage_change
@@ -17,8 +18,9 @@ def create_news_for_companies(companies, activities, news_position, api):
     # Create a dataframe to store the news we have created
     news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
 
-    for ticker, company_name in companies.items():
+    for ticker, company_info in companies.items():
         company_sector = find_sector_for_company(ticker, activities)
+        company_name = company_info['label']
         
         n = create_news(ticker, company_name, company_sector, news_position[ticker], model, api)
 
@@ -174,7 +176,13 @@ def create_news(company_ticker, company_name, company_sector, news_position, mod
             title = transform_news_title(content, client, model)
 
             # Create a new row in news_created
-            news_created.loc[len(news_created)] = [market_data.iloc[position]['date'], company_name, sector, title, content, sentiment]
+
+            date = market_data.iloc[position]['date']
+            date = datetime.fromisoformat(date)
+            date = date.strftime('%d/%m/%y %H:%M')
+
+
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
  
             print("News created for " + company_name)
             i += 1

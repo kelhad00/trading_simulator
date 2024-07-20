@@ -12,6 +12,8 @@ def display_chart(data, data_name, news_position):
         'scrollZoom': True
     }
 
+    data = data.dropna()
+
     # Chart
     fig = go.Figure(data=[go.Candlestick(
         x=data.index,

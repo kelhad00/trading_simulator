@@ -75,8 +75,8 @@ if not os.path.exists(dlt.data_path):
 #     data[stock].to_csv(file_path)
 
 # Save data to single CSV file
-print('Saving data to ' + dlt.data_path + '/market_data.csv')
-file_path = os.path.join(dlt.data_path, 'market_data.csv')
+print('Saving data to ' + dlt.data_path + '/generated_data.csv')
+file_path = os.path.join(dlt.data_path, 'generated_data.csv')
 data.to_csv(file_path)
 
 # Read data from CSV file and show its head to check if it is correct
