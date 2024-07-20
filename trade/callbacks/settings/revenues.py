@@ -126,7 +126,9 @@ def update_revenues_inputs(companies, mode):
         return []
 
     df = get_generated_data()
-    timestamps = pd.to_datetime(df.index)
+    timestamps = pd.to_datetime(df.index, utc=True)
+    timestamps = pd.DatetimeIndex(timestamps)
+
 
     years = timestamps.year.unique()
     last_year = years[-1]
@@ -199,7 +201,9 @@ def export_revenues(n, companies, mode):
         raise PreventUpdate
 
     df = get_generated_data()
-    timestamps = pd.to_datetime(df.index)
+    timestamps = pd.to_datetime(df.index, utc=True)
+    timestamps = pd.DatetimeIndex(timestamps)
+
 
     years = timestamps.year.unique()
     last_year = years[-1]
