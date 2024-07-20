@@ -61,7 +61,6 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, sta
             first_timestamp = start_date
 
 
-        print(first_timestamp)
 
         for company in companies:
             # Get the trends

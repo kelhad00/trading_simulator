@@ -207,7 +207,6 @@ def export_generated_data(df, stock):
     '''
 
     data = df.copy()
-    print("copy", df)
     df = format_generated_data(data, stock)
     existing_df = get_generated_data()
 
@@ -220,11 +219,6 @@ def export_generated_data(df, stock):
         if stock in symbols:
             print('Stock already exists in the generated data')
             existing_df = existing_df.drop(stock, axis=1, level='symbol')
-
-
-    # combined_df = existing_df[stock] = df
-    print(df.index)
-    print(existing_df.index)
 
     combined_df = pd.concat([existing_df, df], axis=1)
 
