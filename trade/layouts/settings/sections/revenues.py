@@ -30,7 +30,7 @@ def revenues_layout(lang="fr"):
             action=tls[lang]["settings-button"]["modify"]
         ),
 
-
+        dmc.Button("Delete", id="button-delete-revenues", color="dark"),
 
     ], className="flex flex-col gap-8 w-full")
 

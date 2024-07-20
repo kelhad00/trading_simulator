@@ -26,7 +26,7 @@ from trade.locales import translations as tls
     Input("modal-select-companies", "value"),
     prevent_initial_call=True
 )
-def generate_new_charts(alpha, length, start_value, radio_trends, companies):
+def generate_new_charts(alpha, length, start_value, radio_trends, companies, start_date="1/1/2021"):
     """
     Generate the charts based on the parameters selected in the modal
     Args:
@@ -77,7 +77,7 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies):
 
             # Concatenate the data and update the Date column
             final_chart = pd.concat(data_list).reset_index(drop=True)
-            final_chart['Date'] = pd.date_range(start='1/1/2005', periods=final_chart.shape[0], freq='D')
+            final_chart['Date'] = pd.date_range(start=start_date, periods=final_chart.shape[0], freq='D')
 
             # Get the chart
             fig = display_chart(final_chart, 0, final_chart.shape[0], company)

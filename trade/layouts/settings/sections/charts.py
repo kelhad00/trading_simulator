@@ -27,6 +27,9 @@ def generate_charts(lang="fr"):
                 dcc.Graph(id="chart")
             )
         ], action_id="modify-button", action=tls[lang]["settings-button"]["modify"]),
+
+        dmc.Button("Delete", id="button-delete-charts", color="dark"),
+
     ], className="flex flex-col gap-8 w-full")
 
 

@@ -29,43 +29,48 @@ def select_all_companies(n, companies):
 @callback(
     Output("testo", "children"),
     Input("settings-tabs", "value"),
+    Input("modal-revenues", "opened"),
     Input("select-companies-revenues", "value")
 )
-def display_revenues(tabs, companies):
+def display_revenues(tabs, modal, companies):
     if companies is None or companies == []:
         raise PreventUpdate
 
     revenues = get_revenues_dataframe()
     children = []
     for company in companies:
+        try:
 
-        # Format these data to be easily used
-        df = revenues[company].T.reset_index()
-        df['asOfDate'] = pd.to_datetime(df['asOfDate']).dt.year
-        df['NetIncome'] = pd.to_numeric(df['NetIncome'], errors='coerce')
-        df['TotalRevenue'] = pd.to_numeric(df['TotalRevenue'], errors='coerce')
+            # Format these data to be easily used
+            df = revenues[company].T.reset_index()
+            df['asOfDate'] = pd.to_datetime(df['asOfDate']).dt.year
+            df['NetIncome'] = pd.to_numeric(df['NetIncome'], errors='coerce')
+            df['TotalRevenue'] = pd.to_numeric(df['TotalRevenue'], errors='coerce')
 
 
-        # Create the graph
-        fig = go.Figure(data=[
-            go.Bar(
-                name=tls[page_registry["lang"]]["revenue-graph"]['totalRevenue'],
-                x=df['asOfDate'], y=df['TotalRevenue']
-            ),
-            go.Bar(
-                name=tls[page_registry["lang"]]["revenue-graph"]['netIncome'],
-                x=df['asOfDate'], y=df['NetIncome']
+            # Create the graph
+            fig = go.Figure(data=[
+                go.Bar(
+                    name=tls[page_registry["lang"]]["revenue-graph"]['totalRevenue'],
+                    x=df['asOfDate'], y=df['TotalRevenue']
+                ),
+                go.Bar(
+                    name=tls[page_registry["lang"]]["revenue-graph"]['netIncome'],
+                    x=df['asOfDate'], y=df['NetIncome']
+                )
+            ])
+            fig.update_layout(
+                title=f"Revenues for {company}",
             )
-        ])
-        fig.update_layout(
-            title=f"Revenues for {company}",
-        )
-        children.append(
-            dcc.Graph(
-                figure=fig,
-                config=PLOTLY_CONFIG,
+            children.append(
+                dcc.Graph(
+                    figure=fig,
+                    config=PLOTLY_CONFIG,
+                )
             )
-        )
+        except Exception as e:
+            print(e)
+            children.append(dcc.Graph())
 
     return children
 
@@ -117,14 +122,6 @@ def select_all_companies_modal(n, companies):
     Input("modal-radio-mode-revenues", "value"),
 )
 def update_revenues_inputs(companies, mode):
-    """
-    Update the revenues inputs
-    Args:
-        company: The company selected
-        mode: The mode selected
-    Returns:
-        The revenues inputs
-    """
     if companies is None or companies == [] or mode is None:
         return []
 
@@ -132,21 +129,27 @@ def update_revenues_inputs(companies, mode):
     timestamps = pd.to_datetime(df.index)
 
     years = timestamps.year.unique()
-    years = [2020, 2021, 2022]
+    last_year = years[-1]
 
     children = []
     for company in companies:
         ticker = Ticker(company.upper())
         data = ticker.get_financial_data(["TotalRevenue", "NetIncome"])
-        data = data.reset_index()
+        data['asOfDate'] = pd.to_datetime(data['asOfDate'])
+        data = data.set_index('asOfDate')
 
-        revenues = [
-            data[data['asOfDate'] == f"{year}-12-31"]['TotalRevenue'].iloc[0]
-            for year in years]
+        revenues_list = []
+        net_incomes_list = []
 
-        net_incomes = [
-            data[data['asOfDate'] == f"{year}-12-31"]['NetIncome'].iloc[0]
-            for year in years]
+        years = data.index.year.unique()
+        years = years[years <= last_year]
+
+        for year in years:
+            yearly_data = data[:f"{year}-12-31"]
+            revenue = yearly_data['TotalRevenue'].iloc[-1] if not yearly_data['TotalRevenue'].empty else None
+            net_income = yearly_data['NetIncome'].iloc[-1] if not yearly_data['NetIncome'].empty else None
+            revenues_list.append(revenue)
+            net_incomes_list.append(net_income)
 
         children.append(
             html.Div(
@@ -166,23 +169,21 @@ def update_revenues_inputs(companies, mode):
                             className="flex-1"
                         )],
                         className="flex justify-between gap-4"
-                    ) for year, revenue, income in zip(years, revenues, net_incomes )]
+                    ) for year, revenue, income in zip(years, revenues_list, net_incomes_list)]
                 ],
                 className="flex flex-col gap-2"
             )
         )
 
-        print(len(children))
-
-        return children
-
+    return children
 
 
 @callback(
-    Output("revenues", "data"),
+    Output("modal-revenues", "opened", allow_duplicate=True),
     Input("generate-revenues", "n_clicks"),
     State("modal-select-companies-revenues", "value"),
     State("modal-radio-mode-revenues", "value"),
+    prevent_initial_call=True
 )
 def export_revenues(n, companies, mode):
     """
@@ -201,10 +202,14 @@ def export_revenues(n, companies, mode):
     timestamps = pd.to_datetime(df.index)
 
     years = timestamps.year.unique()
-    years = [2020, 2021, 2022]
+    last_year = years[-1]
 
     existing_revenues = get_revenues_dataframe()
-    symbols_list = existing_revenues.columns.get_level_values('symbol').unique()
+
+    try:
+        symbols_list = existing_revenues.columns.get_level_values('symbol').unique()
+    except:
+        symbols_list = []
 
 
 
@@ -214,21 +219,47 @@ def export_revenues(n, companies, mode):
         data = ticker.get_financial_data(['TotalRevenue', 'NetIncome'], trailing=False)
         data = data.reset_index().set_index(['symbol', 'asOfDate']).T.drop('periodType')
 
+        # get data before the last year
+        data = data.loc[:, data.columns.get_level_values('asOfDate').year <= last_year]
+
         if company in symbols_list:
             existing_revenues.drop(columns=company, level=0, inplace=True)
 
         # Concatenate the new data with the existing data
         existing_revenues = pd.concat([existing_revenues, data], axis=1)
 
-
-
-
-
-
-
-
     # Save data to single CSV file
     file_path = os.path.join(dlt.data_path, 'revenue.csv')
     existing_revenues.to_csv(file_path)
 
+    return False
 
+
+
+@callback(
+    Output("testo", "children", allow_duplicate=True),
+    Input("button-delete-revenues", "n_clicks"),
+    State("select-companies-revenues", "value"),
+    prevent_initial_call=True
+)
+def delete_revenues(n, companies):
+    """
+    Delete the revenues
+    Args:
+        n: The number of clicks
+        company: The company selected
+    Returns:
+        The revenues
+    """
+    if companies is None or companies == []:
+        raise PreventUpdate
+
+    revenues = get_revenues_dataframe()
+    for company in companies:
+        revenues.drop(columns=company, level=0, inplace=True)
+
+    # Save data to single CSV file
+    file_path = os.path.join(dlt.data_path, 'revenue.csv')
+    revenues.to_csv(file_path)
+
+    return dcc.Graph()
