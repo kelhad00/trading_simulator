@@ -171,10 +171,11 @@ cython_debug/
 .DS_Store
 
 data/generated_data.csv
-
 data/market_data.csv
 data/revenue.csv
 
+data/exports/**/*
+data/export/**/*
 
 ## Data
 #data/legacy/market_data.csv
