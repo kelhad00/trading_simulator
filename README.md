@@ -183,7 +183,7 @@ On utilise yahooquery pour récuperer les revenus du/des tickers entre 2020 et l
 WARNING : Si le ticker n'existe pas dans le monde réel, cela ne marchera pas
 
 ### Manual 
-Vous pouvez rentrer les données manuellement dans le fichier sur l'interface
+Vous pouvez rentrer les données manuellement sur l'interface
 
 
 # Companies
