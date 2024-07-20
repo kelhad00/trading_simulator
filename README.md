@@ -58,7 +58,6 @@ Voici le chemin du fichier : `data/generated_data.csv`
 
 ### Format 
 Les données sauvegardées pour chaque ticker sont les suivantes :
-- `Date` : La date de la donnée
 - `Open` : Le prix d'ouverture
 - `High` : Le prix le plus haut
 - `Low` : Le prix le plus bas
