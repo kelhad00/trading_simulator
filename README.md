@@ -95,7 +95,7 @@ Market data is generated for each company according to the selected trend (Bull,
 
 
 
-## News
+# News
 
 ## Initialization
 Les news des données de marché réel ont été scrappé à l'avance et son contenu dans un .csv 
