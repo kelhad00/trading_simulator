@@ -22,7 +22,7 @@ from trade.locales import translations as tls
 def select_all_companies(n, companies):
     if n is None:
         raise PreventUpdate
-    value = [company for company in companies.keys() if companies[company]["got_charts"]]
+    value = [company for company in companies.keys() if companies[company]["got_charts"] and companies[company]['activity'] != 'Indice']
     return value
 
 
@@ -99,7 +99,7 @@ def open_modal(n, opened, companies):
 )
 def update_options_news_companies(tabs, companies):
 
-    options = [{"label": company["label"], "value": stock} for stock, company in companies.items() if company["got_charts"]]
+    options = [{"label": company["label"], "value": stock} for stock, company in companies.items() if company["got_charts"] and company['activity'] != 'Indice']
     return options, options
 
 
@@ -113,7 +113,7 @@ def update_options_news_companies(tabs, companies):
 def select_all_companies_modal(n, companies):
     if n is None:
         raise PreventUpdate
-    value = [company for company in companies.keys() if companies[company]["got_charts"]]
+    value = [company for company in companies.keys() if companies[company]["got_charts"] and companies[company]['activity'] != 'Indice']
     return value
 
 @callback(

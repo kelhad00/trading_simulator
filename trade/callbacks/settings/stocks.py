@@ -3,7 +3,7 @@ import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
 
 from trade.components.list import stock_list_element
-from trade.utils.settings.create_market_data import delete_generated_data
+from trade.utils.settings.create_market_data import delete_generated_data, get_generated_data
 from trade.defaults import defaults as dlt
 
 
@@ -108,6 +108,37 @@ def update_select_company_options(companies, tabs, company):
     options = [{"label": v["label"], "value": k} for k, v in options.items()]
 
     return options, options, options, company
+
+@callback(
+Output("companies", "data", allow_duplicate=True),
+    Input("settings-tabs", "value"),
+    State("companies", "data"),
+    prevent_initial_call=True
+)
+def update_companies(tabs, companies):
+    """
+    Update the companies select options
+    Args:
+        tabs: current tab (used to update the callback)
+    Returns:
+        data: updated companies select options
+    """
+    df = get_generated_data()  # Get the data of all companies
+    df_companies = df.columns.get_level_values('symbol').unique()
+    intersection = list(set(df_companies) & set(companies))
+    for company in intersection:
+        companies[company]['got_charts'] = True
+
+    return companies
+
+
+@callback(
+    Output("companies", "data", allow_duplicate=True),
+    Input("reset-stocks", "n_clicks"),
+    prevent_initial_call=True
+)
+def reset_stocks(n):
+    return dlt.companies_list
 
 
 @callback(

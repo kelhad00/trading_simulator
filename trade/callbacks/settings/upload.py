@@ -42,8 +42,6 @@ def upload(contents, filename):
 
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
-    Output('portfolio-shares', 'data', allow_duplicate=True),
-    Output('portfolio-totals', 'data', allow_duplicate=True),
     Output('companies', 'data', allow_duplicate=True),
     Input('upload-charts', 'contents'),
     State("companies", "data"),
@@ -51,19 +49,18 @@ def upload(contents, filename):
 )
 def upload_charts(contents, companies):
     if contents is None:
-        return no_update, no_update, no_update, no_update
+        return no_update, no_update
 
     notif = upload(contents, 'generated_data.csv')
 
     df = get_generated_data()  # Get the data of all companies
     df_companies = df.columns.get_level_values('symbol').unique()
     intersection = list(set(df_companies) & set(companies))
-    portfolio_value = {c: 0 for c in intersection}
 
     for company in intersection:
         companies[company]['got_charts'] = True
 
-    return notif, portfolio_value, portfolio_value, companies
+    return notif, companies
 
 
 @callback(

@@ -36,7 +36,7 @@ def stocks_settings(lang="fr"):
         ]),
         section(tls[lang]["settings-subtitles"]["charts-patterns"], [
             html.Div(id="list-companies", className="flex flex-col gap-4"),
-        ]),
+        ], action_id="reset-stocks", action="Reset"),
 
 
     ], className="flex flex-col gap-8 w-full")

@@ -59,11 +59,13 @@ def open_modal(n, opened, company):
 
 @callback(
     Output("chart", "figure", allow_duplicate=True),
+    Output("companies", "data", allow_duplicate=True),
     Input("button-delete-charts", "n_clicks"),
     State("select-company", "value"),
+    State("companies", "data"),
     prevent_initial_call=True
 )
-def delete_revenues(n, company):
+def delete_revenues(n, company, companies):
     """
     Delete the revenues
     Args:
@@ -84,7 +86,9 @@ def delete_revenues(n, company):
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
     df.to_csv(file_path)
 
-    return {"data": [], "layout": {}, "frames": []}
+    companies[company]['got_charts'] = False
+
+    return {"data": [], "layout": {}, "frames": []}, companies
 
 
 
