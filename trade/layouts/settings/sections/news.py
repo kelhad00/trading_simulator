@@ -3,6 +3,7 @@ import dash_mantine_components as dmc
 
 from trade.components.sections import section
 from trade.locales import translations as tls
+from trade.defaults import Defaults as dlt
 
 
 def news_settings(lang="fr"):
@@ -13,7 +14,7 @@ def news_settings(lang="fr"):
                     id="input-api-key",
                     label=tls[lang]["settings-api"],
                     className="flex-1",
-                    value="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", # TODO: REMOVE IT
+                    value=dlt.api_key
                 ),
             ], className="flex w-full"),
         ]),

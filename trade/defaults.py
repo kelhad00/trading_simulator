@@ -3,7 +3,7 @@ class Defaults:
 
     # Period of time used to update data on the dashboard
     # update_time = 60*1000 # in milliseconds
-    update_time = 5*1000 # in milliseconds
+    update_time = 5*1000  # in milliseconds
 
     # Maximum number of requests the user can make on the dashboard
     max_requests = 10
@@ -16,17 +16,7 @@ class Defaults:
 
     # News settings
     api_key = "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"
-    # Alpha is the minimum percentage of market variation to place a news
-    alpha = 3
-    # Alpha day interval is the number of days between the two days used to calculate the percentage change
-    alpha_day_interval = 3
-    # Delta is the number of days to shift the news position
-    delta = 0
-    # Generation mode of the news (random or linear)
-    generation_mode = "random"
-    # Number of news to generate
-    nbr_positive_news = 5
-    nbr_negative_news = 5
+
 
     # Stocks and Indexes used in the interface
     # They are also used to download data with the download_market_data setup tool
@@ -154,10 +144,6 @@ class Defaults:
             "got_charts": False,
         }
     }
-
-
-
-
 
     activities = {
         "Energie et Produits de base": [ "TTE.PA", "AI.PA" ],
