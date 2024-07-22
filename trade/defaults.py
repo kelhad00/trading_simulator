@@ -28,34 +28,10 @@ class Defaults:
     nbr_positive_news = 5
     nbr_negative_news = 5
 
-    # Stocks used in the interface
+    # Stocks and Indexes used in the interface
     # They are also used to download data with the download_market_data setup tool
-    # The key is the ticker and the value is the name of the company
+    # The key is the ticker and the value is the name of the company, the activity and a boolean to know if the company has charts
     # So the data provided in the data folder must have the same name as the symbol
-    companies = {
-        "MC.PA" : "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
-        "OR.PA" : "L'ORÉAL (OR)",
-        "RMS.PA" : "HERMÈS INTERNATIONAL (RMS)",
-        "TTE.PA" : "TOTALENERGIES SE (TTE)",
-        "SAN.PA" : "SANOFI (SAN)",
-        "AIR.PA" : "AIRBUS SE (AIR)",
-        "SU.PA" : "SCHNEIDER ELECTRIC SE (SU)",
-        "AI.PA" : "AIR LIQUIDE (AI)",
-        "EL.PA" : "ESSILORLUXOTTICA (EL)",
-        "BNP.PA" : "BNP PARIBAS (BNP)",
-        "KER.PA" : "KERING (KER)",
-        "DG.PA" : "VINCI (DG)",
-        "CS.PA" : "AXA (CS)",
-        "SAF.PA" : "SAFRAN (SAF)",
-        "RI.PA" : "PERNOD RICARD (RI)",
-        "DSY.PA" : "DASSAULT SYSTÈMES SE (DSY)",
-        "STLAM.MI" : "STELLANTIS N.V. (STLAM)",
-        "BN.PA" : "DANONE (BN)",
-        "STMPA.PA" : "STMICROELECTRONICS N.V. (STMPA)",
-        "ACA.PA": "CRÉDIT AGRICOLE S.A. (ACA)"
-    }
-
-
     companies_list = {
         "MC.PA": {
             "label": "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
@@ -156,19 +132,32 @@ class Defaults:
             "label": "CRÉDIT AGRICOLE S.A. (ACA)",
             "activity": "Banque",
             "got_charts": False,
+        },
+        "^GSPC": {
+            "label": "S&P 500",
+            "activity": "Indice",
+            "got_charts": False,
+        },
+        "^DJI": {
+            "label": "Dow Jones Industrial Average",
+            "activity": "Indice",
+            "got_charts": False,
+        },
+        "^FCHI": {
+            "label": "CAC 40",
+            "activity": "Indice",
+            "got_charts": False,
+        },
+        "^SPGSGC": {
+            "label": "S&P GSCI Gold Index",
+            "activity": "Indice",
+            "got_charts": False,
         }
     }
 
 
 
-    # Indexes used in the interface
-    # Same use as the companies variable
-    indexes = {
-        "^GSPC" : "S&P 500",
-        "^DJI" : "Dow Jones Industrial Average",
-        "^FCHI" : "CAC 40",
-        "^SPGSGC" : "S&P GSCI Gold Index",
-    }
+
 
     activities = {
         "Energie et Produits de base": [ "TTE.PA", "AI.PA" ],
@@ -212,10 +201,6 @@ class Defaults:
         "Nanotechnologie": [],
         "Indice": [ "^GSPC", "^DJI", "^FCHI", "^SPGSGC" ],
     }
-
-    # Variables used to disable the start button on the home page
-    home_start_button_disabled = False
-
 
 # Provide the default values in global scope
 defaults = Defaults()

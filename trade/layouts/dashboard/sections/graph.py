@@ -9,8 +9,6 @@ from trade.components.menu import dashboard_menu as menu
 
 
 def graph(lang="fr"):
-    options = {**dlt.companies, **dlt.indexes}
-
     return dmc.Paper(
         className="col-span-5 row-span-3 col-start-3 flex flex-col gap-2",
         children=[

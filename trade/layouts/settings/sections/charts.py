@@ -9,7 +9,6 @@ from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 from trade.utils.ordinal import ordinal
 
-options = {**dlt.companies, **dlt.indexes}
 
 def generate_charts(lang="fr"):
     return html.Div([

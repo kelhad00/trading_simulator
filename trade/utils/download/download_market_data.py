@@ -11,7 +11,7 @@ from trade.defaults import defaults as dlt
 #     "KER.PA", "DG.PA",  "CS.PA", "SAF.PA", "RI.PA",
 #     "DSY.PA", "STLAM.MI", "BN.PA",  "STMPA.PA",  "ACA.PA"
 # ]
-stock_list = list(dlt.companies.keys()) + list(dlt.indexes.keys())
+stock_list = dlt.companies_list.keys()
 periode_to_scrape = " 2y"
 each_time_interval = "1d"
 
