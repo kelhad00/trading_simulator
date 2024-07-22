@@ -210,11 +210,10 @@ def export_generated_data(df, stock):
     df = format_generated_data(data, stock)
     existing_df = get_generated_data()
 
-    existing_df.index = pd.to_datetime(existing_df.index, utc=True)
-    existing_df.index = existing_df.index.tz_convert('Europe/Paris')
-
-
     if existing_df is not None:
+        existing_df.index = pd.to_datetime(existing_df.index, utc=True)
+        existing_df.index = existing_df.index.tz_convert('Europe/Paris')
+
         symbols = existing_df.columns.get_level_values('symbol').unique()
         if stock in symbols:
             print('Stock already exists in the generated data')

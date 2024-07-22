@@ -1,4 +1,4 @@
-from dash import callback, Output, Input, State, page_registry, html, dcc, no_update
+from dash import callback, Output, Input, State, page_registry, html, dcc, no_update, ALL
 import pandas as pd
 import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
@@ -128,30 +128,33 @@ def update_revenues_inputs(companies, mode):
     df = get_generated_data()
     timestamps = pd.to_datetime(df.index, utc=True)
     timestamps = pd.DatetimeIndex(timestamps)
-
-
-    years = timestamps.year.unique()
-    last_year = years[-1]
+    last_year = timestamps.year.unique()[-1]
 
     children = []
     for company in companies:
-        ticker = Ticker(company.upper())
-        data = ticker.get_financial_data(["TotalRevenue", "NetIncome"])
-        data['asOfDate'] = pd.to_datetime(data['asOfDate'])
-        data = data.set_index('asOfDate')
+        try:
+            ticker = Ticker(company.upper())
+            data = ticker.get_financial_data(["TotalRevenue", "NetIncome"])
+            data['asOfDate'] = pd.to_datetime(data['asOfDate'])
+            data = data.set_index('asOfDate')
 
-        revenues_list = []
-        net_incomes_list = []
+            revenues_list = []
+            net_incomes_list = []
 
-        years = data.index.year.unique()
-        years = years[years <= last_year]
+            years = data.index.year.unique()
+            years = years[years <= last_year]
 
-        for year in years:
-            yearly_data = data[:f"{year}-12-31"]
-            revenue = yearly_data['TotalRevenue'].iloc[-1] if not yearly_data['TotalRevenue'].empty else None
-            net_income = yearly_data['NetIncome'].iloc[-1] if not yearly_data['NetIncome'].empty else None
-            revenues_list.append(revenue)
-            net_incomes_list.append(net_income)
+            for year in years:
+                yearly_data = data[:f"{year}-12-31"]
+                revenue = yearly_data['TotalRevenue'].iloc[-1] if not yearly_data['TotalRevenue'].empty else None
+                net_income = yearly_data['NetIncome'].iloc[-1] if not yearly_data['NetIncome'].empty else None
+                revenues_list.append(revenue)
+                net_incomes_list.append(net_income)
+
+        except:
+            revenues_list = [None] * 5
+            net_incomes_list = [None] * 5
+            years = [last_year - i for i in range(5)]
 
         children.append(
             html.Div(
@@ -160,12 +163,14 @@ def update_revenues_inputs(companies, mode):
                     *[html.Div([
                         dmc.NumberInput(
                             label=f"Select a revenue for {year}",
+                            id={"type": "revenue", "company": company, "year": str(year)},
                             value=revenue,
                             disabled=True if mode == "auto" else False,
                             className="flex-1"
                         ),
                         dmc.NumberInput(
                             label=f"Select a net income for {year}",
+                            id={"type": "net_income", "company": company, "year": str(year)},
                             value=income,
                             disabled=True if mode == "auto" else False,
                             className="flex-1"
@@ -185,51 +190,54 @@ def update_revenues_inputs(companies, mode):
     Input("generate-revenues", "n_clicks"),
     State("modal-select-companies-revenues", "value"),
     State("modal-radio-mode-revenues", "value"),
+
+    State({"type": "revenue", "company": ALL, "year": ALL}, "value"),
+    State({"type": "revenue", "company": ALL, "year": ALL}, "id"),
+    State({"type": "net_income", "company": ALL, "year": ALL}, "value"),
+    State({"type": "net_income", "company": ALL, "year": ALL}, "id"),
+
     prevent_initial_call=True
 )
-def export_revenues(n, companies, mode):
+def export_revenues(n, companies, mode, revenues, revenues_label, incomes, incomes_label):
     """
     Export the revenues
     Args:
         n: The number of clicks
-        company: The company selected
+        companies: The companies selected
         mode: The mode selected
+        revenues: list of int : revenues
+        revenues_label: list of dict : labels of revenues
+        incomes: list of int : incomes
+        incomes_label: list of dict : labels of incomes
     Returns:
-        The revenues
+        False : Close the modal
     """
     if companies is None or companies == [] or mode is None:
         raise PreventUpdate
 
-    df = get_generated_data()
-    timestamps = pd.to_datetime(df.index, utc=True)
-    timestamps = pd.DatetimeIndex(timestamps)
-
-
-    years = timestamps.year.unique()
-    last_year = years[-1]
-
     existing_revenues = get_revenues_dataframe()
 
-    try:
+    symbols_list = []
+    if 'symbol' in existing_revenues.columns.names:
         symbols_list = existing_revenues.columns.get_level_values('symbol').unique()
-    except:
-        symbols_list = []
-
-
 
     for company in companies:
-        ticker = Ticker(company.upper())
-        # Get company revenue
-        data = ticker.get_financial_data(['TotalRevenue', 'NetIncome'], trailing=False)
-        data = data.reset_index().set_index(['symbol', 'asOfDate']).T.drop('periodType')
+        # Define indexes of dataset
+        index = pd.Index(['currencyCode', 'NetIncome', 'TotalRevenue'], dtype='object')
 
-        # get data before the last year
-        data = data.loc[:, data.columns.get_level_values('asOfDate').year <= last_year]
+        # Format the data to be easily converted to a DataFrame
+        data = {}
+        for labels, revenues, incomes in zip(revenues_label, revenues, incomes):
+            data[(labels['company'], f"{labels['year']}-12-31 00:00:00")] = ['EUR', incomes, revenues]
 
+        data = pd.DataFrame(data, index=index)  # Create the DataFrame
+        data.columns.names = ['symbol', 'asOfDate']  # Define the columns names
+
+        # Drop the company in existing dataframe if it already exists
         if company in symbols_list:
             existing_revenues.drop(columns=company, level=0, inplace=True)
 
-        # Concatenate the new data with the existing data
+        # Add the new data to the existing dataframe
         existing_revenues = pd.concat([existing_revenues, data], axis=1)
 
     # Save data to single CSV file

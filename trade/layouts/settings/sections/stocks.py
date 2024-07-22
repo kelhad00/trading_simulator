@@ -25,7 +25,7 @@ def stocks_settings(lang="fr"):
                     dmc.Select(
                         id="input-activity",
                         label=tls[lang]["settings-stocks-input"]["activity"],
-                        creatable=True,
+                        # creatable=True,
                         searchable=True,
                         className="flex-1"
                     ),
