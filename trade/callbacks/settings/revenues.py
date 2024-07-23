@@ -27,7 +27,7 @@ def select_all_companies(n, companies):
 
 
 @callback(
-    Output("testo", "children"),
+    Output("revenues-container", "children"),
     Input("settings-tabs", "value"),
     Input("modal-revenues", "opened"),
     Input("select-companies-revenues", "value")
@@ -249,7 +249,7 @@ def export_revenues(n, companies, mode, revenues, revenues_label, incomes, incom
 
 
 @callback(
-    Output("testo", "children", allow_duplicate=True),
+    Output("revenues-container", "children", allow_duplicate=True),
     Input("button-delete-revenues", "n_clicks"),
     State("select-companies-revenues", "value"),
     prevent_initial_call=True
