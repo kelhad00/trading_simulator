@@ -145,8 +145,6 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         port_totals: the updated dictionary of the total price of the user
     """
     old_req = request_list.copy()
-    print("old", old_req)
-
 
     price_list = get_price_dataframe()
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
@@ -191,9 +189,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         # Update the total price of each stock
         port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
 
-    print("old", old_req)
-    print("new", request_list)
-    print("hello", request_list if old_req != request_list else "no update")
+
 
     return request_list if old_req != request_list else no_update, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict()
 
