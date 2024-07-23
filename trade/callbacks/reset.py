@@ -79,6 +79,7 @@ def reset_data(btn, initial_cashflow, nb_export):
     Output('requests', 'data', allow_duplicate=True),
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
+    Output('nb_export', 'data', allow_duplicate=True),
     Input('reset-button-1', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
