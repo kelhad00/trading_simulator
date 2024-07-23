@@ -1,9 +1,5 @@
-import os
-
 from dash import Output, Input, State, callback, no_update, ALL, ctx
 from trade.utils.export import export_data
-
-from trade.defaults import defaults as dlt
 
 
 @callback(

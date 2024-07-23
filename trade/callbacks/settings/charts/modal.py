@@ -1,7 +1,7 @@
 import os.path
 import pandas as pd
 
-from dash import callback, Input, Output, State, ALL, no_update, dcc, html, page_registry
+from dash import callback, Input, Output, State, ALL, no_update, dcc, page_registry
 from dash.exceptions import PreventUpdate
 
 from trade.utils.market import get_first_timestamp
@@ -27,7 +27,7 @@ from trade.locales import translations as tls
     Input("modal-select-companies", "value"),
     prevent_initial_call=True
 )
-def generate_new_charts(alpha, length, start_value, radio_trends, companies, start_date="1/1/2021"):
+def generate_new_charts(alpha, length, start_value, radio_trends, companies, start_date=dlt.start_date):
     """
     Generate the charts based on the parameters selected in the modal
     Args:
@@ -59,8 +59,6 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, sta
         except:
             # if there is no data, put start_date
             first_timestamp = start_date
-
-
 
         for company in companies:
             # Get the trends
@@ -99,7 +97,7 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, sta
         return children, dataframes
 
     except Exception as e:
-        print('Error :', e)
+        print('Error while generating charts :', e)
         return no_update
 
 
@@ -122,21 +120,27 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies):
     Args:
         n (int): number of clicks on the generate button
         datas (list): list of the dataframes associated with the charts
-        companies (list): list of the selected companies
+        companies_selected (list): list of the selected companies
         nb_radio (int): number of radio input
+        companies (dict): companies data
     Returns:
         list: list of the dataframes associated with the charts (reset to empty list because the datas are exported)
         bool: opened state of the modal (closed)
         list: list of the radio input values (reset the trends)
+        companies (dict): companies data with the got_charts flag updated
     """
     if datas is None or datas == []:
         raise PreventUpdate
 
-    # Export each graph in the csv file
     for index, data in enumerate(datas):
-        df = pd.DataFrame.from_dict(data)
+        # Get the company name
         company = companies_selected[index]
+
+        # Export each graph in the csv file
+        df = pd.DataFrame.from_dict(data)
         export_generated_data(df, company)
+
+        # Update the got_charts flag
         companies[company]['got_charts'] = True
 
     # Reset the store and close the modal

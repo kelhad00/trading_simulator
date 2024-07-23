@@ -48,6 +48,11 @@ date,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 2023-02-03 01:00:00+01:00,375.5,84.75,4136.68994140625,33926.30078125,7136.39990234375,0.0,384.3999938964844,86.33999633789062,4182.35986328125,34179.578125,7233.93994140625,0.0,373.8999938964844,82.25,4123.35986328125,33813.859375,7113.419921875,0.0,384.3999938964844,85.13999938964844,4136.47998046875,33926.01171875,7233.93994140625,0.0,535365.0,4394526.0,4694510000.0,425150000.0,89988400.0,0.0,368.0873718261719,78.80525970458984,4136.47998046875,33926.01171875,7233.93994140625,0.0,379.83499908447266,359.2560003662109,346.90124923706054,89.86800079345703,90.16340087890624,86.64570022583008,4029.480029296875,3932.3714306640622,3932.8894165039064,33792.555078125,33511.6903125,32495.514296875,7066.147534179688,6816.817626953125,6433.342590332031,0.0,0.0,0.0
 ```
 
+## Reset
+Vous pouvez réinitialiser les données de marché en coupant l'application et en supprimant le fichier `data/generated_data.csv`
+> **TODO** :
+> Ajouter un bouton de réinitialisation dans l'interface
+
 ## Generation
 Market data is generated for each company according to the selected trend (Bull, Bear, Flat). The algorithm searches randomly in the CAC40 market data for trends that match the selected parameters.
 ### Parameters
@@ -160,6 +165,12 @@ Une liste d'entreprise et d'indexes sont definis initialement dans le fichier `d
 
 Les données de ces tickers seront scrappé a l'aide de yahooquery et de yfinance.
 Vous pouvez ajouter/enlever des entreprises dans le fichier `defaults.py` avant le lancement de l'application pour scrapper leurs données de marché réelles.
+
+> **WARNING** :
+> Si vous ajoutez des entreprises après le lancement de l'application, vous devrez les ajouter manuellement dans la page de configuration.
+
+> **WARNING** :
+> Si vous mettez des entreprises qui n'existent pas dans le monde réel, les données de marché ne pourront pas être scrappées. Veuillez remplir le champ `got_charts` à False pour ces entreprises. dans `defaults.py`
 
 ## Storage
 ### Path

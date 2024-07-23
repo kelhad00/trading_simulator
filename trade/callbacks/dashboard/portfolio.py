@@ -1,12 +1,10 @@
-from dash import Output, Input, callback, page_registry, State, no_update
+from dash import Output, Input, callback, page_registry
 import dash_mantine_components as dmc
 
 from trade.components.table import create_table
 from trade.locales import translations as tls
 
 import pandas as pd
-
-from trade.utils.market import get_first_timestamp, get_market_dataframe
 
 
 @callback(
@@ -44,7 +42,6 @@ def display_portfolio_table_updated(n, totals, shares):
     Returns:
         The updated portfolio table
     """
-
 
     lang = page_registry['lang']
 

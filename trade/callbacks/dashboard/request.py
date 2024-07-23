@@ -1,13 +1,13 @@
 import pandas as pd
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, no_update, page_registry as dash_registry, ALL, ctx
+from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
-from trade.components.table import create_selectable_table, create_table_delete
+from trade.components.table import create_table_delete
 from trade.utils.market import get_price_dataframe
 
 
@@ -30,21 +30,21 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
 
     # If the user has too many requests
     if len(req) == max_requests:
-        return True, tls[dash_registry['lang']]["err-too-many-requests"]
+        return True, tls[page_registry['lang']]["err-too-many-requests"]
 
     # If the form isn't filled correctly
     if price == 0:
-        return True, tls[dash_registry['lang']]["err-wrong-form"]
+        return True, tls[page_registry['lang']]["err-wrong-form"]
 
     # If the request is to buy and the user doesn't have enough money
     stock_price = get_price_dataframe().loc[timestamp, company]
     if action == 'buy' and cash < share * stock_price:
-        return True, tls[dash_registry['lang']]["err-enough-money"]
+        return True, tls[page_registry['lang']]["err-enough-money"]
 
     # If the request is to sell and the user doesn't have enough shares
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     if action == 'sell' and share > port_shares['Shares'].loc[company]:
-        return True, tls[dash_registry['lang']]["err-enough-shares"].format(company)
+        return True, tls[page_registry['lang']]["err-enough-shares"].format(company)
 
     # Add the request to the list if no error
     req.append({
@@ -209,17 +209,17 @@ def cb_display_requests(req):
        """
 
     df = pd.DataFrame(req)
-    sell = tls[dash_registry['lang']]['request-action']['choices'][0]['label']
-    buy = tls[dash_registry['lang']]['request-action']['choices'][1]['label']
+    sell = tls[page_registry['lang']]['request-action']['choices'][0]['label']
+    buy = tls[page_registry['lang']]['request-action']['choices'][1]['label']
 
     if not df.empty:
         # Replace all the 'buy' and 'sell' by their translated version
         df['action'] = df['action'].apply(lambda x: buy if x == 'buy' else sell)
         df.rename(columns={
-            'action': tls[dash_registry['lang']]['requests-table']['actions'],
-            'shares': tls[dash_registry['lang']]['requests-table']['shares'],
-            'company': tls[dash_registry['lang']]['requests-table']['company'],
-            'price': tls[dash_registry['lang']]['requests-table']['price']
+            'action': tls[page_registry['lang']]['requests-table']['actions'],
+            'shares': tls[page_registry['lang']]['requests-table']['shares'],
+            'company': tls[page_registry['lang']]['requests-table']['company'],
+            'price': tls[page_registry['lang']]['requests-table']['price']
         }, inplace=True)
 
 
@@ -228,30 +228,8 @@ def cb_display_requests(req):
         children=create_table_delete(df, "requests-selectable-table"),
     )
 
-#
-# @callback(
-#     Output('clear-done-btn', 'children'),
-#     Input({'type': 'requests-selectable-table', 'index': ALL}, 'n_clicks'),
-# )
-# def switch_label_delete_button(selected_rows):
-#     """
-#     Switch the label of the delete button.
-#     Between "Clear all requests" and "Clear requests".
-#     Args:
-#         selected_rows: nb clicks on all the delete button
-#     Returns:
-#         str: the label of the delete button
-#     """
-#
-#     if len(selected_rows) == 0 or True not in selected_rows:
-#         return tls[dash_registry['lang']]["clear-all-requests-button"]
-#     else:
-#         return tls[dash_registry['lang']]["clear-requests-button"]
-
-
 @callback(
     Output("requests", "data", allow_duplicate=True),
-    # Output({'type': 'requests-selectable-table', 'index': ALL}, "n_clicks"),
     Input('clear-done-btn', 'n_clicks'),
     Input({'type': 'requests-selectable-table', 'index': ALL}, "n_clicks"),
     State("requests", "data"),
@@ -268,7 +246,6 @@ def remove_request(n, values_to_remove, req):
         request_list: the updated list of requests
         list: reset the nb of clicks of each delete button
     """
-    old_req = req
 
     if ctx.triggered_id == 'clear-done-btn':
         return []

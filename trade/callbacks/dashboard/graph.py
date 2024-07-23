@@ -1,8 +1,6 @@
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
 import plotly.graph_objects as go
-
 import pandas as pd
-import os
 
 from trade.utils.graph.candlestick_charts import create_graph
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
@@ -10,19 +8,16 @@ from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
 
-
 @callback(
     Output("company-selector", "data"),
     Output("company-selector", "value"),
-    Input("portfolio-shares", "data"),
-    State("companies", "data"),
+    Input("companies", "data"),
     State("company-selector", "data"),
 )
-def update_select_companies_options(portfolio_shares, companies, select_options):
+def update_select_companies_options(companies, select_options):
     """
     Function to update the options of the company selector
     Args:
-        portfolio_shares: The shares of the portfolio --> it contains all the companies that have charts assigned
         companies: The list of companies --> it contains all the companies, even the ones that don't have charts assigned
         select_options: The current options of the company selector
     Returns:
@@ -40,25 +35,6 @@ def update_select_companies_options(portfolio_shares, companies, select_options)
     return options, value
 
 
-@callback(
-    Output("modal", "opened", allow_duplicate=True),
-    Input("modal-close", "n_clicks"),
-    prevent_initial_call=True
-)
-def close_modal(n_clicks):
-    """
-    Function to close the modal when the user clicks on the close button
-    Args:
-        n_clicks: The number of clicks on the close button
-    Returns:
-        The new state of the modal
-    """
-    # if n_clicks:
-    #     return False
-    # else:
-    #     raise PreventUpdate
-
-
 
 @callback(
     Output("modal", "opened", allow_duplicate=True),
@@ -70,7 +46,6 @@ def update_modal(timestamp):
     Function to update the modal when the timestamp changes
     Args:
         timestamp: The new timestamp
-        is_open: The current state of the modal
     Returns:
         The new state of the modal
     """
@@ -161,11 +136,18 @@ def update_graph(n, company, timestamp, range=100):
     State('timestamp', 'data')
 )
 def update_revenue(n, company, timestamp):
-    # If the user select an index, force the tab to be the market graph
-    # if company in dlt.indexes.keys():
-    #     return no_update
-
+    """
+    Function to update the revenue graph with the latest data
+    Args:
+        company: The selected company
+        timestamp: The last timestamp
+    Returns:
+        The new revenue graph
+    """
     try:
+        # If the company is an index, don't display the revenue graph
+        if dlt.companies_list[company]['activity'] == "Indice":
+            return no_update
 
         timestamp = pd.to_datetime(timestamp)
 
@@ -218,7 +200,6 @@ def update_revenue(n, company, timestamp):
             # but don't change anything else.
             return fig
     except Exception as e:
-        print("Error", e)
         return no_update
 
 

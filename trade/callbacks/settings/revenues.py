@@ -1,4 +1,4 @@
-from dash import callback, Output, Input, State, page_registry, html, dcc, no_update, ALL
+from dash import callback, Output, Input, State, page_registry, html, dcc, ALL
 import pandas as pd
 import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
@@ -20,6 +20,14 @@ from trade.locales import translations as tls
     prevent_initial_call=True
 )
 def select_all_companies(n, companies):
+    """
+    Select all companies
+    Args:
+        n: The number of clicks
+        companies: The companies
+    Returns:
+        all the companies which have charts and are not an indice
+    """
     if n is None:
         raise PreventUpdate
     value = [company for company in companies.keys() if companies[company]["got_charts"] and companies[company]['activity'] != 'Indice']
@@ -33,6 +41,15 @@ def select_all_companies(n, companies):
     Input("select-companies-revenues", "value")
 )
 def display_revenues(tabs, modal, companies):
+    """
+    Display the revenues
+    Args:
+        tabs: The tabs (used to trigger the callback)
+        modal: The modal display state (used to trigger the callback)
+        companies: The companies
+    Returns:
+        The revenues
+    """
     if companies is None or companies == []:
         raise PreventUpdate
 
@@ -40,13 +57,11 @@ def display_revenues(tabs, modal, companies):
     children = []
     for company in companies:
         try:
-
             # Format these data to be easily used
             df = revenues[company].T.reset_index()
             df['asOfDate'] = pd.to_datetime(df['asOfDate']).dt.year
             df['NetIncome'] = pd.to_numeric(df['NetIncome'], errors='coerce')
             df['TotalRevenue'] = pd.to_numeric(df['TotalRevenue'], errors='coerce')
-
 
             # Create the graph
             fig = go.Figure(data=[
@@ -69,7 +84,7 @@ def display_revenues(tabs, modal, companies):
                 )
             )
         except Exception as e:
-            print(e)
+            print("Error while rendering revenues :", e)
             children.append(dcc.Graph())
 
     return children
@@ -98,6 +113,14 @@ def open_modal(n, opened, companies):
     Input("companies", "data"),
 )
 def update_options_news_companies(tabs, companies):
+    """
+    Update the options for the news select company dropdown
+    Args:
+        tabs: The tab selected (only to trigger the callback)
+        companies: The list of companies
+    Returns:
+        The options for the dropdown
+    """
 
     options = [{"label": company["label"], "value": stock} for stock, company in companies.items() if company["got_charts"] and company['activity'] != 'Indice']
     return options, options
@@ -111,6 +134,14 @@ def update_options_news_companies(tabs, companies):
     prevent_initial_call=True
 )
 def select_all_companies_modal(n, companies):
+    """
+      Select all companies
+      Args:
+          n: The number of clicks
+          companies: The companies
+      Returns:
+          all the companies which have charts and are not an indice
+      """
     if n is None:
         raise PreventUpdate
     value = [company for company in companies.keys() if companies[company]["got_charts"] and companies[company]['activity'] != 'Indice']
@@ -122,9 +153,18 @@ def select_all_companies_modal(n, companies):
     Input("modal-radio-mode-revenues", "value"),
 )
 def update_revenues_inputs(companies, mode):
+    """
+    Update the revenues inputs
+    Args:
+        companies: The companies
+        mode: The mode
+    Returns:
+        The revenues inputs by company and by year
+    """
     if companies is None or companies == [] or mode is None:
         return []
 
+    # get the market data and convert the index to datetime to get the last year in the dataset
     df = get_generated_data()
     timestamps = pd.to_datetime(df.index, utc=True)
     timestamps = pd.DatetimeIndex(timestamps)
@@ -133,6 +173,7 @@ def update_revenues_inputs(companies, mode):
     children = []
     for company in companies:
         try:
+            # Get the revenues and net incomes
             ticker = Ticker(company.upper())
             data = ticker.get_financial_data(["TotalRevenue", "NetIncome"])
             data['asOfDate'] = pd.to_datetime(data['asOfDate'])
@@ -141,21 +182,29 @@ def update_revenues_inputs(companies, mode):
             revenues_list = []
             net_incomes_list = []
 
+            # Get all the years with available data before the last year of the dataset
             years = data.index.year.unique()
             years = years[years <= last_year]
 
             for year in years:
+                # put each year in a good format
                 yearly_data = data[:f"{year}-12-31"]
+
+                # put the last revenue and net income of the year in a list
                 revenue = yearly_data['TotalRevenue'].iloc[-1] if not yearly_data['TotalRevenue'].empty else None
                 net_income = yearly_data['NetIncome'].iloc[-1] if not yearly_data['NetIncome'].empty else None
                 revenues_list.append(revenue)
                 net_incomes_list.append(net_income)
 
         except:
+            # If the data is not available, set the revenues and net incomes to None
             revenues_list = [None] * 5
             net_incomes_list = [None] * 5
+            # Get the last 5 years before the last year of the dataset
             years = [last_year - i for i in range(5)]
 
+        # Display an input for revenue and net income for each year for each company
+        # defaults values are the data in revenues_list and net_incomes_list
         children.append(
             html.Div(
                 children=[

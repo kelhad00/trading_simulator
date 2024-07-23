@@ -120,13 +120,17 @@ def update_companies(tabs, companies):
     Update the companies select options
     Args:
         tabs: current tab (used to update the callback)
+        companies: dictionary of companies
     Returns:
         data: updated companies select options
     """
     df = get_generated_data()  # Get the data of all companies
-    df_companies = df.columns.get_level_values('symbol').unique()
+    df_companies = df.columns.get_level_values('symbol').unique()  # Get the list of companies in the csv file
+
+    # Get the intersection between the companies in the csv file and the companies in the store
     intersection = list(set(df_companies) & set(companies))
     for company in intersection:
+        # Update the got_charts value of the companies in the store
         companies[company]['got_charts'] = True
 
     return companies
@@ -138,6 +142,7 @@ def update_companies(tabs, companies):
     prevent_initial_call=True
 )
 def reset_stocks(n):
+    """ Reset the companies list with the default companies """
     return dlt.companies_list
 
 
@@ -182,10 +187,14 @@ def delete_companies(clicks, companies, children, portfolio_shares, portfolio_to
         clicks: list of clicks
         companies: dictionary of companies
         children: list of children displayed
+        portfolio_shares: dictionary of portfolio shares
+        portfolio_totals: dictionary of portfolio totals
     Returns:
         children: list of children displayed updated
         companies: dictionary of companies updated
         clicks: reset list of clicks
+        portfolio_shares: dictionary of portfolio shares updated
+        portfolio_totals: dictionary of portfolio totals updated
     """
 
     if not clicks or not 1 in clicks:

@@ -10,6 +10,9 @@ from trade.utils.settings.create_market_data import get_generated_data
 
 
 def upload(contents, filename):
+    """
+    Upload a file to the data folder
+    """
     try:
         if contents is not None:
             content_type, content_string = contents.split(',')
@@ -54,10 +57,12 @@ def upload_charts(contents, companies):
     notif = upload(contents, 'generated_data.csv')
 
     df = get_generated_data()  # Get the data of all companies
-    df_companies = df.columns.get_level_values('symbol').unique()
-    intersection = list(set(df_companies) & set(companies))
+    df_companies = df.columns.get_level_values('symbol').unique()  # Get the list of companies in the csv file
 
+    # Get the intersection between the companies in the csv file and the companies in the store
+    intersection = list(set(df_companies) & set(companies))
     for company in intersection:
+        # Update the got_charts value of the companies in the store
         companies[company]['got_charts'] = True
 
     return notif, companies

@@ -1,6 +1,7 @@
-from dash import Output, Input, State, html, callback, no_update, clientside_callback
+from dash import Output, Input, State, callback, no_update
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
+
 from trade.utils.news_generation.news_creation import get_news_position_for_companies, create_news_for_companies, \
     get_news_position_lin, get_news_position_rand
 from trade.utils.settings.create_market_data import get_generated_data
@@ -56,11 +57,10 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
         n: The number of clicks on the button
     Returns:
         A notification to inform the user when the generation is complete
+        reset loading state (False)
     """
     if n is None:
         raise PreventUpdate
-
-    # TODO : Créer un visuel de chargement
 
     # Get the news position (timestamp) for all the companies
     news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news,
@@ -77,17 +77,20 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
         message=f"Generation complete !",
     ), False
 
+
 @callback(
     Output("generate-news", "loading", allow_duplicate=True),
     Input("generate-news", "n_clicks"),
     prevent_initial_call=True
 )
 def update_loading(n):
+    """
+    Set the loading state to True when the button is clicked
+    """
     if n is None:
         raise PreventUpdate
 
     return True
-
 
 
 @callback(
@@ -96,6 +99,14 @@ def update_loading(n):
     Input("companies", "data"),
 )
 def update_options_news_companies(tabs, companies):
+    """
+    Update the options for the news select company dropdown
+    Args:
+        tabs: The tab selected (only to trigger the callback)
+        companies: The list of companies
+    Returns:
+        The options for the dropdown
+    """
 
     options = [{"label": company["label"], "value": stock} for stock, company in companies.items() if company["got_charts"]]
     return options
@@ -112,6 +123,19 @@ def update_options_news_companies(tabs, companies):
     prevent_initial_call=True
 )
 def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_positive_news, nbr_negative_news):
+    """
+    Update the news graph
+    Args:
+        company: The company
+        alpha: The alpha value
+        alpha_day_interval: The alpha day interval
+        delta: The delta value
+        mode: The generation mode
+        nbr_positive_news: The number of positive news
+        nbr_negative_news: The number of negative news
+    Returns:
+        The updated graph
+    """
     try:
         df = get_generated_data()[company]
 
@@ -124,7 +148,7 @@ def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_posit
         return fig
 
     except Exception as e:
-        print(e)
+        print("Error while updating the news graph :", e)
         return no_update
 
 

@@ -6,16 +6,15 @@ import pandas as pd
 from trade.locales import translations as tls
 from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
-from trade.utils.news_generation.news_creation import get_news_position_for_companies, create_news_for_companies
+
 
 
 @callback(
     Output('news-table', 'children'),
     Input('periodic-updater', 'n_intervals'),
-    Input('company-selector', 'value'),
     State('timestamp', 'data'),
 )
-def cb_update_news_table(n, company, timestamp, range=50, daily=True):
+def cb_update_news_table(n, timestamp, range=50, daily=True):
     """
     Function to display the latest news in the table from the timestamp
     Args:
