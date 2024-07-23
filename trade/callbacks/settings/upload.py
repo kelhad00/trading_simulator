@@ -2,7 +2,7 @@ import base64
 import os
 import dash_mantine_components as dmc
 
-from dash import html, Output, callback, Input, dcc, no_update, State
+from dash import Output, callback, Input, no_update, State
 from dash_iconify import DashIconify
 
 from trade.defaults import defaults as dlt

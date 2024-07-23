@@ -170,7 +170,7 @@ Vous pouvez ajouter/enlever des entreprises dans le fichier `defaults.py` avant 
 > Si vous ajoutez des entreprises après le lancement de l'application, vous devrez les ajouter manuellement dans la page de configuration.
 
 > **WARNING** :
-> Si vous mettez des entreprises qui n'existent pas dans le monde réel, les données de marché ne pourront pas être scrappées. Veuillez remplir le champ `got_charts` à False pour ces entreprises. dans `defaults.py`
+> Si vous mettez des entreprises qui n'existent pas dans le monde réel, les données de marché ne pourront pas être scrappées. Cela engendrera une erreur.
 
 ## Storage
 ### Path
