@@ -1,4 +1,0 @@
-uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart-type,is_news_description_displayed,news_title
-4f6061b7-2a50-4411-9e27-45562d3574ba,2005-04-11T00:00:00,1721138276.56322,100000,SAN.PA,sell,market,False,
-d37402f8-5649-4d97-913c-2dd77f9842d2,2005-04-12T00:00:00,1721138282.669133,100000,ANT,sell,market,False,
-0c39c7c1-3161-4f45-b001-bda2d821c894,2005-04-12T00:00:00,1721138285.049885,100000,SAN.PA,sell,market,False,

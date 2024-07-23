@@ -1,7 +1,0 @@
-uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart-type,is_news_description_displayed,news_title
-6ab4129b-1d72-410b-bed8-6e001bed8a85,2005-04-30T00:00:00,1721135847.22061,100000,OR.PA,sell,market,False,
-3b155336-9d18-468c-ad41-5e2c5f161299,2005-05-14T00:00:00,1721135973.249436,100000,,sell,market,False,
-c995e17c-8638-4dd0-b37a-fe2aabdf0257,2005-05-14T00:00:00,1721136003.532859,100000,,sell,market,False,
-279b070d-c08a-4ad3-9ae2-e78580c3f429,2005-05-14T00:00:00,1721136069.258576,100000,,sell,market,False,
-94ec0552-018a-4aee-9aa5-5cf85d577a56,2005-05-14T00:00:00,1721136078.834992,100000,,sell,market,False,
-e7af3ffe-0c8b-4b7b-a29e-748666de12ab,2005-05-14T00:00:00,1721136080.253165,100000,,sell,market,False,
