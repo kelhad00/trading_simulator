@@ -17,7 +17,7 @@ class Defaults:
     data_path = "../data"
 
     # News settings
-    api_key = "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"
+    api_key = "YOUR_API_KEY"
 
 
     # Stocks and Indexes used in the interface
