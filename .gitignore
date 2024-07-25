@@ -159,5 +159,27 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-Data/
-*.csv
+
+
+# Ignore all .csv files in data folder and its subfolders
+#Data/**/*.csv
+#Data/export/*.csv
+
+
+.idea/
+
+.DS_Store
+
+data/generated_data.csv
+data/market_data.csv
+data/revenue.csv
+
+data/exports/**/*
+data/export/**/*
+
+## Data
+#data/legacy/market_data.csv
+#data/news.csv
+#data/legacy/revenue.csv
+#data/generated_data.csv
+#data/news_dataset.csv
