@@ -143,7 +143,15 @@ def update_companies(tabs, companies):
 )
 def reset_stocks(n):
     """ Reset the companies list with the default companies """
-    return dlt.companies_list
+    df = get_generated_data()  # Get the data of all companies
+    df_companies = df.columns.get_level_values('symbol').unique()  # Get the list of companies in the csv file
+    companies = dlt.companies_list
+
+    for company in companies:
+        if company not in df_companies:
+            companies[company]['got_charts'] = False
+
+    return companies
 
 
 @callback(
