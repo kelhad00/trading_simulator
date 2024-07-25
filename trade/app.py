@@ -36,14 +36,16 @@ theme = {
 
 market_df = get_market_dataframe()
 
+portfolio_value = {ticker: 0 for ticker in dlt.companies_list.keys()}
+
 app.layout = dmc.MantineProvider([
     dmc.NotificationsProvider([
         html.Div(id="notifications"),
 
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
-        dcc.Store(id='portfolio-shares', storage_type="session"),
-        dcc.Store(id='portfolio-totals', storage_type="session"),
+        dcc.Store(id='portfolio-shares', data=portfolio_value, storage_type="session"),
+        dcc.Store(id='portfolio-totals', data=portfolio_value, storage_type="session"),
         dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
 
         dcc.Store(id="companies", data=dlt.companies_list, storage_type="local"),
@@ -66,6 +68,14 @@ if __name__ == '__main__':
     if not os.path.exists(path):
         print('Creating directory ' + path + ' at root of the project')
         os.mkdir(path)
+
+    if not os.path.exists(os.path.join(path, "export")):
+        print('Creating directory ' + os.path.join(path, "export") + ' at root of the project')
+        os.mkdir(os.path.join(path, "export"))
+
+    if not os.path.exists(os.path.join(path, "exports")):
+        print('Creating directory ' + os.path.join(path, "exports") + ' at root of the project')
+        os.mkdir(os.path.join(path, "exports"))
 
     if not os.path.exists(os.path.join(path, "generated_data.csv")) \
             or not os.path.exists(os.path.join(path, "revenue.csv")):

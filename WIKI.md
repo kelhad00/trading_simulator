@@ -102,7 +102,12 @@ News articles are generated using Llama3 and a dataset of news articles scraped 
 - `Alpha interval` : The interval of days used to calculate the alpha variation.
 - `Delta` : This value shifts the news by a certain number of days. For example, setting this to 1 will display the news one day earlier.
 
+Each company is assigned to a sector of activity. The news generated will be from the same sector as the company.
+> **WARNING** :
+> We get the activity of the company from the `activities` store (defined in `defaults.py`).
 
+> **TODO** :
+> Switch the logic to use the `activity` field of `companies_list` instead.
 
 
 # Revenues
@@ -171,6 +176,9 @@ Vous pouvez ajouter/enlever des entreprises dans le fichier `defaults.py` avant 
 
 > **WARNING** :
 > Si vous mettez des entreprises qui n'existent pas dans le monde réel, les données de marché ne pourront pas être scrappées. Cela engendrera une erreur.
+
+> **WARNING** :
+> Actuellement le champ `activity` n'est pas utilisé pour la géneration de news dans companies_list.
 
 ## Storage
 ### Path
@@ -266,7 +274,7 @@ Les données sont exportées à chaque fois qu'une action est effectuée par l'u
 
 ### interface-logs.csv 
 Les données sauvegardées sont les suivantes :
-- `uuid` : L'identifiant unique de la session
+- `uuid` : L'identifiant unique de la session (trigger)
 - `market-timestamp` : Le timestamp de la donnée de marché (la date de la simulation)
 - `host-timestamp` : Le timestamp de l'interaction (la date réele)
 - `cashflow` : Le cashflow de l'utilisateur
@@ -284,7 +292,7 @@ uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart
 
 ### portfolio-logs.csv
 Les données sauvegardées sont les suivantes :
-- `uuid` : L'identifiant unique de la session
+- `uuid` : L'identifiant unique de la session (trigger)
 - `[Ticker]-shares` : Le nombre d'actions du ticker
 - `[Ticker]-totals` : La valeur totale des actions du ticker
 
@@ -296,7 +304,7 @@ uuid,MC.PA-shares,OR.PA-shares,RMS.PA-shares,TTE.PA-shares,SAN.PA-shares,AIR.PA-
 
 ### request-logs.csv
 Les données sauvegardées sont les suivantes :
-- uuid : L'identifiant unique de la session
+- uuid : L'identifiant unique de la ligne (trigger)
 - deleted-request : les index des requêtes supprimées
 - request-[n] : Les requêtes de l'utilisateur : [action] [price] [quantity] [ticker]
 

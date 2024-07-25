@@ -18,6 +18,10 @@ cd trade
 python app.py
 ```
 
+## Requirements
+- Python 3.10
+- Packages in `requirements.txt`
+
 
 ## Structure
 ### Files

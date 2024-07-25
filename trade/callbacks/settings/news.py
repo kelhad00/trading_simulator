@@ -48,10 +48,10 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
         companies: The list of companies
         activities: The activities
         api_key: The API key
-        alpha: The alpha value
-        alpha_day_interval: The alpha day interval
-        delta: The delta value
-        generation_mode: The generation mode
+        alpha:  the minimum percentage of market variation to place a news
+        alpha_day_interval: the number of days between the two days used to calculate the percentage change
+        delta: the number of days to shift the news position
+        generation_mode: The generation mode (rand or linear)
         nbr_positive_news: The number of positive news
         nbr_negative_news: The number of negative news
         n: The number of clicks on the button

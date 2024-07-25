@@ -10,23 +10,29 @@ from trade.locales import translations as tls
 
 
 def format_portfolio_dataframe(df, name):
-    df = pd.DataFrame.from_dict(df, orient='index').T
-    columns = dict(zip(df.columns, [col + name for col in df.columns]))
-    df.rename(columns=columns, inplace=True)
-    return df
+    try:
+        df = pd.DataFrame.from_dict(df, orient='index').T
+        columns = dict(zip(df.columns, [col + name for col in df.columns]))
+        df.rename(columns=columns, inplace=True)
+        return df
+    except:
+        return pd.DataFrame()
 
 def format_requests_dataframe(request_list, max_requests):
-    new_columns_data = {}
-    df = pd.DataFrame(request_list, columns=['action', 'shares', 'company', 'price']).T
-    for i in range(0, max_requests):  # Parcourir les 10 actions (de 1 à 10)
-        action_col_name = f"request-{i+1}"
-        try:
-            action_data = df[i]  # Extraire les données pour l'action i
-            new_columns_data[action_col_name] = f"{action_data['action']} {action_data['price']} {action_data['shares']} {action_data['company']}"
-        except:
-            new_columns_data[action_col_name] = None
+    try:
+        new_columns_data = {}
+        df = pd.DataFrame(request_list, columns=['action', 'shares', 'company', 'price']).T
+        for i in range(0, max_requests):  # Parcourir les 10 actions (de 1 à 10)
+            action_col_name = f"request-{i+1}"
+            try:
+                action_data = df[i]  # Extraire les données pour l'action i
+                new_columns_data[action_col_name] = f"{action_data['action']} {action_data['price']} {action_data['shares']} {action_data['company']}"
+            except:
+                new_columns_data[action_col_name] = None
 
-    return pd.DataFrame.from_dict(new_columns_data, orient="index").T
+        return pd.DataFrame.from_dict(new_columns_data, orient="index").T
+    except:
+        return pd.DataFrame()
 
 
 
