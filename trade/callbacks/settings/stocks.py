@@ -148,7 +148,7 @@ def reset_stocks(n):
     companies = dlt.companies_list
 
     for company in companies:
-        if company not in df_companies:
+        if company not in df_companies:  # check if there is no data for the company
             companies[company]['got_charts'] = False
 
     return companies
