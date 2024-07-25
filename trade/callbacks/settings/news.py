@@ -28,7 +28,6 @@ def update_display_container_nbr_news(mode, children):
     Output("generate-news", "loading"),
 
     State('companies', 'data'),
-    State('activities', 'data'),
     State('input-api-key', 'value'),
     State('input-alpha', 'value'),
     State('input-alpha-day-interval', 'value'),
@@ -40,13 +39,12 @@ def update_display_container_nbr_news(mode, children):
     Input('generate-news', 'n_clicks'),
     prevent_initial_call=True
 )
-def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_interval, delta, generation_mode,
+def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta, generation_mode,
                             nbr_positive_news, nbr_negative_news, n):
     """
     Generate news for all the companies
     Args:
         companies: The list of companies
-        activities: The activities
         api_key: The API key
         alpha:  the minimum percentage of market variation to place a news
         alpha_day_interval: the number of days between the two days used to calculate the percentage change
@@ -61,21 +59,30 @@ def on_start_button_clicked(companies, activities, api_key, alpha, alpha_day_int
     """
     if n is None:
         raise PreventUpdate
+    try:
+        # Get the news position (timestamp) for all the companies
+        news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news,
+                                                        alpha, alpha_day_interval, delta)
 
-    # Get the news position (timestamp) for all the companies
-    news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news,
-                                                    alpha, alpha_day_interval, delta)
+        # Create the news for all the companies
+        create_news_for_companies(companies, news_position, api_key)
 
-    # Create the news for all the companies
-    create_news_for_companies(companies, activities, news_position, api_key)
-
-    return dmc.Notification(
-        id="notification-news-generated",
-        title="News",
-        action="show",
-        color="green",
-        message=f"Generation complete !",
-    ), False
+        return dmc.Notification(
+            id="notification-news-generated",
+            title="News",
+            action="show",
+            color="green",
+            message=f"Generation complete !",
+        ), False
+    except Exception as e:
+        print("Error while generating news :", e)
+        return dmc.Notification(
+            id="notification-news-generated",
+            title="Error",
+            action="show",
+            color="red",
+            message=f"Error while generating news! it may be due to the API key or the parameters",
+        ), False
 
 
 @callback(
