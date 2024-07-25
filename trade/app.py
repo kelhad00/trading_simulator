@@ -36,14 +36,16 @@ theme = {
 
 market_df = get_market_dataframe()
 
+portfolio_value = {ticker: 0 for ticker in dlt.companies_list.keys()}
+
 app.layout = dmc.MantineProvider([
     dmc.NotificationsProvider([
         html.Div(id="notifications"),
 
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
-        dcc.Store(id='portfolio-shares', storage_type="session"),
-        dcc.Store(id='portfolio-totals', storage_type="session"),
+        dcc.Store(id='portfolio-shares', data=portfolio_value, storage_type="session"),
+        dcc.Store(id='portfolio-totals', data=portfolio_value, storage_type="session"),
         dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
 
         dcc.Store(id="companies", data=dlt.companies_list, storage_type="local"),
