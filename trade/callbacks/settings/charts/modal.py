@@ -190,7 +190,7 @@ def update_timeline(nb, children, min=1, max=5):
                     timeline_item(
                         id="timeline",
                         index=len(children) + 1,
-                        title=f"{ordinal(len(children) + 1, page_registry['lang'])} {tls[page_registry['lang']]['settings-timeline']}"
+                        title=f"{ordinal(len(children) + 1, page_registry['lang'])} {tls[page_registry['lang']]['settings']['charts']['radio']['title']}",
                     )
                 )
             else:  # if there is more children than the number of trends
