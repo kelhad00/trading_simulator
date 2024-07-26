@@ -11,23 +11,24 @@ from trade.utils.ordinal import ordinal
 
 
 def generate_charts(lang="fr"):
+    tl = tls[lang]["settings"]["charts"]
     return html.Div([
         dcc.Store(id="figures"),  # Store the generated data before being stored in the csv file
         generate_charts_modal(lang=lang),
-        section(tls[lang]["settings-subtitles"]["charts-patterns"], [
+        section(tl["subtitles"]["ticker"], [
             dmc.Select(
                 id="select-company",
-                label=tls[lang]["settings-number-inputs"]["number-patterns"],
+                label=tl["select"]["ticker"],
                 className="w-full"
             )
         ]),
-        section(tls[lang]["settings-subtitles"]["final-charts"], [
+        section(tl["subtitles"]["preview"], [
             dmc.Paper(
                 dcc.Graph(id="chart")
             )
-        ], action_id="modify-button", action=tls[lang]["settings-button"]["modify"]),
+        ], action_id="modify-button", action=tl["button"]["modify"]),
 
-        dmc.Button("Delete", id="button-delete-charts", color="dark"),
+        dmc.Button(tl["button"]["delete"], id="button-delete-charts", color="dark"),
 
     ], className="flex flex-col gap-8 w-full")
 
@@ -35,44 +36,45 @@ def generate_charts(lang="fr"):
 
 
 def generate_charts_modal(lang="fr"):
+    tl = tls[lang]["settings"]["charts"]
     return modal(
         id="modal",
-        title=tls[lang]["settings-subtitles"]["generate-modal"],
+        title=tl["subtitles"]["modal"],
         children=[
             html.Div([
-                section(tls[lang]["settings-subtitles"]["charts-patterns"], [
+                section(tl["subtitles"]["ticker"], [
                     html.Div([
                         dmc.MultiSelect(
                             id="modal-select-companies",
-                            label=tls[lang]["settings-number-inputs"]["number-patterns"],
+                            label=tl["select"]["ticker"],
                             className="flex-1"
                         ),
-                        dmc.Button(tls[lang]["settings-button"]["select-all"], id="select-all-stocks", color="dark", size="sm"),
+                        dmc.Button(tl["button"]["select-all"], id="select-all-stocks", color="dark", size="sm"),
                     ], className="flex gap-4 w-full items-end")
                 ]),
 
-                section(tls[lang]["settings-subtitles"]["market-data"], [
-                    slider(tls[lang]["settings-sliders"]["alpha"], "slider-alpha", 0, 2000, 500),
-                    slider(tls[lang]["settings-sliders"]["length"], "slider-length", 0, 500, 100),
-                    slider("Selectionner la valeur de départ", "slider-start", 0, 1000, 250)
+                section(tl["subtitles"]["parameters"], [
+                    slider(tl["select"]["alpha"], "slider-alpha", 0, 2000, 500),
+                    slider(tl["select"]["length"], "slider-length", 0, 500, 100),
+                    slider(tl["select"]["start"], "slider-start", 0, 1000, 250)
                 ]),
 
-                section(tls[lang]["settings-subtitles"]["charts-trends"], [
+                section(tl["subtitles"]["trends"], [
                     dmc.NumberInput(
                         id="number-trends",
-                        label=tls[lang]["settings-number-inputs"]["number-trends"],
+                        label=tl["input"]["trends"],
                         min=1, max=5, value=2, step=1,
                         className="w-full"
                     ),
                     timeline('timeline', 2)
                 ]),
 
-                section(tls[lang]["settings-subtitles"]["final-charts"], [
+                section(tl["subtitles"]["preview"], [
                     dmc.Paper(
                         html.Div(dcc.Graph(), id="modal-generated-charts-container"),
                     )
                 ]),
-                dmc.Button(tls[lang]["settings-button"]["modify"], id="generate-button", color="dark", size="md", ),
+                dmc.Button(tl["button"]["modify"], id="generate-button", color="dark", size="md", ),
             ], className="flex flex-col gap-8 w-full"),
         ]
     )
@@ -80,8 +82,8 @@ def generate_charts_modal(lang="fr"):
 
 
 def timeline_item(id, index, title):
-    label = tls[page_registry["lang"]]["settings-radio"]["trend"]
-    option_values = tls[page_registry["lang"]]["settings-radio"]["options"]
+    label = tls[page_registry["lang"]]["settings"]["charts"]["radio"]["label"]
+    option_values = tls[page_registry["lang"]]["settings"]["charts"]["radio"]["options"]
 
     options = [("bull", option_values[0]), ("bear", option_values[1]), ("flat", option_values[2])]
 
@@ -99,7 +101,7 @@ def timeline_item(id, index, title):
 def timeline(id, nb=5):
     def format_title(i):
         lang = page_registry["lang"]
-        title = tls[lang]["settings-timeline"]
+        title = tls[lang]["settings"]["charts"]["radio"]["title"]
         return f"{ordinal(i, lang)} {title}"
 
     return dmc.Timeline(

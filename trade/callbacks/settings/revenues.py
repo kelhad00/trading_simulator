@@ -205,20 +205,21 @@ def update_revenues_inputs(companies, mode):
 
         # Display an input for revenue and net income for each year for each company
         # defaults values are the data in revenues_list and net_incomes_list
+        tl = tls[page_registry["lang"]]["settings"]["revenues"]["select"]
         children.append(
             html.Div(
                 children=[
                     dmc.Text(company, weight=500),
                     *[html.Div([
                         dmc.NumberInput(
-                            label=f"Select a revenue for {year}",
+                            label=tl["revenue"] + " " + str(year),
                             id={"type": "revenue", "company": company, "year": str(year)},
                             value=revenue,
                             disabled=True if mode == "auto" else False,
                             className="flex-1"
                         ),
                         dmc.NumberInput(
-                            label=f"Select a net income for {year}",
+                            label=tl["net-income"] + " " + str(year),
                             id={"type": "net_income", "company": company, "year": str(year)},
                             value=income,
                             disabled=True if mode == "auto" else False,

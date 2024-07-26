@@ -133,9 +133,10 @@ def update_graph(n, company, timestamp, range=100):
     Output('revenue-graph', 'figure'),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
-    State('timestamp', 'data')
+    State('timestamp', 'data'),
+    State("companies", "data")
 )
-def update_revenue(n, company, timestamp):
+def update_revenue(n, company, timestamp, companies):
     """
     Function to update the revenue graph with the latest data
     Args:
@@ -146,7 +147,7 @@ def update_revenue(n, company, timestamp):
     """
     try:
         # If the company is an index, don't display the revenue graph
-        if dlt.companies_list[company]['activity'] == "Indice":
+        if companies[company]['activity'] == "Indice":
             return no_update
 
         timestamp = pd.to_datetime(timestamp)
@@ -200,6 +201,7 @@ def update_revenue(n, company, timestamp):
             # but don't change anything else.
             return fig
     except Exception as e:
+        print("Error", e)
         return no_update
 
 

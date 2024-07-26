@@ -9,36 +9,36 @@
 
 
 # Market
-Market data can be configured for each ticker in the "Charts" section of the configuration page.
+Les données de marché peuvent être configurées pour chaque ticker. Dans la section "Graphiques" de la page de configuration.
 
 ## Initialization
-When you launch the application, market data will be scraped using yahooquery and yfinance.
-These are real market data.
+Quand vous lancerez l'application, les données de marché seront scrappé a l'aide de yahooquery et de yfinance.
+Ce sont des données de marché réelles.
 
 ## Storage
 
 ### Path
-Market data is stored in a CSV file.
-Here is the file path: `data/generated_data.csv`
+Les données de marché sont stockées dans un fichier CSV.
+Voici le chemin du fichier : `data/generated_data.csv`
 
-### Format
-The data saved for each ticker are as follows:
-- `Open`: The opening price
-- `High`: The highest price
-- `Low`: The lowest price
-- `Close`: The closing price
-- `Volume`: The volume of the day
-- `adjclose`: The price adjusted for dividends and splits
-- `long_MA`: The long-term moving average
-- `short_MA`: The short-term moving average
-- `200_MA`: The 200-day moving average
+### Format 
+Les données sauvegardées pour chaque ticker sont les suivantes :
+- `Open` : Le prix d'ouverture
+- `High` : Le prix le plus haut
+- `Low` : Le prix le plus bas
+- `Close` : Le prix de fermeture
+- `Volume` : Le volume de la journée
+- `adjclose` : Le prix ajusté en fonction des dividendes et des splits
+- `long_MA` : La moyenne mobile long terme
+- `short_MA` : La moyenne mobile court terme
+- `200_MA` : La moyenne mobile sur 200 jours
 
 #### Index
-- `date`: The date of the data
+- `date` : La date de la donnée
 
 #### Columns
-- `symbol`: The company's ticker
-- `None`: The data columns (Open, High, Low, Close, Volume, adjclose, long_MA, short_MA, 200_MA)
+- `symbol` : Le ticker de l'entreprise
+- `None` : Les colonnes de données (Open, High, Low, Close, Volume, adjclose, long_MA, short_MA, 200_MA)
 
 #### Example
 ```csv
@@ -49,43 +49,41 @@ date,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 ```
 
 ## Reset
-You can reset the market data by cutting the application and deleting the file `data/generated_data.csv`
+Vous pouvez réinitialiser les données de marché en coupant l'application et en supprimant le fichier `data/generated_data.csv`
 > **TODO** :
-> Add a reset button in the interface
+> Ajouter un bouton de réinitialisation dans l'interface
 
 ## Generation
-Market data is generated for each company according to the selected trend (Bull, Bear, Flat). The algorithm searches randomly in the CAC40 market data for trends that match the selected parameters.
+Les données de marché sont générées pour chaque entreprise en fonction de la tendance sélectionnée (Bull, Bear, Flat). L'algorithme recherche aléatoirement dans les données de marché du CAC40 des tendances qui correspondent aux paramètres sélectionnés.
+
 ### Parameters
-- `Charts trends` : Select the number of trends you want to generate and their shape (Bull, Bear, or Flat).
-- `Alpha` : The minimum percentage value of market change between the first and last day.
-- `Length` : The number of days for the generated trend.
-- `Start value` : The start value for the generated data.
-
-
-
+- `Charts trends` : Sélectionnez le nombre de tendances que vous souhaitez générer et leur forme (Bull, Bear, ou Flat).
+- `Alpha` : La valeur minimale de variation du marché entre le premier et le dernier jour.
+- `Length` : Le nombre de jours pour la tendance générée.
+- `Start value` : La valeur de départ pour les données générées.
 
 # News
 
 ## Initialization
-The news from real market data has been scraped in advance and is contained in a .csv file.
+Les news des données de marché réeles ont été scrappé à l'avance et son contenu dans un .csv 
 
 ## Storage
 
 ### Path
-The news data is stored in a CSV file.
-Here is the file path: `data/news.csv`
+Les données de news sont stockées dans un fichier CSV. 
+Voici le chemin du fichier : `data/news.csv`
 
 ### Format
-The data saved for each ticker are as follows:
-- `date`: The date of the data
-- `ticker`: The company's ticker
-- `title`: The title of the article
-- `content`: The content of the article
-- `sector`: The company's sector (Only if the news is generated)
-- `sentiment`: The sentiment of the article (Only if the news is generated)
+Les données sauvegardées pour chaque ticker sont les suivantes :
+- `date` : La date de la donnée
+- `ticker` : Le ticker de l'entreprise
+- `title` : Le titre de l'article
+- `content` : Le contenu de l'article
+- `sector` : Le secteur de l'entreprise (Uniquement si la news est générée)
+- `sentiment` : Le sentiment de l'article (Uniquement si la news est générée)
 
 #### Columns
-The columns of the file are those described above.
+les colonnes du fichier sont celles decrites ci-dessus
 
 #### Example
 ```csv
@@ -94,48 +92,47 @@ date;ticker;sector;title;content;sentiment
 ```
 
 ## Generation
-News articles are generated using Llama3 and a dataset of news articles scraped from abcbourse.com. The LLM takes a news article from the same activity sector as the company in the dataset and reformulates it. The news will then be displayed either randomly or sequentially, depending on the selected mode, when a variation meets the specified parameters (alpha & alpha interval).
+
+Les articles de news sont générés à l'aide de Llama3 et d'un dataset d'articles de news scrappé depuis abcbourse.com. Le LLM prend un article de news du même secteur d'activité que l'entreprise dans le dataset et le reformule. Les news seront ensuite affichées de manière aléatoire ou séquentielle, en fonction du mode sélectionné, lorsqu'une variation répond aux paramètres spécifiés (alpha & alpha interval).
 
 ### Parameters
-- `API key` : Enter your Groq API key for news generation.
-- `Alpha` : The minimum percentage of market variation between two days required to display a news article.
-- `Alpha interval` : The interval of days used to calculate the alpha variation.
-- `Delta` : This value shifts the news by a certain number of days. For example, setting this to 1 will display the news one day earlier.
+- `API key` : Entrez votre clé d'API Groq pour la génération de news.
+- `Alpha` : La valeur minimale de variation du marché entre le premier et le dernier jour.
+- `Alpha interval` : L'intervalle de jours utilisé pour calculer la variation alpha.
+- `Delta` : Cette valeur décale les news de quelques jours. Par exemple, en la réglant à 1, les news seront affichées un jour plus tôt.
+- `Mode` : Sélectionnez le mode de génération des news (Aléatoire ou Séquentiel).
 
-Each company is assigned to a sector of activity. The news generated will be from the same sector as the company.
-
-
-
+Chaque entreprise est assignée à un secteur d'activité. Les news générées seront du même secteur que l'entreprise.
 
 # Revenues
 
 ## Initialization
-When you launch the application, revenues will be scraped using yahooquery and yfinance.
-These are real data.
+Quand vous lancerez l'application, les revenus seront scrappé a l'aide de yahooquery et de yfinance.
+Ces données sont réelles.
 
 ## Storage
 
 ### Path
-The market data is stored in a CSV file.
-Here is the file path: `data/revenues.csv`
+Les données de marché sont stockées dans un fichier CSV.
+Voici le chemin du fichier : `data/revenues.csv`
 
 ### Format
 
-The data saved for each ticker are as follows:
-- `currencyCode`: the currency
+Les données sauvegardées pour chaque ticker sont les suivantes :
+- `currencyCode`: la devise
 - `NetIncome`:
 - `TotalRevenue`: 
-- `asOfDate`: the year of the data 
-- `symbol`: the ticker 
+- `asOfDate`: l'année de la donnée 
+- `symbol`: le ticker 
 
 #### Index 
-- `currencyCode`: the currency
-- `NetIncome`:
-- `TotalRevenue`:
+- `currencyCode` : la devise
+- `NetIncome` : le revenus net
+- `TotalRevenue` : le revenus total
 
 #### Columns
-- `symbol`: the ticker
-- `asOfDate`: the date of the data
+- `symbol` : le ticker
+- `asOfDate` : la date de la donnée 
 
 #### Example 
 ```csv
@@ -148,47 +145,44 @@ TotalRevenue,18015000000.0,21397000000.0,20646000000.0,23455000000.0,20485200000
 
 ## Generation
 
-The data is not actually generated. It can be scraped or manually defined.
+Les données ne sont pas réelement génerées. Elles sont peuvent être scrappée ou definies à la main.
 
 ### Scrapping
-We use yahooquery to retrieve the revenues of the ticker(s) between 2020 and the last year defined in the market data CSV (`data/generated_data.csv`).
+On utilise yahooquery pour récuperer les revenus du/des tickers entre 2020 et la dernière année definies dans le csv des données de marché (`data/generated_data.csv`)
 
-> **WARNING**:
-If the ticker does not exist in the real world, this will not work.
+> **WARNING** :
+Si le ticker n'existe pas dans le monde réel, cela ne marchera pas
 
-### Manual
-You can enter the data manually in the interface.
-
-
-
+### Manual 
+Vous pouvez rentrer les données manuellement sur l'interface
 
 
 # Companies
 
 ## Initialization
-A list of companies and indexes are initially defined in the `defaults.py` file.
+Une liste d'entreprise et d'indexes sont definis initialement dans le fichier `defaults.py`
 
-The data for these tickers will be scraped using yahooquery and yfinance.
-You can add/remove companies in the `defaults.py` file before launching the application to scrape their real market data.
+Les données de ces tickers seront scrappé a l'aide de yahooquery et de yfinance.
+Vous pouvez ajouter/enlever des entreprises dans le fichier `defaults.py` avant le lancement de l'application pour scrapper leurs données de marché réelles.
 
-> **WARNING**:
-> If you add companies after launching the application, you will need to add them manually in the configuration page.
+> **WARNING** :
+> Si vous mettez des entreprises qui n'existent pas dans le monde réel, les données de marché ne pourront pas être scrappées. Cela engendrera une erreur.
 
-> **WARNING**:
-> If you add companies that do not exist in the real world, the market data cannot be scraped. This will result in an error.
+> **WARNING** :
+> Si vous ajoutez des entreprises après le lancement de l'application, vous devrez les ajouter manuellement dans la page de configuration.
 
 ## Storage
 ### Path
-The data for companies/indices is stored in a Dash Store element (dcc.Store).
-The data is thus stored locally in the client's browser.
+Les données des entreprises / indices sont stockées dans un element Store de Dash. (dcc.Store)
+Les données sont ainsi stockée dans le navigateur du client de maniere locale.
 
 ### Format
-The data is stored in a dictionary with the following keys:
-- `label`: The name of the company or index
-- `got_charts`: Whether the market data has been assigned (boolean)
-- `activity`: The sector of activity of the company or "Index" if it is an index
+Les données sont stockées dans un dictionnaire avec les clés suivantes :
+- `label` : Le nom de l'entreprise ou de l'indice
+- `got_charts` : Si les données de marché ont été assignées (boolean)
+- `activity` : Le secteur d'activité de l'entreprise ou "Indice" si c'est un indice
 
-The key of each dictionary corresponds to the Ticker.
+La clé de chaque dictionnaire correspond au Ticker.
 
 #### Example
 ```python
@@ -211,80 +205,75 @@ companies = {
     }
 ```
 
-You can also create them in the configuration page by filling in the fields:
-- `Company`
+
+Vous pouvez aussi en créer dans la page de configuration en remplissant les champs:
+- `Entreprise`
 - `Ticker`
-- `Sector`
+- `Secteur`
 
-Once this is done, you can generate market data and revenues for each Ticker.
+Une fois ceci fait, vous pouvez générer les données de marché et les revenus pour chaque Ticker.
 
-> **WARNING**:
-If you have not assigned market data to the ticker, you will not be able to generate revenues or news.
-Thus, this Ticker will not be included in the simulation.
+> **WARNING** :
+Si vous n'avez pas assigné de données de marché au ticker, vous ne pourrez pas generer les revenus ni les news.
+Ainsi, ce Ticker ne sera pas intégré dans la simulation.
 
+# Import 
 
-
-
-# Import
-
-You can import market data, revenues, and news by importing CSV files formatted correctly:
+Vous pouvez importer des données de marché, des revenus et des news en important des fichiers CSV formaté dans le bon format :
 - [Market](#format-)
 - [News](#format)
 - [Revenues](#format-1)
 
-> **WARNING**:
-To properly import your data, please use the `Import` tab on the configuration page.
+> **WARNING** :
+Pour importer proprement vos données, veuillez utiliser l'onglet `Import` de la page de configuration
 
 #### Example
-Importing market data through this page updates the `got_charts` field of the Store companies (see [Companies](#format-2)).
-
+Importer les données de marché à travers cette page, permet de mettre à jour le champ `got_charts` du Store companies (cf [Companies](#format-2)).
 
 # Export
-All the data used and generated are stored. We export the information of the interactions with the application, the portfolio, and the requests.
+All the data used and generated are stored. We export the information of the interactions with the application, the portfolio and the requests. 
 
 ## Storage
 
 ### Path
-The exported data is stored in 3 CSV files.
-There are 3 files per session:
-- `interface-logs.csv`: Interface logs
-- `portfolio-logs.csv`: Portfolio logs
-- `request-logs.csv`: Request logs
+Les données exportés sont stockées dans 3 fichiers CSV.
+Il y a 3 fichiers par session : 
+- `interface-logs.csv` : Les logs de l'interface
+- `portfolio-logs.csv` : Les logs du portefeuille
+- `request-logs.csv` : Les logs des requêtes
 
-Each line of each CSV contains a UUID to link the logs together.
+Chaque ligne de chaque CSV contient un UUID permettant de relier les logs entre eux.
 
 #### During the simulation
-When the simulation is running, the data is stored in the `data/export` folder.
+Lorsque la simulation est en cours, les données sont stockées dans le dossier `data/export`
 
 #### After the simulation
-Once the simulation is finished, the data is stored in the `data/exports` folder.
-Each session has its own folder and a unique ID.
-The session ID is incremented with each new session.
+Une fois la simulation terminée, les données sont stockées dans le dossier `data/exports`
+Chaque session a son propre dossier et un ID unique.
+L'ID des sessions est incrémenté à chaque nouvelle session.
 
 ### Triggers
-The data is exported every time an action is performed by the user.
-- When a news item is clicked or closed
-- When an action is performed on the request form (change of action type)
-- When the type of chart changes (Market Data or Revenues)
-- When the selected ticker changes
-- When a request is added
-- When a request is deleted
-- When an action is performed on the portfolio (Buy or Sell)
-- When the market data timestamp changes
-
-
+Les données sont exportées à chaque fois qu'une action est effectuée par l'utilisateur.
+- Lorsqu'une news est cliquée ou fermée
+- Lorsqu'une action est effectuée sur le formulaire de requêtes (changement de type d'action)
+- Lors d'un changement de type de graphique (Données de marché ou Revenus)
+- Lorsque le ticker selectionné change
+- Lorsqu'une requête est ajoutée
+- Lorsqu'une requête est supprimée
+- Lorsqu'une action est effectuée sur le portefeuille (Achat ou Vente)
+- Lorsque le timestamp de la donnée de marché change
 
 ### interface-logs.csv 
-The saved data are as follows:
-- `uuid`: The unique identifier of the session (trigger)
-- `market-timestamp`: The timestamp of the market data (the date of the simulation)
-- `host-timestamp`: The timestamp of the interaction (the real date)
-- `cashflow`: The user's cashflow
-- `selected-company`: The selected company
-- `form-action`: The state of the request form (Buy or Sell)
-- `chart-type`: The selected chart type (Market Data or Revenues)
-- `is_news_description_displayed`: (bool) If a news item was clicked to display the description
-- `news_title`: The title of the clicked news item or None
+Les données sauvegardées sont les suivantes :
+- `uuid` : L'identifiant unique de la session (trigger)
+- `market-timestamp` : Le timestamp de la donnée de marché (la date de la simulation)
+- `host-timestamp` : Le timestamp de l'interaction (la date réele)
+- `cashflow` : Le cashflow de l'utilisateur
+- `selected-company` : L'entreprise sélectionnée
+- `form-action` : L'état du formulaire de requetes (Achat ou Vente)
+- `chart-type` : Le type de graphique sélectionné (Données de marché ou Revenus)
+- `is_news_description_displayed` : (bool) Si une news a été cliqué pour afficher la description
+- `news_title` : Le titre de la news cliqué ou None
 
 #### Example
 ```csv
@@ -293,10 +282,10 @@ uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart
 ```
 
 ### portfolio-logs.csv
-The saved data are as follows:
-- `uuid`: The unique identifier of the session (trigger)
-- `[Ticker]-shares`: The number of shares of the ticker
-- `[Ticker]-totals`: The total value of the shares of the ticker
+Les données sauvegardées sont les suivantes :
+- `uuid` : L'identifiant unique de la session (trigger)
+- `[Ticker]-shares` : Le nombre d'actions du ticker
+- `[Ticker]-totals` : La valeur totale des actions du ticker
 
 #### Example
 ```csv
@@ -305,10 +294,10 @@ uuid,MC.PA-shares,OR.PA-shares,RMS.PA-shares,TTE.PA-shares,SAN.PA-shares,AIR.PA-
 ```
 
 ### request-logs.csv
-The saved data are as follows:
-- `uuid` : The unique identifier of the line (trigger)
-- `deleted-request` : The indexes of the deleted requests
-- `request-[n]` : The user's requests: [action] [price] [quantity] [ticker]
+Les données sauvegardées sont les suivantes :
+- uuid : L'identifiant unique de la ligne (trigger)
+- deleted-request : les index des requêtes supprimées
+- request-[n] : Les requêtes de l'utilisateur : [action] [price] [quantity] [ticker]
 
 #### Example
 ```csv

@@ -7,11 +7,11 @@ def stock_list_element(stock, company, lang="fr"):
     return dmc.Paper([
         html.Div([
 
-            dmc.Text(tls[lang]["settings-stocks-input"]["ticker"], weight=500),
+            dmc.Text(tls[lang]["settings"]["tickers"]["input"]["ticker"], weight=500),
             dmc.Text(stock, size="sm"),
         ], className="flex flex-col flex-1"),
         html.Div([
-            dmc.Text(tls[lang]["settings-stocks-input"]["company"], weight=500),
+            dmc.Text(tls[lang]["settings"]["tickers"]["input"]["company"], weight=500),
             dmc.Text(company, size="sm"),
         ], className="flex flex-col flex-[2]"),
         dmc.ActionIcon(

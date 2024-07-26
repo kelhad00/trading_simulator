@@ -7,71 +7,73 @@ from trade.components.sections import section
 from trade.locales import translations as tls
 
 def revenues_layout(lang="fr"):
+    tl = tls[lang]["settings"]["revenues"]
     return html.Div([
         dcc.Store(id="revenues"),
-        generate_revenues_modal(lang="fr"),
+        generate_revenues_modal(lang),
 
-        section(tls[lang]["settings-subtitles"]["charts-patterns"], [
+        section(tl["subtitles"]["ticker"], [
             html.Div([
                 dmc.MultiSelect(
                     id="select-companies-revenues",
-                    label=tls[lang]["settings-number-inputs"]["number-patterns"],
+                    label=tl["select"]["ticker"],
                     className="flex-1"
                 ),
-                dmc.Button(tls[lang]["settings-button"]["select-all"], id="select-all-companies-revenues", color="dark", size="sm"),
+                dmc.Button(tl["button"]["select-all"], id="select-all-companies-revenues", color="dark", size="sm"),
             ], className="flex gap-4 w-full items-end"),
         ]),
 
-        section(tls[lang]["settings-subtitles"]["final-charts"],
+        section(tl["subtitles"]["preview"],
                 [dmc.Paper(
                     html.Div(dcc.Graph(), id="revenues-container")
                 )],
             action_id="button-modify-revenues",
-            action=tls[lang]["settings-button"]["modify"]
+            action=tl["button"]["modify"]
         ),
 
-        dmc.Button("Delete", id="button-delete-revenues", color="dark"),
+        dmc.Button(tl["button"]["delete"], id="button-delete-revenues", color="dark"),
 
     ], className="flex flex-col gap-8 w-full")
 
 
 
 def generate_revenues_modal(lang="fr"):
+    tl = tls[lang]["settings"]["revenues"]
     return modal(
         id="modal-revenues",
-        title="generer des revenus",
+        title=tl["subtitles"]["modal"],
         children=[
             html.Div([
 
-                section("Choix de l'entreprise", [
+                section(tl["subtitles"]["ticker"], [
                     html.Div([
                         dmc.MultiSelect(
                             id="modal-select-companies-revenues",
-                            label=tls[lang]["settings-number-inputs"]["number-patterns"],
+                            label=tl["select"]["ticker"],
                             className="flex-1"
                         ),
-                        dmc.Button(tls[lang]["settings-button"]["select-all"], id="modal-select-all-companies-revenues",
+                        dmc.Button(tl["button"]["select-all"], id="modal-select-all-companies-revenues",
                                    color="dark", size="sm"),
                     ], className="flex gap-4 w-full items-end"),
                 ]),
 
-                section("Choix du mode", [
+                section(tl["subtitles"]["mode"], [
                     radio(
-                        options=[("auto", "Auto"), ("manual", "Manual")],
-                        label="Choose a mode",
+                        options=[("auto", tl["radio"]["options"][0]), ("manual", tl["radio"]["options"][1])],
+                        label=tl["radio"]["label"],
                         value="auto",
                         id="modal-radio-mode-revenues",
                     ),
                 ]),
 
                 section(
-                    title="Revenues",
+                    title=tl["subtitles"]["form"],
                     children=[html.Div(
                         id="modal-input-container-revenues",
                         className="flex flex-col gap-4 w-full"
                     )]
                 ),
-                dmc.Button("Apply", id="generate-revenues", color="dark", size="md"),
+                dmc.Button(tl["button"]["confirm"], id="generate-revenues", color="dark", size="md"),
             ], className="flex flex-col gap-8 w-full"),
         ]
     )

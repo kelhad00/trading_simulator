@@ -147,48 +147,5 @@ class Defaults:
         }
     }
 
-    activities = {
-        "Energie et Produits de base": [ "TTE.PA", "AI.PA" ],
-        "Services informatiques": [ "DSY.PA" ],
-        "Communication Médias Multimédias": [],
-        "Electricité Electronique": [ "SU.PA", "SAF.PA", "STMPA.PA" ],
-        "Chimie Pharmacie Cosmétiques": [ "SAN.PA", "OR.PA" ],
-        "Autres biens d'équipement": [],
-        "Autres services": [],
-        "Aéronautique Espace Armement": [ "AIR.PA", "AIR.PA" ],
-        "Environnement et Services aux collectivités": [],
-        "Automobile": [ "STLAM.MI" ],
-        "SIIC": [],
-        "Textile Habillement Accessoires": [ "MC.PA", "RMS.PA", "KER.PA" ],
-        "Ingénierie": [],
-        "Biotechnologie": [],
-        "Equipement automobile": [],
-        "Télécommunication": [],
-        "Agroalimentaire": [ "RI.PA", "BN.PA" ],
-        "Banque": ["BNP.PA", "CS.PA", "ACA.PA"],
-        "Loisirs, équipements de loisirs": [],
-        "Hôtellerie Restauration Tourisme": [],
-        "Transport Stockage": [],
-        "Distribution générale grand public": [],
-        "BTP Génie Civil": [ "DG.PA" ],
-        "Biens d'équipement domestique": [ "EL.PA" ],
-        "Transformation des métaux": [],
-        "Société de portefeuille": [],
-        "Conglomérat": [],
-        "Matériaux de construction": [],
-        "Assurances": [],
-        "Services financiers": [],
-        "Distribution spécialisée": [],
-        "Holding": [],
-        "Immobilier": [],
-        "Distribution industrielle": [],
-        "Construction mécanique": [],
-        "Emballage": [],
-        "Biens de consommation non durables": [],
-        "Internet": [],
-        "Nanotechnologie": [],
-        "Indice": [ "^GSPC", "^DJI", "^FCHI", "^SPGSGC" ],
-    }
-
 # Provide the default values in global scope
 defaults = Defaults()

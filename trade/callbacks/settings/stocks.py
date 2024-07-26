@@ -9,7 +9,6 @@ from trade.defaults import defaults as dlt
 
 @callback(
     Output("companies", "data"),
-    Output("activities", "data"),
     Output("notifications", "children"),
 
     Input("add-company", "n_clicks"),
@@ -18,10 +17,9 @@ from trade.defaults import defaults as dlt
     State("input-company", "value"),
     State("input-activity", "value"),
     State("companies", "data"),
-    State("activities", "data"),
     prevent_initial_call=True
 )
-def add_company_and_activity(n, stock, company, activity, companies, activities):
+def add_company_and_activity(n, stock, company, activity, companies):
     """
     Add a company and an activity to the stores
     Args:
@@ -30,21 +28,12 @@ def add_company_and_activity(n, stock, company, activity, companies, activities)
         company: company name
         activity: activity name
         companies: dictionary of companies
-        activities: dictionary of activities
     Returns:
         companies: updated dictionary of companies
-        activities: updated dictionary of activities
         notif: notification displayed
     """
     if not n:
         raise PreventUpdate
-
-    if activity in activities.keys():
-        # if activity exists, add stock to it
-        activities[activity].append(stock)
-    else:
-        # if activity does not exist, create it and add stock to it
-        activities[activity] = [stock]
 
     # add stock to companies
     companies[stock] = {
@@ -62,7 +51,7 @@ def add_company_and_activity(n, stock, company, activity, companies, activities)
         message=f"{company} has been added to the list of companies",
     )
 
-    return companies, activities, notif
+    return companies, notif
 
 
 @callback(
@@ -237,17 +226,19 @@ def delete_companies(clicks, companies, children, portfolio_shares, portfolio_to
 
 @callback(
     Output("input-activity", "data"),
-    Input("activities", "data"),
+    Input("companies", "data"),
     Input("settings-tabs", "value"),
 )
-def update_activities(data, tabs):
+def update_activities(companies, tabs):
     """
     Update the activities select options
     Args:
-        data: dictionary of activities
+        companies: all the companies with an activity field for each
         tabs: current tab (used to update the callback)
     Returns:
         data: updated activities select options
     """
-    data = [{"label": activity, "value": activity} for activity in list(data.keys())]
+    # get all the unique activities in companies dictionary
+    activities = list(set([company["activity"] for company in companies.values()]))
+    data = [{"label": activity, "value": activity} for activity in activities]
     return data
