@@ -15,23 +15,25 @@ from trade.locales import translations as tls
 
 
 def main_layout(lang="fr"):
+    tl = tls[lang]["settings"]
+
     return html.Div([
         header(lang, url="/settings"),
-        dmc.Title(tls[lang]["settings-title"], order=1, className="font-bold leading-none w-full max-w-2xl"),
+        dmc.Title(tl["title"], order=1, className="font-bold leading-none w-full max-w-2xl"),
         dmc.Tabs(
             [
                 dmc.TabsList([
-                    dmc.Tab(tls[lang]["settings-tabs"]["import"], value="import"),
-                    dmc.Tab(tls[lang]["settings-tabs"]["chart"], value="charts"),
-                    dmc.Tab(tls[lang]["settings-tabs"]["stock"], value="stocks"),
-                    dmc.Tab(tls[lang]["settings-tabs"]["news"], value="news"),
-                    dmc.Tab(tls[lang]["settings-tabs"]["revenues"], value="revenues"),
-                    dmc.Tab(tls[lang]["settings-tabs"]["advanced"], value="advanced"),
+                    dmc.Tab(tl["tabs"]["import"], value="import"),
+                    dmc.Tab(tl["tabs"]["chart"], value="charts"),
+                    dmc.Tab(tl["tabs"]["ticker"], value="tickers"),
+                    dmc.Tab(tl["tabs"]["news"], value="news"),
+                    dmc.Tab(tl["tabs"]["revenues"], value="revenues"),
+                    dmc.Tab(tl["tabs"]["advanced"], value="advanced"),
                 ], grow=True),
 
                 dmc.TabsPanel(import_settings_layout(lang), value="import"),
                 dmc.TabsPanel(generate_charts(lang), value="charts"),
-                dmc.TabsPanel(stocks_settings(lang), value="stocks"),
+                dmc.TabsPanel(stocks_settings(lang), value="tickers"),
                 dmc.TabsPanel(news_settings(lang), value="news"),
                 dmc.TabsPanel(revenues_layout(lang), value="revenues"),
                 dmc.TabsPanel(advanced_settings(lang), value="advanced"),

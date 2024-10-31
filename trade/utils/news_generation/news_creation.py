@@ -11,7 +11,7 @@ from trade.utils.news_generation.modules import find_sector_for_company
 from trade.defaults import defaults as dlt
 
 
-def create_news_for_companies(companies, activities, news_position, api):
+def create_news_for_companies(companies, news_position, api):
     model = 'llama3-70b-8192'
     news_path = os.path.join(dlt.data_path, 'news.csv')
 
@@ -19,12 +19,11 @@ def create_news_for_companies(companies, activities, news_position, api):
     news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
 
     for ticker, company_info in companies.items():
-        company_sector = find_sector_for_company(ticker, activities)
+        company_sector = company_info['activity']
         company_name = company_info['label']
-        
-        n = create_news(ticker, company_name, company_sector, news_position[ticker], model, api)
-
-        news_created = pd.concat([news_created, n])
+        if company_info['got_charts'] is True:
+            n = create_news(ticker, company_name, company_sector, news_position[ticker], model, api)
+            news_created = pd.concat([news_created, n])
 
     # Save the news created
     save_data(news_created, news_path)
@@ -45,13 +44,14 @@ def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_nega
     # Create a dictionary to store the news positions
     news_positions = {}
 
-    for company in companies.keys():
+    for company, values in companies.items():
+        if values["got_charts"] is True:
         # Generate the news position for the generated data companies
-        if company in generated_market_data.keys():
-            if mode == "random":
-                news_positions[company] = get_news_position_rand(generated_market_data[company], nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
-            else:
-                news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta)
+            if company in generated_market_data.keys():
+                if mode == "random":
+                    news_positions[company] = get_news_position_rand(generated_market_data[company], nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
+                else:
+                    news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta)
 
     return news_positions
 

@@ -75,68 +75,123 @@ translation = {
         "welcome": ["Welcome to", "TradeSim"],
         "description": ["Click on ", "'Start Session'", ", to start the session. The interface is available in ", "english ", "and ", "french", "."],
 
-        # Settings Page
-        "settings-title": "Settings",
-        "settings-subtitles": {
-            "market-data": "Market data creation",
-            "charts-trends": "Charts trends",
-            "charts-patterns": "Stock choice",
-            "final-charts": "Preview",
-            "generate-modal": "Generate market data",
-            "api": "Groq api key",
-            "news-generation-param": "News generation parameters",
-            "news-generation-mode": "Generation mode",
-            "advanced-init": "Initialisation"
-        },
-        "settings-sliders": {
-            "alpha": "Select alpha value",
-            "length": "Select length of a market movement"
-        },
-        "settings-radio": {
-            "trend": "Select a trend",
-            "options": ["Bull 📈", "Bear 📉", "Flat"]
-        },
-        "settings-button": {
-            "modify": "Modify",
-            "select-all": "Select all",
-            "add": "Ajouter",
-            "confirm": "Confirm",
-            "update": "Update",
-            "generate": "Generate news",
-        },
-        "settings-number-inputs": {
-            "number-trends": "Number of charts trends",
-            "number-patterns": "Select a stock"
-        },
-        "settings-timeline": "market movement",
-        "settings-stocks-input": {
-            "company": "Company",
-            "ticker": "Ticker",
-            "activity": "Activity"
-        },
-        "settings-api" : "API key",
-        "news-settings": {
-            "alpha": "Alpha : The alpha parameter is a percentage of variation between two days.",
-            "alpha-day-interval": "Alpha day interval : The alpha day interval is the interval between the two days used for the calculation of alpha.",
-            "delta": "Delta : The delta value shifts the news days by a certain number of days.",
-            "mode": "News generation mode",
-            "linear-mode": "Linear generation mode",
-            "random-mode": "Random generation mode",
-            "nbr-positive-news": "Number of positive news",
-            "nbr-negative-news" : "Number of negative news",
-        },
-        "settings-advanced-init-input": {
-            "update-time": "Time between updates (ms)",
-            "requests": "Max requests",
-            "cashflow": "Initial cashflow"
-        },
-        "settings-tabs": {
-            "stock": "Stocks",
-            "chart": "Charts",
-            "news": "News",
-            "advanced": "Advanced",
-            "import": "Import",
-            "revenues": "Revenues"
+        "settings": {
+            "title": "Settings",
+            "tabs": {
+                "ticker": "Tickers",
+                "chart": "Charts",
+                "news": "News",
+                "advanced": "Advanced",
+                "revenues": "Revenues",
+                "import": "Import",
+            },
+            "charts": {
+                "subtitles": {
+                    "modal": "Market data creation",
+                    "ticker": "Stock choice",
+                    "preview": "Preview",
+                    "parameters": "Market movement parameters",
+                    "trends": "Charts trends",
+                },
+                "button": {
+                    "modify": "Modify",
+                    "delete": "Delete",
+                    "select-all": "Select all",
+                },
+                "select": {
+                    "ticker": "Select a stock",
+                    "alpha": "Select alpha value",
+                    "length": "Select length of a market movement",
+                    "start": "Select start date",
+                },
+                "radio": {
+                    "title": "market movement",
+                    "label": "Select a trend",
+                    "options": ["Bull 📈", "Bear 📉", "Flat"],
+                },
+                "input": {
+                    "trends": "Number of charts trends",
+                }
+            },
+            "tickers": {
+                "subtitles": {
+                    "form": "Add a ticker",
+                    "list": "Stocks",
+                },
+                "button": {
+                    "add": "Add",
+                    "reset": "Reset",
+                },
+                "input": {
+                    "company": "Company",
+                    "ticker": "Ticker",
+                    "activity": "Activity",
+                },
+            },
+            "news": {
+                "subtitles": {
+                    "key": "Groq API key",
+                    "parameters": "News generation parameters",
+                    "mode": "Generation mode",
+                    "preview": "Preview",
+                },
+                "button": {
+                    "generate": "Generate news for all stocks",
+                },
+                "input": {
+                    "key": "Enter your Groq API key",
+                    "alpha": "Indicate the alpha value : The alpha parameter is a percentage of variation between two days.",
+                    "alpha-day-interval": "Indicate the alpha day interval : The alpha day interval is the interval between the two days used for the calculation of alpha.",
+                    "delta": "Indicate the delta value : The delta value shifts the news days by a certain number of days.",
+                    "nbr-positive-news": "Number of positive news",
+                    "nbr-negative-news": "Number of negative news",
+                },
+                "select": {
+                    "ticker": "Select a stock",
+                },
+                "radio": {
+                    "label": "Generation mode",
+                    "options": ["Random mode", "Linear mode"],
+                },
+            },
+
+            "revenues": {
+                "subtitles": {
+                    "ticker": "Stocks choice",
+                    "preview": "Preview",
+                    "mode": "Mode choice",
+                    "modal": "Assign revenues",
+                    "form": "Form",
+                },
+                "button": {
+                    "modify": "Modify",
+                    "delete": "Delete",
+                    "select-all": "Select all",
+                    "confirm": "Confirm",
+                },
+                "select": {
+                    "ticker": "Select a stock",
+                    "revenue": "Select a revenue",
+                    "net-income": "Select a net income",
+                },
+                "radio": {
+                    "label": "Mode choice",
+                    "options": ["auto", "manual"],
+                },
+            },
+            "advanced": {
+                "subtitles": {
+                    "init": "Initialization",
+                },
+                "button": {
+                    "update": "Update",
+                },
+                "input": {
+                    "update-time": "Time between updates (ms)",
+                    "requests": "Max requests",
+                    "cashflow": "Initial cashflow",
+                },
+            },
         },
 
     }
