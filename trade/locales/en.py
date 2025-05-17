@@ -7,6 +7,7 @@ translation = {
         "portfolio-investment": "Total investment: ",
 
         # Company graph
+        "price": "Price",
         "tab-market": "Technical Analysis",
         "tab-revenue": "Revenue",
         "market-graph": {
@@ -16,12 +17,17 @@ translation = {
                 'longMA': ' Simple moving average (20)',
                 'shortMA': ' Simple moving average (50)',
                 'twohunMA': ' Simple moving average (200)', 
-                'price': 'Price'
+                'price': 'Price',
+                'RSI': 'RSI',
+                'upper zone': 'Over-buy zone',
+                'lower zone': 'Over-sell zone',
+                'upper-limit': 'Upper limit',
+                'lower-limit': 'Lower limit',
             },
         },
         "revenue-graph": {
             "totalRevenue": "Revenue",
-            "netIncome": "Income"
+            "netIncome": "Net Income"
         },
 
         # News table
@@ -107,7 +113,7 @@ translation = {
                 "radio": {
                     "title": "market movement",
                     "label": "Select a trend",
-                    "options": ["Bull 📈", "Bear 📉", "Flat"],
+                    "options": ["Bull 📈", "Bear 📉"],
                 },
                 "input": {
                     "trends": "Number of charts trends",
@@ -180,6 +186,12 @@ translation = {
                 },
             },
             "advanced": {
+                "notification":{
+                    "title_update":"Settings updated",
+                    "message_update":"Settings updated !",
+                    "title_error":"Error",
+                    "message_error":"Please fill all the fields with numbers",
+                },
                 "subtitles": {
                     "init": "Initialization",
                 },

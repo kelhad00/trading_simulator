@@ -35,6 +35,7 @@ theme = {
 }
 
 market_df = get_market_dataframe()
+news_df = get_news_dataframe()
 
 portfolio_value = {ticker: 0 for ticker in dlt.companies_list.keys()}
 
@@ -85,4 +86,4 @@ if __name__ == '__main__':
         print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
         quit()"""
 
-    app.run_server(debug=True)
+    app.run(host='0.0.0.0',debug=True)

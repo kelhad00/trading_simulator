@@ -10,7 +10,7 @@ def news(lang="fr"):
             html.Div(id="news-table", className="w-full h-full overflow-y-scroll"),
         ],
         id='news-container',
-        className="col-span-3 row-span-2 row-start-4 overflow-scroll flex flex-col gap-4",
+        className="col-span-3 row-span-2 row-start-4 flex flex-col gap-4",
     )
 
 def news_description(lang="fr"):

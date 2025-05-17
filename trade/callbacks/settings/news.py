@@ -57,6 +57,9 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
         A notification to inform the user when the generation is complete
         reset loading state (False)
     """
+
+
+
     if n is None:
         raise PreventUpdate
     try:
@@ -143,6 +146,8 @@ def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_posit
     Returns:
         The updated graph
     """
+    if company is None:
+        return no_update
     try:
         df = get_generated_data()[company]
 

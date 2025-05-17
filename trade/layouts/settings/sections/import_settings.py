@@ -9,13 +9,13 @@ from trade.locales import translations as tls
 
 def import_settings_layout(lang="fr"):
     return html.Div([
-        section(tls[lang]["settings"]["tabs"]["chart"], [
+        section(tls[lang]["settings"]["tabs"]["chart"]+" (.csv)", [
             upload_button(id="upload-charts", accept=".csv"),
         ]),
-        section(tls[lang]["settings"]["tabs"]["news"], [
+        section(tls[lang]["settings"]["tabs"]["news"]+" (.csv)", [
             upload_button(id="upload-news", accept=".csv"),
         ]),
-        section(tls[lang]["settings"]["tabs"]["revenues"], [
+        section(tls[lang]["settings"]["tabs"]["revenues"]+" (.csv)", [
             upload_button(id="upload-revenues", accept=".csv"),
         ]),
     ], className="flex flex-col gap-8 w-full")

@@ -59,6 +59,8 @@ def display_portfolio_table_updated(n, totals, shares):
     # Round totals to 2 decimal places
     df[tls[lang]['portfolio-columns']['Total']] = df[tls[lang]['portfolio-columns']['Total']].round(2)
 
+    df.sort_values(by=[tls[lang]['portfolio-columns']['Total']],ascending= False ,inplace=True)
+
     return dmc.Table(
         children=create_table(df),
     )

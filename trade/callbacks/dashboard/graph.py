@@ -1,9 +1,9 @@
+import math
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
 import plotly.graph_objects as go
 import pandas as pd
-
 from trade.utils.graph.candlestick_charts import create_graph
-from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
+from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe, get_price_dataframe
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
@@ -66,18 +66,10 @@ def update_interval(update_time):
 
 
 @callback(
-    Output("timer", "children"),
-    Input("timestamp", "data"),
-)
-def cb_update_timestamp(timestamp):
-    """Function to update the timestamp displayed on the page"""
-    timestamp = pd.to_datetime(timestamp)
-    return timestamp.strftime("%Y-%m-%d")
-
-
-@callback(
     Output('timestamp', 'data'),
     Output('company-graph', 'figure'),
+    Output("company-select-cash","children"),
+    Output("timer", "children"),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
     State('timestamp', 'data')
@@ -100,6 +92,11 @@ def update_graph(n, company, timestamp, range=100):
             next_graph = False  # Don't update the timestamp if the user selects a new company
 
         dftmp = get_market_dataframe()[company]
+        stock_price = get_price_dataframe().loc[timestamp, company]
+        stock_price = str(math.ceil(stock_price))+" €"
+
+        # Ensure the columns are correctly named
+        dftmp.columns = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA']
 
         fig, timestamp = create_graph(
             dftmp,
@@ -116,18 +113,51 @@ def update_graph(n, company, timestamp, range=100):
             margin=dict(l=0, r=0, t=0, b=0),
             legend=dict(x=0, y=1.0),
             xaxis_rangeslider_visible=False,
+            yaxis2=dict(
+                title='RSI',
+                overlaying='y',
+                side='right',
+                range=[0, 100]
+            ),
+            annotations=[
+                dict(
+                    x=0.5, y=85, xref="paper", yref="y2",
+                    text=f"<b>{tls[page_registry['lang']]['market-graph']['legend']['upper zone']}</b>",
+                    showarrow=False,
+                    font=dict(size=14, color="black", family="Arial")
+                ),
+                dict(
+                    x=0.5, y=15, xref="paper", yref="y2",
+                    text=f"<b>{tls[page_registry['lang']]['market-graph']['legend']['lower zone']}</b>",
+                    showarrow=False,
+                    font=dict(size=14, color="black", family="Arial")
+                ),
+                dict(
+                    x=0.05, y=75, xref="paper", yref="y2",
+                    text=f"<b>{tls[page_registry['lang']]['market-graph']['legend']['upper-limit']}</b>",
+                    showarrow=False,
+                    font=dict(size=14, color="black", family="Arial")
+                ),
+                dict(
+                    x=0.05, y=25, xref="paper", yref="y2",
+                    text=f"<b>{tls[page_registry['lang']]['market-graph']['legend']['lower-limit']}</b>",
+                    showarrow=False,
+                    font=dict(size=14, color="black", family="Arial")
+                )
+            ]
+
         )
 
         # Change language on the legend
         fig.for_each_trace(
-            lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]['legend'][t.name])
+            lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]["legend"][t.name])
         )
 
-        return timestamp, fig
+        return timestamp, fig, stock_price, pd.to_datetime(timestamp).strftime("%Y-%m-%d")
 
     except Exception as e:
         print("Error", e)
-        return no_update, no_update
+        return no_update, no_update, no_update, no_update
 
 @callback(
     Output('revenue-graph', 'figure'),
@@ -224,5 +254,3 @@ def toggle_graph_type(value):
         return {'display': 'none'}, {'display': 'block'}
     else:
         return {'display': 'block'}, {'display': 'none'}
-
-

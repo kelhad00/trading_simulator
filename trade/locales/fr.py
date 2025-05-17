@@ -3,10 +3,11 @@ translation = {
         # Portfolio
         "portfolio": "Portefeuille",
         'portfolio-columns': {'Stock': 'Actions', 'Shares': 'Parts', 'Total': 'Prix'},
-        "portfolio-cashflow": "Trésorie",
-        "portfolio-investment": "Investissement total",
+        "portfolio-cashflow": "Trésorerie: ",
+        "portfolio-investment": "Investissement total: ",
 
         # Company graph
+        "price": "Prix",
         "tab-market": "Analyse Technique",
         "tab-revenue": "Revenus",
         "market-graph": {
@@ -16,12 +17,17 @@ translation = {
                 'longMA': 'Moyenne mobile simple (20)',
                 'shortMA': 'Moyenne mobile simple (50)',
                 'twohunMA': 'Moyenne mobile simple (200)',
-                'price': 'Prix'
+                'price': 'Prix',
+                'RSI': 'RSI',
+                'upper zone': 'Zone de sur-achat',
+                'lower zone': 'Zone de sur-vente',
+                'upper-limit': 'Borne haute',
+                'lower-limit': 'Borne basse',
             },
         },
         "revenue-graph": {
             "totalRevenue": "Chiffre d\'affaire",
-            "netIncome": "Recettes"
+            "netIncome": "Résultat net"
         },
 
         # News table
@@ -69,24 +75,12 @@ translation = {
         "clear-requests-button": "Supprimer",
 
         # Home Page
-        # "welcome": "Bienvenue sur l\'trade-legacy TradeSim !",
-        # "info_txt": "Pour commencer la session, cliquer sur 'Démarrer l’expérience'. L\'interface est disponible en anglais et français.",
-        # "signature": "L\'équipe TradeSim",
+
         "button-start": "Démarrer la simulation",
         "button-settings": "Paramètres",
         "button-restart-sim": "Réinitialiser",
-        # "button-start-info": "Veuillez patienter quelques instants...",
         "welcome": ["Bienvenue sur", "TradeSim"],
         "description": ["Cliquer sur ", "'Démarrer la simulation'", ", pour commencer la session. L\'interface est disponible en ", "anglais ", "et ", "français", "."],
-
-
-
-
-
-
-
-
-
 
         "settings": {
             "title": "Paramètres",
@@ -120,7 +114,7 @@ translation = {
                 "radio": {
                     "title": "mouvemement de marché",
                     "label": "Choix de la tendance",
-                    "options": ["Bull 📈", "Bear 📉", "Flat"],
+                    "options": ["Bull 📈", "Bear 📉"],
                 },
                 "input": {
                     "trends": "Nombre de tendances",
@@ -184,7 +178,7 @@ translation = {
                 },
                 "select": {
                     "ticker": "Sélectionner une action",
-                    "revenues": "Revenu",
+                    "revenue": "Revenu",
                     "net-income": "Recettes",
                 },
                 "radio": {
@@ -193,6 +187,12 @@ translation = {
                 },
             },
             "advanced": {
+                "notification":{
+                    "title_update":"Paramètres mis à jour",
+                    "message_update":"Paramètres mis à jour !",
+                    "title_error":"Erreur",
+                    "message_error":"Merci de remplir tous les champs avec des valeurs numériques",
+                },
                 "subtitles": {
                     "init": "Initialisation",
                 },

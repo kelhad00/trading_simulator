@@ -21,10 +21,14 @@ def graph(lang="fr"):
                     className="w-full"
                 ),
                 html.Div([
+                    dmc.Text(tls[lang]['price'], weight=700,
+                             className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
+                    dmc.Text(id="company-select-cash", className="whitespace-nowrap", size="sm"),
+                ], className="flex flex-col"),
+                html.Div([
                     dmc.Text("Date", weight=700,
                              className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
                     dmc.Text(id="timer", className="whitespace-nowrap", size="sm"),
-
                 ], className="flex flex-col"),
                 menu(lang),
             ], className="flex gap-4 justify-between items-center"),

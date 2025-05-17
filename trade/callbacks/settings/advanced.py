@@ -1,7 +1,8 @@
-from dash import callback, Input, Output, State, no_update
+from dash import callback, Input, Output, State, no_update, page_registry
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 import dash_mantine_components as dmc
+from trade.locales import translations as tls
 
 
 @callback(
@@ -42,21 +43,27 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow):
     if n is None or n == 0:
         raise PreventUpdate
 
-    if update_time is None or max_requests is None or init_cashflow is None:  # Check if all the fields are filled
+    if update_time is None or not convertible_in_int(update_time) or max_requests is None or init_cashflow is None:  # Check if all the fields are filled
         return no_update, no_update, no_update, dmc.Notification(
-            title="Error",
+            title=tls[page_registry["lang"]]["settings"]["advanced"]["notification"]["title_error"],
             id="simple-notify",
             action="show",
             color="red",
             icon=DashIconify(icon="material-symbols:error"),
-            message="Please fill all the fields",
+            message=tls[page_registry["lang"]]["settings"]["advanced"]["notification"]["message_error"],
         )
 
     else:
         return update_time, max_requests, init_cashflow, dmc.Notification(
-            id="notification-company-added",
-            title="Company added",
+            id="simple-notify",
+            title=tls[page_registry["lang"]]["settings"]["advanced"]["notification"]["title_update"],
             action="show",
             color="green",
-            message="Settings updated !",
+            message=tls[page_registry["lang"]]["settings"]["advanced"]["notification"]["message_update"],
         )
+def convertible_in_int(str):
+    try:
+        int(str)
+        return True
+    except ValueError:
+        return False

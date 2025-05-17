@@ -44,7 +44,7 @@ def generate_charts_modal(lang="fr"):
             html.Div([
                 section(tl["subtitles"]["ticker"], [
                     html.Div([
-                        dmc.MultiSelect(
+                        dmc.Select(
                             id="modal-select-companies",
                             label=tl["select"]["ticker"],
                             className="flex-1"
@@ -85,7 +85,7 @@ def timeline_item(id, index, title):
     label = tls[page_registry["lang"]]["settings"]["charts"]["radio"]["label"]
     option_values = tls[page_registry["lang"]]["settings"]["charts"]["radio"]["options"]
 
-    options = [("bull", option_values[0]), ("bear", option_values[1]), ("flat", option_values[2])]
+    options = [("bull", option_values[0]), ("bear", option_values[1])]
 
     return dmc.TimelineItem(
         title=title,

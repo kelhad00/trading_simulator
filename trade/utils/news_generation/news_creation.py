@@ -1,9 +1,11 @@
+import time
 from time import sleep
 from groq import Groq
 import pandas as pd
 import os
 from datetime import datetime
 
+from trade.utils.news import get_news_dataframe
 from trade.utils.news_generation.modules import load_data, save_data
 from trade.utils.news_generation.modules import random_number, percentage_change
 from trade.utils.market import get_market_dataframe
@@ -138,7 +140,7 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta):
         elif change <= -alpha:
             negative_positions.append(index - delta)
 
-    return (positive_positions, negative_positions)
+    return positive_positions, negative_positions
 
 def create_news(company_ticker, company_name, company_sector, news_position, model, api):
     '''
@@ -166,30 +168,29 @@ def create_news(company_ticker, company_name, company_sector, news_position, mod
     sector = company_sector
     subset = dataset.query('sector == @sector & sentiment == @sentiment')
     # Check if the subset is well represented in the dataset
+
     if len(subset) >= len(news_position[0]):
         news = subset.sample(len(news_position[0]))
 
         i = 0
-        for position in news_position[0]:    
+        for position in news_position[0]:
             # Create the news
             content = transform_news_content(news.iloc[i]['content'], company_name, client, model, sentiment)
             title = transform_news_title(content, client, model)
-
             # Create a new row in news_created
 
-            date = market_data.iloc[position]['date']
+            date = market_data.iloc[position]['index']
             date = datetime.fromisoformat(date)
             date = date.strftime('%d/%m/%y %H:%M')
 
 
             news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
- 
-            print("News created for " + company_name)
+
             i += 1
-
+            print("News created for " + company_name)
+            print(f"Positive news number {i} / {len(news_position[0])}")
             # Set a delay to avoid the rate limit
-            sleep(6)
-
+            time.sleep(6)
     else:
         # The sector is not in the dataset or there are not enough of them
         raise Exception('There are not enough positive news for the sector of ' + company_name + ' in the dataset')
@@ -203,20 +204,24 @@ def create_news(company_ticker, company_name, company_sector, news_position, mod
         news = subset.sample(len(news_position[1]))
 
         i = 0
-        for position in news_position[1]:    
+        for position in news_position[1]:
             # Create the news
             content = transform_news_content(news.iloc[i]['content'], company_name, client, model, sentiment)
             title = transform_news_title(content, client, model)
-            """except Exception as e:
-                print('Need to wait 1 minute...')
-                sleep(60)
-                content = transform_news_content(news[1]['content'], row['name'], client, model, sentiment)"""
 
             # Create a new row in news_created
-            news_created.loc[len(news_created)] = [market_data.iloc[position]['date'], company_name, sector, title, content, sentiment]
+
+            date = market_data.iloc[position]['index']
+            date = datetime.fromisoformat(date)
+            date = date.strftime('%d/%m/%y %H:%M')
+
+            # Create a new row in news_created
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
  
+            i+=1
             print("News created for " + company_name)
-            i += 1
+            print(f"Negative news number {i} / {len(news_position[1])}")
+
 
             # Set a delay to avoid the rate limit
             sleep(6)
@@ -224,7 +229,11 @@ def create_news(company_ticker, company_name, company_sector, news_position, mod
     else:
         # The sector is not in the dataset or there are not enough of them
         raise Exception('There are not enough negative news for the sector of ' + company_name + ' in the dataset')
-
+    companies_list = list(dlt.companies_list)
+    print(f"Company : {companies_list.index(company_ticker) + 1}/{len(companies_list) + 1}")
+    companies_list = list(dlt.companies_list)
+    progress = round(((companies_list.index(company_ticker) + 1) / (len(companies_list) + 1))*100, 2)
+    print(f"Progress : {progress} %")
     return news_created
 
 
@@ -234,19 +243,19 @@ def transform_news_content(content, company, client, model, sentiment):
     '''
 
     if sentiment == 'negative':
-        sent = 'négatif'
+        sentiment = 'négatif'
     else:
-        sent = 'positif'
+        sentiment = 'positif'
 
     # Prompt for the LLM
-    p = """Contexte:
+    p = f"""Contexte:
     Vous recevez une nouvelle concernant une entreprise. Vous devez reformuler cette nouvelle pour qu'elle s'applique à l'entreprise {company}, une autre entreprise du même secteur. Les actionnaires doivent recevoir cette nouvelle avec un ton formel, informatif et {sentiment}.
 
     Nouvelle originale:
-    {data}
+    {content}
 
     Tâche:
-    Reformulez la nouvelle ci-dessus pour qu'elle concerne l'entreprise {company} et fournissez directement le texte reformulé SANS préambules, introduction ou note supplémentaire ! La réponse doit être en français.""".format(data=content, company=company, sentiment=sent)
+    Reformulez la nouvelle ci-dessus pour qu'elle concerne l'entreprise {company} et fournissez directement le texte reformulé SANS préambules, introduction ou note supplémentaire ! La réponse doit être en français."""
 
     # Create a news for the company
     response = client.chat.completions.create(
@@ -266,16 +275,15 @@ def transform_news_title(content, client, model):
     '''
     Create a title from a content of a news for the company with a LLM
     '''
-    
     # Prompt for the LLM
-    p = """Contexte:
+    p = f"""Contexte:
     Vous recevez une nouvelle concernant une entreprise. Vous devez créer un court titre qui résume au mieux cette nouvelle. Le titre doit être informatif et attirer l'attention des lecteurs.
 
     Nouvelle :
-    {data}
+    {content}
 
     Tâche:
-    Créez un titre par rapport à la nouvelle ci-dessus et fournissez directement le titre SANS préambules, introduction ou note supplémentaire ! La réponse doit être en français.""".format(data=content)
+    Créez un titre par rapport à la nouvelle ci-dessus et fournissez directement le titre SANS préambules, introduction ou note supplémentaire ! La réponse doit être en français."""
 
     # Create a news for the company
     response = client.chat.completions.create(

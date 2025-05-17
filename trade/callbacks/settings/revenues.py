@@ -212,7 +212,7 @@ def update_revenues_inputs(companies, mode):
                     dmc.Text(company, weight=500),
                     *[html.Div([
                         dmc.NumberInput(
-                            label=tl["revenue"] + " " + str(year),
+                            label=tl["revenue"] + f" {year}",
                             id={"type": "revenue", "company": company, "year": str(year)},
                             value=revenue,
                             disabled=True if mode == "auto" else False,

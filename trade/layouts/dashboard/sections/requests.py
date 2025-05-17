@@ -29,11 +29,14 @@ def request_form(lang="fr"):
                 ),
                 dmc.NumberInput(
                     id='nbr-share-input',
-                    label=dmc.Text(tls[lang]['request-shares'], weight=700, className="text-[rgb(73,80,87)]", size="sm"),
+                    label=dmc.Text(tls[lang]['request-shares'], weight=700, className="text-[rgb(73,80,87)]",
+                                   size="sm"),
                     value=1, min=1, step=1,
+                    className="flex-1"
                 ),
+                dmc.Button("Max", id="max-share-button", n_clicks=0, variant="outline", color="gray")
             ]),
-            dmc.Button(tls[lang]['submit-request'], id='submit-button', n_clicks=0, variant="outline", color="gray"),
+            dmc.Button(id='submit-button', n_clicks=0, variant="outline", color="gray"),
             dmc.Text(id='request-err', size="xs")
         ],
         className="flex flex-col justify-between flex-1",

@@ -7,7 +7,7 @@ from trade.layouts.dashboard.sections.portfolio import portfolio
 from trade.layouts.dashboard.sections.requests import request
 
 
-def main_layout(lang="fr"):
+def main_layout_dashboard(lang="fr"):
     return html.Div([
         dcc.Interval(id='periodic-updater', interval=5000),
         dmc.Modal(

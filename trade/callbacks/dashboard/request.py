@@ -37,8 +37,7 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
         return True, tls[page_registry['lang']]["err-wrong-form"]
 
     # If the request is to buy and the user doesn't have enough money
-    stock_price = get_price_dataframe().loc[timestamp, company]
-    if action == 'buy' and cash < share * stock_price:
+    if action == 'buy' and cash < share * price:
         return True, tls[page_registry['lang']]["err-enough-money"]
 
     # If the request is to sell and the user doesn't have enough shares
@@ -110,7 +109,6 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     else:
         # the request list has been returned
         req = message
-
     return req, no_update
 
 
@@ -121,8 +119,8 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     Output('portfolio-totals', 'data'),
 
     Input("requests", "data"),
+    Input('timestamp', 'data'),
 
-    State('timestamp', 'data'),
     State('portfolio-shares', 'data'),
     State('cashflow', 'data'),
     State("portfolio-totals", "data"),
@@ -257,3 +255,37 @@ def remove_request(n, values_to_remove, req):
         else:
             return no_update
 
+@callback(
+    Output("submit-button", "children"),
+    Input("price-input", "value"),
+    Input("nbr-share-input", "value"),
+)
+def total_cost(price,nb):
+    if price == 0 or nb == 0 or price == "" or nb == "" or price is None or nb is None:
+        return tls[page_registry['lang']]['submit-request']
+    else:
+        return f" {tls[page_registry['lang']]['submit-request']} - Total : {price * nb}€"
+
+@callback(
+    Output("nbr-share-input", "value"),
+    Input("max-share-button", "n_clicks"),
+    State("price-input", "value"),
+    State("cashflow","data"),
+    State("action-input", "value"),
+    State("company-selector", "value"),
+    State('portfolio-shares', 'data'),
+    prevent_initial_call=True
+)
+def max_share(btn,price,cashflow,action,company,portfolio):
+
+    if action == "buy":
+        if price != 0 or price != "" or price is not None:
+            return  int(cashflow/price)
+        else:
+            return no_update
+    else:
+        portfolio = pd.DataFrame.from_dict(portfolio, orient='index', columns=['Shares'])
+        if portfolio['Shares'].loc[company] != 0:
+            return portfolio['Shares'].loc[company]
+        else:
+            return no_update

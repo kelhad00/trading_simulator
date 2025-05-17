@@ -14,7 +14,7 @@ from trade.locales import translations as tls
 
 
 
-def main_layout(lang="fr"):
+def main_layout_settings(lang="fr"):
     tl = tls[lang]["settings"]
 
     return html.Div([
