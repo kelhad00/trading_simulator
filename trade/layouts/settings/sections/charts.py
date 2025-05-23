@@ -10,6 +10,45 @@ from trade.defaults import defaults as dlt
 from trade.utils.ordinal import ordinal
 
 
+button_labels = [
+    'Add Very Bull',
+    'Add Medium Bull',
+    'Add Small Bull',
+    'Add Flat',
+    'Add Small Bear',
+    'Add Medium Bear',
+    'Add Very Bear'
+]
+
+button_labels = reversed(button_labels)
+
+buttons = [
+    html.Button(
+        label,
+        id={'type': 'add-button', 'index': label},
+        n_clicks=0,
+        style={
+            'backgroundColor': 'green' if 'Bull' in label else 'red' if 'Bear' in label else 'gray',
+            'color': 'white'
+        }
+    ) for label in button_labels
+]
+
+
+
+editor = html.Div([
+    *buttons,
+
+    html.Br(),
+
+    html.Div(id='timeline',style={'display': 'flex', 'flexDirection': 'row', 'overflowX': 'auto', 'whiteSpace': 'nowrap'}),
+
+    html.Div(id='json'),
+    html.Button('Refresh', id='refresh-button', n_clicks=0),
+    dcc.Store(id="size-store", data={}, storage_type="session")
+])
+
+
 def generate_charts(lang="fr"):
     tl = tls[lang]["settings"]["charts"]
     return html.Div([

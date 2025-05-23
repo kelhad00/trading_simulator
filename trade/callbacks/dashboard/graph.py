@@ -1,7 +1,11 @@
+import json
 import math
-from dash import Output, Input, State, callback, page_registry, ctx, no_update
+import dash
+from dash import Output, Input, State, callback, page_registry, ctx, no_update, html
 import plotly.graph_objects as go
 import pandas as pd
+
+from trade.app import app
 from trade.utils.graph.candlestick_charts import create_graph
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe, get_price_dataframe
 from trade.locales import translations as tls
@@ -77,6 +81,7 @@ def update_interval(update_time):
 def update_graph(n, company, timestamp, range=100):
     """
     Function to update the market graph with the latest data and timestamp
+
     Args:
         company: The selected company
         timestamp: The last timestamp
@@ -254,3 +259,4 @@ def toggle_graph_type(value):
         return {'display': 'none'}, {'display': 'block'}
     else:
         return {'display': 'block'}, {'display': 'none'}
+
