@@ -18,4 +18,8 @@ def import_settings_layout(lang="fr"):
         section(tls[lang]["settings"]["tabs"]["revenues"]+" (.csv)", [
             upload_button(id="upload-revenues", accept=".csv"),
         ]),
+        html.P([
+            "Voici un lien vers " if lang == "fr" else "Link to the ",
+            html.A("Wiki", href="https://github.com/kelhad00/trading_simulator/blob/main/WIKI_FR.md" if lang == "fr" else "https://github.com/kelhad00/trading_simulator/blob/main/WIKI.md", target="_blank"),]
+        ),
     ], className="flex flex-col gap-8 w-full")
