@@ -4,6 +4,8 @@ from groq import Groq
 import pandas as pd
 import os
 from datetime import datetime
+from transformers import pipeline
+
 
 from trade.utils.news import get_news_dataframe
 from trade.utils.news_generation.modules import load_data, save_data
@@ -15,7 +17,7 @@ from trade.defaults import defaults as dlt
 
 def create_news_for_companies(companies, news_position, api):
     model = 'llama3-70b-8192'
-    news_path = os.path.join(dlt.data_path, 'news.csv')
+    news_path = os.path.join(dlt.data_path, 'news_fr.csv')
 
     # Create a dataframe to store the news we have created
     news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
@@ -29,6 +31,16 @@ def create_news_for_companies(companies, news_position, api):
 
     # Save the news created
     save_data(news_created, news_path)
+
+    #Traduction English
+    news_path = os.path.join(dlt.data_path, 'news_en.csv')
+
+    translator = FrenchToEnglishTranslator()
+
+    news_created_trad = translator.translate_dataframe(news_created,['title','content'])
+
+    save_data(news_created_trad, news_path)
+
     print('News created and saved in ' + news_path)
         
 
@@ -297,3 +309,43 @@ def transform_news_title(content, client, model):
     )
 
     return response.choices[0].message.content
+
+def load_translator(model_name: str = "Helsinki-NLP/opus-mt-fr-en"):
+    """
+    Loads a translation pipeline for French to English.
+    """
+    return pipeline("translation_fr_to_en", model=model_name)
+
+class FrenchToEnglishTranslator:
+    def __init__(self, model_name: str = "Helsinki-NLP/opus-mt-fr-en"):
+        self.translator = load_translator(model_name)
+
+    def translate_text(self, text: str) -> str:
+        """
+        Translate a single French string to English.
+        """
+        result = self.translator(text)
+        return result[0]['translation_text']
+
+    def translate_list(self, texts: list[str]) -> list[str]:
+        """
+        Translate a list of French strings to English.
+        """
+        results = self.translator(texts)
+        return [res['translation_text'] for res in results]
+
+    def translate_dataframe(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+        """
+        Translate specified DataFrame columns from French to English in place.
+        :param df: pandas DataFrame
+        :param columns: list of column names to translate
+        :return: DataFrame with translated columns
+        """
+        for col in columns:
+            # Drop NaNs or non-strings if needed
+            df[col] = df[col].fillna("")
+            texts = df[col].astype(str).tolist()
+            translations = self.translate_list(texts)
+            df[col] = translations
+        return df
+

@@ -66,7 +66,7 @@ def welcome(lang="fr"):
 
 
 def disable_button():
-    if os.path.exists(os.path.join(dlt.data_path, 'generated_data.csv')) and os.path.exists(os.path.join(dlt.data_path, 'news.csv')):
+    if os.path.exists(os.path.join(dlt.data_path, 'generated_data.csv')) and os.path.exists(os.path.join(dlt.data_path, 'news_fr.csv')):
         return False
     else:
         return True

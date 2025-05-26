@@ -22,13 +22,13 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     Returns:
         The updated news table
     """
+    lang = page_registry['lang']
 
     try:
-        news_df = get_news_dataframe()
+        news_df = get_news_dataframe(lang)
     except FileNotFoundError:
-        raise "The news.csv file was not generated."
+        raise "The news_fr.csv file was not generated."
 
-    lang = page_registry['lang']
 
     # Format the news dataframe
     try:
@@ -38,7 +38,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         try:
             news_df = news_df.drop_duplicates(subset=['article'], keep='first')
         except KeyError:  # news _df is not correctly formatted
-            print('WARNING: The `news.csv` file must contain a `title` or `article` column.')
+            print('WARNING: The `news_fr.csv` file must contain a `title` or `article` column.')
             raise PreventUpdate
 
     # Convert the date column and the timestamp to datetime
@@ -58,6 +58,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         'date': tls[lang]['news-table']['date'],
         'article': tls[lang]['news-table']['article']
     })
+
 
     return dmc.Table(children=create_table(nl, id="news-lines"))
 
@@ -111,4 +112,3 @@ def toggle_news_display_type(n, cell_clicked, table):
         except Exception as e:
             print('Error :', e)
             return no_update, no_update, no_update, no_update, no_update
-        

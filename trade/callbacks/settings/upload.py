@@ -74,7 +74,7 @@ def upload_charts(contents, companies):
     prevent_initial_call=True
 )
 def upload_news(contents):
-    return upload(contents, 'news.csv')
+    return upload(contents, 'news_fr.csv')
 
 
 @callback(

@@ -1,4 +1,4 @@
-from dash import Dash, html, dcc
+from dash import Dash, html, dcc, Input, Output
 import dash
 import dash_mantine_components as dmc
 
@@ -62,6 +62,96 @@ app.layout = dmc.MantineProvider([
     ])
 ], theme=theme)
 
+app.clientside_callback(
+    """
+    function(n_clicks, children) {
+        if (!window.itemSizesInitialized) {
+            window.itemSizes = {};
+            window.itemSizesInitialized = true;
+
+            const observer = new ResizeObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.id;
+                    if (id && id.startsWith("item-")) {
+                        const el = entry.target;
+                        const directText = Array.from(el.childNodes)
+                            .filter(node => node.nodeType === Node.TEXT_NODE)
+                            .map(node => node.textContent.trim())
+                            .filter(text => text.length > 0)
+                            .join(" ");
+
+                        window.itemSizes[id] = {
+                            width: entry.contentRect.width,
+                            height: entry.contentRect.height,
+                            label: directText
+                        };
+                    }
+                });
+            });
+
+            function observeTextChanges(el, id) {
+                const textObserver = new MutationObserver(() => {
+                    const directText = Array.from(el.childNodes)
+                        .filter(node => node.nodeType === Node.TEXT_NODE)
+                        .map(node => node.textContent.trim())
+                        .filter(text => text.length > 0)
+                        .join(" ");
+
+                    if (window.itemSizes[id]) {
+                        window.itemSizes[id].label = directText;
+                    }
+                });
+
+                textObserver.observe(el, { characterData: true, childList: true, subtree: true });
+                el._textObserver = textObserver;
+            }
+
+            function observeExisting() {
+                document.querySelectorAll('[id^="item-"]').forEach(el => {
+                    const id = el.id;
+                    observer.observe(el);
+                    observeTextChanges(el, id);
+                });
+            }
+
+            observeExisting();
+
+            const timeline = document.getElementById("timeline");
+            if (timeline) {
+                const mutationObserver = new MutationObserver(mutations => {
+                    mutations.forEach(mutation => {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType === 1 && node.id && node.id.startsWith("item-")) {
+                                observer.observe(node);
+                                observeTextChanges(node, node.id);
+                            }
+                        });
+                        mutation.removedNodes.forEach(node => {
+                            if (node.nodeType === 1 && node.id && node.id.startsWith("item-")) {
+                                delete window.itemSizes[node.id];
+                                if (node._textObserver) {
+                                    node._textObserver.disconnect();
+                                    delete node._textObserver;
+                                }
+                            }
+                        });
+                    });
+                });
+                mutationObserver.observe(timeline, { childList: true, subtree: false });
+            }
+        }
+
+        return window.itemSizes;
+    }
+    """,
+    Output("size-store", "data"),
+    Input("refresh-button", "n_clicks"),
+    Input("timeline", "children")
+)
+
+
+
+
 if __name__ == '__main__':
     path = dlt.data_path
 
@@ -82,8 +172,4 @@ if __name__ == '__main__':
         print('\nDownloading market data...\n')
         download_market_data()
 
-    """if not os.path.exists(os.path.join(path, "news.csv")):
-        print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
-        quit()"""
-
-    app.run(host='0.0.0.0',debug=True)
+    app.run(debug=True)

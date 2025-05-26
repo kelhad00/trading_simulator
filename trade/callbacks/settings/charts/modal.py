@@ -27,7 +27,7 @@ from trade.locales import translations as tls
     Input("modal-select-companies", "value"),
     prevent_initial_call=True
 )
-def generate_new_charts(alpha, length, start_value, radio_trends, companies, start_date=dlt.start_date):
+def generate_new_charts(alpha, length, start_value, radio_trends, companies):
     """
     Generate the charts based on the parameters selected in the modal
     Args:
@@ -40,6 +40,10 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, sta
         list: list of the charts
         list: list of the dataframes associated with the charts
     """
+    start_date = dlt.start_date
+
+    if not isinstance(companies, list):
+        companies = [companies]
 
     if None in radio_trends:  # Check if all the fields are filled
         return no_update

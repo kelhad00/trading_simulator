@@ -6,45 +6,83 @@ from trade.components.radio import radio
 from trade.components.sections import section
 from trade.components.slider import slider
 from trade.locales import translations as tls
-from trade.defaults import defaults as dlt
 from trade.utils.ordinal import ordinal
 
 
 button_labels = [
-    'Add Very Bull',
-    'Add Medium Bull',
-    'Add Small Bull',
-    'Add Flat',
-    'Add Small Bear',
-    'Add Medium Bear',
-    'Add Very Bear'
+    'Very Bull',
+    'Medium Bull',
+    'Small Bull',
+    'Flat',
+    'Small Bear',
+    'Medium Bear',
+    'Very Bear'
 ]
 
-button_labels = reversed(button_labels)
-
-buttons = [
+bull_buttons = [
     html.Button(
-        label,
+        "Add "+label,
         id={'type': 'add-button', 'index': label},
         n_clicks=0,
         style={
-            'backgroundColor': 'green' if 'Bull' in label else 'red' if 'Bear' in label else 'gray',
-            'color': 'white'
+            'backgroundColor': 'green',
+            'color': 'white',
+            'padding': '5px',
+            'margin': '5px'
         }
-    ) for label in button_labels
+    ) for label in button_labels if 'Bull' in label
 ]
 
+flat_buttons = [
+    html.Button(
+        "Add "+label,
+        id={'type': 'add-button', 'index': label},
+        n_clicks=0,
+        style={
+            'backgroundColor': 'gray',
+            'color': 'white',
+            'padding': '5px',
+            'margin': '5px'
+        }
+    ) for label in button_labels if 'Flat' in label
+]
 
+bear_buttons = [
+    html.Button(
+        "Add "+label,
+        id={'type': 'add-button', 'index': label},
+        n_clicks=0,
+        style={
+            'backgroundColor': 'red',
+            'color': 'white',
+            'padding': '5px',
+            'margin': '5px'
+        }
+    ) for label in button_labels if 'Bear' in label
+]
 
-editor = html.Div([
-    *buttons,
+layout = html.Div([
+    html.Div(bull_buttons, style={'display': 'flex', 'flexDirection': 'row'}),
+    html.Div(flat_buttons, style={'display': 'flex', 'flexDirection': 'row'}),
+    html.Div(bear_buttons, style={'display': 'flex', 'flexDirection': 'row'})
+], style={'display': 'flex', 'flexDirection': 'column'})
+
+def editor(lang = "fr"):
+    tl = tls[lang]["settings"]["charts"]
+    return    html.Div([
+    layout,
 
     html.Br(),
 
     html.Div(id='timeline',style={'display': 'flex', 'flexDirection': 'row', 'overflowX': 'auto', 'whiteSpace': 'nowrap'}),
 
-    html.Div(id='json'),
     html.Button('Refresh', id='refresh-button', n_clicks=0),
+
+    section(tl["subtitles"]["preview"], [
+        dmc.Paper(
+            dcc.Graph(id="chart_new")
+        )
+    ]),
     dcc.Store(id="size-store", data={}, storage_type="session")
 ])
 
@@ -52,7 +90,7 @@ editor = html.Div([
 def generate_charts(lang="fr"):
     tl = tls[lang]["settings"]["charts"]
     return html.Div([
-        dcc.Store(id="figures"),  # Store the generated data before being stored in the csv file
+        dcc.Store(id="figures"),
         generate_charts_modal(lang=lang),
         section(tl["subtitles"]["ticker"], [
             dmc.Select(
@@ -72,7 +110,26 @@ def generate_charts(lang="fr"):
     ], className="flex flex-col gap-8 w-full")
 
 
+def generate_chars_selection(lang="fr"):
+    tl = tls[lang]["settings"]["charts"]
+    return html.Div([
+        dmc.Tabs(
+            [
+                dmc.TabsList([
+                    dmc.Tab("Old generator",value="old"),
+                    dmc.Tab("New generator",value="new")
+                ],grow=True),
 
+                dmc.TabsPanel(generate_charts(lang=lang),value="old"),
+                dmc.TabsPanel(editor(lang=lang),value="new"),
+            ],
+            value="old",
+            id="generation-charts-tab",
+            color="dark",
+            radius="md",
+            className="w-full max-w-2xl flex flex-col gap-8"
+        )
+    ])
 
 def generate_charts_modal(lang="fr"):
     tl = tls[lang]["settings"]["charts"]

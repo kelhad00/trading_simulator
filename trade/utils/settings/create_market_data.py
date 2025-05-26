@@ -66,7 +66,6 @@ def flat_trend(data, data_size, alpha=50, length=100):
     Found a flat trend in the market data and return the index of the trend
     '''
 
-    rand = 0
     i = 0
     while True:
         rand = random_number(data_size - length - 1)

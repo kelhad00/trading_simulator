@@ -2,7 +2,7 @@ from dash import html
 import dash_mantine_components as dmc
 
 from trade.layouts.settings.sections.advanced import advanced_settings
-from trade.layouts.settings.sections.charts import generate_charts
+from trade.layouts.settings.sections.charts import generate_chars_selection
 from trade.layouts.settings.sections.stocks import stocks_settings
 from trade.layouts.settings.sections.news import news_settings
 from trade.layouts.settings.sections.import_settings import import_settings_layout
@@ -32,7 +32,7 @@ def main_layout_settings(lang="fr"):
                 ], grow=True),
 
                 dmc.TabsPanel(import_settings_layout(lang), value="import"),
-                dmc.TabsPanel(generate_charts(lang), value="charts"),
+                dmc.TabsPanel(generate_chars_selection(lang), value="charts"),
                 dmc.TabsPanel(stocks_settings(lang), value="tickers"),
                 dmc.TabsPanel(news_settings(lang), value="news"),
                 dmc.TabsPanel(revenues_layout(lang), value="revenues"),
@@ -42,7 +42,7 @@ def main_layout_settings(lang="fr"):
             id="settings-tabs",
             color="dark",
             radius="md",
-            className="w-full max-w-2xl flex flex-col gap-8"
+            className="w-full max-w-xl flex flex-col gap-8"
         )
     ], className="px-12 p-8 bg-gray-100 flex flex-col items-center h-screen gap-8 overflow-auto"),
 

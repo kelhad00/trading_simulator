@@ -1,11 +1,13 @@
 import json
 import os
+from random import randint
 
 import dash
-from dash import callback, Input, Output, State, html
+import pandas as pd
+from dash import callback, Input, Output, State, html, no_update
 from dash.exceptions import PreventUpdate
+import plotly.graph_objects as go
 
-from trade.app import app
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
@@ -109,16 +111,17 @@ def add_smash(*args):
 
     # Exemple d'ajout d'éléments dans la timeline
     new_item = html.Div(
-[button_id[4:],
+[button_id,
          html.Div([
-             html.Button('←', id={'type': 'move-left', 'index': add_clicks}, n_clicks=0),
-             html.Button('→', id={'type': 'move-right', 'index': add_clicks}, n_clicks=0),
-         ], style={'display': 'flex', 'justifyContent': 'space-between'}),
+             html.Button('←', id={'type': 'move-left', 'index': add_clicks},style={'color':'white'}, n_clicks=0),
+             html.Button('→', id={'type': 'move-right', 'index': add_clicks},style={'color':'white'}, n_clicks=0),
+         ], style={'display': 'flex', 'justifyContent': 'space-between','color':'white'}),
         html.Button(
             'Delete',
             id={'type': 'delete-button', 'index': add_clicks},
             n_clicks=0,
             style={
+                'color': 'white',
                 'position': 'relative',
                 'bottom': '5px',
                 'right': '5px'
@@ -130,6 +133,7 @@ def add_smash(*args):
             'height': '100px',
             'backgroundColor': 'green' if 'Bull' in button_id else 'red' if 'Bear' in button_id else 'gray',
             'display': 'flex',
+            'color':'white',
             'flexDirection': 'column',
             'justifyContent': 'space-between',
             'resize': 'horizontal',
@@ -143,27 +147,55 @@ def add_smash(*args):
 
 
 @callback(
-    Output('json', 'children', allow_duplicate=True),
+    Output('chart_new', 'figure',allow_duplicate=True),
     Input('size-store', 'data'),
     prevent_initial_call=True
 )
-def refresh_smash(size_data):
+def graph_preview_new(size_data):
 
-    keys_to_remove = [key for key, value in size_data.items() if value["width"] == 0]
+    note = {
+        "Very Bull" : 3,
+        "Medium Bull": 2,
+        "Small Bull": 1,
+        "Flat": 0,
+        "Small Bear": -1,
+        "Medium Bear": -2,
+        "Very Bear": -3,
 
-    for key in keys_to_remove:
-        del size_data[key]
-
-    if not dash.callback_context.triggered:
-        return "No action yet."
-
-    res = 0
-
+    }
+    lenght = int()
     for item in size_data:
-        width = size_data[item]["width"]
-        res += width
+        lenght += size_data[item]["width"]
 
-    return f"Global lenght {res}"
+    data = {}
+    for item in size_data:
+        if size_data[item]["width"] == 0:
+            continue
+        data[item] = size_data[item]
+        data[item]["id"] = int(item[5:])
+        data[item]["w"] = int(size_data[item]["width"])
+        data[item]["note"] = note[size_data[item]["label"]]
+
+    x = list()
+    y = list()
+    j=0
+    for item in data:
+        for _ in range(data[item]["w"]):
+            x.append(j)
+            y.append(data[item]["note"])
+            j+=1
+
+    y = from_trends_market_value(data=data,x=x,y=y)
+
+    df =  {"x": x, "y": y}
+    df = pd.DataFrame(df)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df['x'], y=df['y'],mode="lines+markers",name="lines+markers"))
+    fig.update_layout(title= "Exemple", xaxis_title= "Temps",yaxis_title= "Valeur")
+
+    return fig
+
 
 
 @callback(
@@ -185,7 +217,6 @@ def delete_smash(delete_clicks, timeline_children):
     timeline_items.pop(index_to_delete)
     new_timeline = list()
     for i, item in enumerate(timeline_items):
-        print(item)
         if i != item["props"]["children"][2]["props"]["id"]["index"]:
             item["props"]["children"][2]["props"]["id"]["index"] = i
             item["props"]["id"] = f"item-{i}"
@@ -216,64 +247,44 @@ def move_item(left_clicks, right_clicks, timeline_children):
         timeline[index - 1], timeline[index] = timeline[index], timeline[index - 1]
     elif direction == 'right' and index < len(timeline) - 1:
         timeline[index + 1], timeline[index] = timeline[index], timeline[index + 1]
-    # Re-synchroniser les index dans les IDs
+
     for i, item in enumerate(timeline):
         item["props"]["id"] = f"item-{i}"
-        item["props"]["children"][1]["props"]["children"][0]["props"]["id"]["index"] = i  # ←
-        item["props"]["children"][1]["props"]["children"][1]["props"]["id"]["index"] = i  # →
-        item["props"]["children"][2]["props"]["id"]["index"] = i  # Delete
+        arrow_div = item["props"]["children"][1]
+        left_button = arrow_div["props"]["children"][0]
+        right_button = arrow_div["props"]["children"][1]
+        delete_button = item["props"]["children"][2]
+
+        left_button["props"]["id"]["index"] = i
+        right_button["props"]["id"]["index"] = i
+        delete_button["props"]["id"]["index"] = i
 
     return timeline
 
 
+def from_trends_market_value(data: dict,x: list,y: list) -> list:
 
-app.clientside_callback(
-    """
-    function(n_clicks) {
-        if (!window.itemSizesInitialized) {
-            window.itemSizes = {};
-            window.itemSizesInitialized = true;
+    init: int = 100
 
-            const observer = new ResizeObserver(entries => {
-                entries.forEach(entry => {
-                    const id = entry.target.id;
-                    if (id && id.startsWith("item-")) {
-                        window.itemSizes[id] = {
-                            width: entry.contentRect.width,
-                            height: entry.contentRect.height
-                        };
-                    }
-                });
-            });
+    base_volatility: int = 2
 
-            function observeExisting() {
-                document.querySelectorAll('[id^="item-"]').forEach(el => observer.observe(el));
-            }
+    output = [init for _ in range(len(y))]
 
-            observeExisting();
+    for i in range(1, len(output)):
+        # Génère un pourcentage de variation en fonction de y[i]
+        # y[i] va de -3 à 3
+        # On construit un intervalle de pourcentage basé sur y[i] (par exemple entre -2% et +2% si y[i] = 0)
+        variation_bounds = (-base_volatility  + y[i] ** 2, base_volatility  + y[i] ** 2)
 
-            const timeline = document.getElementById("timeline");
-            if (timeline) {
-                const mutationObserver = new MutationObserver(mutations => {
-                    mutations.forEach(mutation => {
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeType === 1 && node.id && node.id.startsWith("item-")) {
-                                observer.observe(node);
-                            }
-                        });
-                        mutation.removedNodes.forEach(node => {
-                            if (node.nodeType === 1 && node.id && node.id.startsWith("item-")) {
-                                delete window.itemSizes[node.id];
-                            }
-                        });
-                    });
-                });
-                mutationObserver.observe(timeline, { childList: true, subtree: false });
-            }
-        }
-        return window.itemSizes;
-    }
-    """,
-    Output("size-store", "data"),
-    Input("refresh-button", "n_clicks")
-)
+        # Détermine le signe selon la note (négatif si y[i] < 0, positif sinon)
+        sign = -1 if y[i] < 0 else 1
+
+        # Valeur de pourcentage (entre variation_bounds[0] et variation_bounds[1])
+        percentage = randint(*variation_bounds) / 1000
+
+        # Applique la variation en pourcentage sur la valeur précédente
+        output[i] = output[i - 1] * (1 + sign * percentage)
+
+
+
+    return output
