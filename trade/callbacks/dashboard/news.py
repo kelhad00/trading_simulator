@@ -94,6 +94,8 @@ def toggle_news_display_type(n, cell_clicked, table):
     """
 
     # If the back button is clicked, go back to the news list
+    lang = page_registry['lang']
+
     if ctx.triggered_id == 'back-to-news-list':
         return {'display': 'block'}, None, None, {'display': 'none'}, [0] * len(cell_clicked)
 
@@ -106,7 +108,7 @@ def toggle_news_display_type(n, cell_clicked, table):
             rows = table['props']['children'][1]['props']['children']  # get all the rows in the table
             titles = [row['props']['children'][0]['props']['children'] for row in rows]  # get all the titles in the table
 
-            news_df = get_news_dataframe()
+            news_df = get_news_dataframe(lang=lang)
             article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]  # get the news clicked
             return {'display': 'none'}, article_clicked['title'], article_clicked['content'], {'display': 'block'}, no_update
         except Exception as e:
