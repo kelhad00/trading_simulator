@@ -135,60 +135,41 @@ def export_data(
     
     if trigger == 'company-graph' and restyle_data is not None:
         try:
-            print("\n=== Debug Visibilité des Courbes ===")
-            print(f"Trigger: {trigger}")
-            print(f"Restyle data: {restyle_data}")
-            print(f"Courbes visibles avant: {visible_curves}")
+
             
             # restyle_data est une liste contenant les modifications de style
             # Le premier élément contient les changements de visibilité
             # Le second élément contient les indices des traces modifiées
             style_update, trace_indices = restyle_data
             
-            print(f"Style update: {style_update}")
-            print(f"Trace indices: {trace_indices}")
-            
+
             # Si 'visible' est dans les mises à jour de style
             if 'visible' in style_update:
                 visibility = style_update['visible'][0]
-                print(f"Nouvelle visibilité: {visibility}")
                 
                 # Pour chaque trace modifiée
                 for idx in trace_indices:
-                    print(f"Traitement de l'index {idx}")
                     # Mapping des indices vers les noms des courbes
                     # 0: longMA, 1: shortMA, 2: twohunMA, 3: candlestick (toujours visible), 4: RSI
                     if idx == 0 and 'longMA' in visible_curves and  visibility == "legendonly":
                         visible_curves.remove('longMA')
-                        print("Suppression de longMA")
                     elif idx == 1 and 'shortMA' in visible_curves and  visibility == "legendonly":
                         visible_curves.remove('shortMA')
-                        print("Suppression de shortMA")
                     elif idx == 2 and 'twohunMA' in visible_curves and  visibility == "legendonly":
                         visible_curves.remove('twohunMA')
-                        print("Suppression de twohunMA")
                     elif idx == 4 and 'RSI' in visible_curves and visibility == "legendonly":
                         visible_curves.remove('RSI')
-                        print("Suppression de RSI")
                     elif visibility:  # Si on réactive une courbe
                         if idx == 0 and 'longMA' not in visible_curves:
                             visible_curves.append('longMA')
-                            print("Ajout de longMA")
                         elif idx == 1 and 'shortMA' not in visible_curves:
                             visible_curves.append('shortMA')
-                            print("Ajout de shortMA")
                         elif idx == 2 and 'twohunMA' not in visible_curves:
                             visible_curves.append('twohunMA')
-                            print("Ajout de twohunMA")
                         elif idx == 4 and 'RSI' not in visible_curves:
                             visible_curves.append('RSI')
-                            print("Ajout de RSI")
-                    
-            print(f"Courbes visibles après: {visible_curves}")
-            print("=== Fin Debug ===\n")
-            
+
         except Exception as e:
-            print("Error getting curves visibility:", e)
             # En cas d'erreur, on garde l'état précédent
             pass
 
