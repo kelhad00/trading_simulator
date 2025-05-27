@@ -7,6 +7,7 @@ import pandas as pd
 from dash import callback, Input, Output, State, html, no_update
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
+from pandas import DataFrame
 
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
@@ -185,7 +186,7 @@ def graph_preview_new(size_data):
             y.append(data[item]["note"])
             j+=1
 
-    y = from_trends_market_value(data=data,x=x,y=y)
+    y = from_trends_to_market_value(data=data, x=x, y=y)
 
     df =  {"x": x, "y": y}
     df = pd.DataFrame(df)
@@ -262,7 +263,7 @@ def move_item(left_clicks, right_clicks, timeline_children):
     return timeline
 
 
-def from_trends_market_value(data: dict,x: list,y: list) -> list:
+def from_trends_to_market_value(data: dict, x: list, y: list) -> list:
 
     init: int = 100
 
@@ -288,3 +289,13 @@ def from_trends_market_value(data: dict,x: list,y: list) -> list:
 
 
     return output
+
+def from_market_value_to_TODO(df: DataFrame):
+
+    companies = dlt.companies_list
+
+    start_date = dlt.start_date
+
+
+
+

@@ -83,6 +83,9 @@ def editor(lang = "fr"):
             dcc.Graph(id="chart_new")
         )
     ]),
+
+    html.Button(tl["button"]["modify"], id='modify-new-button', n_clicks=0),
+
     dcc.Store(id="size-store", data={}, storage_type="session")
 ])
 

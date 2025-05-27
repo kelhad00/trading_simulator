@@ -76,20 +76,21 @@ def update_interval(update_time):
     Output("timer", "children"),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
-    State('timestamp', 'data')
+    State('timestamp', 'data'),
+    State('company-graph', 'figure'),
 )
-def update_graph(n, company, timestamp, range=100):
+def update_graph(n, company, timestamp, current_fig, range=100):
     """
     Function to update the market graph with the latest data and timestamp
 
     Args:
         company: The selected company
         timestamp: The last timestamp
+        current_fig: The current state of the figure
     Returns:
         The updated timestamp and the new graph
     """
     try:
-
         # Determining which callback input changed
         if ctx.triggered_id == 'periodic-updater':
             next_graph = True
@@ -150,13 +151,26 @@ def update_graph(n, company, timestamp, range=100):
                     font=dict(size=14, color="black", family="Arial")
                 )
             ]
-
         )
 
         # Change language on the legend
         fig.for_each_trace(
             lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]["legend"][t.name])
         )
+
+        # Préserver l'état de visibilité des courbes du graphique précédent
+        if current_fig and 'data' in current_fig and ctx.triggered_id == 'periodic-updater':
+            for i, trace in enumerate(fig.data):
+                if i < len(current_fig['data']):
+                    # Vérifier si la visibilité est définie dans les données actuelles
+                    if 'visible' in current_fig['data'][i]:
+                        trace.visible = current_fig['data'][i]['visible']
+                    # Si la visibilité n'est pas définie, vérifier la propriété legendgroup
+                    elif 'legendgroup' in current_fig['data'][i]:
+                        trace.visible = current_fig['data'][i]['legendgroup'] != 'hidden'
+                    # Par défaut, garder la trace visible
+                    else:
+                        trace.visible = True
 
         return timestamp, fig, stock_price, pd.to_datetime(timestamp).strftime("%Y-%m-%d")
 

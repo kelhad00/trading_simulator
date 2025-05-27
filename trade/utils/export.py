@@ -1,4 +1,5 @@
 from uuid import uuid4
+import ast
 
 import pandas as pd
 from datetime import datetime
@@ -52,6 +53,56 @@ def format_deleted_requests(deleted_request):
     return deleted_request
 
 
+def get_last_visible_curves():
+    """Récupère l'état des courbes visibles de la dernière entrée dans les logs"""
+    default_curves = ['longMA', 'shortMA', 'twohunMA', 'RSI']
+    file_path = os.path.join(dlt.data_path, 'export', 'interface-logs.csv')
+    
+    try:
+        if not os.path.exists(file_path):
+            return default_curves
+
+        # Lire uniquement la dernière ligne du fichier
+        with open(file_path, 'rb') as f:
+            # Aller à la fin du fichier
+            f.seek(0, os.SEEK_END)
+            file_size = f.tell()
+            
+            # Si le fichier est vide
+            if file_size == 0:
+                return default_curves
+                
+            # Remonter depuis la fin pour trouver la dernière ligne complète
+            pos = file_size - 1
+            while pos > 0 and f.read(1) != b'\n':
+                pos -= 1
+                f.seek(pos, os.SEEK_SET)
+            
+            # Lire la dernière ligne
+            last_line = f.readline().decode()
+            
+            # Si la ligne est vide
+            if not last_line.strip():
+                return default_curves
+            
+            # Parser la dernière ligne comme CSV
+            columns = pd.read_csv(file_path, nrows=0).columns
+            last_row = pd.read_csv(pd.io.common.StringIO(last_line), names=columns)
+            
+            # Récupérer la valeur des courbes visibles
+            curves_str = last_row['visible_curves'].iloc[0]
+            if pd.isna(curves_str):
+                return default_curves
+                
+            # Utiliser ast.literal_eval pour une conversion sûre de la chaîne en liste
+            curves = ast.literal_eval(curves_str)
+            return curves if isinstance(curves, list) else default_curves
+            
+    except Exception as e:
+        print("Error reading last visible curves:", str(e))
+        return default_curves
+
+
 def export_data(
         timestamp,
         request_list,
@@ -64,6 +115,7 @@ def export_data(
         form_type,  # used to know if user is going to buy or sell
         deleted_request=None,
         trigger=None,
+        restyle_data=None,
         max_requests=dlt.max_requests
 ):
     """ Periodically save state of the trade into csv
@@ -78,6 +130,68 @@ def export_data(
     # generate an uuid
     uuid = str(uuid4())
 
+    # Récupérer l'état des courbes depuis le dernier log
+    visible_curves = get_last_visible_curves()
+    
+    if trigger == 'company-graph' and restyle_data is not None:
+        try:
+            print("\n=== Debug Visibilité des Courbes ===")
+            print(f"Trigger: {trigger}")
+            print(f"Restyle data: {restyle_data}")
+            print(f"Courbes visibles avant: {visible_curves}")
+            
+            # restyle_data est une liste contenant les modifications de style
+            # Le premier élément contient les changements de visibilité
+            # Le second élément contient les indices des traces modifiées
+            style_update, trace_indices = restyle_data
+            
+            print(f"Style update: {style_update}")
+            print(f"Trace indices: {trace_indices}")
+            
+            # Si 'visible' est dans les mises à jour de style
+            if 'visible' in style_update:
+                visibility = style_update['visible'][0]
+                print(f"Nouvelle visibilité: {visibility}")
+                
+                # Pour chaque trace modifiée
+                for idx in trace_indices:
+                    print(f"Traitement de l'index {idx}")
+                    # Mapping des indices vers les noms des courbes
+                    # 0: longMA, 1: shortMA, 2: twohunMA, 3: candlestick (toujours visible), 4: RSI
+                    if idx == 0 and 'longMA' in visible_curves and  visibility == "legendonly":
+                        visible_curves.remove('longMA')
+                        print("Suppression de longMA")
+                    elif idx == 1 and 'shortMA' in visible_curves and  visibility == "legendonly":
+                        visible_curves.remove('shortMA')
+                        print("Suppression de shortMA")
+                    elif idx == 2 and 'twohunMA' in visible_curves and  visibility == "legendonly":
+                        visible_curves.remove('twohunMA')
+                        print("Suppression de twohunMA")
+                    elif idx == 4 and 'RSI' in visible_curves and visibility == "legendonly":
+                        visible_curves.remove('RSI')
+                        print("Suppression de RSI")
+                    elif visibility:  # Si on réactive une courbe
+                        if idx == 0 and 'longMA' not in visible_curves:
+                            visible_curves.append('longMA')
+                            print("Ajout de longMA")
+                        elif idx == 1 and 'shortMA' not in visible_curves:
+                            visible_curves.append('shortMA')
+                            print("Ajout de shortMA")
+                        elif idx == 2 and 'twohunMA' not in visible_curves:
+                            visible_curves.append('twohunMA')
+                            print("Ajout de twohunMA")
+                        elif idx == 4 and 'RSI' not in visible_curves:
+                            visible_curves.append('RSI')
+                            print("Ajout de RSI")
+                    
+            print(f"Courbes visibles après: {visible_curves}")
+            print("=== Fin Debug ===\n")
+            
+        except Exception as e:
+            print("Error getting curves visibility:", e)
+            # En cas d'erreur, on garde l'état précédent
+            pass
+
     df = pd.DataFrame({
         "uuid": [uuid],
         "market-timestamp": [timestamp],
@@ -86,8 +200,9 @@ def export_data(
         "selected-company": [company_id],
         "form-action": [form_type],
         "chart-type": [charts],
-        "is_news_description_displayed" : [False if news_title is None else True],
-        "news_title" : [news_title],
+        "is_news_description_displayed": [False if news_title is None else True],
+        "news_title": [news_title],
+        "visible_curves": [str(visible_curves)]  # On enregistre toujours la liste des courbes visibles
     })
 
     portfolio_df = pd.DataFrame({"uuid": [uuid]})

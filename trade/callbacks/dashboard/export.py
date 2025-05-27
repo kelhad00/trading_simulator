@@ -12,6 +12,7 @@ from trade.utils.export import export_data
     Input("requests", "data"),
     Input({'type': 'requests-selectable-table', 'index': ALL}, "n_clicks"),
     Input('clear-done-btn', 'n_clicks'),
+    Input('company-graph', 'restyleData'),
 
     State('cashflow', 'data'),
     State('timestamp', 'data'),
@@ -21,7 +22,7 @@ from trade.utils.export import export_data
     prevent_initial_call=True
 
 )
-def export_display_update(company, title, graph_segmented, request_segmented, requests, delete_requests, delete_all_requests, cashflow, timestamp, shares, totals, max_requests):
+def export_display_update(company, title, graph_segmented, request_segmented, requests, delete_requests, delete_all_requests, restyle_data, cashflow, timestamp, shares, totals, max_requests):
     """
     Function triggered when the user interacts with the dashboard
     Update the logs with the latest data
@@ -30,13 +31,31 @@ def export_display_update(company, title, graph_segmented, request_segmented, re
         delete = ["all"]
     else:
         try:
-            index = ctx.triggered_id['index']
-            if delete_requests[index] is not None:
-                delete = [index]
+            if ctx.triggered_id == 'company-graph':
+                # Cas où l'utilisateur a modifié la visibilité des courbes
+                delete = []
             else:
-                return no_update
+                index = ctx.triggered_id['index']
+                if delete_requests[index] is not None:
+                    delete = [index]
+                else:
+                    return no_update
         except:
             delete = []
 
-    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, delete, max_requests=max_requests)
+    export_data(
+        timestamp, 
+        requests, 
+        cashflow, 
+        shares, 
+        totals, 
+        company, 
+        title, 
+        graph_segmented, 
+        request_segmented, 
+        delete, 
+        trigger=ctx.triggered_id,
+        restyle_data=restyle_data,
+        max_requests=max_requests
+    )
     return no_update
