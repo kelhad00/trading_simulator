@@ -7,11 +7,16 @@ import pandas as pd
 from dash import callback, Input, Output, State, html, no_update
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from pandas import DataFrame
+import numpy as np
+import dash_mantine_components as dmc
 
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
+from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
+from trade.callbacks.settings.charts.modal import generate_new_charts
 
 
 @callback(
@@ -112,31 +117,55 @@ def add_smash(*args):
 
     # Exemple d'ajout d'éléments dans la timeline
     new_item = html.Div(
-[button_id,
+        [button_id,
          html.Div([
-             html.Button('←', id={'type': 'move-left', 'index': add_clicks},style={'color':'white'}, n_clicks=0),
-             html.Button('→', id={'type': 'move-right', 'index': add_clicks},style={'color':'white'}, n_clicks=0),
-         ], style={'display': 'flex', 'justifyContent': 'space-between','color':'white'}),
-        html.Button(
-            'Delete',
-            id={'type': 'delete-button', 'index': add_clicks},
-            n_clicks=0,
-            style={
-                'color': 'white',
-                'position': 'relative',
-                'bottom': '5px',
-                'right': '5px'
-            }
-        )
+             dmc.Button(
+                 "←",
+                 id={'type': 'move-left', 'index': add_clicks},
+                 color="dark",
+                 size="xs",
+                 variant="filled",
+                 n_clicks=0,
+                 style={'minWidth': '30px'}
+             ),
+             dmc.Button(
+                 "→",
+                 id={'type': 'move-right', 'index': add_clicks},
+                 color="dark",
+                 size="xs",
+                 variant="filled",
+                 n_clicks=0,
+                 style={'minWidth': '30px'}
+             ),
+         ], style={'display': 'flex', 'justifyContent': 'space-between', 'gap': '8px', 'padding': '8px'}),
+         dmc.Button(
+             "Delete",
+             id={'type': 'delete-button', 'index': add_clicks},
+             color="red",
+             size="xs",
+             variant="filled",
+             n_clicks=0,
+             style={
+                 'position': 'relative',
+                 'bottom': '5px',
+                 'right': '5px',
+                 'width': '100%',
+                 'marginTop': '4px'
+             }
+         )
         ],
         style={
-            'width': '100px',
-            'height': '100px',
+            'width': '120px',
+            'height': '120px',
             'backgroundColor': 'green' if 'Bull' in button_id else 'red' if 'Bear' in button_id else 'gray',
             'display': 'flex',
-            'color':'white',
+            'color': 'white',
             'flexDirection': 'column',
             'justifyContent': 'space-between',
+            'borderRadius': '8px',
+            'padding': '8px',
+            'margin': '4px',
+            'boxShadow': '0 2px 4px rgba(0,0,0,0.2)',
             'resize': 'horizontal',
             'overflow': 'auto'
         },
@@ -148,54 +177,133 @@ def add_smash(*args):
 
 
 @callback(
-    Output('chart_new', 'figure',allow_duplicate=True),
+    Output("chart_new", "figure"),
     Input('size-store', 'data'),
     prevent_initial_call=True
 )
 def graph_preview_new(size_data):
+    if not size_data:
+        return go.Figure()
 
-    note = {
-        "Very Bull" : 3,
-        "Medium Bull": 2,
-        "Small Bull": 1,
-        "Flat": 0,
-        "Small Bear": -1,
-        "Medium Bear": -2,
-        "Very Bear": -3,
-
+    # Map intensity levels to alpha values
+    alpha_map = {
+        "Very": 1000,
+        "Medium": 500,
+        "Small": 250,
+        "Flat": 100
     }
-    lenght = int()
-    for item in size_data:
-        lenght += size_data[item]["width"]
 
-    data = {}
+    # Convert size_data to sequence of trends with appropriate alpha values
+    trends = []
+    alphas = []
+    lengths = []
+    
     for item in size_data:
         if size_data[item]["width"] == 0:
             continue
-        data[item] = size_data[item]
-        data[item]["id"] = int(item[5:])
-        data[item]["w"] = int(size_data[item]["width"])
-        data[item]["note"] = note[size_data[item]["label"]]
+            
+        length = size_data[item]["width"]
+        label = size_data[item]["label"]
+        
+        # Determine trend type and alpha
+        intensity = next((level for level in ["Very", "Medium", "Small"] if level in label), "Flat")
+        alpha = alpha_map[intensity]
+        
+        if "Bull" in label:
+            trends.append("bull")
+        elif "Bear" in label:
+            trends.append("bear")
+        else:
+            trends.append("flat")
+            
+        alphas.append(alpha)
+        lengths.append(length)
 
-    x = list()
-    y = list()
-    j=0
-    for item in data:
-        for _ in range(data[item]["w"]):
-            x.append(j)
-            y.append(data[item]["note"])
-            j+=1
+    if not trends:
+        return go.Figure()
 
-    y = from_trends_to_market_value(data=data, x=x, y=y)
+    # Get all companies
+    companies = list(dlt.companies_list.keys())
+    if not companies:
+        return go.Figure()
 
-    df =  {"x": x, "y": y}
-    df = pd.DataFrame(df)
+    try:
+        # Call generate_new_charts with our parameters
+        children, _ = generate_new_charts(
+            alpha=alphas[0] if alphas else 500,
+            length=sum(lengths),  # Total length of all trends
+            start_value=100,  # Default start value
+            radio_trends=trends,  # Our converted trends
+            companies=companies  # Using all companies
+        )
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df['x'], y=df['y'],mode="lines+markers",name="lines+markers"))
-    fig.update_layout(title= "Exemple", xaxis_title= "Temps",yaxis_title= "Valeur")
+        if not children or not isinstance(children, list):
+            return go.Figure()
 
-    return fig
+        # Create subplot figure
+        n_companies = len(companies)
+        n_cols = min(2, n_companies)  # Maximum 2 columns
+        n_rows = (n_companies + 1) // 2  # Calculate needed rows
+
+        # Create subplot titles
+        subplot_titles = [f"{company}" for company in companies]
+        
+        # Initialize figure with subplots
+        fig = make_subplots(
+            rows=n_rows,
+            cols=n_cols,
+            subplot_titles=subplot_titles,
+            vertical_spacing=0.1,
+            horizontal_spacing=0.05
+        )
+        
+        # Add each company's chart as a subplot
+        for i, child in enumerate(children):
+            if not hasattr(child, 'figure'):
+                continue
+                
+            company_fig = child.figure
+            if not company_fig.data:
+                continue
+
+            # Calculate row and column for this subplot
+            row = (i // 2) + 1
+            col = (i % 2) + 1
+
+            # Add all traces from the company figure to the main figure
+            for trace in company_fig.data:
+                fig.add_trace(
+                    trace,
+                    row=row,
+                    col=col
+                )
+
+        # Update layout
+        fig.update_layout(
+            height=400 * n_rows,  # Adjust height based on number of rows
+            showlegend=True,
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01
+            ),
+            margin=dict(l=50, r=50, t=50, b=50)
+        )
+
+        # Update axes labels
+        for i in range(n_companies):
+            row = (i // 2) + 1
+            col = (i % 2) + 1
+            
+            fig.update_xaxes(title="Date", row=row, col=col)
+            fig.update_yaxes(title="Price", row=row, col=col)
+
+        return fig
+
+    except Exception as e:
+        print('Error while generating preview:', e)
+        return go.Figure()
 
 
 
@@ -291,10 +399,92 @@ def from_trends_to_market_value(data: dict, x: list, y: list) -> list:
     return output
 
 def from_market_value_to_TODO(df: DataFrame):
+    """
+    Convert trend data into candlestick market data for each company.
+    Args:
+        df: DataFrame containing the trend data with columns 'x' (time) and 'y' (value)
+    Returns:
+        DataFrame containing the candlestick data for each company
+    """
+    # Check if DataFrame is empty
+    if df.empty:
+        return pd.DataFrame()
 
+    # Initialize the result DataFrame with MultiIndex columns for each company
+    result = pd.DataFrame()
+    
+    # Get the list of companies
     companies = dlt.companies_list
-
-    start_date = dlt.start_date
+    
+    # Create date range starting from start_date with 2 years of data
+    first_timestamp = pd.Timestamp(dlt.start_date)
+    dates = pd.date_range(start=first_timestamp, periods=df.shape[0], freq='D')
+    
+    for company in companies:
+        # Initialize price data for this company
+        company_data = pd.DataFrame(index=dates)
+        
+        # Convert trend values (-3 to 3) to price movements
+        base_price = 100  # Starting price
+        price_changes = []
+        
+        for i in range(len(df)):
+            trend = df['y'].iloc[i]
+            # Convert trend to daily return
+            # Strong trends (±3) -> ±0.8% average daily change
+            # Medium trends (±2) -> ±0.5% average daily change
+            # Small trends (±1) -> ±0.3% average daily change
+            # Flat (0) -> ±0.1% average daily change
+            base_change = abs(trend) * 0.3 / 100  # 0.3% per trend unit
+            
+            # Add randomness to the change
+            random_factor = np.random.normal(0, 0.5)  # More randomness
+            daily_return = trend * base_change * (1 + random_factor)
+            
+            if i == 0:
+                price_changes.append(base_price)
+            else:
+                # Compound the returns
+                price_changes.append(price_changes[-1] * (1 + daily_return))
+        
+        # Generate OHLC data
+        price_series = pd.Series(price_changes, index=dates)
+        daily_volatility = price_series.pct_change().std() * 2
+        
+        company_data['Close'] = price_series
+        company_data['Open'] = company_data['Close'].shift(1)
+        company_data.loc[company_data.index[0], 'Open'] = base_price
+        
+        # Generate High and Low with realistic intraday volatility
+        for idx in company_data.index:
+            base = max(company_data.loc[idx, 'Open'], company_data.loc[idx, 'Close'])
+            min_val = min(company_data.loc[idx, 'Open'], company_data.loc[idx, 'Close'])
+            
+            high_low_volatility = daily_volatility * np.random.uniform(0.5, 1.5)
+            company_data.loc[idx, 'High'] = base * (1 + abs(np.random.normal(0, high_low_volatility)))
+            company_data.loc[idx, 'Low'] = min_val * (1 - abs(np.random.normal(0, high_low_volatility)))
+        
+        # Add volume (higher in strong trends)
+        base_volume = 500000
+        trend_factor = df['y'].abs() + 1
+        company_data['Volume'] = base_volume * trend_factor * np.random.uniform(0.5, 1.5, size=len(df))
+        
+        # Calculate moving averages
+        company_data['long_MA'] = company_data['Close'].rolling(window=20, min_periods=1).mean()
+        company_data['short_MA'] = company_data['Close'].rolling(window=50, min_periods=1).mean()
+        company_data['200_MA'] = company_data['Close'].rolling(window=200, min_periods=1).mean()
+        
+        # Create MultiIndex columns for this company
+        columns = pd.MultiIndex.from_tuples([(company, col) for col in company_data.columns], names=['symbol', None])
+        company_df = pd.DataFrame(company_data.values, index=dates, columns=columns)
+        
+        # Concatenate with the result
+        if result.empty:
+            result = company_df
+        else:
+            result = pd.concat([result, company_df], axis=1)
+    
+    return result
 
 
 

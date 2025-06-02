@@ -20,44 +20,35 @@ button_labels = [
 ]
 
 bull_buttons = [
-    html.Button(
+    dmc.Button(
         "Add "+label,
         id={'type': 'add-button', 'index': label},
         n_clicks=0,
-        style={
-            'backgroundColor': 'green',
-            'color': 'white',
-            'padding': '5px',
-            'margin': '5px'
-        }
+        color="green",
+        size="sm",
+        className="m-1"
     ) for label in button_labels if 'Bull' in label
 ]
 
 flat_buttons = [
-    html.Button(
+    dmc.Button(
         "Add "+label,
         id={'type': 'add-button', 'index': label},
         n_clicks=0,
-        style={
-            'backgroundColor': 'gray',
-            'color': 'white',
-            'padding': '5px',
-            'margin': '5px'
-        }
+        color="gray",
+        size="sm",
+        className="m-1"
     ) for label in button_labels if 'Flat' in label
 ]
 
 bear_buttons = [
-    html.Button(
+    dmc.Button(
         "Add "+label,
         id={'type': 'add-button', 'index': label},
         n_clicks=0,
-        style={
-            'backgroundColor': 'red',
-            'color': 'white',
-            'padding': '5px',
-            'margin': '5px'
-        }
+        color="red",
+        size="sm",
+        className="m-1"
     ) for label in button_labels if 'Bear' in label
 ]
 
@@ -69,25 +60,38 @@ layout = html.Div([
 
 def editor(lang = "fr"):
     tl = tls[lang]["settings"]["charts"]
-    return    html.Div([
-    layout,
+    return html.Div([
+        layout,
 
-    html.Br(),
+        html.Br(),
 
-    html.Div(id='timeline',style={'display': 'flex', 'flexDirection': 'row', 'overflowX': 'auto', 'whiteSpace': 'nowrap'}),
+        html.Div(id='timeline', style={'display': 'flex', 'flexDirection': 'row', 'overflowX': 'auto', 'whiteSpace': 'nowrap'}),
 
-    html.Button('Refresh', id='refresh-button', n_clicks=0),
+        dmc.Button(
+            "Refresh",
+            id='refresh-button',
+            n_clicks=0,
+            color="dark",
+            size="sm",
+            variant="outline"
+        ),
 
-    section(tl["subtitles"]["preview"], [
-        dmc.Paper(
-            dcc.Graph(id="chart_new")
-        )
-    ]),
+        section(tl["subtitles"]["preview"], [
+            dmc.Paper(
+                dcc.Graph(id="chart_new")
+            )
+        ]),
 
-    html.Button(tl["button"]["modify"], id='modify-new-button', n_clicks=0),
+        dmc.Button(
+            tl["button"]["modify"],
+            id='modify-new-button',
+            n_clicks=0,
+            color="dark",
+            size="sm"
+        ),
 
-    dcc.Store(id="size-store", data={}, storage_type="session")
-])
+        dcc.Store(id="size-store", data={}, storage_type="session")
+    ], className="flex flex-col gap-8 w-full")
 
 
 def generate_charts(lang="fr"):
