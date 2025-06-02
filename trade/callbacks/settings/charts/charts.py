@@ -12,7 +12,7 @@ import numpy as np
 import dash_mantine_components as dmc
 
 from trade.utils.market import get_first_timestamp
-from trade.utils.settings.create_market_data import get_generated_data
+from trade.utils.settings.create_market_data import get_generated_data, export_generated_data
 from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
 from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
@@ -560,8 +560,11 @@ def export_to_csv(n, graph_data):
             names=['symbol', None]
         )
         
-        # Export to CSV
-        df.to_csv('test.csv')
+        # Pour chaque symbole dans le DataFrame, exporter ses données
+        symbols = df.columns.get_level_values('symbol').unique()
+        for symbol in symbols:
+            symbol_data = df[symbol]
+            export_generated_data(symbol_data, symbol)
         
         return no_update
 

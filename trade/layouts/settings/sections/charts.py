@@ -84,7 +84,7 @@ def editor(lang = "fr"):
 
         dmc.Button(
             tl["button"]["modify"],
-            id='modify-new-button',
+            id='modify-button-new-graph',
             n_clicks=0,
             color="dark",
             size="sm"
@@ -111,7 +111,7 @@ def generate_charts(lang="fr"):
             dmc.Paper(
                 dcc.Graph(id="chart")
             )
-        ], action_id="modify-button-new-graph", action=tl["button"]["modify"]),
+        ], action_id="modify-button", action=tl["button"]["modify"]),
 
         dmc.Button(tl["button"]["delete"], id="button-delete-charts", color="dark"),
 
