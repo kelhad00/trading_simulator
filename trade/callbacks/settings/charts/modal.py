@@ -27,7 +27,7 @@ from trade.locales import translations as tls
     Input("modal-select-companies", "value"),
     prevent_initial_call=True
 )
-def generate_new_charts(alpha, length, start_value, radio_trends, companies):
+def generate_new_charts(alpha, length, start_value, radio_trends, companies, dates=None):
     """
     Generate the charts based on the parameters selected in the modal
     Args:
@@ -36,6 +36,7 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies):
         start_value (int): start value for the scaling
         radio_trends (list): list of the selected trends
         companies (list): list of the selected companies
+        dates (pd.DatetimeIndex, optional): specific dates to use for the data
     Returns:
         list: list of the charts
         list: list of the dataframes associated with the charts
@@ -56,13 +57,17 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies):
         dataframes = []  # Store the dataframes to export them later
         figures = []  # Store the figures to display them
 
-        try:
-            # Put the same day as the generated_data file
-            df = get_generated_data()
-            first_timestamp = get_first_timestamp(df)
-        except:
-            # if there is no data, put start_date
-            first_timestamp = start_date
+        # Utiliser les dates fournies ou obtenir la première date
+        if dates is None:
+            try:
+                # Put the same day as the generated_data file
+                df = get_generated_data()
+                first_timestamp = get_first_timestamp(df)
+            except:
+                # if there is no data, put start_date
+                first_timestamp = start_date
+        else:
+            first_timestamp = dates[0]
 
         for company in companies:
             # Get the trends
@@ -89,7 +94,12 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies):
 
             # Concatenate the data and update the Date column
             final_chart = pd.concat(data_list).reset_index(drop=True)
-            final_chart['Date'] = pd.date_range(start=first_timestamp, periods=final_chart.shape[0], freq='D')
+            if dates is not None:
+                # Utiliser les dates spécifiques fournies
+                final_chart['Date'] = dates[:len(final_chart)]
+            else:
+                # Générer des dates séquentielles
+                final_chart['Date'] = pd.date_range(start=first_timestamp, periods=final_chart.shape[0], freq='D')
 
             # Get the chart
             fig = display_chart(final_chart, 0, final_chart.shape[0], company)

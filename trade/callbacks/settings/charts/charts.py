@@ -4,14 +4,14 @@ from random import randint
 
 import dash
 import pandas as pd
-from dash import callback, Input, Output, State, html, no_update
+from dash import callback, Input, Output, State, html, no_update, dcc
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from pandas import DataFrame
 import numpy as np
 import dash_mantine_components as dmc
 
+from trade.utils.market import get_first_timestamp
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
@@ -177,13 +177,17 @@ def add_smash(*args):
 
 
 @callback(
-    Output("chart_new", "figure"),
+    Output("chart_new", "children"),
+    Output("new-graph-df", "data"),
     Input('size-store', 'data'),
+    State("new-graph-df", "data"),
     prevent_initial_call=True
 )
-def graph_preview_new(size_data):
+def graph_preview_new(size_data, current_df):
     if not size_data:
-        return go.Figure()
+        return html.Div(), {}
+    
+    first_timestamp = get_first_timestamp(get_generated_data())
 
     # Map intensity levels to alpha values
     alpha_map = {
@@ -220,90 +224,131 @@ def graph_preview_new(size_data):
         lengths.append(length)
 
     if not trends:
-        return go.Figure()
+        return html.Div(), {}
 
     # Get all companies
-    companies = list(dlt.companies_list.keys())
+    companies = []
+    for key, value in dlt.companies_list.items():
+        if key.startswith('^'):
+            companies.append(value['label'])
+        else:
+            companies.append(key)
+
     if not companies:
-        return go.Figure()
+        return html.Div(), {}
 
     try:
-        # Call generate_new_charts with our parameters
-        children, _ = generate_new_charts(
-            alpha=alphas[0] if alphas else 500,
-            length=sum(lengths),  # Total length of all trends
-            start_value=100,  # Default start value
-            radio_trends=trends,  # Our converted trends
-            companies=companies  # Using all companies
-        )
-
-        if not children or not isinstance(children, list):
-            return go.Figure()
-
-        # Create subplot figure
-        n_companies = len(companies)
-        n_cols = min(2, n_companies)  # Maximum 2 columns
-        n_rows = (n_companies + 1) // 2  # Calculate needed rows
-
-        # Create subplot titles
-        subplot_titles = [f"{company}" for company in companies]
-        
-        # Initialize figure with subplots
-        fig = make_subplots(
-            rows=n_rows,
-            cols=n_cols,
-            subplot_titles=subplot_titles,
-            vertical_spacing=0.1,
-            horizontal_spacing=0.05
-        )
-        
-        # Add each company's chart as a subplot
-        for i, child in enumerate(children):
-            if not hasattr(child, 'figure'):
-                continue
-                
-            company_fig = child.figure
-            if not company_fig.data:
-                continue
-
-            # Calculate row and column for this subplot
-            row = (i // 2) + 1
-            col = (i % 2) + 1
-
-            # Add all traces from the company figure to the main figure
-            for trace in company_fig.data:
-                fig.add_trace(
-                    trace,
-                    row=row,
-                    col=col
-                )
-
-        # Update layout
-        fig.update_layout(
-            height=400 * n_rows,  # Adjust height based on number of rows
-            showlegend=True,
-            legend=dict(
-                yanchor="top",
-                y=0.99,
-                xanchor="left",
-                x=0.01
-            ),
-            margin=dict(l=50, r=50, t=50, b=50)
-        )
-
-        # Update axes labels
-        for i in range(n_companies):
-            row = (i // 2) + 1
-            col = (i % 2) + 1
+        # Get existing data to get the date range
+        existing_df = get_generated_data()
+        if existing_df.empty:
+            return html.Div(), {}
             
-            fig.update_xaxes(title="Date", row=row, col=col)
-            fig.update_yaxes(title="Price", row=row, col=col)
+        # Get the date range
+        dates = existing_df.index
+        
+        # Calculer les proportions pour chaque tendance
+        total_width = sum(lengths)
+        proportions = [length/total_width for length in lengths]
+        
+        # Diviser les dates selon les proportions
+        date_ranges = []
+        start_idx = 0
+        for prop in proportions:
+            end_idx = start_idx + int(prop * len(dates))
+            date_ranges.append(dates[start_idx:end_idx])
+            start_idx = end_idx
+            
+        # Générer les graphiques pour chaque tendance
+        children = []
+        all_dataframes = {}  # Pour stocker les données de toutes les entreprises
+        
+        for i, (trend, alpha, date_range) in enumerate(zip(trends, alphas, date_ranges)):
+            trend_children, dataframes = generate_new_charts(
+                alpha=alpha,
+                length=len(date_range),
+                start_value=100 if i == 0 else None,
+                radio_trends=[trend],
+                companies=companies
+            )
+            
+            if trend_children and dataframes:
+                # Pour chaque graphique, mettre à jour les dates
+                for j, df_dict in enumerate(dataframes):
+                    df = pd.DataFrame.from_dict(df_dict)
+                    date_index = pd.date_range(start=first_timestamp, periods=df.shape[0], freq='D')
+                    df.set_index(date_index, inplace=True)
+                    
+                    # Stocker les données dans le dictionnaire global
+                    company = companies[j]
+                    if company not in all_dataframes:
+                        all_dataframes[company] = df
+                    else:
+                        # Concaténer avec les données existantes
+                        all_dataframes[company] = pd.concat([all_dataframes[company], df])
+                    
+                    # Mettre à jour le graphique avec les nouvelles dates
+                    fig = go.Figure(trend_children[j].figure)
+                    
+                    # Mettre à jour les données du graphique avec les nouvelles dates
+                    for trace in fig.data:
+                        if hasattr(trace, 'x'):
+                            trace.x = df.index
+                    
+                    # Configurer l'axe des x pour afficher correctement les dates
+                    fig.update_layout(
+                        xaxis=dict(
+                            type='date',
+                            tickformat='%b %Y',  # Format pour afficher "Jan 2024"
+                            dtick='M4',  # Affiche une graduation tous les 4 mois
+                            tickangle=0,
+                            rangeslider=dict(visible=False),
+                            gridcolor='rgba(128, 128, 128, 0.1)',
+                            showgrid=True,
+                            tickfont=dict(size=10)
+                        ),
+                        xaxis_title="Date",
+                        plot_bgcolor='rgba(240, 244, 250, 1)',
+                        paper_bgcolor='rgba(0,0,0,0)'
+                    )
+                    
+                    # Créer un nouveau graphique avec les dates mises à jour
+                    new_graph = dcc.Graph(
+                        figure=fig,
+                        config=PLOTLY_CONFIG
+                    )
+                    children.append(new_graph)
 
-        return fig
+        if not children:
+            return html.Div(), {}
+            
+        # Créer un DataFrame multi-index comme dans generated_data.csv
+        final_df = pd.concat(all_dataframes, axis=1, keys=all_dataframes.keys())
+        final_df.columns.names = ['symbol', None]
+        
+        # Convertir en format sérialisable
+        # Aplatir les colonnes multi-index en les joignant avec un séparateur
+        final_df.columns = [f"{col[0]}|{col[1]}" for col in final_df.columns]
+        
+        # Convertir en dictionnaire avec un format simple
+        json_data = {
+            'data': final_df.to_dict(orient='split'),
+            'column_names': final_df.columns.tolist()
+        }
+        
+        # Retourner le conteneur avec les graphiques et les données
+        return html.Div(
+            children=children,
+            style={
+                'display': 'flex',
+                'flexDirection': 'column',
+                'gap': '20px',
+                'width': '100%'
+            }
+        ), json_data
 
     except Exception as e:
         print('Error while generating preview:', e)
-        return go.Figure()
+        return html.Div(), {}
 
 
 
@@ -485,6 +530,44 @@ def from_market_value_to_TODO(df: DataFrame):
             result = pd.concat([result, company_df], axis=1)
     
     return result
+
+
+@callback(
+    Output("chart", "figure", allow_duplicate=True),
+    Input("modify-button-new-graph", "n_clicks"),
+    State("new-graph-df", "data"),
+    prevent_initial_call=True
+)
+def export_to_csv(n, graph_data):
+    """
+    Export all companies data to CSV when the modify button is clicked
+    Args:
+        n: number of clicks
+        graph_data: dictionary containing all companies data in simplified format
+    Returns:
+        The current chart figure (no update)
+    """
+    if not graph_data:
+        raise PreventUpdate
+
+    try:
+        # Reconstruire le DataFrame à partir des données
+        df = pd.DataFrame(**graph_data['data'])
+        
+        # Recréer le multi-index pour les colonnes
+        df.columns = pd.MultiIndex.from_tuples(
+            [tuple(col.split('|')) for col in graph_data['column_names']],
+            names=['symbol', None]
+        )
+        
+        # Export to CSV
+        df.to_csv('test.csv')
+        
+        return no_update
+
+    except Exception as e:
+        print('Error while exporting to CSV:', e)
+        return no_update
 
 
 

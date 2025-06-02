@@ -78,7 +78,7 @@ def editor(lang = "fr"):
 
         section(tl["subtitles"]["preview"], [
             dmc.Paper(
-                dcc.Graph(id="chart_new")
+                html.Div(id="chart_new")
             )
         ]),
 
@@ -98,6 +98,7 @@ def generate_charts(lang="fr"):
     tl = tls[lang]["settings"]["charts"]
     return html.Div([
         dcc.Store(id="figures"),
+        dcc.Store(id="new-graph-df"),
         generate_charts_modal(lang=lang),
         section(tl["subtitles"]["ticker"], [
             dmc.Select(
@@ -110,7 +111,7 @@ def generate_charts(lang="fr"):
             dmc.Paper(
                 dcc.Graph(id="chart")
             )
-        ], action_id="modify-button", action=tl["button"]["modify"]),
+        ], action_id="modify-button-new-graph", action=tl["button"]["modify"]),
 
         dmc.Button(tl["button"]["delete"], id="button-delete-charts", color="dark"),
 

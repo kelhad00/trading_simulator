@@ -16,3 +16,4 @@ dash-mantine-components==0.12.0
 groq
 transformers
 python-time
+torch
