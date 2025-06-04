@@ -106,6 +106,13 @@ def delete_revenues(n, company, companies):
     prevent_initial_call=True
 )
 def add_smash(*args):
+    """
+    Add a new item to the timeline when a button is clicked.
+    
+    Args:
+        *args: Variable length argument list. The last argument is the current timeline children.
+            - args[-1]: Current timeline children list
+    """
     timeline_children = args[-1]
 
     if not dash.ctx.triggered:
@@ -184,6 +191,18 @@ def add_smash(*args):
     prevent_initial_call=True
 )
 def graph_preview_new(size_data, current_df):
+    """
+    Generate a preview of charts based on the size data and current DataFrame.
+    
+    Args:
+        size_data (dict): Dictionary containing size and trend information for each timeline item
+        current_df (dict): Current DataFrame data in a serializable format
+        
+    Returns:
+        tuple: (html.Div, dict)
+            - html.Div containing the generated chart previews
+            - Dictionary containing the serialized DataFrame data
+    """
     if not size_data:
         return html.Div(), {}
     
@@ -263,13 +282,19 @@ def graph_preview_new(size_data, current_df):
         all_dataframes = {}  # Pour stocker les données de toutes les entreprises
         
         for i, (trend, alpha, date_range) in enumerate(zip(trends, alphas, date_ranges)):
-            trend_children, dataframes = generate_new_charts(
-                alpha=alpha,
-                length=len(date_range),
-                start_value=100 if i == 0 else None,
-                radio_trends=[trend],
-                companies=companies
-            )
+            trend_children = []
+            dataframes = []
+            for company in companies:
+                company_children, company_dataframes = generate_new_charts(
+                    alpha=alpha,
+                    length=len(date_range),
+                    start_value=randint(100,1000),
+                    radio_trends=[trend],
+                    companies=[company]
+                )
+                if company_children and company_dataframes:
+                    trend_children.extend(company_children)
+                    dataframes.extend(company_dataframes)
             
             if trend_children and dataframes:
                 # Pour chaque graphique, mettre à jour les dates
@@ -359,7 +384,13 @@ def graph_preview_new(size_data, current_df):
     prevent_initial_call=True
 )
 def delete_smash(delete_clicks, timeline_children):
-
+    """
+    Delete a timeline item based on button clicks.
+    
+    Args:
+        delete_clicks (list): List of click counts for delete buttons
+        timeline_children (list): Current list of timeline items
+    """
     button_id = dash.ctx.triggered[0]['prop_id'].split('.')[0]
     index_to_delete = eval(button_id)['index']
 
@@ -385,6 +416,17 @@ def delete_smash(delete_clicks, timeline_children):
     prevent_initial_call=True
 )
 def move_item(left_clicks, right_clicks, timeline_children):
+    """
+    Move a timeline item left or right based on button clicks.
+    
+    Args:
+        left_clicks (list): List of click counts for left movement buttons
+        right_clicks (list): List of click counts for right movement buttons
+        timeline_children (list): Current list of timeline items
+        
+    Returns:
+        list: Updated timeline items with the moved item in its new position
+    """
     ctx = dash.callback_context
     if not ctx.triggered:
         return timeline_children or []
@@ -415,123 +457,6 @@ def move_item(left_clicks, right_clicks, timeline_children):
 
     return timeline
 
-
-def from_trends_to_market_value(data: dict, x: list, y: list) -> list:
-
-    init: int = 100
-
-    base_volatility: int = 2
-
-    output = [init for _ in range(len(y))]
-
-    for i in range(1, len(output)):
-        # Génère un pourcentage de variation en fonction de y[i]
-        # y[i] va de -3 à 3
-        # On construit un intervalle de pourcentage basé sur y[i] (par exemple entre -2% et +2% si y[i] = 0)
-        variation_bounds = (-base_volatility  + y[i] ** 2, base_volatility  + y[i] ** 2)
-
-        # Détermine le signe selon la note (négatif si y[i] < 0, positif sinon)
-        sign = -1 if y[i] < 0 else 1
-
-        # Valeur de pourcentage (entre variation_bounds[0] et variation_bounds[1])
-        percentage = randint(*variation_bounds) / 1000
-
-        # Applique la variation en pourcentage sur la valeur précédente
-        output[i] = output[i - 1] * (1 + sign * percentage)
-
-
-
-    return output
-
-def from_market_value_to_TODO(df: DataFrame):
-    """
-    Convert trend data into candlestick market data for each company.
-    Args:
-        df: DataFrame containing the trend data with columns 'x' (time) and 'y' (value)
-    Returns:
-        DataFrame containing the candlestick data for each company
-    """
-    # Check if DataFrame is empty
-    if df.empty:
-        return pd.DataFrame()
-
-    # Initialize the result DataFrame with MultiIndex columns for each company
-    result = pd.DataFrame()
-    
-    # Get the list of companies
-    companies = dlt.companies_list
-    
-    # Create date range starting from start_date with 2 years of data
-    first_timestamp = pd.Timestamp(dlt.start_date)
-    dates = pd.date_range(start=first_timestamp, periods=df.shape[0], freq='D')
-    
-    for company in companies:
-        # Initialize price data for this company
-        company_data = pd.DataFrame(index=dates)
-        
-        # Convert trend values (-3 to 3) to price movements
-        base_price = 100  # Starting price
-        price_changes = []
-        
-        for i in range(len(df)):
-            trend = df['y'].iloc[i]
-            # Convert trend to daily return
-            # Strong trends (±3) -> ±0.8% average daily change
-            # Medium trends (±2) -> ±0.5% average daily change
-            # Small trends (±1) -> ±0.3% average daily change
-            # Flat (0) -> ±0.1% average daily change
-            base_change = abs(trend) * 0.3 / 100  # 0.3% per trend unit
-            
-            # Add randomness to the change
-            random_factor = np.random.normal(0, 0.5)  # More randomness
-            daily_return = trend * base_change * (1 + random_factor)
-            
-            if i == 0:
-                price_changes.append(base_price)
-            else:
-                # Compound the returns
-                price_changes.append(price_changes[-1] * (1 + daily_return))
-        
-        # Generate OHLC data
-        price_series = pd.Series(price_changes, index=dates)
-        daily_volatility = price_series.pct_change().std() * 2
-        
-        company_data['Close'] = price_series
-        company_data['Open'] = company_data['Close'].shift(1)
-        company_data.loc[company_data.index[0], 'Open'] = base_price
-        
-        # Generate High and Low with realistic intraday volatility
-        for idx in company_data.index:
-            base = max(company_data.loc[idx, 'Open'], company_data.loc[idx, 'Close'])
-            min_val = min(company_data.loc[idx, 'Open'], company_data.loc[idx, 'Close'])
-            
-            high_low_volatility = daily_volatility * np.random.uniform(0.5, 1.5)
-            company_data.loc[idx, 'High'] = base * (1 + abs(np.random.normal(0, high_low_volatility)))
-            company_data.loc[idx, 'Low'] = min_val * (1 - abs(np.random.normal(0, high_low_volatility)))
-        
-        # Add volume (higher in strong trends)
-        base_volume = 500000
-        trend_factor = df['y'].abs() + 1
-        company_data['Volume'] = base_volume * trend_factor * np.random.uniform(0.5, 1.5, size=len(df))
-        
-        # Calculate moving averages
-        company_data['long_MA'] = company_data['Close'].rolling(window=20, min_periods=1).mean()
-        company_data['short_MA'] = company_data['Close'].rolling(window=50, min_periods=1).mean()
-        company_data['200_MA'] = company_data['Close'].rolling(window=200, min_periods=1).mean()
-        
-        # Create MultiIndex columns for this company
-        columns = pd.MultiIndex.from_tuples([(company, col) for col in company_data.columns], names=['symbol', None])
-        company_df = pd.DataFrame(company_data.values, index=dates, columns=columns)
-        
-        # Concatenate with the result
-        if result.empty:
-            result = company_df
-        else:
-            result = pd.concat([result, company_df], axis=1)
-    
-    return result
-
-
 @callback(
     Output("chart", "figure", allow_duplicate=True),
     Input("modify-button-new-graph", "n_clicks"),
@@ -540,12 +465,17 @@ def from_market_value_to_TODO(df: DataFrame):
 )
 def export_to_csv(n, graph_data):
     """
-    Export all companies data to CSV when the modify button is clicked
+    Export all companies data to CSV when the modify button is clicked.
+    
     Args:
-        n: number of clicks
-        graph_data: dictionary containing all companies data in simplified format
+        n (int): Number of clicks on the modify button
+        graph_data (dict): Dictionary containing all companies data in simplified format
+        
     Returns:
-        The current chart figure (no update)
+        dict: No update to the current chart figure if successful, or error message if failed
+        
+    Raises:
+        PreventUpdate: If graph_data is empty
     """
     if not graph_data:
         raise PreventUpdate
