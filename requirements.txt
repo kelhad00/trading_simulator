@@ -17,3 +17,5 @@ groq
 transformers
 python-time
 torch
+hf_xet
+tqdm

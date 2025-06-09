@@ -6,17 +6,17 @@ import os
 from datetime import datetime
 from transformers import pipeline
 
-
+from trade.utils.market import get_revenues_dataframe
 from trade.utils.news import get_news_dataframe
 from trade.utils.news_generation.modules import load_data, save_data
 from trade.utils.news_generation.modules import random_number, percentage_change
-from trade.utils.market import get_market_dataframe
+from trade.utils.market import get_market_dataframe, get_price_dataframe
 from trade.utils.news_generation.modules import find_sector_for_company
 from trade.defaults import defaults as dlt
 
 
 def create_news_for_companies(companies, news_position, api):
-    model = 'llama3-70b-8192'
+    model = 'meta-llama/llama-4-scout-17b-16e-instruct'
     news_path = os.path.join(dlt.data_path, 'news_fr.csv')
 
     # Create a dataframe to store the news we have created
@@ -186,15 +186,16 @@ def create_news(company_ticker, company_name, company_sector, news_position, mod
 
         i = 0
         for position in news_position[0]:
-            # Create the news
-            content = transform_news_content(news.iloc[i]['content'], company_name, client, model, sentiment)
-            title = transform_news_title(content, client, model)
             # Create a new row in news_created
 
             date = market_data.iloc[position]['index']
+            
+
+            # Create the news
+            content = transform_news_content(news.iloc[i]['content'], company_name, company_ticker, client, model, sentiment, date, position)
+            title = transform_news_title(content, client, model)
             date = datetime.fromisoformat(date)
             date = date.strftime('%d/%m/%y %H:%M')
-
 
             news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
 
@@ -217,15 +218,16 @@ def create_news(company_ticker, company_name, company_sector, news_position, mod
 
         i = 0
         for position in news_position[1]:
-            # Create the news
-            content = transform_news_content(news.iloc[i]['content'], company_name, client, model, sentiment)
-            title = transform_news_title(content, client, model)
-
             # Create a new row in news_created
 
             date = market_data.iloc[position]['index']
+            
+            # Create the news
+            content = transform_news_content(news.iloc[i]['content'], company_name, company_ticker, client, model, sentiment, date, position)
+            title = transform_news_title(content, client, model)
             date = datetime.fromisoformat(date)
             date = date.strftime('%d/%m/%y %H:%M')
+
 
             # Create a new row in news_created
             news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
@@ -249,26 +251,50 @@ def create_news(company_ticker, company_name, company_sector, news_position, mod
     return news_created
 
 
-def transform_news_content(content, company, client, model, sentiment):
+def transform_news_content(content, company, company_ticker, client, model, sentiment, date, position):
     '''
     Transform the content of a news into a news for the company with a LLM
+    
+    Parameters:
+        content (str): Original news content to transform
+        company (str): Company name to adapt the news for
+        company_ticker (str): Company ticker symbol
+        client: The LLM client
+        model (str): Model name to use
+        sentiment (str): Sentiment of the news ('positive' or 'negative')
+        date: Date of the news
+        position (int): Position in the market data to get the current price
     '''
 
     if sentiment == 'negative':
         sentiment = 'négatif'
     else:
         sentiment = 'positif'
+    
+    # Get the market data for current price
+    current_price = get_price_dataframe()[company_ticker][date]
+       
+    try:
+        # Get the revenue data
+        revenue_df = get_revenues_dataframe()[company_ticker]
+        revenue_info = revenue_df.to_string()
+    except Exception as e:
+        print(f"\nError processing revenue data: {str(e)}")
+        revenue_info = "Données de revenus non disponibles"
 
     # Prompt for the LLM
     p = f"""Contexte:
-    Vous recevez une nouvelle concernant une entreprise. Vous devez reformuler cette nouvelle pour qu'elle s'applique à l'entreprise {company}, une autre entreprise du même secteur. Les actionnaires doivent recevoir cette nouvelle avec un ton formel, informatif et {sentiment}.
+    Vous recevez une nouvelle concernant une entreprise. Vous devez reformuler cette nouvelle pour qu'elle s'applique à l'entreprise {company}, une autre entreprise du même secteur. Les actionnaires doivent recevoir cette nouvelle avec un ton formel, informatif et {sentiment}. 
+    Informations financières sur {company}:
+    Cours actuel: {current_price:.2f} €
+    Derniers revenus annuels: 
+    {revenue_info}
 
     Nouvelle originale:
     {content}
 
     Tâche:
-    Reformulez la nouvelle ci-dessus pour qu'elle concerne l'entreprise {company} et fournissez directement le texte reformulé SANS préambules, introduction ou note supplémentaire ! La réponse doit être en français."""
-
+    Reformulez la nouvelle ci-dessus pour qu'elle concerne l'entreprise {company} en tenant compte des informations financières fournies. Fournissez directement le texte reformulé SANS préambules, introduction ou note supplémentaire ! La réponse doit être en français."""
     # Create a news for the company
     response = client.chat.completions.create(
         messages=[
@@ -279,8 +305,8 @@ def transform_news_content(content, company, client, model, sentiment):
         ],
         model=model,
     )
-
-    return response.choices[0].message.content
+    res = response.choices[0].message.content
+    return res
 
 
 def transform_news_title(content, client, model):
@@ -314,25 +340,65 @@ def load_translator(model_name: str = "Helsinki-NLP/opus-mt-fr-en"):
     """
     Loads a translation pipeline for French to English.
     """
-    return pipeline("translation_fr_to_en", model=model_name)
+    return pipeline("translation_fr_to_en", model=model_name, max_length=1024)
 
 class FrenchToEnglishTranslator:
-    def __init__(self, model_name: str = "Helsinki-NLP/opus-mt-fr-en"):
+    def __init__(self, model_name: str = "Helsinki-NLP/opus-mt-fr-en", chunk_size: int = 900):
         self.translator = load_translator(model_name)
+        self.chunk_size = chunk_size
+
+    def _split_text(self, text: str) -> list[str]:
+        """
+        Split text into chunks that respect sentence boundaries.
+        """
+        if len(text) <= self.chunk_size:
+            return [text]
+        
+        # Split on sentences (simple approach)
+        sentences = text.replace('! ', '!|').replace('? ', '?|').replace('. ', '.|').split('|')
+        chunks = []
+        current_chunk = ""
+        
+        for sentence in sentences:
+            if len(current_chunk) + len(sentence) <= self.chunk_size:
+                current_chunk += sentence + " "
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                current_chunk = sentence + " "
+        
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+            
+        return chunks
 
     def translate_text(self, text: str) -> str:
         """
-        Translate a single French string to English.
+        Translate a single French string to English, handling long texts by splitting them.
         """
-        result = self.translator(text)
-        return result[0]['translation_text']
+        if not text or text.isspace():
+            return ""
+            
+        chunks = self._split_text(text)
+        translated_chunks = []
+        
+        for chunk in chunks:
+            result = self.translator(chunk)
+            translated_chunks.append(result[0]['translation_text'])
+            
+        return " ".join(translated_chunks)
 
     def translate_list(self, texts: list[str]) -> list[str]:
         """
-        Translate a list of French strings to English.
+        Translate a list of French strings to English with a progress bar.
         """
-        results = self.translator(texts)
-        return [res['translation_text'] for res in results]
+        from tqdm import tqdm
+        translated_texts = []
+        
+        for text in tqdm(texts, desc="Translating texts", unit="text"):
+            translated_texts.append(self.translate_text(text))
+            
+        return translated_texts
 
     def translate_dataframe(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
         """
@@ -341,8 +407,9 @@ class FrenchToEnglishTranslator:
         :param columns: list of column names to translate
         :return: DataFrame with translated columns
         """
+        print(f"\nTranslating {len(columns)} columns...")
         for col in columns:
-            # Drop NaNs or non-strings if needed
+            print(f"\nTranslating column: {col}")
             df[col] = df[col].fillna("")
             texts = df[col].astype(str).tolist()
             translations = self.translate_list(texts)
