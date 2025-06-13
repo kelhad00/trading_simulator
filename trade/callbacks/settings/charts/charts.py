@@ -17,6 +17,7 @@ from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
 from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
 from trade.callbacks.settings.charts.modal import generate_new_charts
+from trade.callbacks.settings.charts.patterns_generator import insert_bullish_engulfing, insert_bearish_engulfing, insert_hammer, insert_shooting_star, insert_double_top, insert_head_and_shoulders
 
 
 @callback(
@@ -247,11 +248,8 @@ def graph_preview_new(size_data, current_df):
 
     # Get all companies
     companies = []
-    for key, value in dlt.companies_list.items():
-        if key.startswith('^'):
-            companies.append(value['label'])
-        else:
-            companies.append(key)
+    for key in dlt.companies_list.items():
+            companies.append(key[0])  # Use the company symbol (key) instead of the dictionary
 
     if not companies:
         return html.Div(), {}
@@ -265,11 +263,11 @@ def graph_preview_new(size_data, current_df):
         # Get the date range
         dates = existing_df.index
         
-        # Calculer les proportions pour chaque tendance
+        # Calculate proportions for each trend
         total_width = sum(lengths)
         proportions = [length/total_width for length in lengths]
         
-        # Diviser les dates selon les proportions
+        # Divide dates according to proportions
         date_ranges = []
         start_idx = 0
         for prop in proportions:
@@ -277,14 +275,15 @@ def graph_preview_new(size_data, current_df):
             date_ranges.append(dates[start_idx:end_idx])
             start_idx = end_idx
             
-        # Générer les graphiques pour chaque tendance
+        # Generate charts for each trend
         children = []
-        all_dataframes = {}  # Pour stocker les données de toutes les entreprises
+        all_dataframes = {}  # To store data for all companies
         
         for i, (trend, alpha, date_range) in enumerate(zip(trends, alphas, date_ranges)):
             trend_children = []
             dataframes = []
             for company in companies:
+                # First generate the base chart data
                 company_children, company_dataframes = generate_new_charts(
                     alpha=alpha,
                     length=len(date_range),
@@ -292,39 +291,145 @@ def graph_preview_new(size_data, current_df):
                     radio_trends=[trend],
                     companies=[company]
                 )
+                
+                if company_children is no_update or company_dataframes is no_update:
+                    continue
+                    
                 if company_children and company_dataframes:
+                    # Process each dataframe
+                    for df_dict in company_dataframes:
+                        # Convert to DataFrame for easier manipulation
+                        df = pd.DataFrame(df_dict)
+                        
+                        # Convert DataFrame columns to numpy arrays for manipulation
+                        opens = df['Open'].values
+                        highs = df['High'].values
+                        lows = df['Low'].values
+                        closes = df['Close'].values
+                        
+                        # Define pattern spans
+                        pattern_span = {
+                            "bullish_engulfing": 2,
+                            "bearish_engulfing": 2,
+                            "hammer": 1,
+                            "shooting_star": 1,
+                            "double_top": 5,
+                            "head_and_shoulders": 5
+                        }
+                        
+                        # Keep track of used days to avoid overlap
+                        used_days = set()
+                        # Store patterns to apply them later during visualization
+                        patterns_to_apply = []
+                        
+                        # Try to add patterns multiple times
+                        num_attempts = len(opens) // 10  # Try to add a pattern every 10 days on average
+                        
+                        for _ in range(num_attempts):
+                            if np.random.random() < 0.4:  # 40% chance for each attempt
+                                # Select pattern based on current trend
+                                if trend == "bull":
+                                    pattern = np.random.choice(["bullish_engulfing", "hammer"], p=[0.6, 0.4])
+                                elif trend == "bear":
+                                    pattern = np.random.choice(["bearish_engulfing", "shooting_star", "double_top"], p=[0.4, 0.3, 0.3])
+                                else:  # flat trend
+                                    pattern = np.random.choice(["head_and_shoulders", None], p=[0.3, 0.7])
+                                
+                                if pattern:
+                                    # Get span for this pattern
+                                    span = pattern_span[pattern]
+                                    
+                                    # Find a suitable position for the pattern
+                                    # Leave some margin at the start and end
+                                    margin = 5
+                                    possible_starts = list(range(margin, len(opens) - span - margin))
+                                    
+                                    # Remove positions that would overlap with existing patterns
+                                    possible_starts = [
+                                        pos for pos in possible_starts 
+                                        if not any(
+                                            day in used_days 
+                                            for day in range(pos - 2, pos + span + 2)  # Add buffer around patterns
+                                        )
+                                    ]
+                                    
+                                    if possible_starts:  # If we found a valid position
+                                        pattern_day = np.random.choice(possible_starts)
+                                        pattern_date = date_range[pattern_day]
+                                        
+                                        # Mark these days as used
+                                        for day in range(pattern_day - 2, pattern_day + span + 2):
+                                            used_days.add(day)
+                                        
+                                        # Apply the pattern
+                                        if pattern == "bullish_engulfing":
+                                            insert_bullish_engulfing(opens, highs, lows, closes, pattern_day)
+                                        elif pattern == "bearish_engulfing":
+                                            insert_bearish_engulfing(opens, highs, lows, closes, pattern_day)
+                                        elif pattern == "hammer":
+                                            insert_hammer(opens, highs, lows, closes, pattern_day)
+                                        elif pattern == "shooting_star":
+                                            insert_shooting_star(opens, highs, lows, closes, pattern_day)
+                                        elif pattern == "double_top":
+                                            insert_double_top(opens, highs, lows, closes, pattern_day)
+                                        elif pattern == "head_and_shoulders":
+                                            insert_head_and_shoulders(opens, highs, lows, closes, pattern_day)
+                                        
+                                        # Store pattern info for later visualization
+                                        patterns_to_apply.append({
+                                            'pattern': pattern,
+                                            'day': pattern_day,
+                                            'span': span,
+                                            'date': pattern_date
+                                        })
+                        
+                        # Update the DataFrame with modified values
+                        df['Open'] = opens
+                        df['High'] = highs
+                        df['Low'] = lows
+                        df['Close'] = closes
+                        
+                        # Convert to dict and store patterns
+                        new_dict = df.to_dict('list')
+                        new_dict['_patterns'] = patterns_to_apply
+                        dataframes.append(new_dict)
+                    
                     trend_children.extend(company_children)
-                    dataframes.extend(company_dataframes)
             
             if trend_children and dataframes:
-                # Pour chaque graphique, mettre à jour les dates
+                # For each chart, update the dates
+                children = []  # List to store the new graphs
                 for j, df_dict in enumerate(dataframes):
-                    df = pd.DataFrame.from_dict(df_dict)
+                    # Extract patterns before creating DataFrame
+                    patterns_info = df_dict.pop('_patterns', [])
+                    
+                    # Create DataFrame from the data
+                    df = pd.DataFrame(df_dict)
                     date_index = pd.date_range(start=first_timestamp, periods=df.shape[0], freq='D')
                     df.set_index(date_index, inplace=True)
                     
-                    # Stocker les données dans le dictionnaire global
+                    # Store data in the global dictionary
                     company = companies[j]
                     if company not in all_dataframes:
                         all_dataframes[company] = df
                     else:
-                        # Concaténer avec les données existantes
+                        # Concatenate with existing data
                         all_dataframes[company] = pd.concat([all_dataframes[company], df])
                     
-                    # Mettre à jour le graphique avec les nouvelles dates
+                    # Create new figure from trend_children
                     fig = go.Figure(trend_children[j].figure)
                     
-                    # Mettre à jour les données du graphique avec les nouvelles dates
+                    # Update chart data with new dates
                     for trace in fig.data:
                         if hasattr(trace, 'x'):
                             trace.x = df.index
                     
-                    # Configurer l'axe des x pour afficher correctement les dates
+                    # Configure x-axis to properly display dates
                     fig.update_layout(
                         xaxis=dict(
                             type='date',
-                            tickformat='%b %Y',  # Format pour afficher "Jan 2024"
-                            dtick='M4',  # Affiche une graduation tous les 4 mois
+                            tickformat='%b %Y',  # Format to display "Jan 2024"
+                            dtick='M4',  # Show tick every 4 months
                             tickangle=0,
                             rangeslider=dict(visible=False),
                             gridcolor='rgba(128, 128, 128, 0.1)',
@@ -336,38 +441,38 @@ def graph_preview_new(size_data, current_df):
                         paper_bgcolor='rgba(0,0,0,0)'
                     )
                     
-                    # Créer un nouveau graphique avec les dates mises à jour
+                    # Create new graph with updated figure
                     new_graph = dcc.Graph(
                         figure=fig,
                         config=PLOTLY_CONFIG
                     )
                     children.append(new_graph)
 
-        if not children:
-            return html.Div(), {}
-            
-        # Créer un DataFrame multi-index comme dans generated_data.csv
+                # Create multi-index DataFrame like in generated_data.csv
         final_df = pd.concat(all_dataframes, axis=1, keys=all_dataframes.keys())
         final_df.columns.names = ['symbol', None]
         
-        # Convertir en format sérialisable
-        # Aplatir les colonnes multi-index en les joignant avec un séparateur
+                # Convert to serializable format
+                # Flatten multi-index columns by joining with separator
         final_df.columns = [f"{col[0]}|{col[1]}" for col in final_df.columns]
         
-        # Convertir en dictionnaire avec un format simple
+                # Convert to dictionary with simple format
         json_data = {
             'data': final_df.to_dict(orient='split'),
             'column_names': final_df.columns.tolist()
         }
         
-        # Retourner le conteneur avec les graphiques et les données
+        
+        # Return the container with the new graphs
         return html.Div(
             children=children,
             style={
                 'display': 'flex',
                 'flexDirection': 'column',
                 'gap': '20px',
-                'width': '100%'
+                        'width': '100%',
+                        'maxHeight': '500px',
+                        'overflowY': 'auto'
             }
         ), json_data
 

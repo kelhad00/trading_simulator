@@ -175,7 +175,10 @@ def generate_charts_modal(lang="fr"):
 
                 section(tl["subtitles"]["preview"], [
                     dmc.Paper(
-                        html.Div(dcc.Graph(), id="modal-generated-charts-container"),
+                        html.Div(
+                            dcc.Graph(),
+                            id="modal-generated-charts-container",
+                        ),
                     )
                 ]),
                 dmc.Button(tl["button"]["modify"], id="generate-button", color="dark", size="md", ),

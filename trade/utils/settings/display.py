@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+from trade.defaults import defaults as dlt
 
 
 def display_chart(data, index, length, data_name):
@@ -19,6 +20,12 @@ def display_chart(data, index, length, data_name):
     # delete the index where col contains a NaN
     data = data.dropna()
 
+    # Get the company label if it exists in companies_list
+    if data_name in dlt.companies_list:
+        display_name = dlt.companies_list[data_name]['label']
+    else:
+        display_name = data_name
+
     # Chart
     fig = go.Figure(data=[go.Candlestick(
                 x=data.index,
@@ -26,10 +33,10 @@ def display_chart(data, index, length, data_name):
                 high=data['High'],
                 low=data['Low'],
                 close=data['Close'],
-                name=data_name)])
+                name=display_name)])
 
     fig.update_layout(
-        title=data_name,
+        title=display_name,
         xaxis_title="Date",
         yaxis_title="Price",
         xaxis_rangeslider_visible=False,

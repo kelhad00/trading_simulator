@@ -215,7 +215,7 @@ def export_generated_data(df, stock):
 
         symbols = existing_df.columns.get_level_values('symbol').unique()
         if stock in symbols:
-            print('Stock already exists in the generated data')
+            print(f'Stock of {stock} already exists in the generated data')
             existing_df = existing_df.drop(stock, axis=1, level='symbol')
 
     combined_df = pd.concat([existing_df, df], axis=1)
