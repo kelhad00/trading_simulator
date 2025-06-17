@@ -2,6 +2,7 @@ import os
 
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
 from dash.exceptions import PreventUpdate
+from trade.utils.config import save_current_config
 
 from trade.defaults import defaults as dlt
 from trade.utils.market import get_first_timestamp, get_market_dataframe
@@ -46,6 +47,8 @@ def reset_data(btn, initial_cashflow, nb_export):
     if btn is None or btn == 0:
         raise PreventUpdate
 
+    # Sauvegarder la configuration actuelle
+    save_current_config()
 
     # Reset the data of each dcc.Store component
     timestamp = get_first_timestamp(market_df, 100)
@@ -67,7 +70,7 @@ def reset_data(btn, initial_cashflow, nb_export):
     for file in os.listdir(content_path):
         os.rename(os.path.join(content_path, file), os.path.join(session_path, file))
 
-    nb_export = len(os.listdir(os.path.join(dlt.data_path, "exports")))
+    nb_export = len(os.listdir(os.path.join(dlt.data_path, "exports")))-1
 
     return timestamp, cashflow, requests, portfolio_value, portfolio_value, nb_export
 
