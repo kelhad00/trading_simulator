@@ -4,13 +4,13 @@ from random import randint
 
 import dash
 import pandas as pd
-from dash import callback, Input, Output, State, html, no_update, dcc
+from dash import callback, Input, Output, State, html, no_update, dcc, page_registry
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 from pandas import DataFrame
 import numpy as np
 import dash_mantine_components as dmc
-
+from trade.locales import translations as tls
 from trade.utils.market import get_first_timestamp
 from trade.utils.settings.create_market_data import get_generated_data, export_generated_data
 from trade.utils.settings.display import display_chart
@@ -125,7 +125,7 @@ def add_smash(*args):
 
     # Exemple d'ajout d'éléments dans la timeline
     new_item = html.Div(
-        [button_id,
+        [tls[page_registry['lang']]["settings"]["charts"]["subtitles"][button_id],
          html.Div([
              dmc.Button(
                  "←",
@@ -177,7 +177,7 @@ def add_smash(*args):
             'resize': 'horizontal',
             'overflow': 'auto'
         },
-        id=f"item-{add_clicks}",
+        id=f"item-{add_clicks}-{button_id}",
     )
     timeline_items = timeline_children or []
     timeline_items.append(new_item)
@@ -211,10 +211,13 @@ def graph_preview_new(size_data, current_df):
 
     # Map intensity levels to alpha values
     alpha_map = {
-        "Very": 1000,
-        "Medium": 500,
-        "Small": 250,
-        "Flat": 100
+        "Very Bull": 1000,
+        "Medium Bull": 500,
+        "Small Bull": 250,
+        "Flat": 100,
+        "Very Bear": 250,
+        "Medium Bear": 500,
+        "Small Bear": 1000,
     }
 
     # Convert size_data to sequence of trends with appropriate alpha values
@@ -229,9 +232,7 @@ def graph_preview_new(size_data, current_df):
         length = size_data[item]["width"]
         label = size_data[item]["label"]
         
-        # Determine trend type and alpha
-        intensity = next((level for level in ["Very", "Medium", "Small"] if level in label), "Flat")
-        alpha = alpha_map[intensity]
+        alpha = alpha_map.get(label, 100)
         
         if "Bull" in label:
             trends.append("bull")
@@ -259,14 +260,14 @@ def graph_preview_new(size_data, current_df):
         existing_df = get_generated_data()
         if existing_df.empty:
             return html.Div(), {}
-            
+
         # Get the date range
         dates = existing_df.index
-        
+
         # Calculate proportions for each trend
         total_width = sum(lengths)
         proportions = [length/total_width for length in lengths]
-        
+
         # Divide dates according to proportions
         date_ranges = []
         start_idx = 0
@@ -274,11 +275,11 @@ def graph_preview_new(size_data, current_df):
             end_idx = start_idx + int(prop * len(dates))
             date_ranges.append(dates[start_idx:end_idx])
             start_idx = end_idx
-            
+
         # Generate charts for each trend
         children = []
         all_dataframes = {}  # To store data for all companies
-        
+
         for i, (trend, alpha, date_range) in enumerate(zip(trends, alphas, date_ranges)):
             trend_children = []
             dataframes = []
@@ -291,22 +292,22 @@ def graph_preview_new(size_data, current_df):
                     radio_trends=[trend],
                     companies=[company]
                 )
-                
+
                 if company_children is no_update or company_dataframes is no_update:
                     continue
-                    
+
                 if company_children and company_dataframes:
                     # Process each dataframe
                     for df_dict in company_dataframes:
                         # Convert to DataFrame for easier manipulation
                         df = pd.DataFrame(df_dict)
-                        
+
                         # Convert DataFrame columns to numpy arrays for manipulation
                         opens = df['Open'].values
                         highs = df['High'].values
                         lows = df['Low'].values
                         closes = df['Close'].values
-                        
+
                         # Define pattern spans
                         pattern_span = {
                             "bullish_engulfing": 2,
@@ -316,15 +317,15 @@ def graph_preview_new(size_data, current_df):
                             "double_top": 5,
                             "head_and_shoulders": 5
                         }
-                        
+
                         # Keep track of used days to avoid overlap
                         used_days = set()
                         # Store patterns to apply them later during visualization
                         patterns_to_apply = []
-                        
+
                         # Try to add patterns multiple times
                         num_attempts = len(opens) // 10  # Try to add a pattern every 10 days on average
-                        
+
                         for _ in range(num_attempts):
                             if np.random.random() < 0.4:  # 40% chance for each attempt
                                 # Select pattern based on current trend
@@ -334,33 +335,33 @@ def graph_preview_new(size_data, current_df):
                                     pattern = np.random.choice(["bearish_engulfing", "shooting_star", "double_top"], p=[0.4, 0.3, 0.3])
                                 else:  # flat trend
                                     pattern = np.random.choice(["head_and_shoulders", None], p=[0.3, 0.7])
-                                
+
                                 if pattern:
                                     # Get span for this pattern
                                     span = pattern_span[pattern]
-                                    
+
                                     # Find a suitable position for the pattern
                                     # Leave some margin at the start and end
                                     margin = 5
                                     possible_starts = list(range(margin, len(opens) - span - margin))
-                                    
+
                                     # Remove positions that would overlap with existing patterns
                                     possible_starts = [
-                                        pos for pos in possible_starts 
+                                        pos for pos in possible_starts
                                         if not any(
-                                            day in used_days 
+                                            day in used_days
                                             for day in range(pos - 2, pos + span + 2)  # Add buffer around patterns
                                         )
                                     ]
-                                    
+
                                     if possible_starts:  # If we found a valid position
                                         pattern_day = np.random.choice(possible_starts)
                                         pattern_date = date_range[pattern_day]
-                                        
+
                                         # Mark these days as used
                                         for day in range(pattern_day - 2, pattern_day + span + 2):
                                             used_days.add(day)
-                                        
+
                                         # Apply the pattern
                                         if pattern == "bullish_engulfing":
                                             insert_bullish_engulfing(opens, highs, lows, closes, pattern_day)
@@ -374,7 +375,7 @@ def graph_preview_new(size_data, current_df):
                                             insert_double_top(opens, highs, lows, closes, pattern_day)
                                         elif pattern == "head_and_shoulders":
                                             insert_head_and_shoulders(opens, highs, lows, closes, pattern_day)
-                                        
+
                                         # Store pattern info for later visualization
                                         patterns_to_apply.append({
                                             'pattern': pattern,
@@ -382,32 +383,32 @@ def graph_preview_new(size_data, current_df):
                                             'span': span,
                                             'date': pattern_date
                                         })
-                        
+
                         # Update the DataFrame with modified values
                         df['Open'] = opens
                         df['High'] = highs
                         df['Low'] = lows
                         df['Close'] = closes
-                        
+
                         # Convert to dict and store patterns
                         new_dict = df.to_dict('list')
                         new_dict['_patterns'] = patterns_to_apply
                         dataframes.append(new_dict)
-                    
+
                     trend_children.extend(company_children)
-            
+
             if trend_children and dataframes:
                 # For each chart, update the dates
                 children = []  # List to store the new graphs
                 for j, df_dict in enumerate(dataframes):
                     # Extract patterns before creating DataFrame
                     patterns_info = df_dict.pop('_patterns', [])
-                    
+
                     # Create DataFrame from the data
                     df = pd.DataFrame(df_dict)
                     date_index = pd.date_range(start=first_timestamp, periods=df.shape[0], freq='D')
                     df.set_index(date_index, inplace=True)
-                    
+
                     # Store data in the global dictionary
                     company = companies[j]
                     if company not in all_dataframes:
@@ -415,15 +416,15 @@ def graph_preview_new(size_data, current_df):
                     else:
                         # Concatenate with existing data
                         all_dataframes[company] = pd.concat([all_dataframes[company], df])
-                    
+
                     # Create new figure from trend_children
                     fig = go.Figure(trend_children[j].figure)
-                    
+
                     # Update chart data with new dates
                     for trace in fig.data:
                         if hasattr(trace, 'x'):
                             trace.x = df.index
-                    
+
                     # Configure x-axis to properly display dates
                     fig.update_layout(
                         xaxis=dict(
@@ -440,7 +441,7 @@ def graph_preview_new(size_data, current_df):
                         plot_bgcolor='rgba(240, 244, 250, 1)',
                         paper_bgcolor='rgba(0,0,0,0)'
                     )
-                    
+
                     # Create new graph with updated figure
                     new_graph = dcc.Graph(
                         figure=fig,
@@ -451,18 +452,18 @@ def graph_preview_new(size_data, current_df):
                 # Create multi-index DataFrame like in generated_data.csv
         final_df = pd.concat(all_dataframes, axis=1, keys=all_dataframes.keys())
         final_df.columns.names = ['symbol', None]
-        
-                # Convert to serializable format
-                # Flatten multi-index columns by joining with separator
+
+        # Convert to serializable format
+        # Flatten multi-index columns by joining with separator
         final_df.columns = [f"{col[0]}|{col[1]}" for col in final_df.columns]
-        
-                # Convert to dictionary with simple format
+
+        # Convert to dictionary with simple format
         json_data = {
             'data': final_df.to_dict(orient='split'),
             'column_names': final_df.columns.tolist()
         }
-        
-        
+
+
         # Return the container with the new graphs
         return html.Div(
             children=children,
@@ -470,9 +471,9 @@ def graph_preview_new(size_data, current_df):
                 'display': 'flex',
                 'flexDirection': 'column',
                 'gap': '20px',
-                        'width': '100%',
-                        'maxHeight': '500px',
-                        'overflowY': 'auto'
+                'width': '100%',
+                'maxHeight': '500px',
+                'overflowY': 'auto'
             }
         ), json_data
 

@@ -68,57 +68,50 @@ app.layout = dmc.MantineProvider([
 app.clientside_callback(
     """
     function(n_clicks, children) {
-        if (!window.itemSizesInitialized) {
+        // Initialiser l'objet pour stocker les tailles si ce n'est pas déjà fait
+        if (!window.itemSizes) {
             window.itemSizes = {};
-            window.itemSizesInitialized = true;
+        }
 
-            const observer = new ResizeObserver(entries => {
-                entries.forEach(entry => {
-                    const id = entry.target.id;
-                    if (id && id.startsWith("item-")) {
-                        const el = entry.target;
-                        const directText = Array.from(el.childNodes)
-                            .filter(node => node.nodeType === Node.TEXT_NODE)
-                            .map(node => node.textContent.trim())
-                            .filter(text => text.length > 0)
-                            .join(" ");
+        // Fonction pour mesurer et stocker les tailles des éléments
+        function measureAndStoreSizes() {
+            document.querySelectorAll('[id^="item-"]').forEach(el => {
+                const id = el.id;
+                if (id && id.startsWith("item-")) {
+                    const parts = id.split('-');
+                    if (parts.length >= 3) {
+                        const itemId = parts[0] + '-' + parts[1];
+                        const label = parts.slice(2).join(' ');
 
-                        window.itemSizes[id] = {
-                            width: entry.contentRect.width,
-                            height: entry.contentRect.height,
-                            label: directText
+                        // Mesurer la taille de l'élément
+                        const width = el.offsetWidth;
+                        const height = el.offsetHeight;
+
+                        // Stocker les tailles
+                        window.itemSizes[itemId] = {
+                            width: width,
+                            height: height,
+                            label: label
                         };
                     }
-                });
+                }
+            });
+        }
+
+        // Utiliser ResizeObserver pour observer les changements de taille
+        if (!window.resizeObserverInitialized) {
+            const observer = new ResizeObserver(entries => {
+                // Mettre à jour les tailles lorsque les éléments sont redimensionnés
+                measureAndStoreSizes();
+                console.log("Updated item sizes:", window.itemSizes);
             });
 
-            function observeTextChanges(el, id) {
-                const textObserver = new MutationObserver(() => {
-                    const directText = Array.from(el.childNodes)
-                        .filter(node => node.nodeType === Node.TEXT_NODE)
-                        .map(node => node.textContent.trim())
-                        .filter(text => text.length > 0)
-                        .join(" ");
+            // Observer tous les éléments existants
+            document.querySelectorAll('[id^="item-"]').forEach(el => {
+                observer.observe(el);
+            });
 
-                    if (window.itemSizes[id]) {
-                        window.itemSizes[id].label = directText;
-                    }
-                });
-
-                textObserver.observe(el, { characterData: true, childList: true, subtree: true });
-                el._textObserver = textObserver;
-            }
-
-            function observeExisting() {
-                document.querySelectorAll('[id^="item-"]').forEach(el => {
-                    const id = el.id;
-                    observer.observe(el);
-                    observeTextChanges(el, id);
-                });
-            }
-
-            observeExisting();
-
+            // Observer les changements dans la timeline pour les nouveaux éléments
             const timeline = document.getElementById("timeline");
             if (timeline) {
                 const mutationObserver = new MutationObserver(mutations => {
@@ -126,24 +119,20 @@ app.clientside_callback(
                         mutation.addedNodes.forEach(node => {
                             if (node.nodeType === 1 && node.id && node.id.startsWith("item-")) {
                                 observer.observe(node);
-                                observeTextChanges(node, node.id);
-                            }
-                        });
-                        mutation.removedNodes.forEach(node => {
-                            if (node.nodeType === 1 && node.id && node.id.startsWith("item-")) {
-                                delete window.itemSizes[node.id];
-                                if (node._textObserver) {
-                                    node._textObserver.disconnect();
-                                    delete node._textObserver;
-                                }
                             }
                         });
                     });
                 });
-                mutationObserver.observe(timeline, { childList: true, subtree: false });
+                mutationObserver.observe(timeline, { childList: true });
             }
+
+            window.resizeObserverInitialized = true;
         }
 
+        // Mesurer et stocker les tailles initiales
+        measureAndStoreSizes();
+
+        console.log("Current item sizes:", window.itemSizes);
         return window.itemSizes;
     }
     """,
@@ -151,6 +140,7 @@ app.clientside_callback(
     Input("refresh-button", "n_clicks"),
     Input("timeline", "children")
 )
+
 
 
 

@@ -19,56 +19,60 @@ button_labels = [
     'Very Bear'
 ]
 
-bull_buttons = [
-    dmc.Button(
-        "Add "+label,
-        id={'type': 'add-button', 'index': label},
-        n_clicks=0,
-        color="green",
-        size="sm",
-        className="m-1"
-    ) for label in button_labels if 'Bull' in label
-]
+def bull_buttons(lang = "fr"):
+    tl = tls[lang]["settings"]["charts"]["button"]
+    return [dmc.Button(
+            tl[label],
+            id={'type': 'add-button', 'index': label},
+            n_clicks=0,
+            color="green",
+            size="sm",
+            className="m-1"
+        ) for label in button_labels if 'Bull' in label
+    ]
 
-flat_buttons = [
-    dmc.Button(
-        "Add "+label,
-        id={'type': 'add-button', 'index': label},
-        n_clicks=0,
-        color="gray",
-        size="sm",
-        className="m-1"
-    ) for label in button_labels if 'Flat' in label
-]
+def flat_buttons(lang = "fr"):
+    tl = tls[lang]["settings"]["charts"]["button"]
+    return [dmc.Button(
+            tl[label],
+            id={'type': 'add-button', 'index': label},
+            n_clicks=0,
+            color="gray",
+            size="sm",
+            className="m-1"
+        ) for label in button_labels if 'Flat' in label
+    ]
 
-bear_buttons = [
-    dmc.Button(
-        "Add "+label,
-        id={'type': 'add-button', 'index': label},
-        n_clicks=0,
-        color="red",
-        size="sm",
-        className="m-1"
-    ) for label in button_labels if 'Bear' in label
-]
+def bear_buttons(lang = "fr"):
+    tl = tls[lang]["settings"]["charts"]["button"]
+    return  [dmc.Button(
+            tl[label],
+            id={'type': 'add-button', 'index': label},
+            n_clicks=0,
+            color="red",
+            size="sm",
+            className="m-1"
+        ) for label in button_labels if 'Bear' in label
+    ]
 
-layout = html.Div([
-    html.Div(bull_buttons, style={'display': 'flex', 'flexDirection': 'row'}),
-    html.Div(flat_buttons, style={'display': 'flex', 'flexDirection': 'row'}),
-    html.Div(bear_buttons, style={'display': 'flex', 'flexDirection': 'row'})
-], style={'display': 'flex', 'flexDirection': 'column'})
+def layout(lang = "fr"):
+    return html.Div([
+    html.Div(bull_buttons(lang), style={'display': 'flex', 'flexDirection': 'row'}),
+    html.Div(flat_buttons(lang), style={'display': 'flex', 'flexDirection': 'row'}),
+    html.Div(bear_buttons(lang), style={'display': 'flex', 'flexDirection': 'row'})
+    ], style={'display': 'flex', 'flexDirection': 'column'})
 
 def editor(lang = "fr"):
     tl = tls[lang]["settings"]["charts"]
     return html.Div([
-        layout,
+        layout(lang),
 
         html.Br(),
 
         html.Div(id='timeline', style={'display': 'flex', 'flexDirection': 'row', 'overflowX': 'auto', 'whiteSpace': 'nowrap'}),
 
         dmc.Button(
-            "Refresh",
+            tl["button"]["refresh"],
             id='refresh-button',
             n_clicks=0,
             color="dark",
@@ -124,8 +128,8 @@ def generate_chars_selection(lang="fr"):
         dmc.Tabs(
             [
                 dmc.TabsList([
-                    dmc.Tab("Old generator",value="old"),
-                    dmc.Tab("New generator",value="new")
+                    dmc.Tab(tl["subtitles"]["Old generator"],value="old"),
+                    dmc.Tab(tl["subtitles"]["New generator"],value="new")
                 ],grow=True),
 
                 dmc.TabsPanel(generate_charts(lang=lang),value="old"),
