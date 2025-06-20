@@ -1,6 +1,7 @@
 import json
 import os
 from random import randint
+import csv
 
 import dash
 import pandas as pd
@@ -18,7 +19,100 @@ from trade.defaults import defaults as dlt
 from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
 from trade.callbacks.settings.charts.modal import generate_new_charts
 from trade.callbacks.settings.charts.patterns_generator import insert_bullish_engulfing, insert_bearish_engulfing, insert_hammer, insert_shooting_star, insert_double_top, insert_head_and_shoulders
+from dash import ALL
 
+# Mapping pattern -> paramètres optionnels
+PATTERN_PARAMS = {
+    "bullish_engulfing": [
+        {"name": "down1", "label": "Baisse jour 1 (%)", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
+        {"name": "up1", "label": "Hausse jour 2 (%)", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
+    ],
+    "bearish_engulfing": [
+        {"name": "down1", "label": "Baisse jour 2 (%)", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
+        {"name": "up1", "label": "Hausse jour 1 (%)", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
+    ],
+    "hammer": [
+        {"name": "low", "label": "Corps min (%)", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
+        {"name": "high", "label": "Corps max (%)", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
+    ],
+    "shooting_star": [
+        {"name": "low", "label": "Corps min (%)", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
+        {"name": "high", "label": "Corps max (%)", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
+    ],
+    "double_top": [
+        {"name": "top_init", "label": "Sommet initial (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
+        {"name": "creux_init", "label": "Creux initial (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.01},
+        {"name": "rise1", "label": "Hausse 1 (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.015},
+        {"name": "low4", "label": "Bas 4 (%)", "type": "number", "min": 0.98, "max": 1.01, "step": 0.001, "value": 0.998},
+        {"name": "high4", "label": "Haut 4 (%)", "type": "number", "min": 1.0, "max": 1.01, "step": 0.001, "value": 1.002},
+        {"name": "close5", "label": "Clôture 5 (%)", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
+    ],
+    "head_and_shoulders": [
+        {"name": "shoulder_rate", "label": "Épaule (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
+        {"name": "head_rate", "label": "Tête (%)", "type": "number", "min": 1.0, "max": 1.1, "step": 0.001, "value": 1.04},
+        {"name": "neckline_rate", "label": "Ligne de cou (%)", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
+        {"name": "breaking_rate", "label": "Cassure (%)", "type": "number", "min": 0.9, "max": 1.0, "step": 0.001, "value": 0.97},
+    ],
+}
+
+# Callback pour générer dynamiquement les champs de paramètres
+from dash import Output, Input, State, callback
+
+@callback(
+    Output("pattern-params-container", "children"),
+    Input("pattern-select", "value"),
+    Input("reset-pattern-config-btn", "n_clicks"),
+    State({"type": "pattern-param", "name": ALL}, "value"),
+    State({"type": "pattern-param", "name": ALL}, "id"),
+    prevent_initial_call=True
+)
+def update_pattern_params(pattern_name, reset_clicks, current_values, current_ids):
+    ctx = dash.callback_context
+    triggered = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
+    if not pattern_name:
+        return []
+    params = PATTERN_PARAMS.get(pattern_name, [])
+    if not params:
+        return [html.Div("Aucun paramètre optionnel pour ce pattern.")]
+    # Utiliser un fichier JSON pour stocker les configs
+    file_path = os.path.join(dlt.data_path, "pattern_configs.json")
+    configs = {}
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            configs = json.load(f)
+    except Exception:
+        configs = {}
+    if triggered == "reset-pattern-config-btn":
+        # On force les valeurs par défaut ET on écrase le JSON
+        value_map = {param["name"]: param["value"] for param in params}
+        configs[pattern_name] = value_map
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(configs, f, indent=2)
+    elif pattern_name in configs:
+        value_map = {param["name"]: configs[pattern_name].get(param["name"], param["value"]) for param in params}
+    else:
+        value_map = {id_["name"]: val for id_, val in zip(current_ids, current_values)} if current_ids else {param["name"]: param["value"] for param in params}
+    fields = []
+    for param in params:
+        value = value_map.get(param["name"], param["value"])
+        if param["type"] == "number":
+            fields.append(
+                dmc.Slider(
+                    id={"type": "pattern-param", "name": param["name"]},
+                    value=value,
+                    min=param["min"],
+                    max=param["max"],
+                    step=param["step"],
+                    marks=[
+                        {"value": param["min"], "label": str(param["min"])} if param["min"] != param["max"] else {},
+                        {"value": param["max"], "label": str(param["max"])} if param["min"] != param["max"] else {},
+                    ],
+                    size="md",
+                    className="mb-4 w-64",
+                    labelAlwaysOn=True,
+                )
+            )
+    return fields
 
 @callback(
     Output("chart", "figure"),
@@ -607,6 +701,101 @@ def export_to_csv(n, graph_data):
     except Exception as e:
         print('Error while exporting to CSV:', e)
         return no_update
+
+@callback(
+    Output("pattern-preview-graph", "figure"),
+    Input("pattern-select", "value"),
+    Input({"type": "pattern-param", "name": ALL}, "value"),
+    State({"type": "pattern-param", "name": ALL}, "id"),
+)
+def update_pattern_preview(pattern_name, param_values, param_ids):
+    if not pattern_name:
+        return go.Figure()
+
+    # Préparer les paramètres sous forme de dict
+    params = {id_["name"]: val for id_, val in zip(param_ids, param_values)} if param_ids else {}
+
+    # Générer les données OHLC pour chaque pattern
+    n = 6  # nombre de jours max pour les patterns
+    opens = [100.0] * n
+    highs = [100.0] * n
+    lows = [100.0] * n
+    closes = [100.0] * n
+
+    # Appel de la bonne fonction
+    try:
+        if pattern_name == "bullish_engulfing":
+            insert_bullish_engulfing(opens, highs, lows, closes, 0, **params)
+        elif pattern_name == "bearish_engulfing":
+            insert_bearish_engulfing(opens, highs, lows, closes, 0, **params)
+        elif pattern_name == "hammer":
+            insert_hammer(opens, highs, lows, closes, 0, **params)
+        elif pattern_name == "shooting_star":
+            insert_shooting_star(opens, highs, lows, closes, 0, **params)
+        elif pattern_name == "double_top":
+            insert_double_top(opens, highs, lows, closes, 0, **params)
+        elif pattern_name == "head_and_shoulders":
+            insert_head_and_shoulders(opens, highs, lows, closes, 0, **params)
+        else:
+            return go.Figure()
+    except Exception as e:
+        return go.Figure(layout={"title": f"Erreur : {e}"})
+
+    # Déterminer la longueur utile
+    pattern_len = 2 if pattern_name in ["bullish_engulfing", "bearish_engulfing"] else 1
+    if pattern_name == "hammer" or pattern_name == "shooting_star":
+        pattern_len = 1
+    elif pattern_name == "double_top":
+        pattern_len = 5
+    elif pattern_name == "head_and_shoulders":
+        pattern_len = 6
+
+    # Générer le graphique
+    fig = go.Figure(data=[
+        go.Candlestick(
+            open=opens[:pattern_len],
+            high=highs[:pattern_len],
+            low=lows[:pattern_len],
+            close=closes[:pattern_len],
+            increasing_line_color='green',
+            decreasing_line_color='red',
+            showlegend=False
+        )
+    ])
+    fig.update_layout(
+        xaxis_title="Jour",
+        yaxis_title="Prix",
+        title=f"Aperçu : {pattern_name.replace('_', ' ').title()}",
+        xaxis=dict(tickvals=list(range(pattern_len)), ticktext=[f"Jour {i+1}" for i in range(pattern_len)])
+    )
+    return fig
+
+@callback(
+    Output("save-pattern-config-msg", "children"),
+    Input("save-pattern-config-btn", "n_clicks"),
+    State("pattern-select", "value"),
+    State({"type": "pattern-param", "name": ALL}, "value"),
+    State({"type": "pattern-param", "name": ALL}, "id"),
+    prevent_initial_call=True
+)
+def save_pattern_config(n_clicks, pattern_name, param_values, param_ids):
+    if not pattern_name:
+        return dmc.Alert("Veuillez sélectionner un pattern.", color="red")
+    params = {id_["name"]: val for id_, val in zip(param_ids, param_values)} if param_ids else {}
+    file_path = os.path.join(dlt.data_path, "pattern_configs.json")
+    # Charger l'existant
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            configs = json.load(f)
+    except Exception:
+        configs = {}
+    # Mettre à jour la config du pattern
+    configs[pattern_name] = params
+    # Sauvegarder
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(configs, f, indent=2)
+    return dmc.Alert("Configuration sauvegardée !", color="green")
 
 
 

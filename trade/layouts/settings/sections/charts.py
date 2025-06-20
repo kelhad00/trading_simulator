@@ -94,7 +94,44 @@ def editor(lang = "fr"):
             size="sm"
         ),
 
-        dcc.Store(id="size-store", data={}, storage_type="session")
+        dcc.Store(id="size-store", data={}, storage_type="session"),
+
+        section("Configurer un pattern personnalisé", [
+            dmc.Select(
+                id="pattern-select",
+                label="Choisir un pattern",
+                data=[
+                    {"value": "bullish_engulfing", "label": "Bullish Engulfing"},
+                    {"value": "bearish_engulfing", "label": "Bearish Engulfing"},
+                    {"value": "hammer", "label": "Hammer"},
+                    {"value": "shooting_star", "label": "Shooting Star"},
+                    {"value": "double_top", "label": "Double Top"},
+                    {"value": "head_and_shoulders", "label": "Head and Shoulders"},
+                ],
+                className="w-full",
+            ),
+            html.Div(id="pattern-params-container"),
+            dmc.Group([
+                dmc.Button(
+                    "Sauvegarder la configuration",
+                    id="save-pattern-config-btn",
+                    color="blue",
+                    className="mt-4"
+                ),
+                dmc.Button(
+                    "Réinitialiser les paramètres",
+                    id="reset-pattern-config-btn",
+                    color="gray",
+                    className="mt-4"
+                ),
+            ], position="left", className="mb-2"),
+            section("Aperçu du pattern", [
+                dmc.Paper(
+                    dcc.Graph(id="pattern-preview-graph")
+                )
+            ]),
+            html.Div(id="save-pattern-config-msg")
+        ])
     ], className="flex flex-col gap-8 w-full")
 
 
