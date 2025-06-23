@@ -51,7 +51,7 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
 
         dcc.Store(id="companies", data=dlt.companies_list, storage_type="local"),
-        dcc.Store(id="nb_export", data=len(os.listdir(os.path.join(dlt.data_path, "exports")))-1, storage_type="session"),
+        dcc.Store(id="nb_export", data=len(os.listdir(os.path.join(dlt.data_path, "exports"))), storage_type="session"),
         #for new graph generation
         dcc.Store(id="new-graph-df", data={}, storage_type="session"),
 

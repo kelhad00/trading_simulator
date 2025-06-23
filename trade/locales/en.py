@@ -107,6 +107,13 @@ translation = {
                     'Small Bear':'Small Bear',
                     'Medium Bear':'Medium Bear',
                     'Very Bear':'Very Bear',
+                    "preview_pattern_title": "Preview :",
+                    "preview_pattern_day": "Day",
+                    "preview_pattern_price": "Price",
+                    "alert_select_pattern": "Please select a pattern.",
+                    "alert_config_saved": "Configuration saved!",
+                    "pattern_config": "Configure a custom pattern",
+                    "pattern_preview": "Pattern preview",
                 },
                 "button": {
                     "refresh":"Refresh",
@@ -120,12 +127,15 @@ translation = {
                     'Small Bear':'Add Small Bear',
                     'Medium Bear':'Add Medium Bear',
                     'Very Bear':'Add Very Bear',
+                    "save_pattern_config": "Save configuration",
+                    "reset_pattern_config": "Reset parameters"
                 },
                 "select": {
                     "ticker": "Select a stock",
                     "alpha": "Select alpha value",
                     "length": "Select length of a market movement",
                     "start": "Select start date",
+                    "pattern": "Choose a pattern"
                 },
                 "radio": {
                     "title": "market movement",
@@ -134,7 +144,47 @@ translation = {
                 },
                 "input": {
                     "trends": "Number of charts trends",
-                }
+                },
+                "patterns_params": {
+                    "bullish_engulfing": {
+                        "down1": "Day 1 drop (%)",
+                        "up1": "Day 2 rise (%)"
+                    },
+                    "bearish_engulfing": {
+                        "down1": "Day 2 drop (%)",
+                        "up1": "Day 1 rise (%)"
+                    },
+                    "hammer": {
+                        "low": "Body min (%)",
+                        "high": "Body max (%)"
+                    },
+                    "shooting_star": {
+                        "low": "Body min (%)",
+                        "high": "Body max (%)"
+                    },
+                    "double_top": {
+                        "top_init": "Initial top (%)",
+                        "creux_init": "Initial bottom (%)",
+                        "rise1": "Rise 1 (%)",
+                        "low4": "Low 4 (%)",
+                        "high4": "High 4 (%)",
+                        "close5": "Close 5 (%)"
+                    },
+                    "head_and_shoulders": {
+                        "shoulder_rate": "Shoulder (%)",
+                        "head_rate": "Head (%)",
+                        "neckline_rate": "Neckline (%)",
+                        "breaking_rate": "Breakout (%)"
+                    }
+                },
+                "patterns_names": {
+                    "bullish_engulfing": "Bullish Engulfing",
+                    "bearish_engulfing": "Bearish Engulfing",
+                    "hammer": "Hammer",
+                    "shooting_star": "Shooting Star",
+                    "double_top": "Double Top",
+                    "head_and_shoulders": "Head and Shoulders"
+                },
             },
             "tickers": {
                 "subtitles": {

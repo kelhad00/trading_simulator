@@ -24,34 +24,34 @@ from dash import ALL
 # Mapping pattern -> paramètres optionnels
 PATTERN_PARAMS = {
     "bullish_engulfing": [
-        {"name": "down1", "label": "Baisse jour 1 (%)", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
-        {"name": "up1", "label": "Hausse jour 2 (%)", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
+        {"name": "down1", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
+        {"name": "up1", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
     ],
     "bearish_engulfing": [
-        {"name": "down1", "label": "Baisse jour 2 (%)", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
-        {"name": "up1", "label": "Hausse jour 1 (%)", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
+        {"name": "down1", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
+        {"name": "up1", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
     ],
     "hammer": [
-        {"name": "low", "label": "Corps min (%)", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
-        {"name": "high", "label": "Corps max (%)", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
+        {"name": "low", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
+        {"name": "high", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
     ],
     "shooting_star": [
-        {"name": "low", "label": "Corps min (%)", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
-        {"name": "high", "label": "Corps max (%)", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
+        {"name": "low", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
+        {"name": "high", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
     ],
     "double_top": [
-        {"name": "top_init", "label": "Sommet initial (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
-        {"name": "creux_init", "label": "Creux initial (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.01},
-        {"name": "rise1", "label": "Hausse 1 (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.015},
-        {"name": "low4", "label": "Bas 4 (%)", "type": "number", "min": 0.98, "max": 1.01, "step": 0.001, "value": 0.998},
-        {"name": "high4", "label": "Haut 4 (%)", "type": "number", "min": 1.0, "max": 1.01, "step": 0.001, "value": 1.002},
-        {"name": "close5", "label": "Clôture 5 (%)", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
+        {"name": "top_init", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
+        {"name": "creux_init", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.01},
+        {"name": "rise1", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.015},
+        {"name": "low4", "type": "number", "min": 0.98, "max": 1.01, "step": 0.001, "value": 0.998},
+        {"name": "high4", "type": "number", "min": 1.0, "max": 1.01, "step": 0.001, "value": 1.002},
+        {"name": "close5", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
     ],
     "head_and_shoulders": [
-        {"name": "shoulder_rate", "label": "Épaule (%)", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
-        {"name": "head_rate", "label": "Tête (%)", "type": "number", "min": 1.0, "max": 1.1, "step": 0.001, "value": 1.04},
-        {"name": "neckline_rate", "label": "Ligne de cou (%)", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
-        {"name": "breaking_rate", "label": "Cassure (%)", "type": "number", "min": 0.9, "max": 1.0, "step": 0.001, "value": 0.97},
+        {"name": "shoulder_rate", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
+        {"name": "head_rate", "type": "number", "min": 1.0, "max": 1.1, "step": 0.001, "value": 1.04},
+        {"name": "neckline_rate", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
+        {"name": "breaking_rate", "type": "number", "min": 0.9, "max": 1.0, "step": 0.001, "value": 0.97},
     ],
 }
 
@@ -82,8 +82,9 @@ def update_pattern_params(pattern_name, reset_clicks, current_values, current_id
             configs = json.load(f)
     except Exception:
         configs = {}
+    # Récupérer la langue courante
+    lang = page_registry['lang']
     if triggered == "reset-pattern-config-btn":
-        # On force les valeurs par défaut ET on écrase le JSON
         value_map = {param["name"]: param["value"] for param in params}
         configs[pattern_name] = value_map
         with open(file_path, "w", encoding="utf-8") as f:
@@ -95,22 +96,30 @@ def update_pattern_params(pattern_name, reset_clicks, current_values, current_id
     fields = []
     for param in params:
         value = value_map.get(param["name"], param["value"])
+        # Récupérer le label traduit
+        try:
+            label = tls[lang]["settings"]["charts"]["patterns_params"][pattern_name][param["name"]]
+        except Exception:
+            label = param["name"]
         if param["type"] == "number":
             fields.append(
-                dmc.Slider(
-                    id={"type": "pattern-param", "name": param["name"]},
-                    value=value,
-                    min=param["min"],
-                    max=param["max"],
-                    step=param["step"],
-                    marks=[
-                        {"value": param["min"], "label": str(param["min"])} if param["min"] != param["max"] else {},
-                        {"value": param["max"], "label": str(param["max"])} if param["min"] != param["max"] else {},
-                    ],
-                    size="md",
-                    className="mb-4 w-64",
-                    labelAlwaysOn=True,
-                )
+                html.Div([
+                    dmc.Text(label, size="sm", className="mb-1"),
+                    dmc.Slider(
+                        id={"type": "pattern-param", "name": param["name"]},
+                        value=value,
+                        min=param["min"],
+                        max=param["max"],
+                        step=param["step"],
+                        marks=[
+                            {"value": param["min"], "label": str(param["min"])} if param["min"] != param["max"] else {},
+                            {"value": param["max"], "label": str(param["max"])} if param["min"] != param["max"] else {},
+                        ],
+                        size="md",
+                        className="mb-4 w-64",
+                        labelAlwaysOn=False,
+                    ),
+                ], style={"marginBottom": "16px"})
             )
     return fields
 
@@ -750,6 +759,13 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
     elif pattern_name == "head_and_shoulders":
         pattern_len = 6
 
+    # Récupérer la langue courante
+    lang = page_registry['lang']
+    # Récupérer les labels traduits
+    preview_label = tls[lang]["settings"]["charts"]["subtitles"]["preview_pattern_title"]
+    day_label = tls[lang]["settings"]["charts"]["subtitles"]["preview_pattern_day"]
+    price_label = tls[lang]["settings"]["charts"]["subtitles"]["preview_pattern_price"]
+
     # Générer le graphique
     fig = go.Figure(data=[
         go.Candlestick(
@@ -763,10 +779,10 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
         )
     ])
     fig.update_layout(
-        xaxis_title="Jour",
-        yaxis_title="Prix",
-        title=f"Aperçu : {pattern_name.replace('_', ' ').title()}",
-        xaxis=dict(tickvals=list(range(pattern_len)), ticktext=[f"Jour {i+1}" for i in range(pattern_len)])
+        xaxis_title=day_label,
+        yaxis_title=price_label,
+        title=f"{preview_label} {pattern_name.replace('_', ' ').title()}",
+        xaxis=dict(tickvals=list(range(pattern_len)), ticktext=[f"{day_label} {i+1}" for i in range(pattern_len)])
     )
     return fig
 
@@ -779,8 +795,14 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
     prevent_initial_call=True
 )
 def save_pattern_config(n_clicks, pattern_name, param_values, param_ids):
+    # Récupérer la langue courante
+    lang = page_registry['lang']
     if not pattern_name:
-        return dmc.Alert("Veuillez sélectionner un pattern.", color="red")
+        try:
+            msg = tls[lang]["settings"]["charts"]["alert_select_pattern"]
+        except Exception:
+            msg = "Veuillez sélectionner un pattern."
+        return dmc.Alert(msg, color="red")
     params = {id_["name"]: val for id_, val in zip(param_ids, param_values)} if param_ids else {}
     file_path = os.path.join(dlt.data_path, "pattern_configs.json")
     # Charger l'existant
@@ -795,7 +817,21 @@ def save_pattern_config(n_clicks, pattern_name, param_values, param_ids):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(configs, f, indent=2)
-    return dmc.Alert("Configuration sauvegardée !", color="green")
+    try:
+        msg = tls[lang]["settings"]["charts"]["alert_config_saved"]
+    except Exception:
+        msg = "Configuration sauvegardée !"
+    return dmc.Alert(msg, color="green")
+
+# Callback pour synchroniser dynamiquement la valeur affichée à droite de chaque slider
+@callback(
+    Output({"type": "pattern-param-value", "name": ALL}, "children"),
+    Input({"type": "pattern-param", "name": ALL}, "value"),
+    State({"type": "pattern-param", "name": ALL}, "id"),
+)
+def update_pattern_param_values(values, ids):
+    # Retourne la valeur sous forme de string pour chaque slider
+    return [str(v) for v in values]
 
 
 

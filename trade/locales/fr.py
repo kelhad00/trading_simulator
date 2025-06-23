@@ -108,6 +108,13 @@ translation = {
                     'Small Bear': 'Petit Bear',
                     'Medium Bear': 'Moyen Bear',
                     'Very Bear': 'Très Bear',
+                    "preview_pattern_title": "Aperçu :",
+                    "preview_pattern_day": "Jour",
+                    "preview_pattern_price": "Prix",
+                    "alert_select_pattern": "Veuillez sélectionner un pattern.",
+                    "alert_config_saved": "Configuration sauvegardée !",
+                    "pattern_config": "Configurer un pattern personnalisé",
+                    "pattern_preview": "Aperçu du pattern",
                 },
                 "button": {
                     "refresh":"Rafraichir",
@@ -121,12 +128,15 @@ translation = {
                     'Small Bear': 'Ajouter Petit Bear',
                     'Medium Bear': 'Ajouter Moyen Bear',
                     'Very Bear': 'Ajouter Très Bear',
+                    "save_pattern_config": "Sauvegarder la configuration",
+                    "reset_pattern_config": "Réinitialiser les paramètres"
                 },
                 "select": {
                     "ticker": "Sélectionner une action",
                     "alpha": "Sélectionner la valeur d'alpha",
                     "length": "Sélectionner la longueur d'un mouvement de marché",
                     "start": "Sélectionner la valeur de départ",
+                    "pattern": "Choisir un pattern"
                 },
                 "radio": {
                     "title": "mouvemement de marché",
@@ -135,7 +145,47 @@ translation = {
                 },
                 "input": {
                     "trends": "Nombre de tendances",
-                }
+                },
+                "patterns_params": {
+                    "bullish_engulfing": {
+                        "down1": "Baisse jour 1 (%)",
+                        "up1": "Hausse jour 2 (%)"
+                    },
+                    "bearish_engulfing": {
+                        "down1": "Baisse jour 2 (%)",
+                        "up1": "Hausse jour 1 (%)"
+                    },
+                    "hammer": {
+                        "low": "Corps min (%)",
+                        "high": "Corps max (%)"
+                    },
+                    "shooting_star": {
+                        "low": "Corps min (%)",
+                        "high": "Corps max (%)"
+                    },
+                    "double_top": {
+                        "top_init": "Sommet initial (%)",
+                        "creux_init": "Creux initial (%)",
+                        "rise1": "Hausse 1 (%)",
+                        "low4": "Bas 4 (%)",
+                        "high4": "Haut 4 (%)",
+                        "close5": "Clôture 5 (%)"
+                    },
+                    "head_and_shoulders": {
+                        "shoulder_rate": "Épaule (%)",
+                        "head_rate": "Tête (%)",
+                        "neckline_rate": "Ligne de cou (%)",
+                        "breaking_rate": "Cassure (%)"
+                    }
+                },
+                "patterns_names": {
+                    "bullish_engulfing": "Avalement haussier",
+                    "bearish_engulfing": "Avalement baissier",
+                    "hammer": "Marteau",
+                    "shooting_star": "Étoile filante",
+                    "double_top": "Double sommet",
+                    "head_and_shoulders": "Tête et épaules"
+                },
             },
             "tickers": {
                 "subtitles": {

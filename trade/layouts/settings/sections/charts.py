@@ -64,6 +64,15 @@ def layout(lang = "fr"):
 
 def editor(lang = "fr"):
     tl = tls[lang]["settings"]["charts"]
+    # Liste des patterns et labels traduits
+    pattern_options = [
+        {"value": "bullish_engulfing", "label": tl["patterns_names"]["bullish_engulfing"]},
+        {"value": "bearish_engulfing", "label": tl["patterns_names"]["bearish_engulfing"]},
+        {"value": "hammer", "label": tl["patterns_names"]["hammer"]},
+        {"value": "shooting_star", "label": tl["patterns_names"]["shooting_star"]},
+        {"value": "double_top", "label": tl["patterns_names"]["double_top"]},
+        {"value": "head_and_shoulders", "label": tl["patterns_names"]["head_and_shoulders"]},
+    ]
     return html.Div([
         layout(lang),
 
@@ -96,36 +105,29 @@ def editor(lang = "fr"):
 
         dcc.Store(id="size-store", data={}, storage_type="session"),
 
-        section("Configurer un pattern personnalisé", [
+        section(tl["subtitles"]["pattern_config"], [
             dmc.Select(
                 id="pattern-select",
-                label="Choisir un pattern",
-                data=[
-                    {"value": "bullish_engulfing", "label": "Bullish Engulfing"},
-                    {"value": "bearish_engulfing", "label": "Bearish Engulfing"},
-                    {"value": "hammer", "label": "Hammer"},
-                    {"value": "shooting_star", "label": "Shooting Star"},
-                    {"value": "double_top", "label": "Double Top"},
-                    {"value": "head_and_shoulders", "label": "Head and Shoulders"},
-                ],
+                label=tl["select"]["pattern"],
+                data=pattern_options,
                 className="w-full",
             ),
             html.Div(id="pattern-params-container"),
             dmc.Group([
                 dmc.Button(
-                    "Sauvegarder la configuration",
+                    tl["button"]["save_pattern_config"],
                     id="save-pattern-config-btn",
                     color="blue",
                     className="mt-4"
                 ),
                 dmc.Button(
-                    "Réinitialiser les paramètres",
+                    tl["button"]["reset_pattern_config"],
                     id="reset-pattern-config-btn",
                     color="gray",
                     className="mt-4"
                 ),
             ], position="left", className="mb-2"),
-            section("Aperçu du pattern", [
+            section(tl["subtitles"]["pattern_preview"], [
                 dmc.Paper(
                     dcc.Graph(id="pattern-preview-graph")
                 )
