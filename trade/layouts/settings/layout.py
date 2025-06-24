@@ -7,6 +7,7 @@ from trade.layouts.settings.sections.stocks import stocks_settings
 from trade.layouts.settings.sections.news import news_settings
 from trade.layouts.settings.sections.import_settings import import_settings_layout
 from trade.layouts.settings.sections.revenues import revenues_layout
+from trade.layouts.settings.sections.pattern import pattern_config
 from trade.components.header import header
 
 from trade.locales import translations as tls
@@ -25,6 +26,7 @@ def main_layout_settings(lang="fr"):
                 dmc.TabsList([
                     dmc.Tab(tl["tabs"]["import"], value="import"),
                     dmc.Tab(tl["tabs"]["chart"], value="charts"),
+                    dmc.Tab(tl["tabs"]["pattern"], value="pattern"),
                     dmc.Tab(tl["tabs"]["ticker"], value="tickers"),
                     dmc.Tab(tl["tabs"]["news"], value="news"),
                     dmc.Tab(tl["tabs"]["revenues"], value="revenues"),
@@ -37,14 +39,15 @@ def main_layout_settings(lang="fr"):
                 dmc.TabsPanel(news_settings(lang), value="news"),
                 dmc.TabsPanel(revenues_layout(lang), value="revenues"),
                 dmc.TabsPanel(advanced_settings(lang), value="advanced"),
+                dmc.TabsPanel(pattern_config(lang), value="pattern"),
             ],
             value="charts",
             id="settings-tabs",
             color="dark",
             radius="md",
-            className="w-full max-w-xl flex flex-col gap-8"
+            className="w-full max-w-2xl flex flex-col gap-6"
         )
-    ], className="px-12 p-8 bg-gray-100 flex flex-col items-center h-screen gap-8 overflow-auto"),
+    ], className="px-12 p-8 bg-gray-100 flex flex-col items-center h-screen gap-6 overflow-auto"),
 
 
 

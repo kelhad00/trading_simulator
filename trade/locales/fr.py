@@ -91,6 +91,7 @@ translation = {
                 "advanced": "Avancé",
                 "revenues": "Revenus",
                 "import": "Importation",
+                "pattern": "Pattern",
             },
             "charts": {
                 "subtitles": {
