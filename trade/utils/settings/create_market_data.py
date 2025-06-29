@@ -58,30 +58,24 @@ def bear_trend(data, data_size, alpha=500, length=100):
 
 
 def flat_trend(data, data_size, alpha=50, length=100):
-    # Parameters
-    # alpha: the maximum difference between the close price at the start and end of the trend
-    # length: the length of the trend
-
-    '''
-    Found a flat trend in the market data and return the index of the trend
-    '''
-
-    i = 0
-    while True:
-        rand = random_number(data_size - length - 1)
-        i += 1
-
-        # Calculate the standard deviation
-        std = np.std(data['Close'].iloc[rand:rand + length])
-
-        if abs(data['Close'].iloc[rand] - data['Close'].iloc[rand + length]) <= alpha and std <= 80:
-            break
-
-        if i > 1000:
-            raise Exception("No flat trend found")
-
-    # Return the index of the trend
-    return rand
+    # Génère une série flat artificielle avec variation random 1-2% chaque jour
+    start_price = data['Close'].iloc[0] if not data.empty else 100.0
+    prices = [start_price]
+    while not (1.10 > prices[-1] / start_price > 0.90):
+        prices.clear()
+        prices = [start_price]
+        for _ in range(1, length):
+            pct = np.random.uniform(-0.0005, 0.0005)
+            new_price = prices[-1] * (1 + pct)
+            prices.append(new_price)
+    # Génère un DataFrame avec Open, High, Low, Close
+    df = pd.DataFrame({'Close': prices})
+    df['Open'] = df['Close'] * np.random.uniform(0.995, 1.005, size=length)
+    df['High'] = np.maximum(df['Open'], df['Close']) * np.random.uniform(1.0, 1.01, size=length)
+    df['Low'] = np.minimum(df['Open'], df['Close']) * np.random.uniform(0.99, 1.0, size=length)
+    # Réorganise les colonnes pour correspondre à l'output attendu
+    df = df[['Open', 'High', 'Low', 'Close']]
+    return df.reset_index(drop=True)
 
 
 def add_pattern(chart, nbr_pattern):

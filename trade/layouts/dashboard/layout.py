@@ -1,5 +1,6 @@
 from dash import html, dcc
 import dash_mantine_components as dmc
+from trade.defaults import defaults as dlt
 
 from trade.layouts.dashboard.sections.graph import graph
 from trade.layouts.dashboard.sections.news import news, news_description
@@ -9,7 +10,7 @@ from trade.layouts.dashboard.sections.requests import request
 
 def main_layout_dashboard(lang="fr"):
     return html.Div([
-        dcc.Interval(id='periodic-updater', interval=5000),
+        dcc.Interval(id='periodic-updater', interval=dlt.update_time),
         dmc.Modal(
             id="modal",
             title=dmc.Title("Simulation terminée !", order=2, className="font-bold w-full max-w-2xl"),

@@ -137,7 +137,15 @@ translation = {
                     "alpha": "Sélectionner la valeur d'alpha",
                     "length": "Sélectionner la longueur d'un mouvement de marché",
                     "start": "Sélectionner la valeur de départ",
-                    "pattern": "Choisir un pattern"
+                    "pattern": "Choisir un pattern",
+                    "date_range": "Période de génération :",
+                    "start_date": "Date de début",
+                    "end_date": "Date de fin",
+                    "granularity": "Granularité :",
+                    "month": "Mois",
+                    "week": "Semaine",
+                    "day": "Jour",
+                    "hour": "Heure"
                 },
                 "radio": {
                     "title": "mouvemement de marché",

@@ -147,6 +147,12 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     price_list = get_price_dataframe()
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     port_totals = pd.DataFrame.from_dict(port_totals, orient='index', columns=['Totals'])
+    
+    # Ensure numeric types
+    port_shares['Shares'] = pd.to_numeric(port_shares['Shares'], errors='coerce')
+    port_totals['Totals'] = pd.to_numeric(port_totals['Totals'], errors='coerce')
+    port_shares['Shares'] = port_shares['Shares'].fillna(0)
+    port_totals['Totals'] = port_totals['Totals'].fillna(0)
 
     i = 0
     while i < len(request_list):
@@ -279,13 +285,24 @@ def total_cost(price,nb):
 def max_share(btn,price,cashflow,action,company,portfolio):
 
     if action == "buy":
-        if price != 0 or price != "" or price is not None:
-            return  int(cashflow/price)
-        else:
+        # Ensure price and cashflow are numeric and not NaN
+        try:
+            price = float(price) if price is not None else 0
+            cashflow = float(cashflow) if cashflow is not None else 0
+            
+            if price > 0 and cashflow > 0:
+                return int(cashflow/price)
+            else:
+                return no_update
+        except (ValueError, TypeError):
             return no_update
     else:
         portfolio = pd.DataFrame.from_dict(portfolio, orient='index', columns=['Shares'])
+        # Ensure numeric type
+        portfolio['Shares'] = pd.to_numeric(portfolio['Shares'], errors='coerce')
+        portfolio['Shares'] = portfolio['Shares'].fillna(0)
+        
         if portfolio['Shares'].loc[company] != 0:
-            return portfolio['Shares'].loc[company]
+            return int(portfolio['Shares'].loc[company])
         else:
             return no_update

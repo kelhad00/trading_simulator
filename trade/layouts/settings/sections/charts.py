@@ -67,6 +67,29 @@ def editor(lang = "fr"):
     return html.Div([
         layout(lang),
 
+        html.Div([
+            dmc.Text(tl["select"].get("granularity", "Granularité :"), size="sm", weight=500, className="mb-1"),
+            dmc.Select(
+                id="granularity-select",
+                data=[
+                    {"value": "M", "label": "Mois"},
+                    {"value": "W", "label": "Semaine"},
+                    {"value": "D", "label": "Jour"},
+                    {"value": "H", "label": "Heure"},
+                ],
+                value="D",
+                className="mb-2 w-40"
+            ),
+            dmc.Text(tl["select"].get("date_range", "Période de génération :"), size="sm", weight=500, className="mb-1"),
+            dcc.DatePickerRange(
+                id="date-picker-range",
+                display_format="YYYY-MM-DD",
+                start_date_placeholder_text=tl["select"].get("start_date", "Date de début"),
+                end_date_placeholder_text=tl["select"].get("end_date", "Date de fin"),
+                className="mb-4"
+            )
+        ], className="flex flex-col gap-2 w-full"),
+
         html.Br(),
 
         html.Div(id='timeline', style={'display': 'flex', 'flexDirection': 'row', 'overflowX': 'auto', 'whiteSpace': 'nowrap'}),

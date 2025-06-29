@@ -6,7 +6,45 @@ import pandas as pd
 from trade.locales import translations as tls
 from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
+from trade.defaults import defaults as dlt
 
+
+def get_next_timestamp_by_granularity(current_timestamp, granularity):
+    """
+    Get the next timestamp based on the granularity setting
+    
+    Args:
+        current_timestamp: The current timestamp
+        granularity: The granularity setting ('H', 'D', 'W', 'M')
+    
+    Returns:
+        The next timestamp based on granularity
+    """
+    if not current_timestamp:
+        return current_timestamp
+    
+    # Ensure timestamp is properly parsed and convert to timezone-naive
+    try:
+        timestamp = pd.to_datetime(current_timestamp).tz_localize(None)
+    except:
+        # If parsing fails, try without timezone
+        timestamp = pd.to_datetime(current_timestamp)
+    
+    if granularity == 'H':
+        # Next hour
+        return timestamp + pd.Timedelta(hours=1)
+    elif granularity == 'D':
+        # Next day
+        return timestamp + pd.Timedelta(days=1)
+    elif granularity == 'W':
+        # Next week
+        return timestamp + pd.Timedelta(weeks=1)
+    elif granularity == 'M':
+        # Next month
+        return timestamp + pd.DateOffset(months=1)
+    else:
+        # Default to next day
+        return timestamp + pd.Timedelta(days=1)
 
 
 @callback(
@@ -14,7 +52,7 @@ from trade.utils.news import get_news_dataframe
     Input('periodic-updater', 'n_intervals'),
     State('timestamp', 'data'),
 )
-def cb_update_news_table(n, timestamp, range=50, daily=True):
+def cb_update_news_table(n, timestamp, range=50):
     """
     Function to display the latest news in the table from the timestamp
     Args:
@@ -45,11 +83,11 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
     timestamp = pd.to_datetime(timestamp).tz_localize(None)
 
-    if daily:
-        timestamp = timestamp + pd.Timedelta(days=1)  # get the date of the next day
+    # Get the next timestamp based on granularity instead of adding one day
+    next_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
 
-    # Get the news before the timestamp
-    nl = news_df.loc[news_df['date'] <= timestamp].sort_values(by='date', ascending=False).astype(str)
+    # Get the news before the next timestamp
+    nl = news_df.loc[news_df['date'] <= next_timestamp].sort_values(by='date', ascending=False).astype(str)
 
     #Display article and date columns
     nl = nl[['article', 'date']]

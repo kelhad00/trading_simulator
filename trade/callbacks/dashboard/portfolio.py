@@ -23,7 +23,11 @@ def display_portfolio_updated(n, totals, cashflow):
     Returns:
         The updated portfolio cashflow and investment
     """
+    # Convert to Series and ensure numeric types
     totals = pd.Series(totals)
+    totals = pd.to_numeric(totals, errors='coerce')
+    totals = totals.fillna(0)
+    
     return f"{round(cashflow, 2)}€", f"{round(cashflow + totals.sum(), 2)}€"
 
 
@@ -45,8 +49,18 @@ def display_portfolio_table_updated(n, totals, shares):
 
     lang = page_registry['lang']
 
+    # Convert to Series and ensure numeric types
     totals = pd.Series(totals)
     shares = pd.Series(shares)
+    
+    # Convert to numeric, coercing errors to NaN
+    totals = pd.to_numeric(totals, errors='coerce')
+    shares = pd.to_numeric(shares, errors='coerce')
+    
+    # Fill NaN values with 0
+    totals = totals.fillna(0)
+    shares = shares.fillna(0)
+    
     df = pd.concat([shares, totals], axis=1)  # Concatenate the shares and totals
 
     # Rename the columns for the display in the table

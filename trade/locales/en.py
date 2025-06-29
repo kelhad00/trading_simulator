@@ -136,7 +136,15 @@ translation = {
                     "alpha": "Select alpha value",
                     "length": "Select length of a market movement",
                     "start": "Select start date",
-                    "pattern": "Choose a pattern"
+                    "pattern": "Choose a pattern",
+                    "date_range": "Generation period:",
+                    "start_date": "Start date",
+                    "end_date": "End date",
+                    "granularity": "Granularity:",
+                    "month": "Month",
+                    "week": "Week",
+                    "day": "Day",
+                    "hour": "Hour"
                 },
                 "radio": {
                     "title": "market movement",

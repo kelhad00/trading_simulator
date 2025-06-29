@@ -83,10 +83,23 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, dat
             # Get the data
             data_list = []
             for index, trend in enumerate(trends):
-                data_list.append(dataset[trend:trend + length].reset_index(drop=True))
+                if isinstance(trend, pd.DataFrame):
+                    # flat_trend retourne un DataFrame déjà prêt
+                    df_flat = trend.copy()
+                    if dates is not None:
+                        df_flat['Date'] = dates[:len(df_flat)]
+                    else:
+                        df_flat['Date'] = pd.date_range(start=first_timestamp, periods=df_flat.shape[0], freq='D')
+                    data_list.append(df_flat)
+                else:
+                    # bull/bear : trend est un index
+                    data_list.append(dataset[trend:trend + length].reset_index(drop=True))
 
             # Scale the data
             for index, trend in enumerate(data_list):
+                if isinstance(trend, pd.DataFrame) and trend.shape[1] == 4 and set(trend.columns) == {'Open', 'High', 'Low', 'Close'}:
+                    # flat_trend : ne pas rescaler, déjà prêt
+                    continue
                 if index == 0:
                     data_list[0] = scale_market_data(trend, start_value)
                 else:

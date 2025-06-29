@@ -12,6 +12,77 @@ from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
 
+def get_next_timestamp_by_granularity(current_timestamp, granularity):
+    """
+    Get the next timestamp based on the granularity setting
+    
+    Args:
+        current_timestamp: The current timestamp
+        granularity: The granularity setting ('H', 'D', 'W', 'M')
+    
+    Returns:
+        The next timestamp based on granularity
+    """
+    if not current_timestamp:
+        return current_timestamp
+    
+    # Ensure timestamp is properly parsed and convert to timezone-naive
+    try:
+        timestamp = pd.to_datetime(current_timestamp).tz_localize(None)
+    except:
+        # If parsing fails, try without timezone
+        timestamp = pd.to_datetime(current_timestamp)
+    
+    if granularity == 'H':
+        # Next hour
+        return timestamp + pd.Timedelta(hours=1)
+    elif granularity == 'D':
+        # Next day
+        return timestamp + pd.Timedelta(days=1)
+    elif granularity == 'W':
+        # Next week
+        return timestamp + pd.Timedelta(weeks=1)
+    elif granularity == 'M':
+        # Next month
+        return timestamp + pd.DateOffset(months=1)
+    else:
+        # Default to next day
+        return timestamp + pd.Timedelta(days=1)
+
+
+def get_timestamp_display_format(timestamp, granularity):
+    """
+    Get the appropriate display format for the timestamp based on granularity
+    
+    Args:
+        timestamp: The timestamp to format
+        granularity: The granularity setting
+    
+    Returns:
+        Formatted timestamp string
+    """
+    if not timestamp:
+        return ""
+    
+    # Ensure timestamp is properly parsed and convert to timezone-naive
+    try:
+        timestamp = pd.to_datetime(timestamp).tz_localize(None)
+    except:
+        # If parsing fails, try without timezone
+        timestamp = pd.to_datetime(timestamp)
+    
+    if granularity == 'H':
+        return timestamp.strftime("%Y-%m-%d %H:%M")
+    elif granularity == 'D':
+        return timestamp.strftime("%Y-%m-%d")
+    elif granularity == 'W':
+        return timestamp.strftime("%Y-%m-%d")
+    elif granularity == 'M':
+        return timestamp.strftime("%Y-%m")
+    else:
+        return timestamp.strftime("%Y-%m-%d")
+
+
 @callback(
     Output("company-selector", "data"),
     Output("company-selector", "value"),
@@ -53,7 +124,14 @@ def update_modal(timestamp):
     Returns:
         The new state of the modal
     """
-    if timestamp == get_last_timestamp(get_market_dataframe()):
+    # Get the last timestamp from market data
+    last_timestamp = get_last_timestamp(get_market_dataframe())
+    
+    # Get the next expected timestamp based on granularity
+    next_expected_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
+    
+    # Check if we've reached the last available timestamp
+    if timestamp == last_timestamp:
         return True
     else:
         return False
@@ -66,7 +144,13 @@ def update_modal(timestamp):
 )
 def update_interval(update_time):
     """Function to update the interval of the periodic updater"""
-    return int(update_time)
+    try:
+        # Ensure update_time is numeric and not NaN
+        update_time = float(update_time) if update_time is not None else 5000
+        return int(update_time)
+    except (ValueError, TypeError):
+        # Default to 5000ms if conversion fails
+        return 5000
 
 
 @callback(
@@ -98,6 +182,29 @@ def update_graph(n, company, timestamp, current_fig, range=100):
             next_graph = False  # Don't update the timestamp if the user selects a new company
 
         dftmp = get_market_dataframe()[company]
+        
+        # If we need to advance to the next timestamp based on granularity
+        if next_graph and timestamp:
+            # Calculate the next expected timestamp based on granularity
+            next_expected_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
+            
+            # Find the closest available timestamp in the data
+            # Convert to timezone-naive timestamps for comparison
+            available_timestamps = pd.to_datetime(dftmp.index).tz_localize(None)
+            next_expected_timestamp = pd.to_datetime(next_expected_timestamp).tz_localize(None)
+            
+            # Find the closest timestamp that is >= next_expected_timestamp
+            future_timestamps = available_timestamps[available_timestamps >= next_expected_timestamp]
+            
+            if len(future_timestamps) > 0:
+                # Use the closest available timestamp
+                new_timestamp = future_timestamps[0]
+                # Convert back to string format for consistency
+                timestamp = new_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                # If no future timestamp available, stay at the last available timestamp
+                timestamp = available_timestamps[-1].strftime('%Y-%m-%d %H:%M:%S')
+        
         stock_price = get_price_dataframe().loc[timestamp, company]
         stock_price = str(math.ceil(stock_price))+" €"
 
@@ -172,7 +279,10 @@ def update_graph(n, company, timestamp, current_fig, range=100):
                     else:
                         trace.visible = True
 
-        return timestamp, fig, stock_price, pd.to_datetime(timestamp).strftime("%Y-%m-%d")
+        # Format the timestamp display based on granularity
+        formatted_timestamp = get_timestamp_display_format(timestamp, dlt.granularity)
+
+        return timestamp, fig, stock_price, formatted_timestamp
 
     except Exception as e:
         print("Error", e)
@@ -203,15 +313,39 @@ def update_revenue(n, company, timestamp, companies):
 
         # When it's the timestamp that calls the callback,
         # it's possible that a new year is available, so update the information.
-        # Otherwise, nothing is done.
-        # We therefore only check if an additional year is available,
-        # if the current timestamp is the first week of the year.
-        # if ctx.triggered_id == 'market-timestamp-value' and timestamp.week > 1:
-        # 	raise PreventUpdate
-        # Using this method prevents income from being displayed
-        # for as long as the user has not changed company,
-        # unless it's the first week of the year.
-        # TODO: So we need to find another way of optimizing
+        # The logic depends on the granularity:
+        # - For monthly granularity: update every month (revenues are annual data)
+        # - For weekly granularity: update in the first week of a new year
+        # - For daily granularity: update on January 1st
+        # - For hourly granularity: update at 00:00 on January 1st
+        
+        if ctx.triggered_id == 'periodic-updater':
+            current_year = timestamp.year
+            current_month = timestamp.month
+            current_week = timestamp.isocalendar()[1]
+            current_day = timestamp.day
+            current_hour = timestamp.hour
+            
+            # Check if we should update based on granularity
+            should_update = False
+            
+            if dlt.granularity == 'M':
+                # For monthly granularity, update every month since revenues are annual data
+                # and we want to show the graph as soon as we have data for a new year
+                should_update = True
+            elif dlt.granularity == 'W' and current_week == 1:
+                # For weekly granularity, update in the first week of the year
+                should_update = True
+            elif dlt.granularity == 'D' and current_day == 1 and current_month == 1:
+                # For daily granularity, update on January 1st
+                should_update = True
+            elif dlt.granularity == 'H' and current_hour == 0 and current_day == 1 and current_month == 1:
+                # For hourly granularity, update at 00:00 on January 1st
+                should_update = True
+            
+            # If we shouldn't update based on granularity, return no_update
+            if not should_update:
+                return no_update
 
         df = get_revenues_dataframe()
 

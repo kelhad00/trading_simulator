@@ -291,26 +291,29 @@ def add_smash(*args):
     Output("chart_new", "children"),
     Output("new-graph-df", "data"),
     Input('size-store', 'data'),
+    Input('date-picker-range', 'start_date'),
+    Input('date-picker-range', 'end_date'),
+    Input('granularity-select', 'value'),
     State("new-graph-df", "data"),
     prevent_initial_call=True
 )
-def graph_preview_new(size_data, current_df):
+def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
     """
     Generate a preview of charts based on the size data and current DataFrame.
-    
-    Args:
-        size_data (dict): Dictionary containing size and trend information for each timeline item
-        current_df (dict): Current DataFrame data in a serializable format
-        
-    Returns:
-        tuple: (html.Div, dict)
-            - html.Div containing the generated chart previews
-            - Dictionary containing the serialized DataFrame data
+    Utilise la période et la granularité choisies par l'utilisateur pour la génération.
     """
-    if not size_data:
+    if not size_data or not start_date or not end_date or not granularity:
         return html.Div(), {}
-    
-    first_timestamp = get_first_timestamp(get_generated_data())
+
+    # Génère la période à partir du picker et de la granularité
+    freq = granularity
+    if granularity == 'M':
+        freq = 'ME'  # 'M' deprecated, use 'ME' (Month End)
+    if granularity == 'H':
+        freq = 'h'
+    dates = pd.date_range(start=start_date, end=end_date, freq=freq)
+    if len(dates) == 0:
+        return html.Div(), {}
 
     # Map intensity levels to alpha values
     alpha_map = {
@@ -364,9 +367,6 @@ def graph_preview_new(size_data, current_df):
         if existing_df.empty:
             return html.Div(), {}
 
-        # Get the date range
-        dates = existing_df.index
-
         # Calculate proportions for each trend
         total_width = sum(lengths)
         proportions = [length/total_width for length in lengths]
@@ -375,7 +375,16 @@ def graph_preview_new(size_data, current_df):
         date_ranges = []
         start_idx = 0
         for prop in proportions:
-            end_idx = start_idx + int(prop * len(dates))
+            # Ensure prop is numeric and not NaN
+            try:
+                prop = float(prop) if prop is not None else 0
+                if prop >= 0:
+                    end_idx = start_idx + int(prop * len(dates))
+                else:
+                    end_idx = start_idx
+            except (ValueError, TypeError):
+                end_idx = start_idx
+            
             date_ranges.append(dates[start_idx:end_idx])
             start_idx = end_idx
 
@@ -509,8 +518,8 @@ def graph_preview_new(size_data, current_df):
 
                     # Create DataFrame from the data
                     df = pd.DataFrame(df_dict)
-                    date_index = pd.date_range(start=first_timestamp, periods=df.shape[0], freq='D')
-                    df.set_index(date_index, inplace=True)
+                    # Utilise la bonne tranche de dates comme index
+                    df.set_index(date_range, inplace=True)
 
                     # Store data in the global dictionary
                     company = companies[j]
@@ -669,44 +678,63 @@ def move_item(left_clicks, right_clicks, timeline_children):
 @callback(
     Output("chart", "figure", allow_duplicate=True),
     Input("modify-button-new-graph", "n_clicks"),
+    Input('date-picker-range', 'start_date'),
+    Input('granularity-select', 'value'),
     State("new-graph-df", "data"),
     prevent_initial_call=True
 )
-def export_to_csv(n, graph_data):
+def export_to_csv(n, start_date, granularity, graph_data):
     """
     Export all companies data to CSV when the modify button is clicked.
-    
+    Also updates start_date and granularity in trade/defaults.py.
     Args:
         n (int): Number of clicks on the modify button
+        start_date (str): Selected start date
+        granularity (str): Selected granularity
         graph_data (dict): Dictionary containing all companies data in simplified format
-        
     Returns:
         dict: No update to the current chart figure if successful, or error message if failed
-        
     Raises:
         PreventUpdate: If graph_data is empty
     """
     if not graph_data:
         raise PreventUpdate
 
+    # --- Mise à jour de trade/defaults.py ---
+    import re
+    defaults_path = os.path.join(os.path.dirname(__file__), '../../defaults.py')
+    defaults_path = os.path.normpath(defaults_path)
+    try:
+        with open(defaults_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith('start_date'):
+                new_lines.append(f'    start_date = {start_date}')
+            elif line.strip().startswith('granularity'):
+                new_lines.append(f'    granularity = {granularity}')
+            else:
+                new_lines.append(line)
+        with open(defaults_path, 'w', encoding='utf-8') as f:
+            f.writelines(new_lines)
+    except Exception as e:
+        print(f'Erreur lors de la mise à jour de defaults.py : {e}')
+    # --- Fin mise à jour ---
+
     try:
         # Reconstruire le DataFrame à partir des données
         df = pd.DataFrame(**graph_data['data'])
-        
         # Recréer le multi-index pour les colonnes
         df.columns = pd.MultiIndex.from_tuples(
             [tuple(col.split('|')) for col in graph_data['column_names']],
             names=['symbol', None]
         )
-        
         # Pour chaque symbole dans le DataFrame, exporter ses données
         symbols = df.columns.get_level_values('symbol').unique()
         for symbol in symbols:
             symbol_data = df[symbol]
             export_generated_data(symbol_data, symbol)
-        
         return no_update
-
     except Exception as e:
         print('Error while exporting to CSV:', e)
         return no_update

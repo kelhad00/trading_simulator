@@ -45,13 +45,15 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
             dftmp = dataframe[:range]
 
     else:  # if the graph is being updated
-        idx = dataframe.index.get_loc(timestamp) + 1
-        if idx == 1:  # if the timestamp is the first element of the dataframe
+        idx = dataframe.index.get_loc(timestamp)
+        if idx == 0:  # if the timestamp is the first element of the dataframe
             if range == 0:
                 dftmp = dataframe[:1]
             else:
                 dftmp = dataframe[:range]
         elif next_graph:  # You want to see the graph with new data
+            # The timestamp is already updated by the callback based on granularity
+            # So we just need to show the data up to the current timestamp
             if range == 0 or idx < range:
                 dftmp = dataframe.iloc[:idx + 1]
             else:
