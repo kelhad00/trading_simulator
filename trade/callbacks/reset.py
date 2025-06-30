@@ -68,7 +68,11 @@ def reset_data(btn, initial_cashflow, nb_export):
 
     # move all files from data/export to data/exports/nb_export
     for file in os.listdir(content_path):
-        os.rename(os.path.join(content_path, file), os.path.join(session_path, file))
+        src = os.path.join(content_path, file)
+        dst = os.path.join(session_path, file)
+        if os.path.exists(dst):
+            os.remove(dst)
+        os.rename(src, dst)
 
     nb_export = len(os.listdir(os.path.join(dlt.data_path, "exports")))-1
 

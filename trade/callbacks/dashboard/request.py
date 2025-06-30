@@ -189,7 +189,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         else:
             i += 1
 
-    if not timestamp == "":
+    if not timestamp == "" and timestamp in price_list.index:
         # Update the total price of each stock
         port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
 

@@ -174,6 +174,13 @@ def update_graph(n, company, timestamp, current_fig, range=100):
 
         dftmp = get_market_dataframe()[company]
         
+        # Fix: If timestamp is 0, None, or invalid, set to first available timestamp
+        if not timestamp or timestamp == 0 or str(timestamp) == "0":
+            if len(dftmp.index) > 0:
+                timestamp = dftmp.index[0]
+            else:
+                return no_update, no_update, no_update, no_update
+        
         # If we need to advance to the next timestamp based on granularity
         if next_graph and timestamp:
             # Calculate the next expected timestamp based on granularity
@@ -208,8 +215,15 @@ def update_graph(n, company, timestamp, current_fig, range=100):
             print(f"Error retrieving stock price for {company} at {timestamp}: {e}")
             stock_price = "N/A"
 
-        # Ensure the columns are correctly named
-        dftmp.columns = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA']
+        # Fix: Ensure the columns are correctly named based on their count
+        expected_cols_7 = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA']
+        expected_cols_9 = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA']
+        if len(dftmp.columns) == 9:
+            dftmp.columns = expected_cols_9
+        elif len(dftmp.columns) == 7:
+            dftmp.columns = expected_cols_7
+        else:
+            print(f"Unexpected number of columns in dftmp: {len(dftmp.columns)}")
 
         fig, timestamp = create_graph(
             dftmp,

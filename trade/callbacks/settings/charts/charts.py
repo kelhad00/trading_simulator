@@ -317,13 +317,13 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
         return html.Div(), None
 
     # Validation: period must be > 150 units of granularity
-    if len(dates) <= 150:
+    if len(dates) <= 400:
         # Get language for translation
         try:
             lang = page_registry['lang']
-            msg = tls[lang]["settings"]["charts"].get("alert_period_too_short", "La période de génération doit être supérieure à 150 unités de granularité.")
+            msg = tls[lang]["settings"]["charts"].get("alert_period_too_short", "La période de génération doit être supérieure à 400 unités de granularité.")
         except Exception:
-            msg = "La période de génération doit être supérieure à 150 unités de granularité."
+            msg = "La période de génération doit être supérieure à 400 unités de granularité."
         return dmc.Alert(msg, color="red"), None
 
     # Map intensity levels to alpha values
@@ -397,6 +397,23 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
                     for col in df_trend.columns:
                         company_df.loc[trend_dates, col] = df_trend[col].values
                 date_cursor += length
+            # Ensure all expected columns are present and in the correct order
+            expected_cols = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA', 'RSI']
+            # Calcul des moyennes mobiles et du RSI
+            if 'Close' in company_df.columns:
+                company_df['short_MA'] = company_df['Close'].rolling(window=20, min_periods=1).mean()
+                company_df['long_MA'] = company_df['Close'].rolling(window=50, min_periods=1).mean()
+                company_df['200_MA'] = company_df['Close'].rolling(window=200, min_periods=1).mean()
+                # RSI
+                delta = company_df['Close'].diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=14, min_periods=1).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14, min_periods=1).mean()
+                rs = gain / (loss + 1e-9)
+                company_df['RSI'] = 100 - (100 / (1 + rs))
+            for col in expected_cols:
+                if col not in company_df.columns:
+                    company_df[col] = np.nan
+            company_df = company_df[expected_cols]
             company_dfs[company] = company_df
         # Concaténer tous les DataFrames de sociétés sur les colonnes (MultiIndex)
         df_global = pd.concat(company_dfs.values(), axis=1, keys=company_dfs.keys(), names=['symbol'])
@@ -585,6 +602,17 @@ def export_to_csv(n, start_date, end_date, granularity, graph_data):
             [tuple(col.split('|')) for col in graph_data['column_names']],
             names=['symbol', None]
         )
+        # Ensure all expected columns for each company
+        expected_cols = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA', 'RSI']
+        all_symbols = df.columns.get_level_values('symbol').unique()
+        new_cols = []
+        for symbol in all_symbols:
+            for col in expected_cols:
+                new_cols.append((symbol, col))
+        for col in new_cols:
+            if col not in df.columns:
+                df[col] = np.nan
+        df = df.reindex(columns=new_cols)
         # 3. Remettre l'index (dates)
         df.index = pd.to_datetime(graph_data['index'])
         # S'assurer que toutes les sociétés et toutes les dates sont présentes
