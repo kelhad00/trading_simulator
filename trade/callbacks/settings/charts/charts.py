@@ -148,7 +148,7 @@ def update_graph(company, data):
 
 
 @callback(
-    Output("modal", "opened"),
+    Output("modal", "opened", allow_duplicate=True),
     Output("modal-select-companies", "value"),
     Input("modify-button", "n_clicks"),
     State("modal", "opened"),
@@ -287,6 +287,15 @@ def add_smash(*args):
     return timeline_items
 
 
+# Utility function to convert user granularity to pandas frequency
+
+def get_pandas_freq(granularity):
+    if granularity == 'M':
+        return 'ME'
+    if granularity == 'H':
+        return 'h'
+    return granularity
+
 @callback(
     Output("chart_new", "children"),
     Output("new-graph-df", "data"),
@@ -298,22 +307,24 @@ def add_smash(*args):
     prevent_initial_call=True
 )
 def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
-    """
-    Generate a preview of charts based on the size data and current DataFrame.
-    Utilise la période et la granularité choisies par l'utilisateur pour la génération.
-    """
     if not size_data or not start_date or not end_date or not granularity:
-        return html.Div(), {}
+        return html.Div(), None
 
     # Génère la période à partir du picker et de la granularité
-    freq = granularity
-    if granularity == 'M':
-        freq = 'ME'  # 'M' deprecated, use 'ME' (Month End)
-    if granularity == 'H':
-        freq = 'h'
+    freq = get_pandas_freq(granularity)
     dates = pd.date_range(start=start_date, end=end_date, freq=freq)
     if len(dates) == 0:
-        return html.Div(), {}
+        return html.Div(), None
+
+    # Validation: period must be > 150 units of granularity
+    if len(dates) <= 150:
+        # Get language for translation
+        try:
+            lang = page_registry['lang']
+            msg = tls[lang]["settings"]["charts"].get("alert_period_too_short", "La période de génération doit être supérieure à 150 unités de granularité.")
+        except Exception:
+            msg = "La période de génération doit être supérieure à 150 unités de granularité."
+        return dmc.Alert(msg, color="red"), None
 
     # Map intensity levels to alpha values
     alpha_map = {
@@ -330,268 +341,100 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
     trends = []
     alphas = []
     lengths = []
-    
     for item in size_data:
         if size_data[item]["width"] == 0:
             continue
-            
         length = size_data[item]["width"]
         label = size_data[item]["label"]
-        
         alpha = alpha_map.get(label, 100)
-        
         if "Bull" in label:
             trends.append("bull")
         elif "Bear" in label:
             trends.append("bear")
         else:
             trends.append("flat")
-            
         alphas.append(alpha)
         lengths.append(length)
-
     if not trends:
-        return html.Div(), {}
+        return html.Div(), None
+
+    # Ajuster la somme des longueurs pour couvrir exactement la période
+    total_length = sum(lengths)
+    if total_length < len(dates):
+        lengths[-1] += len(dates) - total_length
+    elif total_length > len(dates):
+        lengths[-1] -= total_length - len(dates)
 
     # Get all companies
     companies = []
     for key in dlt.companies_list.items():
-            companies.append(key[0])  # Use the company symbol (key) instead of the dictionary
-
+        companies.append(key[0])  # Use the company symbol (key) instead of the dictionary
     if not companies:
-        return html.Div(), {}
+        return html.Div(), None
 
     try:
-        # Get existing data to get the date range
-        existing_df = get_generated_data()
-        if existing_df.empty:
-            return html.Div(), {}
-
-        # Calculate proportions for each trend
-        total_width = sum(lengths)
-        proportions = [length/total_width for length in lengths]
-
-        # Divide dates according to proportions
-        date_ranges = []
-        start_idx = 0
-        for prop in proportions:
-            # Ensure prop is numeric and not NaN
-            try:
-                prop = float(prop) if prop is not None else 0
-                if prop >= 0:
-                    end_idx = start_idx + int(prop * len(dates))
-                else:
-                    end_idx = start_idx
-            except (ValueError, TypeError):
-                end_idx = start_idx
-            
-            date_ranges.append(dates[start_idx:end_idx])
-            start_idx = end_idx
-
-        # Generate charts for each trend
-        children = []
-        all_dataframes = {}  # To store data for all companies
-
-        for i, (trend, alpha, date_range) in enumerate(zip(trends, alphas, date_ranges)):
-            trend_children = []
-            dataframes = []
-            for company in companies:
-                # First generate the base chart data
+        # Nouvelle logique : pour chaque société, construire un DataFrame indexé par toutes les dates
+        company_dfs = {}
+        for company in companies:
+            company_df = pd.DataFrame(index=dates)
+            date_cursor = 0
+            for trend, alpha, length in zip(trends, alphas, lengths):
+                trend_dates = dates[date_cursor:date_cursor+length]
+                if len(trend_dates) == 0:
+                    continue
+                # Générer les données pour cette tranche
                 company_children, company_dataframes = generate_new_charts(
                     alpha=alpha,
-                    length=len(date_range),
+                    length=len(trend_dates),
                     start_value=randint(100,1000),
                     radio_trends=[trend],
                     companies=[company]
                 )
-
-                if company_children is no_update or company_dataframes is no_update:
-                    continue
-
-                if company_children and company_dataframes:
-                    # Process each dataframe
-                    for df_dict in company_dataframes:
-                        # Convert to DataFrame for easier manipulation
-                        df = pd.DataFrame(df_dict)
-
-                        # Convert DataFrame columns to numpy arrays for manipulation
-                        opens = df['Open'].values
-                        highs = df['High'].values
-                        lows = df['Low'].values
-                        closes = df['Close'].values
-
-                        # Define pattern spans
-                        pattern_span = {
-                            "bullish_engulfing": 2,
-                            "bearish_engulfing": 2,
-                            "hammer": 1,
-                            "shooting_star": 1,
-                            "double_top": 5,
-                            "head_and_shoulders": 5
-                        }
-
-                        # Keep track of used days to avoid overlap
-                        used_days = set()
-                        # Store patterns to apply them later during visualization
-                        patterns_to_apply = []
-
-                        # Try to add patterns multiple times
-                        num_attempts = len(opens) // 10  # Try to add a pattern every 10 days on average
-
-                        for _ in range(num_attempts):
-                            if np.random.random() < 0.4:  # 40% chance for each attempt
-                                # Select pattern based on current trend
-                                if trend == "bull":
-                                    pattern = np.random.choice(["bullish_engulfing", "hammer"], p=[0.6, 0.4])
-                                elif trend == "bear":
-                                    pattern = np.random.choice(["bearish_engulfing", "shooting_star", "double_top"], p=[0.4, 0.3, 0.3])
-                                else:  # flat trend
-                                    pattern = np.random.choice(["head_and_shoulders", None], p=[0.3, 0.7])
-
-                                if pattern:
-                                    # Get span for this pattern
-                                    span = pattern_span[pattern]
-
-                                    # Find a suitable position for the pattern
-                                    # Leave some margin at the start and end
-                                    margin = 5
-                                    possible_starts = list(range(margin, len(opens) - span - margin))
-
-                                    # Remove positions that would overlap with existing patterns
-                                    possible_starts = [
-                                        pos for pos in possible_starts
-                                        if not any(
-                                            day in used_days
-                                            for day in range(pos - 2, pos + span + 2)  # Add buffer around patterns
-                                        )
-                                    ]
-
-                                    if possible_starts:  # If we found a valid position
-                                        pattern_day = np.random.choice(possible_starts)
-                                        pattern_date = date_range[pattern_day]
-
-                                        # Mark these days as used
-                                        for day in range(pattern_day - 2, pattern_day + span + 2):
-                                            used_days.add(day)
-
-                                        # Apply the pattern
-                                        if pattern == "bullish_engulfing":
-                                            insert_bullish_engulfing(opens, highs, lows, closes, pattern_day)
-                                        elif pattern == "bearish_engulfing":
-                                            insert_bearish_engulfing(opens, highs, lows, closes, pattern_day)
-                                        elif pattern == "hammer":
-                                            insert_hammer(opens, highs, lows, closes, pattern_day)
-                                        elif pattern == "shooting_star":
-                                            insert_shooting_star(opens, highs, lows, closes, pattern_day)
-                                        elif pattern == "double_top":
-                                            insert_double_top(opens, highs, lows, closes, pattern_day)
-                                        elif pattern == "head_and_shoulders":
-                                            insert_head_and_shoulders(opens, highs, lows, closes, pattern_day)
-
-                                        # Store pattern info for later visualization
-                                        patterns_to_apply.append({
-                                            'pattern': pattern,
-                                            'day': pattern_day,
-                                            'span': span,
-                                            'date': pattern_date
-                                        })
-
-                        # Update the DataFrame with modified values
-                        df['Open'] = opens
-                        df['High'] = highs
-                        df['Low'] = lows
-                        df['Close'] = closes
-
-                        # Convert to dict and store patterns
-                        new_dict = df.to_dict('list')
-                        new_dict['_patterns'] = patterns_to_apply
-                        dataframes.append(new_dict)
-
-                    trend_children.extend(company_children)
-
-            if trend_children and dataframes:
-                # For each chart, update the dates
-                children = []  # List to store the new graphs
-                for j, df_dict in enumerate(dataframes):
-                    # Extract patterns before creating DataFrame
-                    patterns_info = df_dict.pop('_patterns', [])
-
-                    # Create DataFrame from the data
-                    df = pd.DataFrame(df_dict)
-                    # Utilise la bonne tranche de dates comme index
-                    df.set_index(date_range, inplace=True)
-
-                    # Store data in the global dictionary
-                    company = companies[j]
-                    if company not in all_dataframes:
-                        all_dataframes[company] = df
-                    else:
-                        # Concatenate with existing data
-                        all_dataframes[company] = pd.concat([all_dataframes[company], df])
-
-                    # Create new figure from trend_children
-                    fig = go.Figure(trend_children[j].figure)
-
-                    # Update chart data with new dates
-                    for trace in fig.data:
-                        if hasattr(trace, 'x'):
-                            trace.x = df.index
-
-                    # Configure x-axis to properly display dates
-                    fig.update_layout(
-                        xaxis=dict(
-                            type='date',
-                            tickformat='%b %Y',  # Format to display "Jan 2024"
-                            dtick='M4',  # Show tick every 4 months
-                            tickangle=0,
-                            rangeslider=dict(visible=False),
-                            gridcolor='rgba(128, 128, 128, 0.1)',
-                            showgrid=True,
-                            tickfont=dict(size=10)
-                        ),
-                        xaxis_title="Date",
-                        plot_bgcolor='rgba(240, 244, 250, 1)',
-                        paper_bgcolor='rgba(0,0,0,0)'
-                    )
-
-                    # Create new graph with updated figure
-                    new_graph = dcc.Graph(
-                        figure=fig,
-                        config=PLOTLY_CONFIG
-                    )
-                    children.append(new_graph)
-
-                # Create multi-index DataFrame like in generated_data.csv
-        final_df = pd.concat(all_dataframes, axis=1, keys=all_dataframes.keys())
-        final_df.columns.names = ['symbol', None]
-
-        # Convert to serializable format
-        # Flatten multi-index columns by joining with separator
-        final_df.columns = [f"{col[0]}|{col[1]}" for col in final_df.columns]
-
-        # Convert to dictionary with simple format
-        json_data = {
-            'data': final_df.to_dict(orient='split'),
-            'column_names': final_df.columns.tolist()
+                if company_dataframes and company_dataframes != no_update:
+                    df_trend = pd.DataFrame(company_dataframes[0])
+                    df_trend.index = trend_dates
+                    # Remplir la tranche dans le DataFrame global de la société
+                    for col in df_trend.columns:
+                        company_df.loc[trend_dates, col] = df_trend[col].values
+                date_cursor += length
+            company_dfs[company] = company_df
+        # Concaténer tous les DataFrames de sociétés sur les colonnes (MultiIndex)
+        df_global = pd.concat(company_dfs.values(), axis=1, keys=company_dfs.keys(), names=['symbol'])
+        # Préparer les données pour l'export
+        data_dict = {
+            'data': {f'{col[0]}|{col[1]}': [str(x) if isinstance(x, (pd.Timestamp, np.datetime64)) else x for x in df_global[col]] for col in df_global.columns},
+            'column_names': [f'{col[0]}|{col[1]}' for col in df_global.columns],
+            'index': [str(x) if isinstance(x, (pd.Timestamp, np.datetime64)) else x for x in df_global.index]
         }
-
-
-        # Return the container with the new graphs
-        return html.Div(
-            children=children,
-            style={
-                'display': 'flex',
-                'flexDirection': 'column',
-                'gap': '20px',
-                'width': '100%',
-                'maxHeight': '500px',
-                'overflowY': 'auto'
-            }
-        ), json_data
-
+        # Générer les graphiques de preview pour les premières sociétés (candlestick)
+        children = []
+        for i, (company, df) in enumerate(company_dfs.items()):
+            # On cherche les colonnes OHLC (open, high, low, close)
+            o_col = next((col for col in df.columns if str(col).lower() == 'open'), None)
+            h_col = next((col for col in df.columns if str(col).lower() == 'high'), None)
+            l_col = next((col for col in df.columns if str(col).lower() == 'low'), None)
+            c_col = next((col for col in df.columns if str(col).lower() == 'close'), None)
+            fig = go.Figure()
+            if all([o_col, h_col, l_col, c_col]):
+                fig.add_trace(go.Candlestick(
+                    x=[str(x) for x in df.index],
+                    open=df[o_col],
+                    high=df[h_col],
+                    low=df[l_col],
+                    close=df[c_col],
+                    name=f"{company}"
+                ))
+            else:
+                fig.add_trace(go.Scatter(x=[], y=[], name="No OHLC"))
+                fig.update_layout(title=f"Erreur: pas de colonnes OHLC pour {company}")
+            fig.update_layout(title=f"Prévisualisation {company}", xaxis_title="Date", yaxis_title="Cours")
+            children.append(dcc.Graph(figure=fig, config=PLOTLY_CONFIG))
+        if not children:
+            return html.Div(), None
+        # Ajout d'un wrapper scrollable autour de la preview
+        return html.Div(children, style={"overflowY": "auto", "maxHeight": "80vh"}), data_dict
     except Exception as e:
-        print('Error while generating preview:', e)
-        return html.Div(), {}
+        return html.Div(), None
 
 
 
@@ -679,11 +522,12 @@ def move_item(left_clicks, right_clicks, timeline_children):
     Output("chart", "figure", allow_duplicate=True),
     Input("modify-button-new-graph", "n_clicks"),
     Input('date-picker-range', 'start_date'),
+    Input('date-picker-range', 'end_date'),
     Input('granularity-select', 'value'),
     State("new-graph-df", "data"),
     prevent_initial_call=True
 )
-def export_to_csv(n, start_date, granularity, graph_data):
+def export_to_csv(n, start_date, end_date, granularity, graph_data):
     """
     Export all companies data to CSV when the modify button is clicked.
     Also updates start_date and granularity in trade/defaults.py.
@@ -702,17 +546,28 @@ def export_to_csv(n, start_date, granularity, graph_data):
 
     # --- Mise à jour de trade/defaults.py ---
     import re
-    defaults_path = os.path.join(os.path.dirname(__file__), '../../defaults.py')
-    defaults_path = os.path.normpath(defaults_path)
+    # Correction du chemin pour pointer vers le bon defaults.py (toujours dans trade/)
+    defaults_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../defaults.py'))
+    # Si le fichier n'existe pas, tente le chemin absolu depuis la racine du projet
+    if not os.path.isfile(defaults_path):
+        import sys
+        import pathlib
+        # Remonte jusqu'à trouver le dossier trade
+        current = pathlib.Path(__file__).resolve()
+        for parent in current.parents:
+            candidate = parent / 'trade' / 'defaults.py'
+            if candidate.exists():
+                defaults_path = str(candidate)
+                break
     try:
         with open(defaults_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         new_lines = []
         for line in lines:
             if line.strip().startswith('start_date'):
-                new_lines.append(f'    start_date = {start_date}')
+                new_lines.append(f'    start_date = "{start_date}" \n')
             elif line.strip().startswith('granularity'):
-                new_lines.append(f'    granularity = {granularity}')
+                new_lines.append(f'    granularity = "{granularity}" \n')
             else:
                 new_lines.append(line)
         with open(defaults_path, 'w', encoding='utf-8') as f:
@@ -723,17 +578,23 @@ def export_to_csv(n, start_date, granularity, graph_data):
 
     try:
         # Reconstruire le DataFrame à partir des données
-        df = pd.DataFrame(**graph_data['data'])
-        # Recréer le multi-index pour les colonnes
+        # 1. Créer le DataFrame à partir du dict (colonnes simples)
+        df = pd.DataFrame(graph_data['data'])
+        # 2. Remettre le MultiIndex sur les colonnes
         df.columns = pd.MultiIndex.from_tuples(
             [tuple(col.split('|')) for col in graph_data['column_names']],
             names=['symbol', None]
         )
-        # Pour chaque symbole dans le DataFrame, exporter ses données
-        symbols = df.columns.get_level_values('symbol').unique()
-        for symbol in symbols:
-            symbol_data = df[symbol]
-            export_generated_data(symbol_data, symbol)
+        # 3. Remettre l'index (dates)
+        df.index = pd.to_datetime(graph_data['index'])
+        # S'assurer que toutes les sociétés et toutes les dates sont présentes
+        all_symbols = df.columns.get_level_values('symbol').unique()
+        freq = get_pandas_freq(granularity)
+        all_dates = pd.date_range(start=start_date, end=end_date, freq=freq)
+        df = df.reindex(all_dates)
+        # Sauvegarder le DataFrame complet dans un CSV global
+        generated_data_path = os.path.join(dlt.data_path, 'generated_data.csv')
+        df.to_csv(generated_data_path, index=True)
         return no_update
     except Exception as e:
         print('Error while exporting to CSV:', e)

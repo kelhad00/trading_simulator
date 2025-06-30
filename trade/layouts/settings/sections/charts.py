@@ -75,7 +75,7 @@ def editor(lang = "fr"):
                     {"value": "M", "label": "Mois"},
                     {"value": "W", "label": "Semaine"},
                     {"value": "D", "label": "Jour"},
-                    {"value": "H", "label": "Heure"},
+                    {"value": "h", "label": "Heure"},
                 ],
                 value="D",
                 className="mb-2 w-40"

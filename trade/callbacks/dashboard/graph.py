@@ -4,6 +4,7 @@ import dash
 from dash import Output, Input, State, callback, page_registry, ctx, no_update, html
 import plotly.graph_objects as go
 import pandas as pd
+from plotly.subplots import make_subplots
 
 from trade.app import app
 from trade.utils.graph.candlestick_charts import create_graph
@@ -110,32 +111,20 @@ def update_select_companies_options(companies, select_options):
     return options, value
 
 
-
 @callback(
-    Output("modal", "opened", allow_duplicate=True),
+    Output("modal", "opened"),
     Input("timestamp", "data"),
     prevent_initial_call=True
 )
-def update_modal(timestamp):
-    """
-    Function to update the modal when the timestamp changes
-    Args:
-        timestamp: The new timestamp
-    Returns:
-        The new state of the modal
-    """
-    # Get the last timestamp from market data
+def open_modal_on_end_or_last(timestamp):
+    # Si simulation terminée (timestamp == "END")
+    if timestamp == "END":
+        return True
+    # Si timestamp est le dernier disponible (logique héritée)
     last_timestamp = get_last_timestamp(get_market_dataframe())
-    
-    # Get the next expected timestamp based on granularity
-    next_expected_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
-    
-    # Check if we've reached the last available timestamp
     if timestamp == last_timestamp:
         return True
-    else:
-        return False
-
+    return no_update
 
 
 @callback(
@@ -146,7 +135,9 @@ def update_interval(update_time):
     """Function to update the interval of the periodic updater"""
     try:
         # Ensure update_time is numeric and not NaN
-        update_time = float(update_time) if update_time is not None else 5000
+        if update_time is None or (isinstance(update_time, float) and math.isnan(update_time)):
+            return 5000
+        update_time = float(update_time)
         return int(update_time)
     except (ValueError, TypeError):
         # Default to 5000ms if conversion fails
@@ -188,10 +179,9 @@ def update_graph(n, company, timestamp, current_fig, range=100):
             # Calculate the next expected timestamp based on granularity
             next_expected_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
             
-            # Find the closest available timestamp in the data
-            # Convert to timezone-naive timestamps for comparison
-            available_timestamps = pd.to_datetime(dftmp.index).tz_localize(None)
-            next_expected_timestamp = pd.to_datetime(next_expected_timestamp).tz_localize(None)
+            # Convert index to DatetimeIndex (force utc, then localize to None)
+            available_timestamps = pd.to_datetime(dftmp.index, utc=True).tz_localize(None)
+            next_expected_timestamp = pd.to_datetime(next_expected_timestamp, utc=True).tz_localize(None)
             
             # Find the closest timestamp that is >= next_expected_timestamp
             future_timestamps = available_timestamps[available_timestamps >= next_expected_timestamp]
@@ -202,11 +192,21 @@ def update_graph(n, company, timestamp, current_fig, range=100):
                 # Convert back to string format for consistency
                 timestamp = new_timestamp.strftime('%Y-%m-%d %H:%M:%S')
             else:
-                # If no future timestamp available, stay at the last available timestamp
-                timestamp = available_timestamps[-1].strftime('%Y-%m-%d %H:%M:%S')
+                # Si plus de timestamp disponible, signaler la fin de simulation
+                fig = make_subplots()
+                fig.add_annotation(text="Fin de simulation", xref="paper", yref="paper", showarrow=False, font=dict(size=20))
+                return "END", fig, "N/A", "Fin de simulation"
         
-        stock_price = get_price_dataframe().loc[timestamp, company]
-        stock_price = str(math.ceil(stock_price))+" €"
+        # Récupérer le prix de l'action de façon sécurisée
+        try:
+            stock_price_val = get_price_dataframe().loc[timestamp, company]
+            if pd.isna(stock_price_val):
+                stock_price = "N/A"
+            else:
+                stock_price = str(math.ceil(stock_price_val))+" €"
+        except Exception as e:
+            print(f"Error retrieving stock price for {company} at {timestamp}: {e}")
+            stock_price = "N/A"
 
         # Ensure the columns are correctly named
         dftmp.columns = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA']

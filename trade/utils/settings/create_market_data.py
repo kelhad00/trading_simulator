@@ -185,7 +185,7 @@ def format_generated_data(data, stock):
     df = pd.DataFrame(index=data.index, columns=columns)
 
     for col in data.columns:
-        df.loc[:, (stock, col)].update(data[col])
+        df.loc[:, (stock, col)] = data[col].values
 
 
 
@@ -201,22 +201,8 @@ def export_generated_data(df, stock):
 
     data = df.copy()
     df = format_generated_data(data, stock)
-    existing_df = get_generated_data()
-
-    if existing_df is not None:
-        existing_df.index = pd.to_datetime(existing_df.index, utc=True)
-        existing_df.index = existing_df.index.tz_convert('Europe/Paris')
-
-        symbols = existing_df.columns.get_level_values('symbol').unique()
-        if stock in symbols:
-            print(f'Stock of {stock} already exists in the generated data')
-            existing_df = existing_df.drop(stock, axis=1, level='symbol')
-
-    combined_df = pd.concat([existing_df, df], axis=1)
-
-
+    # Écrire un nouveau fichier, sans fusionner avec l'existant
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
-    combined_df.to_csv(file_path, index=True)
-
+    df.to_csv(file_path, index=True)
     return None
 
