@@ -46,6 +46,11 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
 
     else:  # if the graph is being updated
         idx = dataframe.index.get_loc(timestamp)
+        # Correction : forcer idx à être un int si ce n'est pas le cas
+        if isinstance(idx, slice):
+            idx = idx.start
+        elif isinstance(idx, (list, np.ndarray)):
+            idx = idx[0]
         if idx == 0:  # if the timestamp is the first element of the dataframe
             if range == 0:
                 dftmp = dataframe[:1]

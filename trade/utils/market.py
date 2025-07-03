@@ -43,6 +43,7 @@ def get_market_dataframe(generated=True):
 
 def get_price_dataframe():
     df = get_market_dataframe()
+    df.index = df.index.map(lambda x: format_timestamp(x))
     price_list = df.xs('Close', axis=1, level=1)
     return price_list
 
@@ -61,3 +62,11 @@ def get_last_timestamp(market_df):
         return timestamp
     except:
         return 0
+
+def format_timestamp(timestamp):
+    if timestamp.tzinfo is not None:
+        timestamp = timestamp.replace(tzinfo=None)
+    if dlt.granularity == 'h':
+        return timestamp.strftime('%Y-%m-%d %H:%M')
+    else:
+        return timestamp.strftime('%Y-%m-%d')

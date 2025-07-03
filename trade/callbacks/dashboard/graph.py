@@ -8,7 +8,8 @@ from plotly.subplots import make_subplots
 
 from trade.app import app
 from trade.utils.graph.candlestick_charts import create_graph
-from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe, get_price_dataframe
+from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe, get_price_dataframe, \
+    format_timestamp
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
@@ -19,7 +20,7 @@ def get_next_timestamp_by_granularity(current_timestamp, granularity):
     
     Args:
         current_timestamp: The current timestamp
-        granularity: The granularity setting ('H', 'D', 'W', 'M')
+        granularity: The granularity setting ('h', 'D', 'W', 'ME')
     
     Returns:
         The next timestamp based on granularity
@@ -34,7 +35,7 @@ def get_next_timestamp_by_granularity(current_timestamp, granularity):
         # If parsing fails, try without timezone
         timestamp = pd.to_datetime(current_timestamp)
     
-    if granularity == 'H':
+    if granularity == 'h':
         # Next hour
         return timestamp + pd.Timedelta(hours=1)
     elif granularity == 'D':
@@ -43,7 +44,7 @@ def get_next_timestamp_by_granularity(current_timestamp, granularity):
     elif granularity == 'W':
         # Next week
         return timestamp + pd.Timedelta(weeks=1)
-    elif granularity == 'M':
+    elif granularity == 'ME':
         # Next month
         return timestamp + pd.DateOffset(months=1)
     else:
@@ -72,13 +73,13 @@ def get_timestamp_display_format(timestamp, granularity):
         # If parsing fails, try without timezone
         timestamp = pd.to_datetime(timestamp)
     
-    if granularity == 'H':
+    if granularity == 'h':
         return timestamp.strftime("%Y-%m-%d %H:%M")
     elif granularity == 'D':
         return timestamp.strftime("%Y-%m-%d")
     elif granularity == 'W':
         return timestamp.strftime("%Y-%m-%d")
-    elif granularity == 'M':
+    elif granularity == 'ME':
         return timestamp.strftime("%Y-%m")
     else:
         return timestamp.strftime("%Y-%m-%d")
@@ -117,9 +118,6 @@ def update_select_companies_options(companies, select_options):
     prevent_initial_call=True
 )
 def open_modal_on_end_or_last(timestamp):
-    # Si simulation terminée (timestamp == "END")
-    if timestamp == "END":
-        return True
     # Si timestamp est le dernier disponible (logique héritée)
     last_timestamp = get_last_timestamp(get_market_dataframe())
     if timestamp == last_timestamp:
@@ -185,45 +183,26 @@ def update_graph(n, company, timestamp, current_fig, range=100):
         if next_graph and timestamp:
             # Calculate the next expected timestamp based on granularity
             next_expected_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
-            
-            # Convert index to DatetimeIndex (force utc, then localize to None)
-            available_timestamps = pd.to_datetime(dftmp.index, utc=True).tz_localize(None)
-            next_expected_timestamp = pd.to_datetime(next_expected_timestamp, utc=True).tz_localize(None)
-            
-            # Find the closest timestamp that is >= next_expected_timestamp
-            future_timestamps = available_timestamps[available_timestamps >= next_expected_timestamp]
-            
-            if len(future_timestamps) > 0:
-                # Use the closest available timestamp
-                new_timestamp = future_timestamps[0]
-                # Convert back to string format for consistency
-                timestamp = new_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            if dlt.granularity == 'h':
+                timestamp = next_expected_timestamp.strftime('%Y-%m-%d %H:%M')
             else:
-                # Si plus de timestamp disponible, signaler la fin de simulation
-                fig = make_subplots()
-                fig.add_annotation(text="Fin de simulation", xref="paper", yref="paper", showarrow=False, font=dict(size=20))
-                return "END", fig, "N/A", "Fin de simulation"
-        
+                timestamp = next_expected_timestamp.strftime('%Y-%m-%d')
+                
         # Récupérer le prix de l'action de façon sécurisée
         try:
-            stock_price_val = get_price_dataframe().loc[timestamp, company]
-            if pd.isna(stock_price_val):
-                stock_price = "N/A"
-            else:
-                stock_price = str(math.ceil(stock_price_val))+" €"
+            price_df = get_price_dataframe()[company]
+            # Harmoniser le format du timestamp avec l'index du DataFrame
+            if price_df is not None:
+                ts = timestamp
+                if ts in price_df.index:
+                    stock_price_val = price_df.loc[ts]
+                    stock_price = str(math.ceil(stock_price_val))+" €"
+                else:
+                    stock_price = "N/A"
+
         except Exception as e:
             print(f"Error retrieving stock price for {company} at {timestamp}: {e}")
             stock_price = "N/A"
-
-        # Fix: Ensure the columns are correctly named based on their count
-        expected_cols_7 = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA']
-        expected_cols_9 = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA']
-        if len(dftmp.columns) == 9:
-            dftmp.columns = expected_cols_9
-        elif len(dftmp.columns) == 7:
-            dftmp.columns = expected_cols_7
-        else:
-            print(f"Unexpected number of columns in dftmp: {len(dftmp.columns)}")
 
         fig, timestamp = create_graph(
             dftmp,
@@ -272,8 +251,7 @@ def update_graph(n, company, timestamp, current_fig, range=100):
                     font=dict(size=14, color="black", family="Arial")
                 )
             ]
-        )
-
+        ) 
         # Change language on the legend
         fig.for_each_trace(
             lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]["legend"][t.name])
@@ -299,7 +277,7 @@ def update_graph(n, company, timestamp, current_fig, range=100):
         return timestamp, fig, stock_price, formatted_timestamp
 
     except Exception as e:
-        print("Error", e)
+        print("Error", e)       
         return no_update, no_update, no_update, no_update
 
 @callback(
