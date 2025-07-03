@@ -5,7 +5,7 @@ class Defaults:
     # update_time = 60*1000 # in milliseconds
     update_time = 5*1000  # in milliseconds
 
-    start_date = "2020-01-01" 
+    start_date = "2000-01-01" 
     # Maximum number of requests the user can make on the dashboard
     max_requests = 10
 
@@ -16,7 +16,7 @@ class Defaults:
     data_path = "../data"
 
     #Granularity of the data
-    granularity = "D" 
+    granularity = "ME"
     # News settings
     api_key = "YOUR_API_KEY"
 

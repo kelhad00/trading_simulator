@@ -187,7 +187,7 @@ def update_graph(n, company, timestamp, current_fig, range=100):
                 timestamp = next_expected_timestamp.strftime('%Y-%m-%d %H:%M')
             else:
                 timestamp = next_expected_timestamp.strftime('%Y-%m-%d')
-                
+
         # Récupérer le prix de l'action de façon sécurisée
         try:
             price_df = get_price_dataframe()[company]
@@ -203,6 +203,7 @@ def update_graph(n, company, timestamp, current_fig, range=100):
         except Exception as e:
             print(f"Error retrieving stock price for {company} at {timestamp}: {e}")
             stock_price = "N/A"
+
         fig, timestamp = create_graph(
             dftmp,
             timestamp,

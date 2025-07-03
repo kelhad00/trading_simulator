@@ -72,7 +72,7 @@ def editor(lang = "fr"):
             dmc.Select(
                 id="granularity-select",
                 data=[
-                    {"value": "M", "label": "Mois"},
+                    {"value": "ME", "label": "Mois"},
                     {"value": "W", "label": "Semaine"},
                     {"value": "D", "label": "Jour"},
                     {"value": "h", "label": "Heure"},
