@@ -142,16 +142,12 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         cashflow: the updated money of the user
         port_totals: the updated dictionary of the total price of the user
     """
-    if len(request_list) == 0:
-        return no_update,no_update,no_update,no_update
-
     old_req = request_list.copy()
 
     timestamp = pd.to_datetime(timestamp)
 
     timestamp = format_timestamp(timestamp)
 
-    print("Execute_requestes : ", timestamp)
     price_list = get_price_dataframe()
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     port_totals = pd.DataFrame.from_dict(port_totals, orient='index', columns=['Totals'])

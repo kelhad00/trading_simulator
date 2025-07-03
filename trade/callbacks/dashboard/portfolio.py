@@ -27,7 +27,7 @@ def display_portfolio_updated(n, totals, cashflow):
     totals = pd.Series(totals)
     totals = pd.to_numeric(totals, errors='coerce')
     totals = totals.fillna(0)
-    
+
     return f"{round(cashflow, 2)}€", f"{round(cashflow + totals.sum(), 2)}€"
 
 
@@ -46,13 +46,13 @@ def display_portfolio_table_updated(n, totals, shares):
     Returns:
         The updated portfolio table
     """
-
     lang = page_registry['lang']
 
     # Convert to Series and ensure numeric types
     totals = pd.Series(totals)
     shares = pd.Series(shares)
-    
+
+
     # Convert to numeric, coercing errors to NaN
     totals = pd.to_numeric(totals, errors='coerce')
     shares = pd.to_numeric(shares, errors='coerce')

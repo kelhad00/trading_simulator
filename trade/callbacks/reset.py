@@ -1,11 +1,12 @@
 import os
+import pandas as pd
 
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
 from dash.exceptions import PreventUpdate
 from trade.utils.config import save_current_config
 
 from trade.defaults import defaults as dlt
-from trade.utils.market import get_first_timestamp, get_market_dataframe
+from trade.utils.market import get_first_timestamp, get_market_dataframe, format_timestamp
 from trade.utils.news import get_news_dataframe
 from trade.utils.settings.create_market_data import get_generated_data
 
@@ -17,7 +18,12 @@ market_df = get_market_dataframe()
     Input("timestamp", "data"),
 )
 def disable_button(timestamp):
-    if timestamp == get_first_timestamp(market_df, 100):
+    timestamp = pd.to_datetime(timestamp)
+    timestamp = format_timestamp(timestamp)
+    first_timestamp = get_first_timestamp(market_df, 100)
+    first_timestamp = pd.to_datetime(first_timestamp)
+    first_timestamp = format_timestamp(first_timestamp)
+    if timestamp == first_timestamp:
         return False
     else:
         return True
@@ -40,6 +46,8 @@ def reset_data(btn, initial_cashflow, nb_export):
     Function to reset the simulation data
     Args:
         btn: The reset button
+        initial_cashflow: The initial cashflow
+        nb_export: The number of exported data
     Returns:
         The initial data of the simulation
     """
