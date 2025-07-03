@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+
 import pandas as pd
 
 from trade.defaults import defaults as dlt
@@ -64,8 +66,9 @@ def get_last_timestamp(market_df):
         return 0
 
 def format_timestamp(timestamp):
-    if timestamp.tzinfo is not None:
-        timestamp = timestamp.replace(tzinfo=None)
+    if not isinstance(timestamp, str):
+        if timestamp.tzinfo is not None :
+            timestamp = timestamp.replace(tzinfo=None)
     if dlt.granularity == 'h':
         return timestamp.strftime('%Y-%m-%d %H:%M')
     else:

@@ -203,14 +203,12 @@ def update_graph(n, company, timestamp, current_fig, range=100):
         except Exception as e:
             print(f"Error retrieving stock price for {company} at {timestamp}: {e}")
             stock_price = "N/A"
-
         fig, timestamp = create_graph(
             dftmp,
             timestamp,
             next_graph,
             range
         )
-
         # Define chart layouts
         fig.update_layout(
             xaxis_title=tls[page_registry['lang']]["market-graph"]['x'],

@@ -8,7 +8,7 @@ from dash_iconify import DashIconify
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 from trade.components.table import create_table_delete
-from trade.utils.market import get_price_dataframe
+from trade.utils.market import get_price_dataframe, format_timestamp
 
 
 def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests):
@@ -142,8 +142,16 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         cashflow: the updated money of the user
         port_totals: the updated dictionary of the total price of the user
     """
+    if len(request_list) == 0:
+        return no_update,no_update,no_update,no_update
+
     old_req = request_list.copy()
 
+    timestamp = pd.to_datetime(timestamp)
+
+    timestamp = format_timestamp(timestamp)
+
+    print("Execute_requestes : ", timestamp)
     price_list = get_price_dataframe()
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     port_totals = pd.DataFrame.from_dict(port_totals, orient='index', columns=['Totals'])
@@ -285,6 +293,7 @@ def total_cost(price,nb):
 def max_share(btn,price,cashflow,action,company,portfolio):
 
     if action == "buy":
+
         # Ensure price and cashflow are numeric and not NaN
         try:
             price = float(price) if price is not None else 0
