@@ -192,7 +192,9 @@ translation = {
                     "hammer": "Hammer",
                     "shooting_star": "Shooting Star",
                     "double_top": "Double Top",
-                    "head_and_shoulders": "Head and Shoulders"
+                    "head_and_shoulders": "Head and Shoulders",
+                    "double_bottom" : "Double Bottom",
+                    "inverse_head_and_shoulders":"Inversed Head and Shoulders"
                 },
             },
             "tickers": {

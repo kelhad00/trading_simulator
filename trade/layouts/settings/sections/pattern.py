@@ -16,6 +16,8 @@ def pattern_config(lang = "fr"):
         {"value": "shooting_star", "label": tl["patterns_names"]["shooting_star"]},
         {"value": "double_top", "label": tl["patterns_names"]["double_top"]},
         {"value": "head_and_shoulders", "label": tl["patterns_names"]["head_and_shoulders"]},
+        {"value": "double_bottom", "label": tl["patterns_names"].get("double_bottom", "Double creux")},
+        {"value": "inverse_head_and_shoulders", "label": tl["patterns_names"].get("inverse_head_and_shoulders", "Tête et épaules inversées")},
     ]
 
     return html.Div( [

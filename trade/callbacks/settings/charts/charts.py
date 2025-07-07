@@ -1,127 +1,55 @@
 import json
 import os
 from random import randint
-import csv
-
 import dash
 import pandas as pd
-from dash import callback, Input, Output, State, html, no_update, dcc, page_registry
+from dash import callback, Input, Output, State, html, no_update, dcc, page_registry, ALL
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
-from pandas import DataFrame
 import numpy as np
 import dash_mantine_components as dmc
 from trade.locales import translations as tls
-from trade.utils.market import get_first_timestamp
-from trade.utils.settings.create_market_data import get_generated_data, export_generated_data
+from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
 from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
 from trade.callbacks.settings.charts.modal import generate_new_charts
-from trade.callbacks.settings.charts.patterns_generator import insert_bullish_engulfing, insert_bearish_engulfing, insert_hammer, insert_shooting_star, insert_double_top, insert_head_and_shoulders
-from dash import ALL
+from trade.callbacks.settings.charts.patterns_generator import insert_bullish_engulfing, insert_bearish_engulfing, insert_hammer, insert_shooting_star, insert_double_top, insert_head_and_shoulders, insert_double_bottom, insert_inverse_head_and_shoulders
 
 # Mapping pattern -> paramètres optionnels
 PATTERN_PARAMS = {
     "bullish_engulfing": [
-        {"name": "down1", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
-        {"name": "up1", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
     ],
     "bearish_engulfing": [
-        {"name": "down1", "type": "number", "min": 0.98, "max": 1.0, "step": 0.001, "value": 0.995},
-        {"name": "up1", "type": "number", "min": 1.0, "max": 1.02, "step": 0.001, "value": 1.005},
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
     ],
     "hammer": [
-        {"name": "low", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
-        {"name": "high", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
     ],
     "shooting_star": [
-        {"name": "low", "type": "number", "min": 0.001, "max": 0.01, "step": 0.001, "value": 0.001},
-        {"name": "high", "type": "number", "min": 0.002, "max": 0.02, "step": 0.001, "value": 0.003},
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
     ],
     "double_top": [
-        {"name": "top_init", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
-        {"name": "creux_init", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.01},
-        {"name": "rise1", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.015},
-        {"name": "low4", "type": "number", "min": 0.98, "max": 1.01, "step": 0.001, "value": 0.998},
-        {"name": "high4", "type": "number", "min": 1.0, "max": 1.01, "step": 0.001, "value": 1.002},
-        {"name": "close5", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
+        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 5},
     ],
     "head_and_shoulders": [
-        {"name": "shoulder_rate", "type": "number", "min": 1.0, "max": 1.05, "step": 0.001, "value": 1.02},
-        {"name": "head_rate", "type": "number", "min": 1.0, "max": 1.1, "step": 0.001, "value": 1.04},
-        {"name": "neckline_rate", "type": "number", "min": 0.95, "max": 1.0, "step": 0.001, "value": 0.99},
-        {"name": "breaking_rate", "type": "number", "min": 0.9, "max": 1.0, "step": 0.001, "value": 0.97},
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
+        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 6},
+    ],
+    "double_bottom": [
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
+        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 5},
+    ],
+    "inverse_head_and_shoulders": [
+        {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
+        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 6},
     ],
 }
 
-# Callback pour générer dynamiquement les champs de paramètres
-from dash import Output, Input, State, callback
 
-@callback(
-    Output("pattern-params-container", "children"),
-    Input("pattern-select", "value"),
-    Input("reset-pattern-config-btn", "n_clicks"),
-    State({"type": "pattern-param", "name": ALL}, "value"),
-    State({"type": "pattern-param", "name": ALL}, "id"),
-    prevent_initial_call=True
-)
-def update_pattern_params(pattern_name, reset_clicks, current_values, current_ids):
-    ctx = dash.callback_context
-    triggered = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
-    if not pattern_name:
-        return []
-    params = PATTERN_PARAMS.get(pattern_name, [])
-    if not params:
-        return [html.Div("Aucun paramètre optionnel pour ce pattern.")]
-    # Utiliser un fichier JSON pour stocker les configs
-    file_path = os.path.join(dlt.data_path, "pattern_configs.json")
-    configs = {}
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            configs = json.load(f)
-    except Exception:
-        configs = {}
-    # Récupérer la langue courante
-    lang = page_registry['lang']
-    if triggered == "reset-pattern-config-btn":
-        value_map = {param["name"]: param["value"] for param in params}
-        configs[pattern_name] = value_map
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(configs, f, indent=2)
-    elif pattern_name in configs:
-        value_map = {param["name"]: configs[pattern_name].get(param["name"], param["value"]) for param in params}
-    else:
-        value_map = {id_["name"]: val for id_, val in zip(current_ids, current_values)} if current_ids else {param["name"]: param["value"] for param in params}
-    fields = []
-    for param in params:
-        value = value_map.get(param["name"], param["value"])
-        # Récupérer le label traduit
-        try:
-            label = tls[lang]["settings"]["charts"]["patterns_params"][pattern_name][param["name"]]
-        except Exception:
-            label = param["name"]
-        if param["type"] == "number":
-            fields.append(
-                html.Div([
-                    dmc.Text(label, size="sm", className="mb-1"),
-                    dmc.Slider(
-                        id={"type": "pattern-param", "name": param["name"]},
-                        value=value,
-                        min=param["min"],
-                        max=param["max"],
-                        step=param["step"],
-                        marks=[
-                            {"value": param["min"], "label": str(param["min"])} if param["min"] != param["max"] else {},
-                            {"value": param["max"], "label": str(param["max"])} if param["min"] != param["max"] else {},
-                        ],
-                        size="md",
-                        className="mb-4 w-64",
-                        labelAlwaysOn=False,
-                    ),
-                ], style={"marginBottom": "16px"})
-            )
-    return fields
+
 
 @callback(
     Output("chart", "figure"),
@@ -662,19 +590,22 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
             insert_double_top(opens, highs, lows, closes, 0, **params)
         elif pattern_name == "head_and_shoulders":
             insert_head_and_shoulders(opens, highs, lows, closes, 0, **params)
+        elif pattern_name == "double_bottom":
+            insert_double_bottom(opens, highs, lows, closes, 0, **params)
+        elif pattern_name == "inverse_head_and_shoulders":
+            insert_inverse_head_and_shoulders(opens, highs, lows, closes, 0, **params)
         else:
             return go.Figure()
     except Exception as e:
         return go.Figure(layout={"title": f"Erreur : {e}"})
 
-    # Déterminer la longueur utile
-    pattern_len = 2 if pattern_name in ["bullish_engulfing", "bearish_engulfing"] else 1
-    if pattern_name == "hammer" or pattern_name == "shooting_star":
+    # Déterminer la longueur utile dynamiquement
+    if pattern_name in ["bullish_engulfing", "bearish_engulfing"]:
+        pattern_len = 2
+    elif pattern_name in ["hammer", "shooting_star"]:
         pattern_len = 1
-    elif pattern_name == "double_top":
-        pattern_len = 5
-    elif pattern_name == "head_and_shoulders":
-        pattern_len = 6
+    else:
+        pattern_len = params.get("duree", n)
 
     # Récupérer la langue courante
     lang = page_registry['lang']
@@ -693,6 +624,14 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
             increasing_line_color='green',
             decreasing_line_color='red',
             showlegend=False
+        ),
+        go.Scatter(
+            x=list(range(pattern_len)),
+            y=closes[:pattern_len],
+            mode='lines+markers',
+            name='Close',
+            line=dict(color='blue', width=2, dash='dash'),
+            marker=dict(size=6, color='blue')
         )
     ])
     fig.update_layout(
@@ -750,6 +689,67 @@ def update_pattern_param_values(values, ids):
     # Retourne la valeur sous forme de string pour chaque slider
     return [str(v) for v in values]
 
+@callback(
+    Output("pattern-params-container", "children"),
+    Input("pattern-select", "value"),
+    Input("reset-pattern-config-btn", "n_clicks"),
+    State({"type": "pattern-param", "name": ALL}, "value"),
+    State({"type": "pattern-param", "name": ALL}, "id"),
+    prevent_initial_call=True
+)
+def update_pattern_params(pattern_name, reset_clicks, current_values, current_ids):
+    ctx = dash.callback_context
+    triggered = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
+    if not pattern_name:
+        return []
+    params = PATTERN_PARAMS.get(pattern_name, [])
+    if not params:
+        return [html.Div("Aucun paramètre optionnel pour ce pattern.")]
+    file_path = os.path.join(dlt.data_path, "pattern_configs.json")
+    configs = {}
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            configs = json.load(f)
+    except Exception:
+        configs = {}
+    lang = page_registry['lang']
+    if triggered == "reset-pattern-config-btn":
+        value_map = {param["name"]: param["value"] for param in params}
+        configs[pattern_name] = value_map
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(configs, f, indent=2)
+    elif pattern_name in configs:
+        value_map = {param["name"]: configs[pattern_name].get(param["name"], param["value"]) for param in params}
+    else:
+        value_map = {id_["name"]: val for id_, val in zip(current_ids, current_values)} if current_ids else {param["name"]: param["value"] for param in params}
+    fields = []
+    for param in params:
+        value = value_map.get(param["name"], param["value"])
+        try:
+            label = tls[lang]["settings"]["charts"]["patterns_params"][pattern_name][param["name"]]
+        except Exception:
+            label = param["name"]
+        if param["type"] == "number":
+            fields.append(
+                html.Div([
+                    dmc.Text(label, size="sm", className="mb-1"),
+                    dmc.Slider(
+                        id={"type": "pattern-param", "name": param["name"]},
+                        value=value,
+                        min=param["min"],
+                        max=param["max"],
+                        step=param["step"],
+                        marks=[
+                            {"value": param["min"], "label": str(param["min"])} if param["min"] != param["max"] else {},
+                            {"value": param["max"], "label": str(param["max"])} if param["min"] != param["max"] else {},
+                        ],
+                        size="md",
+                        className="mb-4 w-64",
+                        labelAlwaysOn=False,
+                    ),
+                ], style={"marginBottom": "16px"})
+            )
+    return fields
 
 
 

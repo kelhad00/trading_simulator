@@ -193,7 +193,9 @@ translation = {
                     "hammer": "Marteau",
                     "shooting_star": "Étoile filante",
                     "double_top": "Double sommet",
-                    "head_and_shoulders": "Tête et épaules"
+                    "head_and_shoulders": "Tête et épaules",
+                    "double_bottom" : "Double creux",
+                    "inverse_head_and_shoulders":"Tête et épaules inversés"
                 },
             },
             "tickers": {
