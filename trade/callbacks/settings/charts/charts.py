@@ -67,7 +67,8 @@ def update_graph(company, data):
         The updated graph
     """
     try:
-        df = get_generated_data()[company]  # Get the data of the selected company
+        df = get_generated_data()[company]
+        print(df.shape[0])# Get the data of the selected company
         return display_chart(df, 0, df.shape[0], company)  # Display the chart
 
     except Exception as e:
