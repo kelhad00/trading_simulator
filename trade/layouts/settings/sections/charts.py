@@ -19,11 +19,11 @@ button_labels = [
     'Very Bear'
 ]
 
-def bull_buttons(lang = "fr"):
+def bull_buttons(lang = "fr", pattern_type="with"):
     tl = tls[lang]["settings"]["charts"]["button"]
     return [dmc.Button(
             tl[label],
-            id={'type': 'add-button', 'index': label},
+            id={'type': 'add-button', 'index': label, 'pattern_type': pattern_type},
             n_clicks=0,
             color="green",
             size="sm",
@@ -31,11 +31,11 @@ def bull_buttons(lang = "fr"):
         ) for label in button_labels if 'Bull' in label
     ]
 
-def flat_buttons(lang = "fr"):
+def flat_buttons(lang = "fr", pattern_type="with"):
     tl = tls[lang]["settings"]["charts"]["button"]
     return [dmc.Button(
             tl[label],
-            id={'type': 'add-button', 'index': label},
+            id={'type': 'add-button', 'index': label, 'pattern_type': pattern_type},
             n_clicks=0,
             color="gray",
             size="sm",
@@ -43,11 +43,11 @@ def flat_buttons(lang = "fr"):
         ) for label in button_labels if 'Flat' in label
     ]
 
-def bear_buttons(lang = "fr"):
+def bear_buttons(lang = "fr", pattern_type="with"):
     tl = tls[lang]["settings"]["charts"]["button"]
     return  [dmc.Button(
             tl[label],
-            id={'type': 'add-button', 'index': label},
+            id={'type': 'add-button', 'index': label, 'pattern_type': pattern_type},
             n_clicks=0,
             color="red",
             size="sm",
@@ -55,17 +55,64 @@ def bear_buttons(lang = "fr"):
         ) for label in button_labels if 'Bear' in label
     ]
 
-def layout(lang = "fr"):
+def pattern_section(title, lang="fr", pattern_type="with"):
     return html.Div([
-    html.Div(bull_buttons(lang), style={'display': 'flex', 'flexDirection': 'row'}),
-    html.Div(flat_buttons(lang), style={'display': 'flex', 'flexDirection': 'row'}),
-    html.Div(bear_buttons(lang), style={'display': 'flex', 'flexDirection': 'row'})
-    ], style={'display': 'flex', 'flexDirection': 'column'})
+        dmc.Text(title, size="md", weight=700, className="mb-2 mt-2"),
+        layout(lang=lang, pattern_type=pattern_type)
+    ], className="mb-4")
+
+# On adapte layout pour accepter pattern_type ("with" ou "without")
+def layout(lang = "fr", pattern_type="with"):
+    label = "Avec pattern" if pattern_type == "with" else "Sans pattern"
+    return html.Div([
+        html.Div([
+            html.Div(bull_buttons(lang, pattern_type), style={'display': 'flex', 'flexDirection': 'row'})
+        ], className="mb-2"),
+        html.Div([
+            html.Div(flat_buttons(lang, pattern_type), style={'display': 'flex', 'flexDirection': 'row'})
+        ], className="mb-2"),
+        html.Div([
+            html.Div(bear_buttons(lang, pattern_type), style={'display': 'flex', 'flexDirection': 'row'})
+        ], className="mb-2"),
+    ], style={'display': 'flex', 'flexDirection': 'column'}, id={"type": "pattern-section", "pattern_type": pattern_type})
+
+# On adapte editor pour afficher les deux sections
 
 def editor(lang = "fr"):
     tl = tls[lang]["settings"]["charts"]
+    # Liste d'exemple de patterns (à remplacer par la vraie liste plus tard)
     return html.Div([
-        layout(lang),
+        pattern_section(tl["subtitles"].get("with_pattern", "Avec pattern"), lang, pattern_type="with"),
+        pattern_section(tl["subtitles"].get("without_pattern", "Sans pattern"), lang, pattern_type="without"),
+
+        # Bloc selecteur de pattern + bouton ajouter
+        html.Div([
+            dmc.Text("Pattern", size="md", weight=700, className="mb-2 mt-2"),
+            html.Br(),
+            dmc.Select(
+                id="pattern-selector",
+                data=[
+                    {"value": "bullish_engulfing", "label": tl["patterns_names"]["bullish_engulfing"]},
+                    {"value": "bearish_engulfing", "label": tl["patterns_names"]["bearish_engulfing"]},
+                    {"value": "hammer", "label": tl["patterns_names"]["hammer"]},
+                    {"value": "shooting_star", "label": tl["patterns_names"]["shooting_star"]},
+                    {"value": "double_top", "label": tl["patterns_names"]["double_top"]},
+                    {"value": "head_and_shoulders", "label": tl["patterns_names"]["head_and_shoulders"]},
+                    {"value": "double_bottom", "label": tl["patterns_names"].get("double_bottom", "Double creux")},
+                    {"value": "inverse_head_and_shoulders", "label": tl["patterns_names"].get("inverse_head_and_shoulders", "Tête et épaules inversées")},
+                ],
+                className="mb-2 w-60",
+                value="bullish_engulfing"
+            ),
+            dmc.Button(
+                "Ajouter pattern",
+                id="add-pattern-button",
+                color="dark",
+                size="sm",
+                className="ml-2"
+            )
+        ], className="flex flex-row items-end mb-2 gap-2"),
+
 
         html.Div([
             dmc.Text(tl["select"].get("granularity", "Granularité :"), size="sm", weight=500, className="mb-1"),
@@ -139,9 +186,7 @@ def generate_charts(lang="fr"):
             dmc.Paper(
                 dcc.Graph(id="chart")
             )
-        ], action_id="modify-button", action=tl["button"]["modify"]),
-
-        dmc.Button(tl["button"]["delete"], id="button-delete-charts", color="dark"),
+        ]),
 
     ], className="flex flex-col gap-8 w-full")
 

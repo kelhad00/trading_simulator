@@ -3,7 +3,7 @@ import os
 from random import randint
 import dash
 import pandas as pd
-from dash import callback, Input, Output, State, html, no_update, dcc, page_registry, ALL
+from dash import callback, Input, Output, State, html, no_update, dcc, page_registry, ALL, MATCH
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import numpy as np
@@ -32,19 +32,19 @@ PATTERN_PARAMS = {
     ],
     "double_top": [
         {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 5},
+        {"name": "duree", "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
     ],
     "head_and_shoulders": [
         {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 6},
+        {"name": "duree", "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
     ],
     "double_bottom": [
         {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 5},
+        {"name": "duree", "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
     ],
     "inverse_head_and_shoulders": [
         {"name": "amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": "duree", "type": "number", "min": 3, "max": 10, "step": 1, "value": 6},
+        {"name": "duree", "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
     ],
 }
 
@@ -68,7 +68,6 @@ def update_graph(company, data):
     """
     try:
         df = get_generated_data()[company]
-        print(df.shape[0])# Get the data of the selected company
         return display_chart(df, 0, df.shape[0], company)  # Display the chart
 
     except Exception as e:
@@ -134,70 +133,55 @@ def delete_revenues(n, company, companies):
 
 @callback(
     Output('timeline', 'children', allow_duplicate=True),
-    Input({'type': 'add-button', 'index': dash.ALL}, 'n_clicks'),
+    Input({'type': 'add-button', 'index': dash.ALL, 'pattern_type': ALL}, 'n_clicks'),
     State('timeline', 'children'),
     prevent_initial_call=True
 )
 def add_smash(*args):
-    """
-    Add a new item to the timeline when a button is clicked.
-    
-    Args:
-        *args: Variable length argument list. The last argument is the current timeline children.
-            - args[-1]: Current timeline children list
-    """
     timeline_children = args[-1]
 
     if not dash.ctx.triggered:
         return timeline_children or []
     button_id = dash.ctx.triggered[0]['prop_id'].split('.')[0]
-    button_id = json.loads(button_id)["index"]
-
+    button_id_dict = json.loads(button_id)
+    label = button_id_dict["index"]
+    pattern_type = button_id_dict.get("pattern_type", "with")
+    type_label = "Avec pattern" if pattern_type == "with" else "Sans pattern"
+    lang = page_registry.get('lang', 'fr')
+    label_txt = tls[lang]["settings"]["charts"]["button"].get(label, label)
+    # On retire 'Ajouter' ou 'Add' si présent au début du label
+    if label_txt.startswith("Ajouter "):
+        label_txt = label_txt[len("Ajouter ") :]
+    elif label_txt.startswith("Add "):
+        label_txt = label_txt[len("Add ") :]
+    color = 'green' if 'Bull' in label else 'red' if 'Bear' in label else 'gray'
     add_clicks = len(timeline_children or [])
-
-    # Exemple d'ajout d'éléments dans la timeline
     new_item = html.Div(
-        [tls[page_registry['lang']]["settings"]["charts"]["subtitles"][button_id],
-         html.Div([
-             dmc.Button(
-                 "←",
-                 id={'type': 'move-left', 'index': add_clicks},
-                 color="dark",
-                 size="xs",
-                 variant="filled",
-                 n_clicks=0,
-                 style={'minWidth': '30px'}
-             ),
-             dmc.Button(
-                 "→",
-                 id={'type': 'move-right', 'index': add_clicks},
-                 color="dark",
-                 size="xs",
-                 variant="filled",
-                 n_clicks=0,
-                 style={'minWidth': '30px'}
-             ),
-         ], style={'display': 'flex', 'justifyContent': 'space-between', 'gap': '8px', 'padding': '8px'}),
-         dmc.Button(
-             "Delete",
-             id={'type': 'delete-button', 'index': add_clicks},
-             color="red",
-             size="xs",
-             variant="filled",
-             n_clicks=0,
-             style={
-                 'position': 'relative',
-                 'bottom': '5px',
-                 'right': '5px',
-                 'width': '100%',
-                 'marginTop': '4px'
-             }
-         )
+        [
+            html.Div([
+                html.Strong(label_txt),
+                html.Div(type_label, style={"fontSize": "0.8em", "fontWeight": 400, "marginTop": "2px"}),
+            ]),
+            dmc.Button(
+                "Delete",
+                id={'type': 'delete-button', 'index': add_clicks},
+                color="red",
+                size="xs",
+                variant="filled",
+                n_clicks=0,
+                style={
+                    'position': 'relative',
+                    'bottom': '5px',
+                    'right': '5px',
+                    'width': '100%',
+                    'marginTop': '4px'
+                }
+            )
         ],
         style={
             'width': '120px',
             'height': '120px',
-            'backgroundColor': 'green' if 'Bull' in button_id else 'red' if 'Bear' in button_id else 'gray',
+            'backgroundColor': color,
             'display': 'flex',
             'color': 'white',
             'flexDirection': 'column',
@@ -209,7 +193,7 @@ def add_smash(*args):
             'resize': 'horizontal',
             'overflow': 'auto'
         },
-        id=f"item-{add_clicks}-{button_id}",
+        id=f"item-{add_clicks}-{label}",
     )
     timeline_items = timeline_children or []
     timeline_items.append(new_item)
@@ -270,11 +254,12 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
     trends = []
     alphas = []
     lengths = []
+    pattern_types = []
     for item in size_data:
         if size_data[item]["width"] == 0:
             continue
-        length = size_data[item]["width"]
         label = size_data[item]["label"]
+        pattern_type = size_data[item].get("pattern_type", "with")
         alpha = alpha_map.get(label, 100)
         if "Bull" in label:
             trends.append("bull")
@@ -283,7 +268,14 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
         else:
             trends.append("flat")
         alphas.append(alpha)
-        lengths.append(length)
+        pattern_types.append(pattern_type)
+        # Si pattern_type est None, on détermine dynamiquement la longueur du pattern généré
+        if pattern_type is None:
+            # Exemple : on suppose une fonction get_pattern_length(label) qui retourne la longueur du pattern
+            pattern_length = get_pattern_length(label)
+            lengths.append(pattern_length)
+        else:
+            lengths.append(size_data[item]["width"])
     if not trends:
         return html.Div(), None
 
@@ -307,7 +299,7 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
         for company in companies:
             company_df = pd.DataFrame(index=dates)
             date_cursor = 0
-            for trend, alpha, length in zip(trends, alphas, lengths):
+            for trend, alpha, length, pattern_type in zip(trends, alphas, lengths, pattern_types):
                 trend_dates = dates[date_cursor:date_cursor+length]
                 if len(trend_dates) == 0:
                     continue
@@ -409,60 +401,12 @@ def delete_smash(delete_clicks, timeline_children):
     timeline_items.pop(index_to_delete)
     new_timeline = list()
     for i, item in enumerate(timeline_items):
-        if i != item["props"]["children"][2]["props"]["id"]["index"]:
-            item["props"]["children"][2]["props"]["id"]["index"] = i
+        # Le bouton Delete est maintenant à l'index 1
+        if i != item["props"]["children"][1]["props"]["id"]["index"]:
+            item["props"]["children"][1]["props"]["id"]["index"] = i
             item["props"]["id"] = f"item-{i}"
         new_timeline.append(item)
     return new_timeline
-
-@callback(
-    Output('timeline', 'children', allow_duplicate=True),
-    Input({'type': 'move-left', 'index': dash.ALL}, 'n_clicks'),
-    Input({'type': 'move-right', 'index': dash.ALL}, 'n_clicks'),
-    State('timeline', 'children'),
-    prevent_initial_call=True
-)
-def move_item(left_clicks, right_clicks, timeline_children):
-    """
-    Move a timeline item left or right based on button clicks.
-    
-    Args:
-        left_clicks (list): List of click counts for left movement buttons
-        right_clicks (list): List of click counts for right movement buttons
-        timeline_children (list): Current list of timeline items
-        
-    Returns:
-        list: Updated timeline items with the moved item in its new position
-    """
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return timeline_children or []
-
-    button_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
-    direction = 'left' if 'move-left' in ctx.triggered[0]['prop_id'] else 'right'
-    index = button_id['index']
-
-    if not (0 <= index < len(timeline_children)):
-        return timeline_children
-
-    timeline = timeline_children[:]
-    if direction == 'left' and index > 0:
-        timeline[index - 1], timeline[index] = timeline[index], timeline[index - 1]
-    elif direction == 'right' and index < len(timeline) - 1:
-        timeline[index + 1], timeline[index] = timeline[index], timeline[index + 1]
-
-    for i, item in enumerate(timeline):
-        item["props"]["id"] = f"item-{i}"
-        arrow_div = item["props"]["children"][1]
-        left_button = arrow_div["props"]["children"][0]
-        right_button = arrow_div["props"]["children"][1]
-        delete_button = item["props"]["children"][2]
-
-        left_button["props"]["id"]["index"] = i
-        right_button["props"]["id"]["index"] = i
-        delete_button["props"]["id"]["index"] = i
-
-    return timeline
 
 @callback(
     Output("chart", "figure", allow_duplicate=True),
@@ -752,5 +696,101 @@ def update_pattern_params(pattern_name, reset_clicks, current_values, current_id
             )
     return fields
 
+@callback(
+    Output('timeline', 'children', allow_duplicate=True),
+    Input('add-pattern-button', 'n_clicks'),
+    State(  'pattern-selector', 'value'),
+    State('timeline', 'children'),
+    State({'type': 'pattern-section', 'pattern_type': ALL}, 'id'),
+    prevent_initial_call=True
+)
+def add_pattern_block(n_clicks, selected_pattern, timeline_children, section_ids):
+    if not selected_pattern:
+        raise PreventUpdate
+    # Toujours une liste
+    if not isinstance(timeline_children, list):
+        timeline_items = []
+    else:
+        timeline_items = timeline_children
+    lang = page_registry.get('lang', 'fr')
+    tl = tls[lang]["settings"]["charts"]["patterns_names"]
+    pattern_colors = {
+        "bullish_engulfing": "green",
+        "bearish_engulfing": "red",
+        "hammer": "orange",
+        "shooting_star": "purple",
+        "double_top": "#b91c1c",
+        "head_and_shoulders": "#6366f1",
+        "double_bottom": "#059669",
+        "inverse_head_and_shoulders": "#2563eb",
+    }
+    label = tl.get(selected_pattern, selected_pattern)
+    color = pattern_colors.get(selected_pattern, "gray")
+    index = len(timeline_items)
+    # Déterminer le pattern_type (with/without) selon la section active
+    pattern_type = "with"
+    for section in section_ids:
+        if section and isinstance(section, dict) and section.get("pattern_type") == "without":
+            pattern_type = "without"
+            break
+    new_item = make_timeline_block(label, color, index, pattern_id=selected_pattern, pattern_type="dont")
+    timeline_items.append(new_item)
+    return timeline_items
 
 
+def make_timeline_block(label, color, index, pattern_id=None, pattern_type="with"):
+    # pattern_id: si fourni, utilisé pour l'id du bloc (sinon label)
+    type_label = "Avec pattern" if pattern_type == "with" else "Sans pattern" if pattern_type != "dont" else None
+    return html.Div(
+        [
+            html.Div([
+                html.Strong(label),
+                html.Div(type_label, style={
+                    "fontSize": "0.8em",
+                    "fontWeight": 400,
+                    "marginTop": "2px"
+                }) if type_label is not None else None,
+            ]),
+            dmc.Button(
+                "Delete",
+                id={'type': 'delete-button', 'index': index},
+                color="red",
+                size="xs",
+                variant="filled",
+                n_clicks=0,
+                style={
+                    'position': 'relative',
+                    'bottom': '5px',
+                    'right': '5px',
+                    'width': '100%',
+                    'marginTop': '4px'
+                }
+            )
+        ],
+        style={
+            'width': '120px',
+            'height': '120px',
+            'backgroundColor': color,
+            'display': 'flex',
+            'color': 'white',
+            'flexDirection': 'column',
+            'justifyContent': 'space-between',
+            'borderRadius': '8px',
+            'padding': '8px',
+            'margin': '4px',
+            'boxShadow': '0 2px 4px rgba(0,0,0,0.2)',
+            'resize': 'horizontal',
+            'overflow': 'auto'
+        },
+        id=f"item-{index}-{pattern_id if pattern_id else label}",
+    )
+
+def get_pattern_length(label):
+    # À adapter selon ta logique de génération de pattern
+    # Ici, on retourne une valeur par défaut ou selon le label
+    if label.lower() in ["bullish engulfing", "bearish engulfing"]:
+        return 2
+    elif label.lower() in ["hammer", "shooting star"]:
+        return 1
+    # Ajoute d'autres patterns si besoin
+    return 3  # valeur par défaut

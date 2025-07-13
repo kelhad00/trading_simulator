@@ -87,11 +87,21 @@ app.clientside_callback(
                         const width = el.offsetWidth;
                         const height = el.offsetHeight;
 
+                        // Chercher le label pattern_type dans le bloc
+                        let patternType = null;
+                        // On cherche un div qui contient 'Avec pattern' ou 'Sans pattern'
+                        const typeDiv = Array.from(el.querySelectorAll('div'))
+                            .find(div => div.textContent === 'Avec pattern' || div.textContent === 'Sans pattern');
+                        if (typeDiv) {
+                            patternType = typeDiv.textContent === 'Avec pattern' ? 'with' : 'without';
+                        }
+
                         // Stocker les tailles
                         window.itemSizes[itemId] = {
                             width: width,
                             height: height,
-                            label: label
+                            label: label,
+                            pattern_type: patternType
                         };
                     }
                 }
