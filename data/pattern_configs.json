@@ -1,32 +1,30 @@
 {
   "bullish_engulfing": {
-    "down1": 0.995,
-    "up1": 1.005
+    "amplitude": 1
   },
   "bearish_engulfing": {
-    "down1": 0.995,
-    "up1": 1.005
+    "amplitude": 1
   },
   "hammer": {
-    "low": 0.001,
-    "high": 0.003
+    "amplitude": 1
   },
   "shooting_star": {
-    "low": 0.001,
-    "high": 0.003
+    "amplitude": 1
   },
   "double_top": {
-    "top_init": 1.02,
-    "creux_init": 1.01,
-    "rise1": 1.015,
-    "low4": 0.998,
-    "high4": 1.002,
-    "close5": 0.99
+    "amplitude": 1.82,
+    "duree": 14
   },
   "head_and_shoulders": {
-    "shoulder_rate": 1.02,
-    "head_rate": 1.04,
-    "neckline_rate": 0.99,
-    "breaking_rate": 0.97
+    "amplitude": 0.87,
+    "duree": 9
+  },
+  "double_bottom": {
+    "amplitude": 1.37,
+    "duree": 9
+  },
+  "inverse_head_and_shoulders": {
+    "amplitude": 1.77,
+    "duree": 10
   }
 }

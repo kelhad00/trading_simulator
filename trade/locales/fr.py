@@ -116,6 +116,9 @@ translation = {
                     "alert_config_saved": "Configuration sauvegardée !",
                     "pattern_config": "Configurer un pattern personnalisé",
                     "pattern_preview": "Aperçu du pattern",
+                    "with_pattern": "Avec pattern",
+                    "without_pattern" : "Sans pattern",
+                    "duration": "Durée",
                 },
                 "button": {
                     "refresh":"Rafraichir",

@@ -115,6 +115,9 @@ translation = {
                     "alert_config_saved": "Configuration saved!",
                     "pattern_config": "Configure a custom pattern",
                     "pattern_preview": "Pattern preview",
+                    "with_pattern": "With pattern",
+                    "without_pattern" : "Without pattern",
+                    "duration":"Duration",
                 },
                 "button": {
                     "refresh":"Refresh",
@@ -129,7 +132,8 @@ translation = {
                     'Medium Bear':'Add Medium Bear',
                     'Very Bear':'Add Very Bear',
                     "save_pattern_config": "Save configuration",
-                    "reset_pattern_config": "Reset parameters"
+                    "reset_pattern_config": "Reset parameters",
+                    "add_pattern": "Add pattern",
                 },
                 "select": {
                     "ticker": "Select a stock",
@@ -144,7 +148,7 @@ translation = {
                     "month": "Month",
                     "week": "Week",
                     "day": "Day",
-                    "hour": "Hour"
+                    "hour": "Hour",
                 },
                 "radio": {
                     "title": "market movement",

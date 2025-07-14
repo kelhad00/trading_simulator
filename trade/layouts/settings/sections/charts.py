@@ -69,8 +69,8 @@ def layout(lang = "fr", pattern_type="with"):
             html.Div(bull_buttons(lang, pattern_type), style={'display': 'flex', 'flexDirection': 'row'})
         ], className="mb-2"),
         html.Div([
-            html.Div(flat_buttons(lang, pattern_type), style={'display': 'flex', 'flexDirection': 'row'})
-        ], className="mb-2"),
+             html.Div(flat_buttons(lang, pattern_type), style={'display': 'flex', 'flexDirection': 'row'})
+        ], className="mb-2") if pattern_type != "with" else None,
         html.Div([
             html.Div(bear_buttons(lang, pattern_type), style={'display': 'flex', 'flexDirection': 'row'})
         ], className="mb-2"),
@@ -105,7 +105,7 @@ def editor(lang = "fr"):
                 value="bullish_engulfing"
             ),
             dmc.Button(
-                "Ajouter pattern",
+                tl["button"]["add_pattern"],
                 id="add-pattern-button",
                 color="dark",
                 size="sm",
@@ -119,10 +119,10 @@ def editor(lang = "fr"):
             dmc.Select(
                 id="granularity-select",
                 data=[
-                    {"value": "ME", "label": "Mois"},
-                    {"value": "W", "label": "Semaine"},
-                    {"value": "D", "label": "Jour"},
-                    {"value": "h", "label": "Heure"},
+                    {"value": "ME", "label": tl["select"]["month"]},
+                    {"value": "W", "label": tl["select"]["week"]},
+                    {"value": "D", "label": tl["select"]["day"]},
+                    {"value": "h", "label": tl["select"]["hour"]},
                 ],
                 value="D",
                 className="mb-2 w-40"

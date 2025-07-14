@@ -69,9 +69,7 @@ app.clientside_callback(
     """
     function(n_clicks, children) {
         // Initialiser l'objet pour stocker les tailles si ce n'est pas déjà fait
-        if (!window.itemSizes) {
-            window.itemSizes = {};
-        }
+        window.itemSizes = {};
 
         // Fonction pour mesurer et stocker les tailles des éléments
         function measureAndStoreSizes() {
@@ -175,4 +173,4 @@ if __name__ == '__main__':
         print('\nDownloading market data...\n')
         download_market_data()
 
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8050, debug=True)

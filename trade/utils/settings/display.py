@@ -17,9 +17,6 @@ def display_chart(data, index, length, data_name):
     # Slice the data
     data = data.iloc[index:index+length]
 
-    # delete the index where col contains a NaN
-    data = data.dropna()
-
     # Get the company label if it exists in companies_list
     if data_name in dlt.companies_list:
         display_name = dlt.companies_list[data_name]['label']

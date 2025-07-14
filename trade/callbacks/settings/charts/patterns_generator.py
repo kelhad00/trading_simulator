@@ -3,7 +3,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 from .pattern_interpolation import fill_ohlc_from_dataset
 
-def insert_bullish_engulfing(opens, highs, lows, closes, day, amplitude=0.05):
+def insert_bullish_engulfing(opens, highs, lows, closes, day, amplitude=5):
+    amplitude /= 100
     # Jour 1 : bougie rouge
     open1 = opens[day]
     close1 = open1 * (1 - amplitude)  # amplitude = pourcentage de baisse (ex: 0.01 pour -1%)
@@ -17,7 +18,8 @@ def insert_bullish_engulfing(opens, highs, lows, closes, day, amplitude=0.05):
     insert_engulfing_details(opens, highs, lows, closes, day, open1, close1, open2, close2)
 
 
-def insert_bearish_engulfing(opens, highs, lows, closes, day, amplitude=0.05):
+def insert_bearish_engulfing(opens, highs, lows, closes, day, amplitude=5):
+    amplitude /= 100
     # Jour 1 : bougie verte (petite hausse)
     open1 = opens[day]
     close1 = open1 * (1 + amplitude)  # petite hausse
@@ -49,7 +51,8 @@ def insert_engulfing_details(opens, highs, lows, closes, day, open1, close1, ope
     highs[day + 1] = body2_high + delta2
     lows[day + 1] = body2_low - delta2
 
-def insert_hammer(opens, highs, lows, closes, day, amplitude=0.002):
+def insert_hammer(opens, highs, lows, closes, day, amplitude=0.2):
+    amplitude /= 100
     # amplitude = pourcentage du corps (ex: 0.002 pour 0.2%)
     direction = 1
     opens[day] = closes[day - 1] * (1 + np.random.normal(0, 0.0005))
@@ -61,7 +64,8 @@ def insert_hammer(opens, highs, lows, closes, day, amplitude=0.002):
     highs[day] = top_price + body_size * np.random.uniform(0.05, 0.1)
 
 
-def insert_shooting_star(opens, highs, lows, closes, day, amplitude=0.002):
+def insert_shooting_star(opens, highs, lows, closes, day, amplitude=0.2):
+    amplitude /= 100
     # amplitude = pourcentage du corps (ex: 0.002 pour 0.2%)
     direction = -1
     opens[day] = closes[day - 1] * (1 + np.random.normal(0, 0.0005))
@@ -72,14 +76,18 @@ def insert_shooting_star(opens, highs, lows, closes, day, amplitude=0.002):
     highs[day] = top_price + body_size * np.random.uniform(2.5, 3.5)
     lows[day] = base_price - body_size * np.random.uniform(0.05, 0.1)
 
-def insert_double_top(opens, highs, lows, closes, day, amplitude=0.02, duree=5):
+def insert_double_top(opens, highs, lows, closes, day, amplitude, duree):
+    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Double_Top', amplitude, duree)
 
-def insert_head_and_shoulders(opens, highs, lows, closes, day, amplitude=0.02, duree=6):
+def insert_head_and_shoulders(opens, highs, lows, closes, day, amplitude, duree):
+    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Head_and_Shoulders', amplitude, duree)
 
-def insert_double_bottom(opens, highs, lows, closes, day, amplitude=0.02, duree=5):
+def insert_double_bottom(opens, highs, lows, closes, day, amplitude, duree):
+    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Double_Bottom', amplitude, duree)
 
-def insert_inverse_head_and_shoulders(opens, highs, lows, closes, day, amplitude=0.02, duree=6):
+def insert_inverse_head_and_shoulders(opens, highs, lows, closes, day, amplitude, duree):
+    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Inverse_Head_and_Shoulders', amplitude, duree)
