@@ -133,7 +133,9 @@ translation = {
                     'Medium Bear': 'Ajouter Moyen Bear',
                     'Very Bear': 'Ajouter Très Bear',
                     "save_pattern_config": "Sauvegarder la configuration",
-                    "reset_pattern_config": "Réinitialiser les paramètres"
+                    "reset_pattern_config": "Réinitialiser les paramètres",
+                    "add_pattern":"Ajouter un pattern",
+
                 },
                 "select": {
                     "ticker": "Sélectionner une action",

@@ -118,6 +118,7 @@ translation = {
                     "with_pattern": "With pattern",
                     "without_pattern" : "Without pattern",
                     "duration":"Duration",
+                    "add_pattern":"Add pattern",
                 },
                 "button": {
                     "refresh":"Refresh",
