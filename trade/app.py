@@ -68,80 +68,120 @@ app.layout = dmc.MantineProvider([
 app.clientside_callback(
     """
     function(n_clicks, children) {
-        // Initialiser l'objet pour stocker les tailles si ce n'est pas déjà fait
-        window.itemSizes = {};
+        try {
+            window.itemSizes = {};
 
-        // Fonction pour mesurer et stocker les tailles des éléments
-        function measureAndStoreSizes() {
-            document.querySelectorAll('[id^="item-"]').forEach(el => {
-                const id = el.id;
-                if (id && id.startsWith("item-")) {
-                    const parts = id.split('-');
-                    if (parts.length >= 3) {
-                        const itemId = parts[0] + '-' + parts[1];
-                        const label = parts.slice(2).join(' ');
-
-                        // Mesurer la taille de l'élément
-                        const width = el.offsetWidth;
-                        const height = el.offsetHeight;
-
-                        // Chercher le label pattern_type dans le bloc
-                        let patternType = null;
-                        // On cherche un div qui contient 'Avec pattern' ou 'Sans pattern'
-                        const typeDiv = Array.from(el.querySelectorAll('div'))
-                            .find(div => div.textContent === 'Avec pattern' || div.textContent === 'Sans pattern');
-                        if (typeDiv) {
-                            patternType = typeDiv.textContent === 'Avec pattern' ? 'with' : 'without';
-                        }
-
-                        // Stocker les tailles
-                        window.itemSizes[itemId] = {
-                            width: width,
-                            height: height,
-                            label: label,
-                            pattern_type: patternType
-                        };
-                    }
+            function updateBlocks() {
+                // Log de la largeur max de la timeline
+                const timelineDiv = document.getElementById('timeline');
+                if (timelineDiv) {
+                    console.log('Largeur max de la timeline (offsetWidth):', timelineDiv.offsetWidth);
+                } else {
+                    console.log('Timeline non trouvée');
                 }
-            });
-        }
 
-        // Utiliser ResizeObserver pour observer les changements de taille
-        if (!window.resizeObserverInitialized) {
-            const observer = new ResizeObserver(entries => {
-                // Mettre à jour les tailles lorsque les éléments sont redimensionnés
-                measureAndStoreSizes();
-                console.log("Updated item sizes:", window.itemSizes);
-            });
-
-            // Observer tous les éléments existants
-            document.querySelectorAll('[id^="item-"]').forEach(el => {
-                observer.observe(el);
-            });
-
-            // Observer les changements dans la timeline pour les nouveaux éléments
-            const timeline = document.getElementById("timeline");
-            if (timeline) {
-                const mutationObserver = new MutationObserver(mutations => {
-                    mutations.forEach(mutation => {
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeType === 1 && node.id && node.id.startsWith("item-")) {
-                                observer.observe(node);
-                            }
-                        });
-                    });
+                // Première passe : calculer la somme des largeurs des blocs valides
+                let totalWidth = 0;
+                const validElements = [];
+                document.querySelectorAll('[id^="item-"]').forEach(el => {
+                    let patternType = null;
+                    const typeDiv = Array.from(el.querySelectorAll('div'))
+                        .find(div => div.textContent === 'Avec pattern' || div.textContent === 'Sans pattern');
+                    if (typeDiv) {
+                        patternType = typeDiv.textContent === 'Avec pattern' ? 'with' : 'without';
+                    }
+                    if (patternType !== null) {
+                        totalWidth += el.offsetWidth;
+                        validElements.push(el);
+                    }
                 });
-                mutationObserver.observe(timeline, { childList: true });
+
+                validElements.forEach(el => {
+                    const width = el.offsetWidth;
+                    const height = el.offsetHeight;
+                    const percent = (width / totalWidth) * 100;
+
+                    // 1. Chercher le premier nœud texte non vide
+                    let labelNode = null;
+                    for (let node of el.childNodes) {
+                        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== "") {
+                            labelNode = node;
+                            break;
+                        }
+                    }
+                    // 2. Sinon, chercher le premier enfant qui n'est pas un div (donc potentiellement span, strong, b, etc.)
+                    if (!labelNode) {
+                        for (let node of el.childNodes) {
+                            if (
+                                node.nodeType === Node.ELEMENT_NODE &&
+                                node.tagName !== 'DIV'
+                            ) {
+                                labelNode = node;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 3. Modifier le texte si trouvé
+                    if (labelNode) {
+                        let displayedLabel = labelNode.textContent;
+                        const percentRegex = /\s*\(\d+(\.\d+)?%\)$/;
+                        displayedLabel = displayedLabel.replace(percentRegex, '').trim();
+                        const newLabel = `${displayedLabel} (${percent.toFixed(1)}%)`;
+                        labelNode.textContent = newLabel;
+                    }
+                    // 4. Adapter la largeur du bloc selon le pourcentage et la largeur de la timeline
+                    if (timelineDiv) {
+                        el.style.width = (timelineDiv.offsetWidth * percent / 100) + 'px';
+                    }
+                    // 5. Stocker les infos dans window.itemSizes (structure : width, height, label, pattern_type)
+                    // label = nom brut extrait de l'id
+                    let label = null;
+                    const id = el.id;
+                    if (id && id.startsWith("item-")) {
+                        const parts = id.split('-');
+                        if (parts.length >= 3) {
+                            label = parts.slice(2).join(' ');
+                        }
+                    }
+                    // pattern_type = with/without/null
+                    let patternType = null;
+                    const typeDiv = Array.from(el.querySelectorAll('div'))
+                        .find(div => div.textContent === 'Avec pattern' || div.textContent === 'Sans pattern');
+                    if (typeDiv) {
+                        patternType = typeDiv.textContent === 'Avec pattern' ? 'with' : 'without';
+                    }
+                    window.itemSizes[el.id] = {
+                        width: width,
+                        height: height,
+                        label: label,
+                        pattern_type: patternType
+                    };
+                });
             }
 
-            window.resizeObserverInitialized = true;
+            // Initial call
+            updateBlocks();
+
+            // Mettre en place un ResizeObserver sur chaque bloc valide
+            const observers = [];
+            document.querySelectorAll('[id^="item-"]').forEach(el => {
+                // On évite de mettre plusieurs observers sur le même élément
+                if (!el._resizeObserver) {
+                    const observer = new ResizeObserver(() => {
+                        updateBlocks();
+                    });
+                    observer.observe(el);
+                    el._resizeObserver = observer;
+                    observers.push(observer);
+                }
+            });
+
+            return window.itemSizes;
+        } catch (e) {
+            console.error('Erreur dans le clientside_callback:', e);
+            return {};
         }
-
-        // Mesurer et stocker les tailles initiales
-        measureAndStoreSizes();
-
-        console.log("Current item sizes:", window.itemSizes);
-        return window.itemSizes;
     }
     """,
     Output("size-store", "data"),
@@ -173,4 +213,4 @@ if __name__ == '__main__':
         print('\nDownloading market data...\n')
         download_market_data()
 
-    app.run(host='0.0.0.0', port=8050, debug=True)
+    app.run(port=8050, debug=True)

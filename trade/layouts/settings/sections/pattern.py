@@ -50,4 +50,4 @@ def pattern_config(lang = "fr"):
             ]),
             html.Div(id="save-pattern-config-msg")
         ])
-    ],className="flex flex-col gap-8 w-full")
+    ],className="flex flex-col gap-8 w-full items-center")

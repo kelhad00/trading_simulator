@@ -95,4 +95,4 @@ def news_settings(lang="fr"):
             # Display a graph with the news timestamp
         ], id="news-notification-container"),
         
-    ], className="flex flex-col gap-8 w-full")
+    ], className="flex flex-col gap-8 w-full items-center")

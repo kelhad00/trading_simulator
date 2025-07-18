@@ -33,4 +33,4 @@ def advanced_settings(lang="fr"):
 
             dmc.Button(tl["button"]["update"], id="update-advanced-settings", color="dark", size="md"),
         ]),
-    ], className="flex flex-col gap-8 w-full")
+    ], className="flex flex-col gap-8 w-full items-center")

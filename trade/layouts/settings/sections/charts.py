@@ -111,7 +111,7 @@ def editor(lang = "fr"):
                 size="sm",
                 className="ml-2"
             )
-        ], className="flex flex-row items-end mb-2 gap-2"),
+        ], className="flex flex-row items-end mb-2 gap-2 items-center"),
 
 
         html.Div([
@@ -188,7 +188,7 @@ def generate_charts(lang="fr"):
             )
         ]),
 
-    ], className="flex flex-col gap-8 w-full")
+    ], className="flex flex-col gap-8 w-full items-center")
 
 
 def generate_chars_selection(lang="fr"):
@@ -208,7 +208,7 @@ def generate_chars_selection(lang="fr"):
             id="generation-charts-tab",
             color="dark",
             radius="md",
-            className="w-full max-w-2xl flex flex-col gap-8"
+            className="w-full flex flex-col gap-8"
         )
     ])
 

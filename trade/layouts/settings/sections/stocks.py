@@ -40,4 +40,4 @@ def stocks_settings(lang="fr"):
         ], action_id="reset-stocks", action="Reset"),
 
 
-    ], className="flex flex-col gap-8 w-full")
+    ], className="flex flex-col gap-8 w-full items-center")

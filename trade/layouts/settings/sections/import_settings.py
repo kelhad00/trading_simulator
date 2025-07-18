@@ -22,4 +22,4 @@ def import_settings_layout(lang="fr"):
             "Voici un lien vers " if lang == "fr" else "Link to the ",
             html.A("Wiki", href="https://github.com/kelhad00/trading_simulator/blob/main/WIKI_FR.md" if lang == "fr" else "https://github.com/kelhad00/trading_simulator/blob/main/WIKI.md", target="_blank"),]
         ),
-    ], className="flex flex-col gap-8 w-full")
+    ], className="flex flex-col gap-8 w-full items-center")

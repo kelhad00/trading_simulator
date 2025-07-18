@@ -45,7 +45,7 @@ def main_layout_settings(lang="fr"):
             id="settings-tabs",
             color="dark",
             radius="md",
-            className="w-full max-w-2xl flex flex-col gap-6"
+            className="w-full max-w-6xl flex flex-col gap-6"
         )
     ], className="px-12 p-8 bg-gray-100 flex flex-col items-center h-screen gap-6 overflow-auto"),
 

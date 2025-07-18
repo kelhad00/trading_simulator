@@ -1,4 +1,3 @@
-import os
 import json
 import os
 from random import randint
@@ -20,6 +19,9 @@ from trade.locales import translations as tls
 from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 # Mapping pattern -> paramètres optionnels
 PATTERN_PARAMS = {
@@ -326,7 +328,6 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
     companies = []
     for key in dlt.companies_list.items():
         companies.append(key[0])  # Use the company symbol (key) instead of the dictionar
-        break
     if not companies:
         return html.Div(), None
     
@@ -358,12 +359,12 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
                     if company_dataframes and company_dataframes != no_update:
                         df_trend = pd.DataFrame(company_dataframes[0])
                         df_trend.index = trend_dates
-                        # PATCH CONTINUITE : forcer la première valeur à start_value
+                        # --- PATCH CONTINUITE : forcer la première valeur à start_value ---
                         for col in ['Open', 'High', 'Low', 'Close']:
                             if col in df_trend.columns:
                                 if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
                                     print(f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
-                                    df_trend[col].iloc[0] = start_value
+                                    df_trend.loc[df_trend.index[0], col] = start_value
                         # Remplir la tranche dans le DataFrame global de la société
                         for col in df_trend.columns:
                             company_df.loc[trend_dates, col] = df_trend[col].values
@@ -468,7 +469,7 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
                                             if col in df_trend.columns:
                                                 if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
                                                     print(f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
-                                                    df_trend[col].iloc[0] = start_value
+                                                    df_trend.loc[df_trend.index[0], col] = start_value
                                         for col in df_trend.columns:
                                             company_df.loc[trend_dates_i, col] = df_trend[col].values
                                         print(f"[TREND] (remplacement pattern strict) last close for {company} at {date_cursor+sub_len-1}: {df_trend['Close'].iloc[-1]}")
@@ -534,7 +535,7 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
                                                 if col in df_trend.columns:
                                                     if abs(df_trend[col].iloc[0] - last_close) > 1e-6:
                                                         print(f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {last_close}')
-                                                        df_trend[col].iloc[0] = last_close
+                                                        df_trend.loc[df_trend.index[0], col] = last_close
                                             for col in df_trend.columns:
                                                 company_df.loc[rest_dates, col] = df_trend[col].values
                                             print(f"[PATTERN->TREND] last close for {company} at {date_cursor+sub_len-1}: {df_trend['Close'].iloc[-1]}")
@@ -562,7 +563,7 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
                                 if col in df_trend.columns:
                                     if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
                                         print(f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
-                                        df_trend[col].iloc[0] = start_value
+                                        df_trend.loc[df_trend.index[0], col] = start_value
                             for col in df_trend.columns:
                                 company_df.loc[trend_dates_i, col] = df_trend[col].values
                             print(f"[TREND] last close for {company} at {date_cursor+sub_len-1}: {df_trend['Close'].iloc[-1]}")
@@ -765,11 +766,8 @@ def export_to_csv(n, start_date, end_date, granularity, graph_data):
     Raises:
         PreventUpdate: If graph_data is empty
     """
-    print("[EXPORT] Début export_to_csv")
-    print(f"[EXPORT] start_date={start_date}, end_date={end_date}, granularity={granularity}")
-    print(f"[EXPORT] graph_data keys: {list(graph_data.keys()) if graph_data else 'AUCUNE'}")
     if not graph_data:
-        print("[EXPORT] graph_data est vide, PreventUpdate")
+
         raise PreventUpdate
 
     # --- Mise à jour de trade/defaults.py ---
