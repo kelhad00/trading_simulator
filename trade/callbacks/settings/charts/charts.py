@@ -39,19 +39,19 @@ PATTERN_PARAMS = {
     ],
     "double_top": [
         {"name": "Amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
+        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 100, "step": 1, "value": 6},
     ],
     "head_and_shoulders": [
         {"name": "Amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
+        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 100, "step": 1, "value": 6},
     ],
     "double_bottom": [
         {"name": "Amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
+        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 100, "step": 1, "value": 6},
     ],
     "inverse_head_and_shoulders": [
         {"name": "Amplitude", "type": "number", "min": 0.5, "max": 2.0, "step": 0.01, "value": 1.0},
-        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 20, "step": 1, "value": 6},
+        {"name": tls[page_registry.get('lang', 'fr')]["settings"]["charts"]["subtitles"]["duration"], "type": "number", "min": 5, "max": 100, "step": 1, "value": 6},
     ],
 }
 bull_pattern = [
@@ -231,14 +231,15 @@ def get_pandas_freq(granularity):
 @callback(
     Output("chart_new", "children"),
     Output("new-graph-df", "data"),
-    Input('size-store', 'data'),
-    Input('date-picker-range', 'start_date'),
-    Input('date-picker-range', 'end_date'),
-    Input('granularity-select', 'value'),
+    Input("refresh-button", "n_clicks"),
+    State('size-store', "data"),
+    State('date-picker-range', 'start_date'),
+    State('date-picker-range', 'end_date'),
+    State('granularity-select', 'value'),
     State("new-graph-df", "data"),
     prevent_initial_call=True
 )
-def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
+def graph_preview_new(n_click, size_data, start_date, end_date, granularity, current_df):
     if not size_data or not start_date or not end_date or not granularity:
         return html.Div(), None
     # Génère la période à partir du picker et de la granularité
@@ -291,7 +292,7 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
         # Si pattern_type est None, on détermine dynamiquement la longueur du pattern généré
         if pattern_type is None:
             # Exemple : on suppose une fonction get_pattern_length(label) qui retourne la longueur du pattern
-            pattern_length = get_pattern_length(label)
+            pattern_length = size_data[item]["width"]
             lengths.append(pattern_length)
         else:
             lengths.append(size_data[item]["width"])
@@ -609,17 +610,11 @@ def graph_preview_new(size_data, start_date, end_date, granularity, current_df):
                             lows = [prev_low] * n
                             closes = [prev_close] * n
 
+                    params["duree"] = length
+
                     # Appeler la bonne fonction d'insertion
                     try:
-                        if pattern_name == "bullish_engulfing":
-                            insert_bullish_engulfing(opens, highs, lows, closes, 0, **params)
-                        elif pattern_name == "bearish_engulfing":
-                            insert_bearish_engulfing(opens, highs, lows, closes, 0, **params)
-                        elif pattern_name == "hammer":
-                            insert_hammer(opens, highs, lows, closes, 0, **params)
-                        elif pattern_name == "shooting_star":
-                            insert_shooting_star(opens, highs, lows, closes, 0, **params)
-                        elif pattern_name == "double_top":
+                        if pattern_name == "double_top":
                             insert_double_top(opens, highs, lows, closes, 0, **params)
                         elif pattern_name == "head_and_shoulders":
                             insert_head_and_shoulders(opens, highs, lows, closes, 0, **params)
@@ -739,16 +734,14 @@ def delete_smash(delete_clicks, timeline_children, size_data):
         if 0 <= index_to_delete < len(keys):
             del size_data[keys[index_to_delete]]
 
-    print(size_data)
-    
     return new_timeline, size_data
 
 @callback(
     Output("chart", "figure", allow_duplicate=True),
     Input("modify-button-new-graph", "n_clicks"),
-    Input('date-picker-range', 'start_date'),
-    Input('date-picker-range', 'end_date'),
-    Input('granularity-select', 'value'),
+    State('date-picker-range', 'start_date'),
+    State('date-picker-range', 'end_date'),
+    State('granularity-select', 'value'),
     State("new-graph-df", "data"),
     prevent_initial_call=True
 )
@@ -859,7 +852,7 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
     params = {normalize_key(id_["name"]): val for id_, val in zip(param_ids, param_values)} if param_ids else {}
 
     # Générer les données OHLC pour chaque pattern
-    n = 6  # nombre de jours max pour les patterns
+    n = params.get("duree",6)  # nombre de jours max pour les patterns
     opens = [100.0] * n
     highs = [100.0] * n
     lows = [100.0] * n
@@ -886,30 +879,10 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
         else:
             return go.Figure()
     except Exception as e:
-        return go.Figure(layout={"title": f"Erreur : {e}"})
+        return go.Figure(layout={"title": f"Loading...."})
+    
 
-    # Déterminer la longueur utile dynamiquement
-    def get_pattern_length_preview(pattern_name, params):
-        import os
-        import json
-        from trade.defaults import defaults as dlt
-        file_path = os.path.join(dlt.data_path, "pattern_configs.json")
-        pattern_key = pattern_name.lower()
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                configs = json.load(f)
-            if pattern_key in configs and "duree" in configs[pattern_key]:
-                return int(configs[pattern_key]["duree"])
-        except Exception:
-            pass
-        # Fallback logique par défaut
-        if pattern_key in ["bullish_engulfing", "bearish_engulfing"]:
-            return 2
-        elif pattern_key in ["hammer", "shooting_star"]:
-            return 1
-        return params.get("duree", n)
-
-    pattern_len = get_pattern_length_preview(pattern_name, params)
+    pattern_len = n
 
     # Récupérer la langue courante
     lang = page_registry['lang']
@@ -1127,7 +1100,7 @@ def make_timeline_block(label, color, index, pattern_id=None, pattern_type="with
             )
         ],
         style={
-            'width': '120px',
+            'width': '200px',
             'height': '120px',
             'backgroundColor': color,
             'display': 'flex',

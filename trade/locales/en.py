@@ -121,8 +121,8 @@ translation = {
                     "add_pattern":"Add pattern",
                 },
                 "button": {
-                    "refresh":"Refresh",
-                    "modify": "Modify",
+                    "refresh":"Refresh the preview",
+                    "modify": "Save changes",
                     "delete": "Delete",
                     "select-all": "Select all",
                     'Very Bull':'Add Very Bull',

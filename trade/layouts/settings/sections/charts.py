@@ -92,14 +92,10 @@ def editor(lang = "fr"):
             dmc.Select(
                 id="pattern-selector",
                 data=[
-                    {"value": "bullish_engulfing", "label": tl["patterns_names"]["bullish_engulfing"]},
-                    {"value": "bearish_engulfing", "label": tl["patterns_names"]["bearish_engulfing"]},
-                    {"value": "hammer", "label": tl["patterns_names"]["hammer"]},
-                    {"value": "shooting_star", "label": tl["patterns_names"]["shooting_star"]},
                     {"value": "double_top", "label": tl["patterns_names"]["double_top"]},
                     {"value": "head_and_shoulders", "label": tl["patterns_names"]["head_and_shoulders"]},
-                    {"value": "double_bottom", "label": tl["patterns_names"].get("double_bottom", "Double creux")},
-                    {"value": "inverse_head_and_shoulders", "label": tl["patterns_names"].get("inverse_head_and_shoulders", "Tête et épaules inversées")},
+                    {"value": "double_bottom", "label": tl["patterns_names"]["double_bottom"]},
+                    {"value": "inverse_head_and_shoulders", "label": tl["patterns_names"]["inverse_head_and_shoulders"]},
                 ],
                 className="mb-2 w-60",
                 value="bullish_engulfing"

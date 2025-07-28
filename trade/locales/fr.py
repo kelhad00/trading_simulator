@@ -121,8 +121,8 @@ translation = {
                     "duration": "Durée",
                 },
                 "button": {
-                    "refresh":"Rafraichir",
-                    "modify": "Modifier",
+                    "refresh":"Rafraichir la prévisualitation",
+                    "modify": "Sauvegarder les modifications",
                     "delete": "Supprimer",
                     "select-all": "Tout sélectionner",
                     'Very Bull': 'Ajouter Très Bull',
