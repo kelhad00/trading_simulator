@@ -12,19 +12,19 @@
     "amplitude": 1
   },
   "double_top": {
-    "amplitude": 1.82,
+    "amplitude": 10.82,
     "duree": 14
   },
   "head_and_shoulders": {
-    "amplitude": 0.87,
+    "amplitude": 6.87,
     "duree": 9
   },
   "double_bottom": {
-    "amplitude": 1.37,
+    "amplitude": 9.37,
     "duree": 9
   },
   "inverse_head_and_shoulders": {
-    "amplitude": 1.77,
+    "amplitude": 5.77,
     "duree": 10
   }
 }

@@ -6,11 +6,13 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
 
+
 from trade.defaults import defaults as dlt
 from trade.utils.market import get_first_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
 from trade.utils.download import download_market_data
-from trade.utils.config import save_current_config
+import trade.callbacks.settings.charts.charts_preview_new
+
 
 external_scripts = [
     {'src': 'https://cdn.tailwindcss.com'}
