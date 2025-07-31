@@ -81,12 +81,67 @@ def add_item_to_timeline(*args):
     add_clicks = len(timeline_children or [])
     new_item = html.Div(
         [
+            # Poignée gauche
+            html.Div(
+                id={'type': 'resize-handle-left', 'index': add_clicks},
+                style={
+                    "position": "absolute",
+                    "top": 0,
+                    "left": 0,
+                    "width": "6px",
+                    "height": "100%",
+                    "cursor": "ew-resize",
+                    "zIndex": 10,
+                    "backgroundColor": "transparent"
+                }
+            ),
+            # Poignée droite
+            html.Div(
+                id={'type': 'resize-handle-right', 'index': add_clicks},
+                style={
+                    "position": "absolute",
+                    "top": 0,
+                    "right": 0,
+                    "width": "6px",
+                    "height": "100%",
+                    "cursor": "ew-resize",
+                    "zIndex": 10,
+                    "backgroundColor": "transparent"
+                }
+            ),
+            # Contenu
             html.Div([
                 html.Strong(label_txt),
-                html.Div(type_label, style={"fontSize": "0.8em", "fontWeight": 400, "marginTop": "2px"}),
+                html.Div(type_label, style={
+                    "fontSize": "0.8em",
+                    "fontWeight": 400,
+                    "marginTop": "2px"
+                }),
             ]),
+            # Flèche de déplacement
+            html.Div([
+                dmc.Button(
+                    "←",
+                    id={'type': 'move-left', 'index': add_clicks},
+                    color="dark",
+                    size="xs",
+                    variant="filled",
+                    n_clicks=0,
+                    style={'minWidth': '30px'}
+                ),
+                dmc.Button(
+                    "→",
+                    id={'type': 'move-right', 'index': add_clicks},
+                    color="dark",
+                    size="xs",
+                    variant="filled",
+                    n_clicks=0,
+                    style={'minWidth': '30px'}
+                ),
+            ], style={'display': 'flex', 'justifyContent': 'space-between', 'gap': '8px', 'padding': '8px'}),
+            #Button suppression
             dmc.Button(
-                "Delete",
+                "Supprimer" if lang == "fr" else "Delete",
                 id={'type': 'delete-button', 'index': add_clicks},
                 color="red",
                 size="xs",
@@ -94,16 +149,38 @@ def add_item_to_timeline(*args):
                 n_clicks=0,
                 style={
                     'position': 'relative',
-                    'bottom': '5px',
-                    'right': '5px',
                     'width': '100%',
-                    'marginTop': '4px'
+                    'marginTop': '4px',
                 }
-            )
+            ),
+            # Bouton conditionnel "Edit"
+            *([
+                  dmc.Button(
+                      "Config",
+                      id={'type': 'open-modal-config-pattern', 'index': add_clicks},
+                      color="blue",
+                      size="xs",
+                      variant="filled",
+                      n_clicks=0,
+                      style={
+                          'width': '100%',
+                          'marginBottom': '4px'
+                      }
+                  ),
+                  dmc.Modal(
+                      id={'type': 'modal-config-pattern', 'index': add_clicks},
+                      opened=False,
+                      title="Configuration des patterns" if lang == "fr" else "Configuration of patterns",
+                      children="""TODO
+                                Liste des patterns 'autoriser'
+                                Quantité par patterns
+                                """,
+                  )
+              ] if pattern_type == "with" else []),
         ],
         style={
             'width': '120px',
-            'height': '120px',
+            'height': '200px',
             'backgroundColor': color,
             'display': 'flex',
             'color': 'white',
@@ -114,13 +191,71 @@ def add_item_to_timeline(*args):
             'margin': '4px',
             'boxShadow': '0 2px 4px rgba(0,0,0,0.2)',
             'resize': 'horizontal',
-            'overflow': 'auto'
+            'overflow': 'auto',
+            'userSelect': 'none',
+            'position': 'relative'  # nécessaire pour que les poignées soient positionnées correctement
         },
         id=f"item-{add_clicks}-{label}",
     )
+
     timeline_items = timeline_children or []
     timeline_items.append(new_item)
     return timeline_items
+
+
+@callback(
+    Output('timeline', 'children', allow_duplicate=True),
+    Input({'type': 'move-left', 'index': dash.ALL}, 'n_clicks'),
+    Input({'type': 'move-right', 'index': dash.ALL}, 'n_clicks'),
+    State('timeline', 'children'),
+    prevent_initial_call=True
+)
+def move_item(left_clicks, right_clicks, timeline_children):
+    """
+    Move a timeline item left or right based on button clicks.
+
+    Args:
+        left_clicks (list): List of click counts for left movement buttons
+        right_clicks (list): List of click counts for right movement buttons
+        timeline_children (list): Current list of timeline items
+
+    Returns:
+        list: Updated timeline items with the moved item in its new position
+    """
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return timeline_children or []
+
+    button_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
+    direction = 'left' if 'move-left' in ctx.triggered[0]['prop_id'] else 'right'
+    index = button_id['index']
+
+    if not (0 <= index < len(timeline_children)):
+        return timeline_children
+
+    timeline = timeline_children[:]
+    if direction == 'left' and index > 0:
+        timeline[index - 1], timeline[index] = timeline[index], timeline[index - 1]
+    elif direction == 'right' and index < len(timeline) - 1:
+        timeline[index + 1], timeline[index] = timeline[index], timeline[index + 1]
+
+    for i, item in enumerate(timeline):
+        item["props"]["id"] = f"item-{i}"
+        arrow_div = item["props"]["children"][3]
+        left_button = arrow_div["props"]["children"][0]
+        right_button = arrow_div["props"]["children"][1]
+        delete_button = item["props"]["children"][4]
+        if 5 < len(item["props"]["children"]):
+            open_modal_button = item["props"]["children"][5]
+            open_modal_button["props"]["id"]["index"] = i
+            open_modal_config = item["props"]["children"][6]
+            open_modal_config["props"]["id"]["index"] = i
+
+        left_button["props"]["id"]["index"] = i
+        right_button["props"]["id"]["index"] = i
+        delete_button["props"]["id"]["index"] = i
+
+    return timeline
 
 @callback(
     Output('timeline', 'children', allow_duplicate=True),
@@ -181,17 +316,44 @@ def delete_smash(delete_clicks, timeline_children, size_data):
     # Supprimer l'élément correspondant dans la timeline
     timeline_items = timeline_children or []
     timeline_items.pop(index_to_delete)
-    new_timeline = list()
     for i, item in enumerate(timeline_items):
-        # Le bouton Delete est maintenant à l'index 1
-        if i != item["props"]["children"][1]["props"]["id"]["index"]:
-            item["props"]["children"][1]["props"]["id"]["index"] = i
-            item["props"]["id"] = f"item-{i}"
-        new_timeline.append(item)
+        item["props"]["id"] = f"item-{i}"
+        arrow_div = item["props"]["children"][3]
+        left_button = arrow_div["props"]["children"][0]
+        right_button = arrow_div["props"]["children"][1]
+        delete_button = item["props"]["children"][4]
+        if 5 < len(item["props"]["children"]):
+            open_modal_button = item["props"]["children"][5]
+            open_modal_button["props"]["id"]["index"] = i
+
+        left_button["props"]["id"]["index"] = i
+        right_button["props"]["id"]["index"] = i
+        delete_button["props"]["id"]["index"] = i
     # Supprimer l'entrée correspondante dans size_data (en respectant l'ordre)
     if size_data and isinstance(size_data, dict):
         keys = list(size_data.keys())
         if 0 <= index_to_delete < len(keys):
             del size_data[keys[index_to_delete]]
 
-    return new_timeline, size_data
+    return timeline_items, size_data
+
+@callback(
+    Output({'type': 'modal-config-pattern', 'index': dash.ALL}, 'opened'),
+    Input({'type': 'open-modal-config-pattern', 'index': dash.ALL}, 'n_clicks'),
+    prevent_initial_call=True
+)
+def toggle_modal(open_clicks):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise dash.exceptions.PreventUpdate
+
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    triggered_id_dict = json.loads(triggered_id)
+    triggered_index = triggered_id_dict['index']
+
+    # Pour chaque modal on va ouvrir la bonne, fermer les autres
+    opened_list = []
+    for modal_index in range(len(open_clicks)):
+        opened_list.append(modal_index == triggered_index)
+
+    return opened_list
