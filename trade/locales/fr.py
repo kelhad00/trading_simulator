@@ -10,6 +10,11 @@ translation = {
         "price": "Prix",
         "tab-market": "Analyse Technique",
         "tab-revenue": "Revenus",
+        "interval": "Unité de temps",
+        "interval-hour": "Heure",
+        "interval-day": "Jour",
+        "interval-week": "Semaine",
+        "interval-month": "Mois",
         "market-graph": {
             'x': 'Date',
             'y': 'Prix',

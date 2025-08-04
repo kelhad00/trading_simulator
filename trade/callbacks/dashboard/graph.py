@@ -151,8 +151,9 @@ def update_interval(update_time):
     Input('company-selector', 'value'),
     State('timestamp', 'data'),
     State('company-graph', 'figure'),
+    State('selected-interval', 'data'),
 )
-def update_graph(n, company, timestamp, current_fig, range=100):
+def update_graph(n, company, timestamp, current_fig, selected_interval, range=100):
     """
     Function to update the market graph with the latest data and timestamp
 
@@ -170,7 +171,9 @@ def update_graph(n, company, timestamp, current_fig, range=100):
         else:
             next_graph = False  # Don't update the timestamp if the user selects a new company
 
-        dftmp = get_market_dataframe()[company]
+        # Use selected time unit for data aggregation
+        current_interval = selected_interval if selected_interval else dlt.granularity
+        dftmp = get_market_dataframe(interval=current_interval)[company]
         
         # Fix: If timestamp is 0, None, or invalid, set to first available timestamp
         if not timestamp or timestamp == 0 or str(timestamp) == "0":
@@ -179,18 +182,20 @@ def update_graph(n, company, timestamp, current_fig, range=100):
             else:
                 return no_update, no_update, no_update, no_update
         
-        # If we need to advance to the next timestamp based on granularity
+        # If we need to advance to the next timestamp based on selected interval
         if next_graph and timestamp:
-            # Calculate the next expected timestamp based on granularity
-            next_expected_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
-            if dlt.granularity == 'h':
+            # Use selected time unit if available, otherwise use default granularity
+            current_interval = selected_interval if selected_interval else dlt.granularity
+            # Calculate the next expected timestamp based on selected interval
+            next_expected_timestamp = get_next_timestamp_by_granularity(timestamp, current_interval)
+            if current_interval == 'h':
                 timestamp = next_expected_timestamp.strftime('%Y-%m-%d %H:%M')
             else:
                 timestamp = next_expected_timestamp.strftime('%Y-%m-%d')
 
         # Récupérer le prix de l'action de façon sécurisée
         try:
-            price_df = get_price_dataframe()[company]
+            price_df = get_price_dataframe(interval=current_interval)[company]
             # Harmoniser le format du timestamp avec l'index du DataFrame
             if price_df is not None:
                 ts = timestamp
@@ -270,8 +275,9 @@ def update_graph(n, company, timestamp, current_fig, range=100):
                     else:
                         trace.visible = True
 
-        # Format the timestamp display based on granularity
-        formatted_timestamp = get_timestamp_display_format(timestamp, dlt.granularity)
+        # Format the timestamp display based on selected time unit
+        current_interval = selected_interval if selected_interval else dlt.granularity
+        formatted_timestamp = get_timestamp_display_format(timestamp, current_interval)
 
         return timestamp, fig, stock_price, formatted_timestamp
 
@@ -284,9 +290,10 @@ def update_graph(n, company, timestamp, current_fig, range=100):
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
     State('timestamp', 'data'),
-    State("companies", "data")
+    State("companies", "data"),
+    State('selected-interval', 'data')
 )
-def update_revenue(n, company, timestamp, companies):
+def update_revenue(n, company, timestamp, companies, selected_interval):
     """
     Function to update the revenue graph with the latest data
     Args:
@@ -317,21 +324,22 @@ def update_revenue(n, company, timestamp, companies):
             current_day = timestamp.day
             current_hour = timestamp.hour
             
-            # Check if we should update based on granularity
+            # Check if we should update based on selected time unit
             should_update = False
+            current_interval = selected_interval if selected_interval else dlt.granularity
             
-            if dlt.granularity == 'M':
-                # For monthly granularity, update every month since revenues are annual data
+            if current_interval == 'ME':
+                # For monthly interval, update every month since revenues are annual data
                 # and we want to show the graph as soon as we have data for a new year
                 should_update = True
-            elif dlt.granularity == 'W' and current_week == 1:
-                # For weekly granularity, update in the first week of the year
+            elif current_interval == 'W' and current_week == 1:
+                # For weekly interval, update in the first week of the year
                 should_update = True
-            elif dlt.granularity == 'D' and current_day == 1 and current_month == 1:
-                # For daily granularity, update on January 1st
+            elif current_interval == 'D' and current_day == 1 and current_month == 1:
+                # For daily interval, update on January 1st
                 should_update = True
-            elif dlt.granularity == 'H' and current_hour == 0 and current_day == 1 and current_month == 1:
-                # For hourly granularity, update at 00:00 on January 1st
+            elif current_interval == 'h' and current_hour == 0 and current_day == 1 and current_month == 1:
+                # For hourly interval, update at 00:00 on January 1st
                 should_update = True
             
             # If we shouldn't update based on granularity, return no_update
@@ -398,4 +406,32 @@ def toggle_graph_type(value):
         return {'display': 'none'}, {'display': 'block'}
     else:
         return {'display': 'block'}, {'display': 'none'}
+
+
+@callback(
+    Output('selected-interval', 'data'),
+    Output('interval-selector', 'value'),
+    Input('interval-selector', 'value'),
+    State('selected-interval', 'data')
+)
+def update_selected_interval(new_interval, current_interval):
+    """
+    Function to update the selected time unit for candlesticks
+    Args:
+        new_interval: The new time unit selected by the user
+        current_interval: The current time unit stored in the Store
+    Returns:
+        The new time unit to store and the corrected selector value
+    """
+    # Vérifier que l'unité de temps sélectionnée n'est pas plus petite que la granularité définie dans defaults
+    granularity_order = {'h': 1, 'D': 2, 'W': 3, 'ME': 4}
+    
+    if new_interval and new_interval in granularity_order:
+        # Si l'unité de temps sélectionnée est plus petite que la granularité par défaut, utiliser la granularité par défaut
+        if granularity_order[new_interval] < granularity_order[dlt.granularity]:
+            return dlt.granularity, dlt.granularity
+        else:
+            return new_interval, new_interval
+    
+    return current_interval, current_interval
 
