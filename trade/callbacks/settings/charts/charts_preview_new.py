@@ -2,11 +2,13 @@ import json
 import os
 import warnings
 from random import randint
+import re
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from dash import callback, Input, Output, State, html, no_update, dcc
+from plotly.graph_objs.layout.newshape import label
 
 from trade.callbacks.settings.charts.modal import generate_new_charts
 from trade.callbacks.settings.charts.patterns_generator import insert_bullish_engulfing, insert_bearish_engulfing, \
@@ -49,24 +51,83 @@ bear_pattern = [
     State('date-picker-range', 'end_date'),
     State('granularity-select', 'value'),
     State("new-graph-df", "data"),
+    State('special-pattern-config', 'data'),
     prevent_initial_call=True
 )
-def graph_preview_new(n_click, size_data, start_date, end_date, granularity, current_df):
+def graph_preview_new(n_click, size_data, start_date, end_date, granularity, current_df, data_pattern):
+
+    for item in size_data:
+        item_label = size_data[item]["label"]
+        if size_data[item].get("pattern_type") is None:
+            item_label = re.sub(r"\s*\(\d+(\.\d+)?%\)\s*$", "", item_label)
+            if item_label == "Tête et épaules":
+                new_label = "head_and_shoulders"
+            elif item_label == "Double sommet":
+                new_label = "double_top"
+            elif item_label == "Double creux":
+                new_label = "double_bottom"
+            elif item_label == "Tête et épaules inversés":
+                new_label = "inverse_head_and_shoulders"
+            elif item_label == "Head and Shoulders":
+                new_label = "head_and_shoulders"
+            elif item_label == "Double Top":
+                new_label = "double_top"
+            elif item_label == "Double Bottom":
+                new_label = "double_bottom"
+            elif item_label == "Inversed Head and Shoulders":
+                new_label = "inverse_head_and_shoulders"
+        else :
+            if "very" in item_label.lower() or "très" in item_label.lower():
+                new_label = "Very "
+            elif "medium" in item_label.lower() or "moyen" in item_label.lower():
+                new_label = "Medium "
+            else:
+                new_label = "Small "
+            if "bear" in item_label.lower():
+                new_label += "Bear"
+            else:
+                new_label += "Bull"
+        size_data[item]["label"] = new_label
+
     if not is_input_valid(size_data, start_date, end_date, granularity):
+        print("Invalid input")
         return html.Div(), None
 
     dates = generate_date_range(start_date, end_date, granularity)
+
     if len(dates) == 0:
         return html.Div(), None
 
     trends, alphas, lengths, pattern_types = parse_size_data(size_data, len(dates))
+
+    custom_pattern_list = list()
+    custom_pattern_count_list = list()
+
+    print(data_pattern)
+
+    i=0
+    data_pattern = dict(data_pattern)
+    for item in pattern_types:
+        if item == "with":
+            if str(i) in data_pattern.keys():
+                custom_pattern_list.append(data_pattern[str(i)]["name"])
+                custom_pattern_count_list.append(data_pattern[str(i)]["count"])
+            else:
+                custom_pattern_list.append([])
+                custom_pattern_count_list.append([])
+        else:
+            custom_pattern_list.append([])
+            custom_pattern_count_list.append([])
+
+        i += 1
+
 
     companies = list(dlt.companies_list.keys())
     if not companies:
         return html.Div(), None
 
     try:
-        company_dfs = generate_company_dataframes(dates, companies, trends, alphas, lengths, pattern_types)
+        company_dfs = generate_company_dataframes(dates, companies, trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list)
         df_global, data_dict = package_dataframe_for_export(company_dfs)
 
         children = build_preview_graphs(company_dfs)
@@ -147,7 +208,7 @@ def handle_pattern_none(company_df, date_cursor, dates, length, trend):
     date_cursor += length
 
 
-def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, trend):
+def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, trend, custom_pattern_item: list ,custom_pattern_item_count):
     subtrend_nb = 10
     subtrend_lengths = [length // subtrend_nb] * subtrend_nb
     if sum(subtrend_lengths) != length:
@@ -160,12 +221,12 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
         # 50% de chance de mettre un pattern à la place du trend classique
         if np.random.rand() < 0.5:
             # Choix du pattern cohérent avec la tendance
-            if trend == "bull":
-                pattern_name = np.random.choice(bull_pattern)
-            elif trend == "bear":
-                pattern_name = np.random.choice(bear_pattern)
-            else:
-                pattern_name = None
+
+            pattern_name = np.random.choice(custom_pattern_item)
+            custom_pattern_item_count[custom_pattern_item.index(pattern_name)] -= 1
+            if custom_pattern_item_count[custom_pattern_item.index(pattern_name)] == 0:
+                custom_pattern_item.remove(pattern_name)
+
             if pattern_name is not None:
                 # Charger les paramètres du pattern depuis le JSON
                 params = {}
@@ -441,7 +502,6 @@ def parse_size_data(size_data, global_length):
         "Very Bear": 250, "Medium Bear": 500, "Small Bear": 1000
     }
     trends, alphas, lengths, pattern_types = [], [], [], []
-    total_length = 0
 
     for item in size_data:
         item_data = size_data[item]
@@ -471,23 +531,25 @@ def resize_lengths_to_fit(lengths, target):
     return resized
 
 
-def generate_company_dataframes(dates, companies, trends, alphas, lengths, pattern_types):
+def generate_company_dataframes(dates, companies, trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list):
     company_dfs = {}
     for company in companies:
         company_df = pd.DataFrame(index=dates)
         date_cursor = 0
-        for trend, alpha, length, pattern_type in zip(trends, alphas, lengths, pattern_types):
+        for trend, alpha, length, pattern_type, custom_pattern_item, custom_pattern_count in zip(trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list):
+            print(pattern_type, custom_pattern_item, custom_pattern_count)
             trend_dates = dates[date_cursor:date_cursor + length]
             if pattern_type == "without":
                 handle_pattern_without(alpha, company, company_df, date_cursor, length, trend, trend_dates)
             elif pattern_type == "with":
-                handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, trend)
+                handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, trend, custom_pattern_item, custom_pattern_count)
             elif pattern_type is None:
                 handle_pattern_none(company_df, date_cursor, dates, length, trend)
             date_cursor += length
 
         compute_indicators(company_df)
         company_dfs[company] = ensure_column_order(company_df)
+
     return company_dfs
 
 

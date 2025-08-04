@@ -160,38 +160,6 @@ translation = {
                 "input": {
                     "trends": "Nombre de tendances",
                 },
-                "patterns_params": {
-                    "bullish_engulfing": {
-                        "down1": "Baisse jour 1 (%)",
-                        "up1": "Hausse jour 2 (%)"
-                    },
-                    "bearish_engulfing": {
-                        "down1": "Baisse jour 2 (%)",
-                        "up1": "Hausse jour 1 (%)"
-                    },
-                    "hammer": {
-                        "low": "Corps min (%)",
-                        "high": "Corps max (%)"
-                    },
-                    "shooting_star": {
-                        "low": "Corps min (%)",
-                        "high": "Corps max (%)"
-                    },
-                    "double_top": {
-                        "top_init": "Sommet initial (%)",
-                        "creux_init": "Creux initial (%)",
-                        "rise1": "Hausse 1 (%)",
-                        "low4": "Bas 4 (%)",
-                        "high4": "Haut 4 (%)",
-                        "close5": "Clôture 5 (%)"
-                    },
-                    "head_and_shoulders": {
-                        "shoulder_rate": "Épaule (%)",
-                        "head_rate": "Tête (%)",
-                        "neckline_rate": "Ligne de cou (%)",
-                        "breaking_rate": "Cassure (%)"
-                    }
-                },
                 "patterns_names": {
                     "bullish_engulfing": "Avalement haussier",
                     "bearish_engulfing": "Avalement baissier",

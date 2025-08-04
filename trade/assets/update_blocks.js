@@ -1,4 +1,4 @@
-window.updateTimeline = function() {
+window.updateTimeline = function () {
     try {
         window.itemSizes = {};
 
@@ -8,10 +8,8 @@ window.updateTimeline = function() {
             return {};
         }
 
-        // Sélectionner tous les blocs item-*
         const allElements = Array.from(document.querySelectorAll('[id^="item-"]'));
 
-        // Total des largeurs de tous les blocs visibles
         let totalWidth = allElements.reduce((sum, el) => sum + el.offsetWidth, 0);
 
         allElements.forEach(el => {
@@ -19,51 +17,40 @@ window.updateTimeline = function() {
             const height = el.offsetHeight;
             const percent = totalWidth ? (width / totalWidth) * 100 : 0;
 
-            // Chercher un nœud texte pour afficher le pourcentage
-            let labelNode = null;
-            for (let node of el.childNodes) {
-                if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== "") {
-                    labelNode = node;
-                    break;
-                }
+            // ✅ Trouver le label via strong imbriqué
+            let displayedLabel = null;
+            const strongEl = el.querySelector('div > strong');
+            if (strongEl) {
+                displayedLabel = strongEl.textContent.trim();
+                // Supprimer ancien pourcentage s’il y en avait
+                const percentRegex = /\s*\(\d+(\.\d+)?%\)$/;
+                strongEl.textContent = `${displayedLabel.replace(percentRegex, '')} (${percent.toFixed(1)}%)`;
             }
-            if (!labelNode) {
-                for (let node of el.childNodes) {
-                    if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'DIV') {
-                        labelNode = node;
-                        break;
+
+            // Adapter la largeur
+            el.style.width = (timelineDiv.offsetWidth * percent / 100) + 'px';
+
+            // Fallback depuis l'id
+            let label = displayedLabel;
+            if (!label) {
+                const id = el.id;
+                if (id && id.startsWith("item-")) {
+                    const parts = id.split('-');
+                    if (parts.length >= 3) {
+                        label = parts.slice(2).join(' ');
                     }
                 }
             }
 
-            if (labelNode) {
-                let displayedLabel = labelNode.textContent;
-                const percentRegex = /\s*\(\d+(\.\d+)?%\)$/;
-                displayedLabel = displayedLabel.replace(percentRegex, '').trim();
-                labelNode.textContent = `${displayedLabel} (${percent.toFixed(1)}%)`;
-            }
-
-            // Adapter la largeur en fonction du pourcentage et taille timeline
-            el.style.width = (timelineDiv.offsetWidth * percent / 100) + 'px';
-
-            // Extraire label à partir de l'id
-            let label = null;
-            const id = el.id;
-            if (id && id.startsWith("item-")) {
-                const parts = id.split('-');
-                if (parts.length >= 3) {
-                    label = parts.slice(2).join(' ');
-                }
-            }
-
-            // Déterminer le type de pattern s'il est visible dans un div
+            // ✅ Trouver le type de pattern
             let patternType = null;
-            const typeDiv = Array.from(el.querySelectorAll('div'))
-                .find(div => div.textContent === 'Avec pattern' || div.textContent === 'Sans pattern');
-            if (typeDiv) {
-                patternType = typeDiv.textContent === 'Avec pattern' ? 'with' : 'without';
+            const patternDiv = Array.from(el.querySelectorAll('div'))
+                .find(div => div.textContent.trim() === 'Avec pattern' || div.textContent.trim() === 'Sans pattern');
+            if (patternDiv) {
+                patternType = patternDiv.textContent.trim() === 'Avec pattern' ? 'with' : 'without';
             }
 
+            // Sauvegarder
             window.itemSizes[el.id] = {
                 width,
                 height,
@@ -72,7 +59,7 @@ window.updateTimeline = function() {
             };
         });
 
-        // Mettre un ResizeObserver sur chaque bloc s'il n'y en a pas déjà
+        // Observer les blocs
         allElements.forEach(el => {
             if (!el._resizeObserver) {
                 const observer = new ResizeObserver(() => {

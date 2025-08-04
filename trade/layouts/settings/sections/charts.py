@@ -222,7 +222,7 @@ def generate_charts_modal(lang="fr"):
                             label=tl["select"]["ticker"],
                             className="flex-1"
                         ),
-                        dmc.Button(tl["button"]["select-all"], id="select-all-stocks", color="dark", size="sm"),
+                        dmc.Button(tl["button"]["select-all"], id="select-all-stocks", color="dark", size="sm",type="button"),
                     ], className="flex gap-4 w-full items-end")
                 ]),
 
@@ -250,7 +250,7 @@ def generate_charts_modal(lang="fr"):
                         ),
                     )
                 ]),
-                dmc.Button(tl["button"]["modify"], id="generate-button", color="dark", size="md", ),
+                dmc.Button(tl["button"]["modify"], id="generate-button", color="dark", size="md",type='button' ),
             ], className="flex flex-col gap-8 w-full"),
         ]
     )
