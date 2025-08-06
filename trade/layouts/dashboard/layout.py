@@ -11,6 +11,7 @@ from trade.layouts.dashboard.sections.requests import request
 def main_layout_dashboard(lang="fr"):
     return html.Div([
         dcc.Interval(id='periodic-updater', interval=dlt.update_time),
+        dcc.Store(id='selected-interval', data=dlt.granularity),
         dmc.Modal(
             id="modal",
             title=dmc.Title("Simulation terminée !", order=2, className="font-bold w-full max-w-2xl"),

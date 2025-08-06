@@ -20,6 +20,7 @@ def graph(lang="fr"):
                     persistence_type='local',
                     className="w-full"
                 ),
+                
                 html.Div([
                     dmc.Text(tls[lang]['price'], weight=700,
                              className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
@@ -29,6 +30,22 @@ def graph(lang="fr"):
                     dmc.Text("Date", weight=700,
                              className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
                     dmc.Text(id="timer", className="whitespace-nowrap", size="sm"),
+                ], className="flex flex-col"),
+                html.Div([
+                    dmc.Text(tls[lang]['interval'], weight=700,
+                             className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
+                    dmc.SegmentedControl(
+                        id="interval-selector",
+                        value=dlt.granularity,
+                        data=[
+                            {"value": "h", "label": tls[lang]['interval-hour']},
+                            {"value": "D", "label": tls[lang]['interval-day']},
+                            {"value": "W", "label": tls[lang]['interval-week']},
+                            {"value": "ME", "label": tls[lang]['interval-month']},
+                        ],
+                        size="xs",
+                        className="mt-1"
+                    ),
                 ], className="flex flex-col"),
                 menu(lang),
             ], className="flex gap-4 justify-between items-center"),

@@ -51,8 +51,9 @@ def get_next_timestamp_by_granularity(current_timestamp, granularity):
     Output('news-table', 'children'),
     Input('periodic-updater', 'n_intervals'),
     State('timestamp', 'data'),
+    State('selected-interval', 'data'),
 )
-def cb_update_news_table(n, timestamp, range=50):
+def cb_update_news_table(n, timestamp, selected_interval, range=50):
     """
     Function to display the latest news in the table from the timestamp
     Args:
@@ -83,8 +84,9 @@ def cb_update_news_table(n, timestamp, range=50):
     news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
     timestamp = pd.to_datetime(timestamp).tz_localize(None)
 
-    # Get the next timestamp based on granularity instead of adding one day
-    next_timestamp = get_next_timestamp_by_granularity(timestamp, dlt.granularity)
+    # Get the next timestamp based on selected time unit instead of adding one day
+    current_interval = selected_interval if selected_interval else dlt.granularity
+    next_timestamp = get_next_timestamp_by_granularity(timestamp, current_interval)
 
     # Get the news before the next timestamp
     nl = news_df.loc[news_df['date'] <= next_timestamp].sort_values(by='date', ascending=False).astype(str)
