@@ -5,7 +5,7 @@ class Defaults:
     # update_time = 60*1000 # in milliseconds
     update_time = 5*1000  # in milliseconds
 
-    start_date = "2025-07-01" 
+    start_date = "2025-08-01" 
     # Maximum number of requests the user can make on the dashboard
     max_requests = 10
 

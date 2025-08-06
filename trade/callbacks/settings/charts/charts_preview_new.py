@@ -113,8 +113,8 @@ def graph_preview_new(n_click, size_data, start_date, end_date, granularity, cur
                 custom_pattern_list.append(data_pattern[str(i)]["name"])
                 custom_pattern_count_list.append(data_pattern[str(i)]["count"])
             else:
-                custom_pattern_list.append([])
-                custom_pattern_count_list.append([])
+                custom_pattern_list.append(bear_pattern if trends[i] == "bear" else bull_pattern)
+                custom_pattern_count_list.append([-1]*len(bear_pattern) if trends[i] == "bear" else [-1]*len(bull_pattern))
         else:
             custom_pattern_list.append([])
             custom_pattern_count_list.append([])
@@ -209,217 +209,180 @@ def handle_pattern_none(company_df, date_cursor, dates, length, trend):
 
 
 def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, trend, custom_pattern_item: list ,custom_pattern_item_count):
-    subtrend_nb = 10
-    subtrend_lengths = [length // subtrend_nb] * subtrend_nb
-    if sum(subtrend_lengths) != length:
-        subtrend_lengths[-1] += length - sum(subtrend_lengths)
-    for i in range(subtrend_nb):
-        sub_len = subtrend_lengths[i]
-        trend_dates_i = dates[date_cursor:date_cursor + sub_len]
+    # Charger la longueur du plus long pattern depuis pattern_configs.json
+    import os, json
+    file_path = os.path.join(dlt.data_path, "pattern_configs.json")
+    with open(file_path, "r", encoding="utf-8") as f:
+        configs = json.load(f)
+    max_pattern_length = max([v.get("duree", 1) for v in configs.values()])
+    min_block_size = max_pattern_length
+    total_covered = 0
+    last_close_block = None
+    while total_covered < length:
+        remaining = length - total_covered
+        trend_dates_i = dates[date_cursor:date_cursor + remaining]
         if len(trend_dates_i) == 0:
-            continue
+            break
         # 50% de chance de mettre un pattern à la place du trend classique
-        if np.random.rand() < 0.5:
-            # Choix du pattern cohérent avec la tendance
-
-            pattern_name = np.random.choice(custom_pattern_item)
-            custom_pattern_item_count[custom_pattern_item.index(pattern_name)] -= 1
-            if custom_pattern_item_count[custom_pattern_item.index(pattern_name)] == 0:
-                custom_pattern_item.remove(pattern_name)
-
-            if pattern_name is not None:
-                # Charger les paramètres du pattern depuis le JSON
-                params = {}
-                try:
-                    file_path = os.path.join(dlt.data_path, "pattern_configs.json")
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        configs = json.load(f)
-                    if pattern_name in configs:
-                        params = configs[pattern_name]
-                except Exception as e:
-                    print(f"Erreur lors du chargement des paramètres du pattern {pattern_name} : {e}")
-                # Déterminer la durée réelle du pattern
-                pattern_len = get_pattern_length(pattern_name)
-                pattern_len = min(pattern_len, sub_len)  # ne pas dépasser la sous-tranche
-                n = pattern_len
-                last_close = get_last_close(company_df, date_cursor)
-                if last_close is None:
-                    start_value = randint(100, 1000)
-                else:
-                    start_value = last_close
-                print(
-                    f"[PATTERN] start_value for {company} at {date_cursor}: {start_value} (pattern: {pattern_name})")
-                opens = [start_value] * n
-                highs = [start_value] * n
-                lows = [start_value] * n
-                closes = [start_value] * n
-                # Vérifier que la fonction d'insertion modifie bien les listes passées !
-                try:
-                    if pattern_name == "bullish_engulfing":
-                        insert_bullish_engulfing(opens, highs, lows, closes, 0, **params)
-                    elif pattern_name == "bearish_engulfing":
-                        insert_bearish_engulfing(opens, highs, lows, closes, 0, **params)
-                    elif pattern_name == "hammer":
-                        insert_hammer(opens, highs, lows, closes, 0, **params)
-                    elif pattern_name == "shooting_star":
-                        insert_shooting_star(opens, highs, lows, closes, 0, **params)
-                    elif pattern_name == "double_top":
-                        insert_double_top(opens, highs, lows, closes, 0, **params)
-                    elif pattern_name == "head_and_shoulders":
-                        insert_head_and_shoulders(opens, highs, lows, closes, 0, **params)
-                    elif pattern_name == "double_bottom":
-                        insert_double_bottom(opens, highs, lows, closes, 0, **params)
-                    elif pattern_name == "inverse_head_and_shoulders":
-                        insert_inverse_head_and_shoulders(opens, highs, lows, closes, 0, **params)
-                except Exception as e:
-                    print(f"Erreur lors de l'insertion du pattern {pattern_name} : {e}")
-                # --- PATCH DE SECURITE CONTINUITE & VALEURS ABERRANTES (STRICT) ---
-                # Forcer la première valeur à start_value
-                opens[0] = start_value
-                closes[0] = start_value
-                highs[0] = max(highs[0], start_value)
-                lows[0] = min(lows[0], start_value)
-                # Corriger les valeurs aberrantes (0, négatif, ou trop éloigné du start_value)
-                for j in range(len(closes)):
-                    for arr, name in zip([opens, highs, lows, closes],
-                                         ["open", "high", "low", "close"]):
-                        if arr[j] <= 0 or abs(arr[j] - start_value) > 10 * max(1, abs(start_value)):
-                            print(
-                                f"[WARNING] Correction valeur aberrante dans pattern {pattern_name} ({name}) : {arr[j]} -> {start_value}")
-                            arr[j] = start_value
-                # Vérification stricte de la cohérence du pattern (skip si n'importe quelle valeur s'éloigne de plus de 2x le start_value)
-                max_dev = max([
-                    max(abs(np.array(arr) - start_value)) for arr in [opens, highs, lows, closes]
-                ])
-                if max_dev > 2 * max(1, abs(start_value)):
+        use_pattern = np.random.rand() < 0.5 and custom_pattern_item
+        if use_pattern:
+            # Choix du pattern et récupération de sa durée
+            import time
+            timeout = 1.0  # secondes
+            pattern_ok = False
+            pattern_attempt = 0
+            start_time = time.time()
+            while not pattern_ok and (time.time() - start_time < timeout):
+                if not custom_pattern_item:
+                    break
+                pattern_name = np.random.choice(custom_pattern_item)
+                custom_pattern_item_count[custom_pattern_item.index(pattern_name)] -= 1
+                if custom_pattern_item_count[custom_pattern_item.index(pattern_name)] == 0:
+                    custom_pattern_item.remove(pattern_name)
+                if pattern_name is not None:
+                    # Charger les paramètres du pattern depuis le JSON
+                    params = {}
+                    try:
+                        file_path = os.path.join(dlt.data_path, "pattern_configs.json")
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            configs = json.load(f)
+                        if pattern_name in configs:
+                            params = configs[pattern_name]
+                    except Exception as e:
+                        print(f"Erreur lors du chargement des paramètres du pattern {pattern_name} : {e}")
+                    # Déterminer la durée réelle du pattern
+                    pattern_len = get_pattern_length(pattern_name)
+                    n = min(pattern_len, remaining)  # ne pas dépasser le bloc restant
+                    last_close = get_last_close(company_df, date_cursor)
+                    if last_close is None:
+                        start_value = randint(100, 1000)
+                    else:
+                        start_value = last_close
                     print(
-                        f"[SKIP PATTERN STRICT] Pattern {pattern_name} trop éloigné du start_value (max_dev={max_dev}), génération d'un trend classique à la place.")
-                    # Générer un trend classique à la place
-                    company_children, company_dataframes = generate_new_charts(
-                        alpha=alpha,
-                        length=sub_len,
-                        start_value=start_value,
-                        radio_trends=[trend],
-                        companies=[company]
-                    )
-                    if company_dataframes and company_dataframes != no_update:
-                        df_trend = pd.DataFrame(company_dataframes[0])
-                        df_trend.index = trend_dates_i
-                        # PATCH CONTINUITE : forcer la première valeur à start_value
-                        for col in ['Open', 'High', 'Low', 'Close']:
-                            if col in df_trend.columns:
-                                if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
-                                    print(
-                                        f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
-                                    df_trend.loc[df_trend.index[0], col] = start_value
-                        for col in df_trend.columns:
-                            company_df.loc[trend_dates_i, col] = df_trend[col].values
-                        print(
-                            f"[TREND] (remplacement pattern strict) last close for {company} at {date_cursor + sub_len - 1}: {df_trend['Close'].iloc[-1]}")
-                    date_cursor += sub_len
-                    continue
-                # Vérification ultra-stricte : pas de drop > 30% ou pic > +30% du start_value
-                closes_arr = np.array(closes)
-                if np.any(closes_arr < 0.7 * start_value) or np.any(closes_arr > 1.3 * start_value):
-                    print(
-                        f'[SKIP PATTERN ULTRA-STRICT] Pattern {pattern_name} génère un drop ou pic trop important, remplacement par trend classique.')
-                    company_children, company_dataframes = generate_new_charts(
-                        alpha=alpha,
-                        length=sub_len,
-                        start_value=start_value,
-                        radio_trends=[trend],
-                        companies=[company]
-                    )
-                    if company_dataframes and company_dataframes != no_update:
-                        df_trend = pd.DataFrame(company_dataframes[0])
-                        df_trend.index = trend_dates_i
-                        # PATCH CONTINUITE : forcer la première valeur à start_value
-                        for col in ['Open', 'High', 'Low', 'Close']:
-                            if col in df_trend.columns:
-                                if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
-                                    print(
-                                        f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
-                                    df_trend.loc[df_trend.index[0], col] = start_value
-                        for col in df_trend.columns:
-                            company_df.loc[trend_dates_i, col] = df_trend[col].values
-                        print(
-                            f"[TREND] (remplacement pattern ultra-strict) last close for {company} at {date_cursor + sub_len - 1}: {df_trend['Close'].iloc[-1]}")
-                    date_cursor += sub_len
-                    continue
-                # Insérer le pattern sur la première partie de la sous-tranche
-                pattern_dates = trend_dates_i[:pattern_len]
-                df_pattern = pd.DataFrame({
-                    "Open": opens,
-                    "High": highs,
-                    "Low": lows,
-                    "Close": closes,
-                    "adjclose": closes,
-                    "Volume": [1000] * n
-                }, index=pattern_dates)
-                for col in df_pattern.columns:
-                    company_df.loc[pattern_dates, col] = df_pattern[col].values
-                print(
-                    f"[PATTERN] last close for {company} at {date_cursor + pattern_len - 1}: {closes[-1]} (pattern: {pattern_name})")
-                # Générer le reste de la sous-tranche avec generate_new_charts()
-                if sub_len > pattern_len:
-                    rest_dates = trend_dates_i[pattern_len:]
-                    if len(rest_dates) > 0:
-                        # On part du dernier close du pattern
+                        f"[PATTERN] start_value for {company} at {date_cursor}: {start_value} (pattern: {pattern_name}) [essai {pattern_attempt+1}]")
+                    opens = [start_value] * n
+                    highs = [start_value] * n
+                    lows = [start_value] * n
+                    closes = [start_value] * n
+                    # Vérifier que la fonction d'insertion modifie bien les listes passées !
+                    try:
+                        if pattern_name == "bullish_engulfing":
+                            insert_bullish_engulfing(opens, highs, lows, closes, 0, **params)
+                        elif pattern_name == "bearish_engulfing":
+                            insert_bearish_engulfing(opens, highs, lows, closes, 0, **params)
+                        elif pattern_name == "hammer":
+                            insert_hammer(opens, highs, lows, closes, 0, **params)
+                        elif pattern_name == "shooting_star":
+                            insert_shooting_star(opens, highs, lows, closes, 0, **params)
+                        elif pattern_name == "double_top":
+                            insert_double_top(opens, highs, lows, closes, 0, **params)
+                        elif pattern_name == "head_and_shoulders":
+                            insert_head_and_shoulders(opens, highs, lows, closes, 0, **params)
+                        elif pattern_name == "double_bottom":
+                            insert_double_bottom(opens, highs, lows, closes, 0, **params)
+                        elif pattern_name == "inverse_head_and_shoulders":
+                            insert_inverse_head_and_shoulders(opens, highs, lows, closes, 0, **params)
+                    except Exception as e:
+                        print(f"Erreur lors de l'insertion du pattern {pattern_name} : {e}")
+                    # --- Complétion si le pattern est plus court que la sous-tendance ---
+                    pattern_len = len(opens)
+                    if pattern_len < n:
+                        last_open = opens[-1]
+                        last_high = highs[-1]
+                        last_low = lows[-1]
                         last_close = closes[-1]
+                        opens += [last_open] * (n - pattern_len)
+                        highs += [last_high] * (n - pattern_len)
+                        lows += [last_low] * (n - pattern_len)
+                        closes += [last_close] * (n - pattern_len)
+                    # --- Continuité stricte avec le bloc précédent ---
+                    if last_close_block is not None:
+                        opens[0] = last_close_block
+                        highs[0] = max(highs[0], last_close_block)
+                        lows[0] = min(lows[0], last_close_block)
+                        closes[0] = last_close_block
+                    # --- PATCH DE SECURITE CONTINUITE & VALEURS ABERRANTES (STRICT) ---
+                    opens[0] = start_value
+                    closes[0] = start_value
+                    highs[0] = max(highs[0], start_value)
+                    lows[0] = min(lows[0], start_value)
+                    for j in range(len(closes)):
+                        for arr, name in zip([opens, highs, lows, closes],
+                                             ["open", "high", "low", "close"]):
+                            if arr[j] <= 0 or abs(arr[j] - start_value) > 10 * max(1, abs(start_value)):
+                                print(
+                                    f"[WARNING] Correction valeur aberrante dans pattern {pattern_name} ({name}) : {arr[j]} -> {start_value}")
+                                arr[j] = start_value
+                    max_dev = max([
+                        max(abs(np.array(arr) - start_value)) for arr in [opens, highs, lows, closes]
+                    ])
+                    if max_dev <= 2 * max(1, abs(start_value)):
+                        pattern_ok = True
+                        break  # On garde ce pattern
+                    else:
                         print(
-                            f"[PATTERN->TREND] start_value for {company} at {date_cursor + pattern_len}: {last_close}")
-                        company_children, company_dataframes = generate_new_charts(
-                            alpha=alpha,
-                            length=len(rest_dates),
-                            start_value=last_close,
-                            radio_trends=[trend],
-                            companies=[company]
-                        )
-                        if company_dataframes and company_dataframes != no_update:
-                            df_trend = pd.DataFrame(company_dataframes[0])
-                            df_trend.index = rest_dates
-                            # PATCH CONTINUITE : forcer la première valeur à last_close
-                            for col in ['Open', 'High', 'Low', 'Close']:
-                                if col in df_trend.columns:
-                                    if abs(df_trend[col].iloc[0] - last_close) > 1e-6:
-                                        print(
-                                            f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {last_close}')
-                                        df_trend.loc[df_trend.index[0], col] = last_close
-                            for col in df_trend.columns:
-                                company_df.loc[rest_dates, col] = df_trend[col].values
-                            print(
-                                f"[PATTERN->TREND] last close for {company} at {date_cursor + sub_len - 1}: {df_trend['Close'].iloc[-1]}")
-                date_cursor += sub_len
-                continue
-        # Trend classique dans la sous-tranche
-        last_close = get_last_close(company_df, date_cursor)
-        if last_close is None:
-            start_value = randint(100, 1000)
-        else:
-            start_value = last_close
-        print(f"[TREND] start_value for {company} at {date_cursor}: {start_value}")
-        company_children, company_dataframes = generate_new_charts(
-            alpha=alpha,
-            length=len(trend_dates_i),
-            start_value=start_value,
-            radio_trends=[trend],
-            companies=[company]
-        )
-        if company_dataframes and company_dataframes != no_update:
-            df_trend = pd.DataFrame(company_dataframes[0])
-            df_trend.index = trend_dates_i
-            # PATCH CONTINUITE : forcer la première valeur à start_value
-            for col in ['Open', 'High', 'Low', 'Close']:
-                if col in df_trend.columns:
-                    if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
-                        print(
-                            f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
-                        df_trend.loc[df_trend.index[0], col] = start_value
+                            f"[SKIP PATTERN STRICT] Pattern {pattern_name} trop éloigné du start_value (max_dev={max_dev}), nouvel essai...")
+                pattern_attempt += 1
+            if not pattern_ok:
+                print(f"[SKIP PATTERN ULTRA-STRICT] Aucun pattern valide trouvé après {pattern_attempt} essais et 1 seconde, génération d'un trend classique à la place.")
+                use_pattern = False  # fallback sur trend classique
+        if not use_pattern:
+            n = min(min_block_size, remaining)
+            last_close = last_close_block if last_close_block is not None else get_last_close(company_df, date_cursor)
+            if last_close is None:
+                start_value = randint(100, 1000)
+            else:
+                start_value = last_close
+            print(f"[TREND] start_value for {company} at {date_cursor}: {start_value}")
+            company_children, company_dataframes = generate_new_charts(
+                alpha=alpha,
+                length=n,
+                start_value=start_value,
+                radio_trends=[trend],
+                companies=[company]
+            )
+            if company_dataframes and company_dataframes != no_update:
+                df_trend = pd.DataFrame(company_dataframes[0])
+                df_trend.index = trend_dates_i[:n]
+                # --- Continuité stricte avec le bloc précédent ---
+                if last_close_block is not None:
+                    for col in ['Open', 'High', 'Low', 'Close']:
+                        if col in df_trend.columns:
+                            df_trend.loc[df_trend.index[0], col] = last_close_block
+                last_close_block = df_trend['Close'].iloc[-1]
+                for col in df_trend.columns:
+                    company_df.loc[trend_dates_i[:n], col] = df_trend[col].values
+                print(f"[TREND] last close for {company} at {date_cursor + n - 1}: {df_trend['Close'].iloc[-1]}")
+            date_cursor += n
+            total_covered += n
+            continue
+        # Si pattern_ok, on continue la logique normale (création du DataFrame, etc.)
+        # --- Correction de la taille des listes et du nombre de dates ---
+        min_len = min(len(opens), len(highs), len(lows), len(closes), len(trend_dates_i[:n]))
+        if not (len(opens) == len(highs) == len(lows) == len(closes) == len(trend_dates_i[:n])):
+            print(f"[ERREUR] Mismatch de longueur : opens={len(opens)}, highs={len(highs)}, lows={len(lows)}, closes={len(closes)}, dates={len(trend_dates_i[:n])}")
+        opens = opens[:min_len]
+        highs = highs[:min_len]
+        lows = lows[:min_len]
+        closes = closes[:min_len]
+        trend_dates = trend_dates_i[:min_len]
+        df_trend = pd.DataFrame({
+            "Open": opens,
+            "High": highs,
+            "Low": lows,
+            "Close": closes,
+            "adjclose": closes,
+            "Volume": [1000] * min_len
+        }, index=trend_dates)
+        if last_close_block is not None:
             for col in df_trend.columns:
-                company_df.loc[trend_dates_i, col] = df_trend[col].values
-            print(
-                f"[TREND] last close for {company} at {date_cursor + sub_len - 1}: {df_trend['Close'].iloc[-1]}")
-        date_cursor += sub_len
+                df_trend.loc[df_trend.index[0], col] = last_close_block
+        last_close_block = df_trend['Close'].iloc[-1]
+        for col in df_trend.columns:
+            company_df.loc[trend_dates, col] = df_trend[col].values
+        print(f"[PATTERN->TREND] last close for {company} at {date_cursor + n - 1}: {closes[-1]}")
+        date_cursor += n
+        total_covered += n
 
 
 def handle_pattern_without(alpha, company, company_df, date_cursor, length, trend, trend_dates):

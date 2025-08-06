@@ -49,6 +49,12 @@ def fill_ohlc_from_dataset(opens, highs, lows, closes, day, pattern_name, amplit
     highs_final = interp(highs_ref, duree)
     lows_final = interp(lows_ref, duree)
     closes_final = interp(closes_ref, duree)
+    # Forcer la première valeur à la valeur de départ pour la continuité
+    start_value = opens[day]
+    opens_final[0] = start_value
+    highs_final[0] = start_value
+    lows_final[0] = start_value
+    closes_final[0] = start_value
     # Ajustement amplitude
     base_price = opens_final[0]
     min_val = min(opens_final)
