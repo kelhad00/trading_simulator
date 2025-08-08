@@ -18,11 +18,15 @@ def scale_amplitude(series, amplitude, base_price):
     return [base_price + (v - base_price) * factor for v in series]
 
 
-def fill_ohlc_from_dataset(opens, highs, lows, closes, day, pattern_name, amplitude, duree, dataset_dir="../data/dataset"):
+def fill_ohlc_from_dataset(opens, highs, lows, closes, day, pattern_name, amplitude, duree, dataset_dir=None):
     """
     Remplit les tableaux OHLC à partir d'un fichier dataset du pattern donné, interpolé à la durée et amplitude demandées.
     """
     import sys
+    from trade.defaults import defaults as dlt
+    # Résolution robuste du chemin dataset
+    if dataset_dir is None:
+        dataset_dir = os.path.join(dlt.data_path, "dataset")
     pattern_dir = os.path.join(dataset_dir, pattern_name)
     files = [f for f in os.listdir(pattern_dir) if f.endswith('.json')]
     if not files:
@@ -65,6 +69,20 @@ def fill_ohlc_from_dataset(opens, highs, lows, closes, day, pattern_name, amplit
     highs_final = base_price + (highs_final - base_price) * factor
     lows_final = base_price + (lows_final - base_price) * factor
     closes_final = base_price + (closes_final - base_price) * factor
+
+    # Retirer la toute première bougie du motif interpolé pour éviter le jump initial
+    if duree >= 2 and len(opens_final) >= 2:
+        opens_final = opens_final[1:]
+        highs_final = highs_final[1:]
+        lows_final = lows_final[1:]
+        closes_final = closes_final[1:]
+        # On ne rallonge pas artificiellement: on utilisera la longueur restante côté appelant
+
+    # Ajout d'une variation aléatoire supplémentaire pour chaque point
+    for arr_final in [opens_final, highs_final, lows_final, closes_final]:
+        for i in range(len(arr_final)):
+            rand_factor = np.random.uniform(1 - amplitude/100, 1 + amplitude/100)
+            arr_final[i] *= rand_factor
     # Remplissage avec extension dynamique si besoin
     for i in range(duree):
         idx = day + i

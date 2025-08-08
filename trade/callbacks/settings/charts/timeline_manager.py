@@ -26,6 +26,35 @@ def make_timeline_block(label, color, index, pattern_id=None, pattern_type="with
     type_label = "Avec pattern" if pattern_type == "with" else "Sans pattern" if pattern_type != "dont" else None
     return html.Div(
         [
+            # Poignée gauche
+            html.Div(
+                id={'type': 'resize-handle-left', 'index': index},
+                style={
+                    "position": "absolute",
+                    "top": 0,
+                    "left": 0,
+                    "width": "6px",
+                    "height": "100%",
+                    "cursor": "ew-resize",
+                    "zIndex": 10,
+                    "backgroundColor": "transparent"
+                }
+            ),
+            # Poignée droite
+            html.Div(
+                id={'type': 'resize-handle-right', 'index': index},
+                style={
+                    "position": "absolute",
+                    "top": 0,
+                    "right": 0,
+                    "width": "6px",
+                    "height": "100%",
+                    "cursor": "ew-resize",
+                    "zIndex": 10,
+                    "backgroundColor": "transparent"
+                }
+            ),
+            #Contenu
             html.Div([
                 html.Strong(label),
                 html.Div(type_label, style={

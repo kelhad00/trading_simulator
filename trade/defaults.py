@@ -16,7 +16,7 @@ class Defaults:
     data_path = "../data"
 
     #Granularity of the data
-    granularity = "h" 
+    granularity = "D" 
     # News settings
     api_key = "YOUR_API_KEY"
 

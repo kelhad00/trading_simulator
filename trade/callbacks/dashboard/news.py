@@ -50,10 +50,10 @@ def get_next_timestamp_by_granularity(current_timestamp, granularity):
 @callback(
     Output('news-table', 'children'),
     Input('periodic-updater', 'n_intervals'),
+    Input('selected-interval', 'data'),
     State('timestamp', 'data'),
-    State('selected-interval', 'data'),
 )
-def cb_update_news_table(n, timestamp, selected_interval, range=50):
+def cb_update_news_table(n, selected_interval, timestamp, range=50):
     """
     Function to display the latest news in the table from the timestamp
     Args:
@@ -86,7 +86,10 @@ def cb_update_news_table(n, timestamp, selected_interval, range=50):
 
     # Get the next timestamp based on selected time unit instead of adding one day
     current_interval = selected_interval if selected_interval else dlt.granularity
-    next_timestamp = get_next_timestamp_by_granularity(timestamp, current_interval)
+    # Normalize interval keys for this module's helper (expects upper-case for hour/month)
+    mapping = { 'h': 'H', 'D': 'D', 'W': 'W', 'ME': 'M' }
+    news_interval = mapping.get(current_interval, 'D')
+    next_timestamp = get_next_timestamp_by_granularity(timestamp, news_interval)
 
     # Get the news before the next timestamp
     nl = news_df.loc[news_df['date'] <= next_timestamp].sort_values(by='date', ascending=False).astype(str)

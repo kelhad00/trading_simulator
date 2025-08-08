@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from dash import callback, Input, Output, State, html, no_update, dcc
+import dash_mantine_components as dmc
 from plotly.graph_objs.layout.newshape import label
 
 from trade.callbacks.settings.charts.modal import generate_new_charts
@@ -41,6 +42,22 @@ bear_pattern = [
 ]
 
 
+# --- Logging utils ---
+VERBOSE_LOGS = False
+
+def _debug(msg: str):
+    if VERBOSE_LOGS:
+        print(msg)
+
+def _progress_bar(done: int, total: int, width: int = 10) -> str:
+    if total <= 0:
+        return "[----------]"
+    done = max(0, min(done, total))
+    percent = int((done / total) * 100)
+    filled = min(width, max(0, percent // (100 // width if width < 100 else 1)))
+    bar = "[" + "=" * filled + f"{percent}%" + "-" * (width - filled) + "]"
+    return bar
+
 # callbacks.py
 @callback(
     Output("chart_new", "children"),
@@ -55,6 +72,12 @@ bear_pattern = [
     prevent_initial_call=True
 )
 def graph_preview_new(n_click, size_data, start_date, end_date, granularity, current_df, data_pattern):
+    # Loading placeholder while generating (use dcc.Loading for compatibility)
+    loading = dcc.Loading(
+        children=html.Div(style={"height": "300px"}),
+        type="default",
+        fullscreen=False
+    )
 
     for item in size_data:
         item_label = size_data[item]["label"]
@@ -90,20 +113,18 @@ def graph_preview_new(n_click, size_data, start_date, end_date, granularity, cur
         size_data[item]["label"] = new_label
 
     if not is_input_valid(size_data, start_date, end_date, granularity):
-        print("Invalid input")
-        return html.Div(), None
+        _debug("Invalid input")
+        return loading, None
 
     dates = generate_date_range(start_date, end_date, granularity)
 
     if len(dates) == 0:
-        return html.Div(), None
+        return loading, None
 
     trends, alphas, lengths, pattern_types = parse_size_data(size_data, len(dates))
 
     custom_pattern_list = list()
     custom_pattern_count_list = list()
-
-    print(data_pattern)
 
     i=0
     data_pattern = dict(data_pattern)
@@ -132,12 +153,15 @@ def graph_preview_new(n_click, size_data, start_date, end_date, granularity, cur
 
         children = build_preview_graphs(company_dfs)
         if not children:
-            return html.Div(), None
+            return loading, None
 
         return html.Div(children, style={"overflowY": "auto", "maxHeight": "80vh"}), data_dict
     except Exception as e:
-        print(f"[ERROR] {e}")
-        return html.Div(), None
+        import traceback
+        tb = traceback.format_exc()
+        print(tb)
+        _debug(f"[ERROR] {e}")
+        return loading, None
 
 
 def handle_pattern_none(company_df, date_cursor, dates, length, trend):
@@ -151,7 +175,7 @@ def handle_pattern_none(company_df, date_cursor, dates, length, trend):
         if pattern_name in configs:
             params = configs[pattern_name]
     except Exception as e:
-        print(f"Erreur lors du chargement des paramètres du pattern {pattern_name} : {e}")
+        _debug(f"Erreur lors du chargement des paramètres du pattern {pattern_name} : {e}")
     # Générer les listes OHLC en continuant la série précédente
     n = length
     trend_dates = dates[date_cursor:date_cursor + length]  # <-- Correction ici
@@ -192,7 +216,7 @@ def handle_pattern_none(company_df, date_cursor, dates, length, trend):
         elif pattern_name == "inverse_head_and_shoulders":
             insert_inverse_head_and_shoulders(opens, highs, lows, closes, 0, **params)
     except Exception as e:
-        print(f"Erreur lors de l'insertion du pattern {pattern_name} : {e}")
+        _debug(f"Erreur lors de l'insertion du pattern {pattern_name} : {e}")
     # Créer le DataFrame pour ce pattern
     df_trend = pd.DataFrame({
         "Open": opens,
@@ -202,6 +226,16 @@ def handle_pattern_none(company_df, date_cursor, dates, length, trend):
         "adjclose": closes,
         "Volume": [1000] * n
     }, index=trend_dates)
+    # Sanitize + petite variation pour éviter un plateau initial
+    try:
+        sanitize_ohlc(df_trend)
+        if len(df_trend) > 1:
+            df_trend.loc[df_trend.index[1], 'Close'] = max(0.01, df_trend['Close'].iloc[1] * (1 + np.random.uniform(-0.001, 0.001)))
+            df_trend.loc[df_trend.index[1], 'Open'] = max(0.01, df_trend['Open'].iloc[1] * (1 + np.random.uniform(-0.001, 0.001)))
+            add_small_wicks(df_trend)
+            sanitize_ohlc(df_trend)
+    except Exception:
+        pass
     # Remplir la tranche dans le DataFrame global de la société
     for col in df_trend.columns:
         company_df.loc[trend_dates, col] = df_trend[col].values
@@ -220,7 +254,9 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
     last_close_block = None
     while total_covered < length:
         remaining = length - total_covered
-        trend_dates_i = dates[date_cursor:date_cursor + remaining]
+        # Point de départ réel du sous-bloc dans la fenêtre globale de ce segment
+        start_index = date_cursor + total_covered
+        trend_dates_i = dates[start_index:start_index + remaining]
         if len(trend_dates_i) == 0:
             break
         # 50% de chance de mettre un pattern à la place du trend classique
@@ -236,9 +272,22 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
                 if not custom_pattern_item:
                     break
                 pattern_name = np.random.choice(custom_pattern_item)
-                custom_pattern_item_count[custom_pattern_item.index(pattern_name)] -= 1
-                if custom_pattern_item_count[custom_pattern_item.index(pattern_name)] == 0:
-                    custom_pattern_item.remove(pattern_name)
+                try:
+                    idx_choice = custom_pattern_item.index(pattern_name)
+                except ValueError:
+                    # Liste désynchronisée, on abandonne l'utilisation du pattern
+                    use_pattern = False
+                    break
+                # Décrémenter le compteur associé
+                if idx_choice < len(custom_pattern_item_count):
+                    custom_pattern_item_count[idx_choice] = max(-1, custom_pattern_item_count[idx_choice] - 1)
+                    if custom_pattern_item_count[idx_choice] <= 0:
+                        # Retirer le pattern et son compteur pour garder les listes alignées
+                        custom_pattern_item.pop(idx_choice)
+                        custom_pattern_item_count.pop(idx_choice)
+                else:
+                    # Sécurité si désalignement
+                    custom_pattern_item.pop(idx_choice)
                 if pattern_name is not None:
                     # Charger les paramètres du pattern depuis le JSON
                     params = {}
@@ -249,7 +298,7 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
                         if pattern_name in configs:
                             params = configs[pattern_name]
                     except Exception as e:
-                        print(f"Erreur lors du chargement des paramètres du pattern {pattern_name} : {e}")
+                        _debug(f"Erreur lors du chargement des paramètres du pattern {pattern_name} : {e}")
                     # Déterminer la durée réelle du pattern
                     pattern_len = get_pattern_length(pattern_name)
                     n = min(pattern_len, remaining)  # ne pas dépasser le bloc restant
@@ -258,7 +307,7 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
                         start_value = randint(100, 1000)
                     else:
                         start_value = last_close
-                    print(
+                    _debug(
                         f"[PATTERN] start_value for {company} at {date_cursor}: {start_value} (pattern: {pattern_name}) [essai {pattern_attempt+1}]")
                     opens = [start_value] * n
                     highs = [start_value] * n
@@ -283,7 +332,7 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
                         elif pattern_name == "inverse_head_and_shoulders":
                             insert_inverse_head_and_shoulders(opens, highs, lows, closes, 0, **params)
                     except Exception as e:
-                        print(f"Erreur lors de l'insertion du pattern {pattern_name} : {e}")
+                        _debug(f"Erreur lors de l'insertion du pattern {pattern_name} : {e}")
                     # --- Complétion si le pattern est plus court que la sous-tendance ---
                     pattern_len = len(opens)
                     if pattern_len < n:
@@ -310,7 +359,7 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
                         for arr, name in zip([opens, highs, lows, closes],
                                              ["open", "high", "low", "close"]):
                             if arr[j] <= 0 or abs(arr[j] - start_value) > 10 * max(1, abs(start_value)):
-                                print(
+                                _debug(
                                     f"[WARNING] Correction valeur aberrante dans pattern {pattern_name} ({name}) : {arr[j]} -> {start_value}")
                                 arr[j] = start_value
                     max_dev = max([
@@ -320,20 +369,20 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
                         pattern_ok = True
                         break  # On garde ce pattern
                     else:
-                        print(
+                        _debug(
                             f"[SKIP PATTERN STRICT] Pattern {pattern_name} trop éloigné du start_value (max_dev={max_dev}), nouvel essai...")
                 pattern_attempt += 1
             if not pattern_ok:
-                print(f"[SKIP PATTERN ULTRA-STRICT] Aucun pattern valide trouvé après {pattern_attempt} essais et 1 seconde, génération d'un trend classique à la place.")
+                _debug(f"[SKIP PATTERN ULTRA-STRICT] Aucun pattern valide trouvé après {pattern_attempt} essais et 1 seconde, génération d'un trend classique à la place.")
                 use_pattern = False  # fallback sur trend classique
         if not use_pattern:
             n = min(min_block_size, remaining)
-            last_close = last_close_block if last_close_block is not None else get_last_close(company_df, date_cursor)
+            last_close = last_close_block if last_close_block is not None else get_last_close(company_df, start_index)
             if last_close is None:
                 start_value = randint(100, 1000)
             else:
                 start_value = last_close
-            print(f"[TREND] start_value for {company} at {date_cursor}: {start_value}")
+            _debug(f"[TREND] start_value for {company} at {date_cursor}: {start_value}")
             company_children, company_dataframes = generate_new_charts(
                 alpha=alpha,
                 length=n,
@@ -344,23 +393,56 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
             if company_dataframes and company_dataframes != no_update:
                 df_trend = pd.DataFrame(company_dataframes[0])
                 df_trend.index = trend_dates_i[:n]
+                # Sanitize OHLC before merging
+                try:
+                    sanitize_ohlc(df_trend)
+                except Exception:
+                    pass
                 # --- Continuité stricte avec le bloc précédent ---
                 if last_close_block is not None:
-                    for col in ['Open', 'High', 'Low', 'Close']:
-                        if col in df_trend.columns:
-                            df_trend.loc[df_trend.index[0], col] = last_close_block
+                    # Rebase entier du sous-bloc pour matcher last_close_block
+                    rebase_chunk_to_last_close(df_trend, last_close_block)
+                else:
+                    # Si aucun bloc précédent, on rebased sur start_value pour éliminer l'escalier initial
+                    rebase_chunk_to_last_close(df_trend, start_value)
+                # Empêcher long plateau: variation minime dès le 2e point et wicks
+                if len(df_trend) > 1:
+                    df_trend.loc[df_trend.index[1], 'Close'] = max(0.01, df_trend['Close'].iloc[0] * (1 + np.random.uniform(0.0005, 0.002)))
+                    df_trend.loc[df_trend.index[1], 'Open'] = max(0.01, df_trend['Open'].iloc[0] * (1 + np.random.uniform(-0.0005, 0.002)))
+                    try:
+                        add_small_wicks(df_trend)
+                        sanitize_ohlc(df_trend)
+                    except Exception:
+                        pass
                 last_close_block = df_trend['Close'].iloc[-1]
+                # Micro variation to avoid long plateaus
+                try:
+                    add_micro_variation(df_trend)
+                except Exception:
+                    pass
                 for col in df_trend.columns:
                     company_df.loc[trend_dates_i[:n], col] = df_trend[col].values
-                print(f"[TREND] last close for {company} at {date_cursor + n - 1}: {df_trend['Close'].iloc[-1]}")
-            date_cursor += n
+                _debug(f"[TREND] last close for {company} at {date_cursor + n - 1}: {df_trend['Close'].iloc[-1]}")
+            else:
+                _debug("[TREND] Aucune donnée retournée par generate_new_charts, on saute ce sous-bloc")
             total_covered += n
             continue
         # Si pattern_ok, on continue la logique normale (création du DataFrame, etc.)
-        # --- Correction de la taille des listes et du nombre de dates ---
-        min_len = min(len(opens), len(highs), len(lows), len(closes), len(trend_dates_i[:n]))
+        # --- Retirer la première bougie du pattern, puis utiliser la longueur réelle restante ---
+        if len(opens) > 1 and len(highs) > 1 and len(lows) > 1 and len(closes) > 1:
+            opens = opens[1:]
+            highs = highs[1:]
+            lows = lows[1:]
+            closes = closes[1:]
+        # Longueur réellement utilisable pour ce sous-bloc
+        used_len = min(len(opens), len(highs), len(lows), len(closes), len(trend_dates_i[:n]))
+        min_len = used_len
+        if min_len <= 0:
+            # Pattern trop court après retrait de la 1ère bougie -> fallback trend sur un mini-bloc
+            use_pattern = False
+            continue
         if not (len(opens) == len(highs) == len(lows) == len(closes) == len(trend_dates_i[:n])):
-            print(f"[ERREUR] Mismatch de longueur : opens={len(opens)}, highs={len(highs)}, lows={len(lows)}, closes={len(closes)}, dates={len(trend_dates_i[:n])}")
+            _debug(f"[ERREUR] Mismatch de longueur : opens={len(opens)}, highs={len(highs)}, lows={len(lows)}, closes={len(closes)}, dates={len(trend_dates_i[:n])}")
         opens = opens[:min_len]
         highs = highs[:min_len]
         lows = lows[:min_len]
@@ -374,15 +456,33 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
             "adjclose": closes,
             "Volume": [1000] * min_len
         }, index=trend_dates)
+        # Sanitize OHLC before merging
+        try:
+            sanitize_ohlc(df_trend)
+        except Exception:
+            pass
         if last_close_block is not None:
-            for col in df_trend.columns:
-                df_trend.loc[df_trend.index[0], col] = last_close_block
+            rebase_chunk_to_last_close(df_trend, last_close_block)
+        else:
+            rebase_chunk_to_last_close(df_trend, opens[0] if len(opens) else df_trend['Close'].iloc[0])
+        # Empêcher long plateau dès le 2e point + wicks
+        if len(df_trend) > 1:
+            df_trend.loc[df_trend.index[1], 'Close'] = max(0.01, df_trend['Close'].iloc[0] * (1 + np.random.uniform(0.0005, 0.002)))
+            df_trend.loc[df_trend.index[1], 'Open'] = max(0.01, df_trend['Open'].iloc[0] * (1 + np.random.uniform(-0.0005, 0.002)))
+            try:
+                add_small_wicks(df_trend)
+                sanitize_ohlc(df_trend)
+            except Exception:
+                pass
         last_close_block = df_trend['Close'].iloc[-1]
+        try:
+            add_micro_variation(df_trend)
+        except Exception:
+            pass
         for col in df_trend.columns:
             company_df.loc[trend_dates, col] = df_trend[col].values
-        print(f"[PATTERN->TREND] last close for {company} at {date_cursor + n - 1}: {closes[-1]}")
-        date_cursor += n
-        total_covered += n
+        _debug(f"[PATTERN->TREND] last close for {company} at {date_cursor + min_len - 1}: {closes[-1]}")
+        total_covered += min_len
 
 
 def handle_pattern_without(alpha, company, company_df, date_cursor, length, trend, trend_dates):
@@ -391,7 +491,7 @@ def handle_pattern_without(alpha, company, company_df, date_cursor, length, tren
         start_value = randint(100, 1000)
     else:
         start_value = last_close
-    print(f"[WITHOUT] start_value for {company} at {date_cursor}: {start_value}")
+    _debug(f"[WITHOUT] start_value for {company} at {date_cursor}: {start_value}")
     # Générer les données pour cette tranche
     company_children, company_dataframes = generate_new_charts(
         alpha=alpha,
@@ -404,17 +504,26 @@ def handle_pattern_without(alpha, company, company_df, date_cursor, length, tren
         df_trend = pd.DataFrame(company_dataframes[0])
         df_trend.index = trend_dates
         # --- PATCH CONTINUITE : forcer la première valeur à start_value ---
-        for col in ['Open', 'High', 'Low', 'Close']:
-            if col in df_trend.columns:
-                if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
-                    print(
-                        f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
-                    df_trend.loc[df_trend.index[0], col] = start_value
+        # Rebase entier du chunk sur start_value pour éviter l'escalier
+        try:
+            rebase_chunk_to_last_close(df_trend, start_value)
+        except Exception:
+            for col in ['Open', 'High', 'Low', 'Close']:
+                if col in df_trend.columns:
+                    if abs(df_trend[col].iloc[0] - start_value) > 1e-6:
+                        _debug(
+                            f'[PATCH CONTINUITE] Correction {col} première valeur {df_trend[col].iloc[0]} -> {start_value}')
+                        df_trend.loc[df_trend.index[0], col] = start_value
         # Remplir la tranche dans le DataFrame global de la société
+        try:
+            sanitize_ohlc(df_trend)
+            add_micro_variation(df_trend)
+        except Exception:
+            pass
         for col in df_trend.columns:
             company_df.loc[trend_dates, col] = df_trend[col].values
         # Log de la dernière valeur générée
-        print(
+        _debug(
             f"[WITHOUT] last close for {company} at {date_cursor + len(trend_dates) - 1}: {df_trend['Close'].iloc[-1]}")
     date_cursor += length
 
@@ -496,11 +605,12 @@ def resize_lengths_to_fit(lengths, target):
 
 def generate_company_dataframes(dates, companies, trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list):
     company_dfs = {}
+    total = len(companies)
+    done = 0
     for company in companies:
         company_df = pd.DataFrame(index=dates)
         date_cursor = 0
         for trend, alpha, length, pattern_type, custom_pattern_item, custom_pattern_count in zip(trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list):
-            print(pattern_type, custom_pattern_item, custom_pattern_count)
             trend_dates = dates[date_cursor:date_cursor + length]
             if pattern_type == "without":
                 handle_pattern_without(alpha, company, company_df, date_cursor, length, trend, trend_dates)
@@ -510,8 +620,13 @@ def generate_company_dataframes(dates, companies, trends, alphas, lengths, patte
                 handle_pattern_none(company_df, date_cursor, dates, length, trend)
             date_cursor += length
 
+        # Finalize consistency
+        company_df = finalize_company_df(company_df)
         compute_indicators(company_df)
         company_dfs[company] = ensure_column_order(company_df)
+        done += 1
+        bar = _progress_bar(done, total, width=10)
+        print(f"{bar} {done}/{total} - {company} terminé")
 
     return company_dfs
 
@@ -538,6 +653,138 @@ def ensure_column_order(df):
     return df[expected_cols]
 
 
+def sanitize_ohlc(df: pd.DataFrame) -> None:
+    """Clean and normalize OHLC to maintain coherence.
+
+    - Fill NaNs from close forward/backward
+    - Ensure High >= max(Open, Close) and Low <= min(Open, Close)
+    - Avoid fully-flat bars by adding a tiny wick
+    - Enforce strictly positive prices
+    """
+    for col in ['Open', 'High', 'Low', 'Close']:
+        if col not in df.columns:
+            df[col] = np.nan
+        # Coerce to numeric
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    base_series = df['Close'].ffill().bfill()
+    base_series = base_series.fillna(100.0)
+    for col in ['Open', 'High', 'Low', 'Close']:
+        df[col] = df[col].fillna(base_series)
+
+    # Enforce OHLC bounds
+    max_oc = np.maximum(df['Open'].values, df['Close'].values)
+    min_oc = np.minimum(df['Open'].values, df['Close'].values)
+    df['High'] = np.maximum(df['High'].values, max_oc)
+    df['Low'] = np.minimum(df['Low'].values, min_oc)
+
+    # Avoid fully flat candles
+    same_all = (
+        (df['Open'] == df['High']) &
+        (df['High'] == df['Low']) &
+        (df['Low'] == df['Close'])
+    )
+    if same_all.any():
+        prices = df.loc[same_all, 'Close']
+        tiny = np.maximum(0.001 * prices.abs(), 0.01)
+        df.loc[same_all, 'High'] = prices + tiny
+        df.loc[same_all, 'Low'] = np.maximum(prices - tiny, 0.01)
+
+    # Strictly positive prices
+    for col in ['Open', 'High', 'Low', 'Close']:
+        df[col] = df[col].clip(lower=0.01)
+
+
+def add_micro_variation(df: pd.DataFrame, tol: float = 1e-9, eps_pct: float = 0.001) -> None:
+    """Inject a tiny day-to-day variation when consecutive closes are strictly flat.
+
+    eps_pct is relative to previous close (e.g. 0.001 = 0.1%).
+    Keeps OHLC consistency after adjustment.
+    """
+    if 'Close' not in df.columns:
+        return
+    closes = df['Close'].values
+    opens = df['Open'].values if 'Open' in df.columns else closes.copy()
+    highs = df['High'].values if 'High' in df.columns else closes.copy()
+    lows = df['Low'].values if 'Low' in df.columns else closes.copy()
+    for i in range(1, len(closes)):
+        if abs(closes[i] - closes[i-1]) <= tol:
+            prev = closes[i-1]
+            delta = prev * np.random.uniform(-eps_pct, eps_pct)
+            closes[i] = max(0.01, prev + delta)
+            # Adjust open toward close but not equal
+            opens[i] = max(0.01, (opens[i] + closes[i]) / 2.0)
+            # Ensure bounds
+            highs[i] = max(highs[i], opens[i], closes[i])
+            lows[i] = min(lows[i], opens[i], closes[i])
+    df['Close'] = closes
+    df['Open'] = opens
+    df['High'] = highs
+    df['Low'] = lows
+
+
+def add_small_wicks(
+    df: pd.DataFrame,
+    wick_min: float = 0.0005,
+    wick_max: float = 0.002,
+    wick_cap: float = 0.02,
+) -> None:
+    """Ensure wicks exist but stay reasonable.
+
+    - Adds a tiny random wick (between wick_min and wick_max)
+    - Caps wick size to wick_cap relative to max(Open, Close) and min(Open, Close)
+    """
+    if not {'Open', 'High', 'Low', 'Close'}.issubset(df.columns):
+        return
+    o = df['Open'].values
+    c = df['Close'].values
+    base_high = np.maximum(o, c)
+    base_low = np.minimum(o, c)
+    up = np.random.uniform(wick_min, wick_max, size=len(df))
+    down = np.random.uniform(wick_min, wick_max, size=len(df))
+    proposed_high = np.maximum(df['High'].values, base_high * (1 + up))
+    proposed_low = np.minimum(df['Low'].values, base_low * (1 - down))
+    # Cap extremes
+    cap_high = base_high * (1 + wick_cap)
+    cap_low = base_low * (1 - wick_cap)
+    df['High'] = np.minimum(proposed_high, cap_high)
+    df['Low'] = np.maximum(proposed_low, cap_low)
+
+
+def finalize_company_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Run final coherence fixes on a full company dataframe."""
+    try:
+        sanitize_ohlc(df)
+        add_micro_variation(df, tol=1e-9, eps_pct=0.001)
+        add_small_wicks(df)
+        sanitize_ohlc(df)
+    except Exception:
+        pass
+    return df
+
+
+def rebase_chunk_to_last_close(df: pd.DataFrame, target_close: float) -> None:
+    """Rescale entire OHLC chunk so that the first Close equals target_close.
+
+    Keeps the relative shape, removes jumps at junction.
+    """
+    if df.empty or not {'Open','High','Low','Close'}.issubset(df.columns):
+        return
+    first_close = float(df['Close'].iloc[0]) if df['Close'].iloc[0] not in [None, np.nan] else target_close
+    if first_close == 0:
+        first_close = 1.0
+    factor = target_close / first_close if first_close != 0 else 1.0
+    for col in ['Open','High','Low','Close']:
+        df[col] = pd.to_numeric(df[col], errors='coerce') * factor
+    # align first open to target_close to remove tiny discrepancy
+    df.loc[df.index[0], 'Open'] = target_close
+    try:
+        add_small_wicks(df)
+        sanitize_ohlc(df)
+    except Exception:
+        pass
+
+
 def package_dataframe_for_export(company_dfs):
     df_global = pd.concat(company_dfs.values(), axis=1, keys=company_dfs.keys(), names=['symbol'])
     data_dict = {
@@ -555,6 +802,11 @@ def package_dataframe_for_export(company_dfs):
 def build_preview_graphs(company_dfs):
     graphs = []
     for company, df in company_dfs.items():
+        # Sanitize to avoid incoherent flat steps and NaNs
+        try:
+            sanitize_ohlc(df)
+        except Exception:
+            pass
         fig = go.Figure()
         try:
             fig.add_trace(go.Candlestick(

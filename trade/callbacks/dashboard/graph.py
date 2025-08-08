@@ -8,8 +8,7 @@ from plotly.subplots import make_subplots
 
 from trade.app import app
 from trade.utils.graph.candlestick_charts import create_graph
-from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe, get_price_dataframe, \
-    format_timestamp
+from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe, get_price_dataframe, format_timestamp
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
@@ -149,11 +148,11 @@ def update_interval(update_time):
     Output("timer", "children"),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
+    Input('selected-interval', 'data'),
     State('timestamp', 'data'),
     State('company-graph', 'figure'),
-    State('selected-interval', 'data'),
 )
-def update_graph(n, company, timestamp, current_fig, selected_interval, range=100):
+def update_graph(n, company, selected_interval, timestamp, current_fig, range=100):
     """
     Function to update the market graph with the latest data and timestamp
 
@@ -181,6 +180,22 @@ def update_graph(n, company, timestamp, current_fig, selected_interval, range=10
                 timestamp = dftmp.index[0]
             else:
                 return no_update, no_update, no_update, no_update
+        
+        # If interval selection changed, align timestamp to the closest available point
+        if ctx.triggered_id == 'selected-interval' and len(dftmp.index) > 0:
+            try:
+                # Convert data index to timezone-naive for comparison
+                df_index_naive = dftmp.index.tz_localize(None) if getattr(dftmp.index, "tz", None) is not None else dftmp.index
+                ts_dt = pd.to_datetime(timestamp).tz_localize(None) if hasattr(pd.to_datetime(timestamp), 'tz_localize') else pd.to_datetime(timestamp)
+                # Pick the last index less than or equal to current timestamp, or the first index
+                eligible = df_index_naive[df_index_naive <= ts_dt]
+                nearest = eligible[-1] if len(eligible) > 0 else df_index_naive[0]
+                # Format timestamp string according to interval for downstream usage (price_df lookup etc.)
+                timestamp = format_timestamp(nearest, current_interval)
+            except Exception:
+                # Fallback safely to first available
+                nearest = dftmp.index[0]
+                timestamp = format_timestamp(nearest, current_interval)
         
         # If we need to advance to the next timestamp based on selected interval
         if next_graph and timestamp:

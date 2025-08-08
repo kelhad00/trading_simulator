@@ -77,17 +77,13 @@ def insert_shooting_star(opens, highs, lows, closes, day, amplitude=0.2):
     lows[day] = base_price - body_size * np.random.uniform(0.05, 0.1)
 
 def insert_double_top(opens, highs, lows, closes, day, amplitude, duree):
-    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Double_Top', amplitude, duree)
 
 def insert_head_and_shoulders(opens, highs, lows, closes, day, amplitude, duree):
-    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Head_and_Shoulders', amplitude, duree)
 
 def insert_double_bottom(opens, highs, lows, closes, day, amplitude, duree):
-    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Double_Bottom', amplitude, duree)
 
 def insert_inverse_head_and_shoulders(opens, highs, lows, closes, day, amplitude, duree):
-    amplitude /= 100
     fill_ohlc_from_dataset(opens, highs, lows, closes, day, 'Inverse_Head_and_Shoulders', amplitude, duree)
