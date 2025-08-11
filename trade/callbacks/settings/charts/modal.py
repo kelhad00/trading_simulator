@@ -15,7 +15,12 @@ from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 
+# --- Logging utils ---
+VERBOSE_LOGS = False
 
+def _debug(msg: str):
+    if VERBOSE_LOGS:
+        print(msg)
 
 
 @callback(
@@ -130,10 +135,10 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, dat
             return children, dataframes
         except Exception as e:
             attempt += 1
-            print(f"Tentative {attempt} échouée (alpha={current_alpha}) : {e}")
+            _debug(f"Tentative {attempt} échouée (alpha={current_alpha}) : {e}")
             current_alpha = max(int(current_alpha * 0.9), 1)
             if time.time() - start_time > timeout:
-                print('Erreur persistante après 1 seconde d\'essais.')
+                _debug('Erreur persistante après 1 seconde d\'essais.')
                 return no_update
             # sinon, on réessaie avec un alpha réduit
 
