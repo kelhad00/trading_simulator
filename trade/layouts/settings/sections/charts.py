@@ -82,6 +82,42 @@ def editor(lang = "fr"):
     tl = tls[lang]["settings"]["charts"]
     # Liste d'exemple de patterns (à remplacer par la vraie liste plus tard)
     return html.Div([
+        html.Div([
+            html.Div([
+                dmc.Text(tl["select"].get("granularity", "Granularité :"), size="sm", weight=500, className="mb-1"),
+                dmc.Select(
+                    id="granularity-select",
+                    data=[
+                        {"value": "ME", "label": tl["select"]["month"]},
+                        {"value": "W", "label": tl["select"]["week"]},
+                        {"value": "D", "label": tl["select"]["day"]},
+                        {"value": "h", "label": tl["select"]["hour"]},
+                    ],
+                    value="D",
+                    className="mb-2 w-40"
+                ),
+                dmc.Text(tl["select"].get("date_range", "Période de génération :"), size="sm", weight=500, className="mb-1"),
+                dcc.DatePickerRange(
+                    id="date-picker-range",
+                    display_format="YYYY-MM-DD",
+                    start_date_placeholder_text=tl["select"].get("start_date", "Date de début"),
+                    end_date_placeholder_text=tl["select"].get("end_date", "Date de fin"),
+                    className="mb-4"
+                )
+            ], className="flex flex-col gap-2 flex-1"),
+
+            html.Div([
+                dmc.Text(tl["subtitles"].get("companies", "Compagnies"), size="sm", weight=500, className="mb-1"),
+                dmc.Paper(
+                    html.Div(id="companies-config-table"),
+                    withBorder=True,
+                    shadow="xs",
+                    radius="sm",
+                    className="w-full"
+                )
+            ], className="flex flex-col gap-2 flex-1"),
+        ], className="flex flex-row gap-6 w-full items-start"),
+
         pattern_section(tl["subtitles"].get("with_pattern", "Avec pattern"), lang, pattern_type="with"),
         pattern_section(tl["subtitles"].get("without_pattern", "Sans pattern"), lang, pattern_type="without"),
 
@@ -109,33 +145,49 @@ def editor(lang = "fr"):
             )
         ], className="flex flex-row items-end mb-2 gap-2 items-center"),
 
-
+        # Sélecteur de compagnies + boutons de sélection
         html.Div([
-            dmc.Text(tl["select"].get("granularity", "Granularité :"), size="sm", weight=500, className="mb-1"),
-            dmc.Select(
-                id="granularity-select",
-                data=[
-                    {"value": "ME", "label": tl["select"]["month"]},
-                    {"value": "W", "label": tl["select"]["week"]},
-                    {"value": "D", "label": tl["select"]["day"]},
-                    {"value": "h", "label": tl["select"]["hour"]},
-                ],
-                value="D",
-                className="mb-2 w-40"
-            ),
-            dmc.Text(tl["select"].get("date_range", "Période de génération :"), size="sm", weight=500, className="mb-1"),
-            dcc.DatePickerRange(
-                id="date-picker-range",
-                display_format="YYYY-MM-DD",
-                start_date_placeholder_text=tl["select"].get("start_date", "Date de début"),
-                end_date_placeholder_text=tl["select"].get("end_date", "Date de fin"),
-                className="mb-4"
-            )
-        ], className="flex flex-col gap-2 w-full"),
-
-        html.Br(),
+            html.Div([
+                dmc.Text("Sélectionner une action", size="md", weight=700, className="mb-2 mt-2"),
+                dmc.MultiSelect(
+                    id="select-companies-charts",
+                    className="flex-1",
+                    searchable=True,
+                    clearable=True,
+                    value=[],
+                ),
+            ], className="flex flex-col flex-1"),
+            html.Div([
+                dmc.Button(
+                    tl["button"].get("select-all", "Tout sélectionner"),
+                    id="select-all-companies-charts",
+                    color="dark",
+                    size="sm",
+                    type="button",
+                ),
+                dmc.Button(
+                    tl["button"].get("select-unconfigured", "Sélectionner non configurées"),
+                    id="select-unconfigured-companies-charts",
+                    color="dark",
+                    size="sm",
+                    variant="outline",
+                    type="button",
+                    className="ml-2",
+                ),
+            ], className="flex gap-2", style={"alignSelf": "flex-end", "paddingBottom": "6px"}),
+        ], className="flex flex-row mb-2 gap-4 items-start w-full"),
 
         html.Div(id='timeline', style={'display': 'flex', 'flexDirection': 'row', 'overflowX': 'auto', 'whiteSpace': 'nowrap'}),
+
+        # Bouton pour sauvegarder la configuration des compagnies sélectionnées
+        dmc.Button(
+            "Sauvegarder la configuration",
+            id="save-company-config",
+            n_clicks=0,
+            color="dark",
+            size="sm",
+            variant="filled"
+        ),
 
         dmc.Button(
             tl["button"]["refresh"],
@@ -143,7 +195,8 @@ def editor(lang = "fr"):
             n_clicks=0,
             color="dark",
             size="sm",
-            variant="outline"
+            variant="outline",
+            disabled=True
         ),
 
         section(tl["subtitles"]["preview"], [
@@ -161,6 +214,7 @@ def editor(lang = "fr"):
         ),
 
         dcc.Store(id="size-store", data={}, storage_type="session"),
+        dcc.Store(id="company-configs", data={}, storage_type="memory"),
 
     ], className="flex flex-col gap-8 w-full")
 

@@ -12,7 +12,7 @@ PLOTLY_CONFIG = {
 }
 
 
-def create_graph(dataframe, timestamp='', next_graph=True, range=10):
+def create_graph(dataframe, timestamp='', next_graph=True, range=10, show_rsi=True):
     """
     Create a candlestick chart for the selected stock or update an existing one
 
@@ -105,26 +105,27 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
     # Create chart for the selected stock
     figure = go.Figure(data=[long_mov_av, short_mov_av, twohun_mov_av, candelstick])
 
-    # creating the plot the RSI plot
-    rsi = calculate_rsi(dftmp['Close'])
-    valid_idx = rsi.dropna().index
-    figure.add_trace(go.Scatter(x=valid_idx, y=rsi.loc[valid_idx], name='RSI', yaxis="y2", line=dict(color='purple')))
+    # Only add RSI and related elements if show_rsi is True
+    if show_rsi:
+        # creating the plot the RSI plot
+        rsi = calculate_rsi(dftmp['Close'])
+        valid_idx = rsi.dropna().index
+        figure.add_trace(go.Scatter(x=valid_idx, y=rsi.loc[valid_idx], name='RSI', yaxis="y2", line=dict(color='purple')))
 
-
-    # Ajout des zones de sur-achat et de sur-vente
-    figure.add_shape(type="rect", xref="paper", yref="y2",
-                  x0=0, y0=70, x1=1, y1=100,
-                  fillcolor="pink", opacity=0.5, line_width=0)
-    figure.add_shape(type="rect", xref="paper", yref="y2",
-                  x0=0, y0=00, x1=1, y1=30,
-                  fillcolor="lightgreen", opacity=0.5, line_width=0)
-    # Ajout des lignes de borne haute et basse
-    figure.add_shape(type="line", xref="paper", yref="y2",
-                  x0=0, y0=70, x1=1, y1=70,
-                  line=dict(color="black", width=2))
-    figure.add_shape(type="line", xref="paper", yref="y2",
-                  x0=0, y0=30, x1=1, y1=30,
-                  line=dict(color="black", width=2))
+        # Ajout des zones de sur-achat et de sur-vente
+        figure.add_shape(type="rect", xref="paper", yref="y2",
+                      x0=0, y0=70, x1=1, y1=100,
+                      fillcolor="pink", opacity=0.5, line_width=0)
+        figure.add_shape(type="rect", xref="paper", yref="y2",
+                      x0=0, y0=00, x1=1, y1=30,
+                      fillcolor="lightgreen", opacity=0.5, line_width=0)
+        # Ajout des lignes de borne haute et basse
+        figure.add_shape(type="line", xref="paper", yref="y2",
+                      x0=0, y0=70, x1=1, y1=70,
+                      line=dict(color="black", width=2))
+        figure.add_shape(type="line", xref="paper", yref="y2",
+                      x0=0, y0=30, x1=1, y1=30,
+                      line=dict(color="black", width=2))
 
     return figure, dftmp.index[-1]
 

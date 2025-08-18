@@ -208,6 +208,9 @@ def update_graph(n, company, selected_interval, timestamp, current_fig, range=10
             else:
                 timestamp = next_expected_timestamp.strftime('%Y-%m-%d')
 
+        # Check if current interval is the original granularity to determine RSI visibility
+        show_rsi = (current_interval == dlt.granularity)
+        
         # Récupérer le prix de l'action de façon sécurisée
         try:
             price_df = get_price_dataframe(interval=current_interval)[company]
@@ -228,23 +231,28 @@ def update_graph(n, company, selected_interval, timestamp, current_fig, range=10
             dftmp,
             timestamp,
             next_graph,
-            range
+            range,
+            show_rsi
         )
         # Define chart layouts
-        fig.update_layout(
-            xaxis_title=tls[page_registry['lang']]["market-graph"]['x'],
-            yaxis_title=tls[page_registry['lang']]["market-graph"]['y'],
-            yaxis_tickprefix='€',
-            margin=dict(l=0, r=0, t=0, b=0),
-            legend=dict(x=0, y=1.0),
-            xaxis_rangeslider_visible=False,
-            yaxis2=dict(
+        layout_config = {
+            'xaxis_title': tls[page_registry['lang']]["market-graph"]['x'],
+            'yaxis_title': tls[page_registry['lang']]["market-graph"]['y'],
+            'yaxis_tickprefix': '€',
+            'margin': dict(l=0, r=0, t=0, b=0),
+            'legend': dict(x=0, y=1.0),
+            'xaxis_rangeslider_visible': False,
+        }
+        
+        # Only add RSI-related elements if we're showing RSI
+        if show_rsi:
+            layout_config['yaxis2'] = dict(
                 title='RSI',
                 overlaying='y',
                 side='right',
                 range=[0, 100]
-            ),
-            annotations=[
+            )
+            layout_config['annotations'] = [
                 dict(
                     x=0.5, y=85, xref="paper", yref="y2",
                     text=f"<b>{tls[page_registry['lang']]['market-graph']['legend']['upper zone']}</b>",
@@ -270,7 +278,8 @@ def update_graph(n, company, selected_interval, timestamp, current_fig, range=10
                     font=dict(size=14, color="black", family="Arial")
                 )
             ]
-        ) 
+        
+        fig.update_layout(**layout_config) 
         # Change language on the legend
         fig.for_each_trace(
             lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]["legend"][t.name])

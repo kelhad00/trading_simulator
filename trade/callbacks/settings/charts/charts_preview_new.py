@@ -24,6 +24,10 @@ import trade.callbacks.settings.charts.delete_revenues
 import trade.callbacks.settings.charts.pattern_manager
 import trade.callbacks.settings.charts.modal
 import trade.callbacks.settings.charts.update_graph
+import trade.callbacks.settings.charts.company_table
+import trade.callbacks.settings.charts.company_selection
+import trade.callbacks.settings.charts.company_config
+
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -69,9 +73,10 @@ def _progress_bar(done: int, total: int, width: int = 10) -> str:
     State('granularity-select', 'value'),
     State("new-graph-df", "data"),
     State('special-pattern-config', 'data'),
+    State('company-configs', 'data'),
     prevent_initial_call=True
 )
-def graph_preview_new(n_click, size_data, start_date, end_date, granularity, current_df, data_pattern):
+def graph_preview_new(n_click, size_data, start_date, end_date, granularity, current_df, data_pattern, company_configs):
     # Loading placeholder while generating (use dcc.Loading for compatibility)
     loading = dcc.Loading(
         children=html.Div(style={"height": "300px"}),
@@ -79,76 +84,95 @@ def graph_preview_new(n_click, size_data, start_date, end_date, granularity, cur
         fullscreen=False
     )
 
-    for item in size_data:
-        item_label = size_data[item]["label"]
-        if size_data[item].get("pattern_type") is None:
-            item_label = re.sub(r"\s*\(\d+(\.\d+)?%\)\s*$", "", item_label)
-            if item_label == "Tête et épaules":
-                new_label = "head_and_shoulders"
-            elif item_label == "Double sommet":
-                new_label = "double_top"
-            elif item_label == "Double creux":
-                new_label = "double_bottom"
-            elif item_label == "Tête et épaules inversés":
-                new_label = "inverse_head_and_shoulders"
-            elif item_label == "Head and Shoulders":
-                new_label = "head_and_shoulders"
-            elif item_label == "Double Top":
-                new_label = "double_top"
-            elif item_label == "Double Bottom":
-                new_label = "double_bottom"
-            elif item_label == "Inversed Head and Shoulders":
-                new_label = "inverse_head_and_shoulders"
-        else :
-            if "very" in item_label.lower() or "très" in item_label.lower():
-                new_label = "Very "
-            elif "medium" in item_label.lower() or "moyen" in item_label.lower():
-                new_label = "Medium "
+    if size_data:
+        for item in size_data:
+            item_label = size_data[item]["label"]
+            if size_data[item].get("pattern_type") is None:
+                item_label = re.sub(r"\s*\(\d+(\.\d+)?%\)\s*$", "", item_label)
+                if item_label == "Tête et épaules":
+                    new_label = "head_and_shoulders"
+                elif item_label == "Double sommet":
+                    new_label = "double_top"
+                elif item_label == "Double creux":
+                    new_label = "double_bottom"
+                elif item_label == "Tête et épaules inversés":
+                    new_label = "inverse_head_and_shoulders"
+                elif item_label == "Head and Shoulders":
+                    new_label = "head_and_shoulders"
+                elif item_label == "Double Top":
+                    new_label = "double_top"
+                elif item_label == "Double Bottom":
+                    new_label = "double_bottom"
+                elif item_label == "Inversed Head and Shoulders":
+                    new_label = "inverse_head_and_shoulders"
             else:
-                new_label = "Small "
-            if "bear" in item_label.lower():
-                new_label += "Bear"
-            else:
-                new_label += "Bull"
-        size_data[item]["label"] = new_label
+                if "very" in item_label.lower() or "très" in item_label.lower():
+                    new_label = "Very "
+                elif "medium" in item_label.lower() or "moyen" in item_label.lower():
+                    new_label = "Medium "
+                else:
+                    new_label = "Small "
+                if "bear" in item_label.lower():
+                    new_label += "Bear"
+                else:
+                    new_label += "Bull"
+            size_data[item]["label"] = new_label
 
-    if not is_input_valid(size_data, start_date, end_date, granularity):
+    # Only require date range and granularity; size_data can be empty when using saved configs
+    if not all([start_date, end_date, granularity]):
         _debug("Invalid input")
         return loading, None
 
     dates = generate_date_range(start_date, end_date, granularity)
-
-    if len(dates) == 0:
-        return loading, None
-
-    trends, alphas, lengths, pattern_types = parse_size_data(size_data, len(dates))
-
-    custom_pattern_list = list()
-    custom_pattern_count_list = list()
-
-    i=0
-    data_pattern = dict(data_pattern)
-    for item in pattern_types:
-        if item == "with":
-            if str(i) in data_pattern.keys():
-                custom_pattern_list.append(data_pattern[str(i)]["name"])
-                custom_pattern_count_list.append(data_pattern[str(i)]["count"])
-            else:
-                custom_pattern_list.append(bear_pattern if trends[i] == "bear" else bull_pattern)
-                custom_pattern_count_list.append([-1]*len(bear_pattern) if trends[i] == "bear" else [-1]*len(bull_pattern))
-        else:
-            custom_pattern_list.append([])
-            custom_pattern_count_list.append([])
-
-        i += 1
-
-
-    companies = list(dlt.companies_list.keys())
-    if not companies:
-        return html.Div(), None
+    # Use per-company configs; if none, skip
+    if not isinstance(company_configs, dict) or len(company_configs) == 0:
+        return dmc.Alert("Aucune configuration enregistrée.", color="gray"), None
 
     try:
-        company_dfs = generate_company_dataframes(dates, companies, trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list)
+        company_dfs = {}
+        for company, cfg in company_configs.items():
+            cfg_size = cfg.get("size_data", {})
+            cfg_pattern = cfg.get("special_pattern_config", {})
+            # Parse timeline sizes for this company
+            trends, alphas, lengths, pattern_types = parse_size_data(cfg_size, len(dates))
+
+            custom_pattern_list = []
+            custom_pattern_count_list = []
+            i = 0
+            cfg_pattern = dict(cfg_pattern or {})
+            for item in pattern_types:
+                if item == "with":
+                    if str(i) in cfg_pattern.keys():
+                        custom_pattern_list.append(cfg_pattern[str(i)]["name"])
+                        custom_pattern_count_list.append(cfg_pattern[str(i)]["count"])
+                    else:
+                        custom_pattern_list.append(bear_pattern if trends[i] == "bear" else bull_pattern)
+                        custom_pattern_count_list.append([-1]*len(bear_pattern) if trends[i] == "bear" else [-1]*len(bull_pattern))
+                else:
+                    custom_pattern_list.append([])
+                    custom_pattern_count_list.append([])
+                i += 1
+
+            # Build one company DataFrame
+            company_df = pd.DataFrame(index=dates)
+            date_cursor = 0
+            for trend, alpha, length, pattern_type, custom_pattern_item, custom_pattern_count in zip(trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list):
+                trend_dates = dates[date_cursor:date_cursor + length]
+                if pattern_type == "without":
+                    handle_pattern_without(alpha, company, company_df, date_cursor, length, trend, trend_dates)
+                elif pattern_type == "with":
+                    handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, trend, custom_pattern_item, custom_pattern_count)
+                elif pattern_type is None:
+                    handle_pattern_none(company_df, date_cursor, dates, length, trend)
+                date_cursor += length
+
+            company_df = finalize_company_df(company_df)
+            compute_indicators(company_df)
+            company_dfs[company] = ensure_column_order(company_df)
+
+        if len(company_dfs) == 0:
+            return loading, None
+
         df_global, data_dict = package_dataframe_for_export(company_dfs)
 
         children = build_preview_graphs(company_dfs)
@@ -355,16 +379,28 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
                     closes[0] = start_value
                     highs[0] = max(highs[0], start_value)
                     lows[0] = min(lows[0], start_value)
+                    # Sanitize all OHLC values to ensure numeric and reasonable bounds
                     for j in range(len(closes)):
-                        for arr, name in zip([opens, highs, lows, closes],
-                                             ["open", "high", "low", "close"]):
-                            if arr[j] <= 0 or abs(arr[j] - start_value) > 10 * max(1, abs(start_value)):
-                                _debug(
-                                    f"[WARNING] Correction valeur aberrante dans pattern {pattern_name} ({name}) : {arr[j]} -> {start_value}")
-                                arr[j] = start_value
-                    max_dev = max([
-                        max(abs(np.array(arr) - start_value)) for arr in [opens, highs, lows, closes]
-                    ])
+                        for arr, name in zip([opens, highs, lows, closes], ["open", "high", "low", "close"]):
+                            val = arr[j]
+                            try:
+                                v = float(val)
+                            except (TypeError, ValueError):
+                                _debug(f"[WARNING] Valeur non numérique dans pattern {pattern_name} ({name}) : {val} -> {start_value}")
+                                arr[j] = float(start_value)
+                                continue
+                            # Replace zeros/negatives and extreme deviations
+                            if v <= 0 or abs(v - start_value) > 10 * max(1, abs(start_value)):
+                                _debug(f"[WARNING] Correction valeur aberrante dans pattern {pattern_name} ({name}) : {v} -> {start_value}")
+                                arr[j] = float(start_value)
+                            else:
+                                arr[j] = v
+                    # Compute max deviation safely
+                    try:
+                        safe_arrays = [np.array(opens, dtype=float), np.array(highs, dtype=float), np.array(lows, dtype=float), np.array(closes, dtype=float)]
+                        max_dev = max([float(np.max(np.abs(arr - float(start_value)))) if arr.size > 0 else 0.0 for arr in safe_arrays])
+                    except Exception:
+                        max_dev = 0.0
                     if max_dev <= 2 * max(1, abs(start_value)):
                         pattern_ok = True
                         break  # On garde ce pattern

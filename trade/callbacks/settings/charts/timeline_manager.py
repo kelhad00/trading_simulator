@@ -268,9 +268,10 @@ def add_item_to_timeline(*args):
     Input({'type': 'move-right', 'index': dash.ALL}, 'n_clicks'),
     State('timeline', 'children'),
     State('special-pattern-config', 'data'),
+    State('size-store', 'data'),
     prevent_initial_call=True
 )
-def move_item(left_clicks, right_clicks, timeline_children, data):
+def move_item(left_clicks, right_clicks, timeline_children, data, size_data):
     """
     Move a timeline item left or right based on button clicks.
 
@@ -293,6 +294,17 @@ def move_item(left_clicks, right_clicks, timeline_children, data):
     if not (0 <= index < len(timeline_children)):
         return timeline_children, data
 
+    # Build a width map from size-store so we can preserve each block's width after reordering
+    id_to_width = {}
+    if isinstance(size_data, dict):
+        for key, info in size_data.items():
+            try:
+                width_value = info.get('width')
+                if isinstance(width_value, (int, float)) and width_value > 0:
+                    id_to_width[str(key)] = f"{int(width_value)}px"
+            except Exception:
+                continue
+
     timeline = timeline_children[:]
     if direction == 'left' and index > 0:
         timeline[index - 1], timeline[index] = timeline[index], timeline[index - 1]
@@ -300,7 +312,8 @@ def move_item(left_clicks, right_clicks, timeline_children, data):
         timeline[index + 1], timeline[index] = timeline[index], timeline[index + 1]
 
     for i, item in enumerate(timeline):
-        item["props"]["id"] = f"item-{i}"
+        # Do NOT change the container id so widths remain associated to the same block
+        # item["props"]["id"] = f"item-{i}"
         if len(item["props"]["children"]) <3:
             arrow_div = item["props"]["children"][1]
             left_button = arrow_div["props"]["children"][0]
@@ -320,6 +333,19 @@ def move_item(left_clicks, right_clicks, timeline_children, data):
         left_button["props"]["id"]["index"] = i
         right_button["props"]["id"]["index"] = i
         delete_button["props"]["id"]["index"] = i
+
+        # Re-apply stored width if available for this block id
+        try:
+            block_id = item["props"].get("id")
+            if block_id is not None:
+                current_style = item["props"].get("style", {})
+                preserved_width = id_to_width.get(str(block_id))
+                if preserved_width:
+                    current_style["width"] = preserved_width
+                    item["props"]["style"] = current_style
+        except Exception:
+            pass
+
     data_copy = {}
 
     for old_index_str, value in data.items():
@@ -401,8 +427,10 @@ def delete_smash(delete_clicks, timeline_children, size_data, data):
         size_data (dict): Current size_data
         data (dict): Current special-pattern-config
     """
-    button_id = dash.ctx.triggered[0]['prop_id'].split('.')[0]
-    index_to_delete = eval(button_id)['index']
+    triggered = dash.ctx.triggered_id
+    if not triggered or not isinstance(triggered, dict):
+        raise dash.exceptions.PreventUpdate
+    index_to_delete = triggered.get('index')
 
     if (not dash.ctx.triggered) or sum(delete_clicks) == 0:
         return timeline_children or [], size_data, data

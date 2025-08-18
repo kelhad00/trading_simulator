@@ -49,8 +49,8 @@ def aggregate_ohlc_data(df, interval):
         # Aggregate to weekly (Monday as start of week)
         resampled = df_agg.resample('W-MON')
     elif interval == 'ME':
-        # Aggregate to monthly
-        resampled = df_agg.resample('ME')
+        # Aggregate to monthly (Month End)
+        resampled = df_agg.resample('M')
     else:
         return df_agg
     
@@ -159,5 +159,7 @@ def format_timestamp(timestamp, interval=None):
     
     if current_interval == 'h':
         return timestamp.strftime('%Y-%m-%d %H:%M')
+    elif current_interval == 'ME':
+        return timestamp.strftime('%Y-%m')
     else:
         return timestamp.strftime('%Y-%m-%d')
