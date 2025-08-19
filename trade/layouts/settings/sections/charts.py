@@ -123,7 +123,7 @@ def editor(lang = "fr"):
 
         # Bloc selecteur de pattern + bouton ajouter
         html.Div([
-            dmc.Text("Pattern", size="md", weight=700, className="mb-2 mt-2"),
+            dmc.Text(tl["subtitles"].get("pattern_title", "Pattern"), size="md", weight=700, className="mb-2 mt-2"),
             html.Br(),
             dmc.Select(
                 id="pattern-selector",
@@ -148,7 +148,7 @@ def editor(lang = "fr"):
         # Sélecteur de compagnies + boutons de sélection
         html.Div([
             html.Div([
-                dmc.Text("Sélectionner une action", size="md", weight=700, className="mb-2 mt-2"),
+                dmc.Text(tl["select"].get("ticker", "Sélectionner une action"), size="md", weight=700, className="mb-2 mt-2"),
                 dmc.MultiSelect(
                     id="select-companies-charts",
                     className="flex-1",
@@ -181,7 +181,7 @@ def editor(lang = "fr"):
 
         # Bouton pour sauvegarder la configuration des compagnies sélectionnées
         dmc.Button(
-            "Sauvegarder la configuration",
+            tl["button"].get("save_company_config", "Sauvegarder la configuration"),
             id="save-company-config",
             n_clicks=0,
             color="dark",

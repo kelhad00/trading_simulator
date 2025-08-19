@@ -101,11 +101,13 @@ translation = {
                 "subtitles": {
                     "modal": "Market data creation",
                     "ticker": "Stock choice",
+                    "companies": "Companies",
                     "preview": "Preview",
                     "parameters": "Market movement parameters",
                     "trends": "Charts trends",
                     "Old generator":"Preview",
                     "New generator":"Generator",
+                    "pattern_title": "Pattern",
                     'Very Bull':'Very Bull',
                     'Medium Bull':'Medium Bull',
                     'Small Bull':'Small Bull',
@@ -130,6 +132,8 @@ translation = {
                     "modify": "Save changes",
                     "delete": "Delete",
                     "select-all": "Select all",
+                    "select-unconfigured": "Select unconfigured",
+                    "save_company_config": "Save configuration",
                     'Very Bull':'Add Very Bull',
                     'Medium Bull':'Add Medium Bull',
                     'Small Bull':'Add Small Bull',
@@ -140,6 +144,15 @@ translation = {
                     "save_pattern_config": "Save configuration",
                     "reset_pattern_config": "Reset parameters",
                     "add_pattern": "Add pattern",
+                },
+                "table": {
+                    "configured": "Configured",
+                    "not_configured": "Not configured",
+                    "ticker": "Ticker",
+                    "status": "Status",
+                    "no_company": "No company",
+                    "no_trends": "No configured trend",
+                    "trends_prefix": "Trends: "
                 },
                 "select": {
                     "ticker": "Select a stock",

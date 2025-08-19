@@ -1,12 +1,16 @@
 from dash import callback, Input, Output, html, page_registry
 import dash_mantine_components as dmc
+from trade.locales import translations as tls
 
 
 def parse_size_data_for_tooltip(size_data):
     """Parse size data to extract trends for tooltip display"""
+    lang = page_registry["lang"]
+    tl = tls[lang]["settings"]["charts"]["table"]
+
     if not size_data:
-        return "Aucune tendance configurée"
-    
+        return tl.get("no_trends", "Aucune tendance configurée")
+
     trends = []
     for item in size_data:
         item_data = size_data[item]
@@ -14,11 +18,11 @@ def parse_size_data_for_tooltip(size_data):
             label = item_data.get("label", "")
             if label:
                 trends.append(label)
-    
+
     if not trends:
-        return "Aucune tendance configurée"
-    
-    return "Tendances : " + ", ".join(trends)
+        return tl.get("no_trends", "Aucune tendance configurée")
+
+    return tl.get("trends_prefix", "Tendances : ") + ", ".join(trends)
 
 
 @callback(
@@ -27,8 +31,12 @@ def parse_size_data_for_tooltip(size_data):
     Input("company-configs", "data"),
 )
 def render_companies_config_table(companies, company_configs):
+    lang = page_registry["lang"]
+    chart_tl = tls[lang]["settings"]["charts"]
+    table_tl = chart_tl.get("table", {})
+
     if not companies:
-        return dmc.Text("Aucune compagnie", size="sm")
+        return dmc.Text(table_tl.get("no_company", "Aucune compagnie"), size="sm")
 
     # Build table rows
     rows = []
@@ -44,7 +52,7 @@ def render_companies_config_table(companies, company_configs):
             badge = dmc.Tooltip(
                 label=tooltip_text,
                 children=dmc.Badge(
-                    "Configuré",
+                    table_tl.get("configured", "Configuré"),
                     color="green",
                     variant="light",
                     radius="xs",
@@ -57,7 +65,7 @@ def render_companies_config_table(companies, company_configs):
             )
         else:
             badge = dmc.Badge(
-                "Non configuré",
+                table_tl.get("not_configured", "Non configuré"),
                 color="red",
                 variant="light",
                 radius="xs",
@@ -77,7 +85,10 @@ def render_companies_config_table(companies, company_configs):
         horizontalSpacing="xs",
         verticalSpacing="xs",
         children=[
-            html.Thead(html.Tr([html.Th("Ticker"), html.Th("Statut", style={"textAlign": "right"})])),
+            html.Thead(html.Tr([
+                html.Th(table_tl.get("ticker", "Ticker")),
+                html.Th(table_tl.get("status", "Statut"), style={"textAlign": "right"})
+            ])),
             html.Tbody(rows),
         ],
     )
