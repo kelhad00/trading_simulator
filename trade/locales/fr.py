@@ -128,7 +128,7 @@ translation = {
                     "duration": "Durée",
                 },
                 "button": {
-                    "refresh":"Rafraichir la prévisualitation",
+                    "refresh":"Rafraichir la prévisualisation",
                     "modify": "Sauvegarder les modifications",
                     "delete": "Supprimer",
                     "select-all": "Tout sélectionner",
