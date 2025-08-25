@@ -12,20 +12,21 @@ from trade.utils.market import get_price_dataframe, format_timestamp
 
 
 def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests):
-    """
-    Add a request to the list of requests.
+    """Validate and append a new buy/sell request to the pending list.
+
     Args:
-        req: the list of requests
-        company: the company of the request
-        action: the action of the request
-        price: the price of the request
-        share: the number of shares of the request
-        cash: the money of the user
-        timestamp: the current timestamp
-        port_shares: the shares of the user
+        req (list): Existing requests.
+        company (str): Target company ticker.
+        action (str): 'buy' or 'sell'.
+        price (float): Limit price.
+        share (int): Number of shares.
+        cash (float): Available cash.
+        timestamp: Current timestamp (unused here, for future checks).
+        port_shares (dict): Current portfolio shares.
+        max_requests (int): Maximum allowed pending requests.
+
     Returns:
-        boolean: is error ?
-        msg: the error message or the updated list of requests
+        tuple[bool, str|list]: (is_error, message_or_updated_requests)
     """
 
     # If the user has too many requests
@@ -73,23 +74,22 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
     prevent_initial_call=True,
 )
 def process_submit_button(btn, company, action, price, share, cash, timestamp, port_shares, req, max_requests):
-    """
-    Process the submit button.
-    Add the request to the list of requests.
-    Or return an error notification.
+    """Handle submit action to create a new request or show an error.
+
     Args:
-        btn: the button nb click
-        company: the company of the request
-        action: the action of the request
-        price: the price of the request
-        share: the number of shares of the request
-        cash: the money of the user
-        timestamp: the current timestamp
-        port_shares: the shares of the user
-        req: the list of requests
+        btn (int): Clicks on submit.
+        company (str): Company ticker.
+        action (str): 'buy' or 'sell'.
+        price (float): Limit price.
+        share (int): Number of shares.
+        cash (float): Available cash.
+        timestamp: Current timestamp.
+        port_shares (dict): Current shares by symbol.
+        req (list): Existing requests.
+        max_requests (int): Max allowed requests.
+
     Returns:
-        req: the updated list of requests
-        dmc.Notification: the notification to display
+        tuple: (updated requests or no_update, notification or no_update)
     """
 
     if btn is None or btn == 0:
@@ -127,20 +127,17 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     prevent_initial_call=True,
 )
 def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals):
-    """
-    Try to execute the requests of the user.
-    Update the portfolio, the cashflow and requests list.
+    """Attempt to execute pending requests at current market prices.
+
     Args:
-        request_list: list of requests
-        timestamp: current timestamp
-        port_shares: dictionary of the shares of the user
-        cashflow: the money of the user
-        port_totals: dictionary of the total price of the user
+        request_list (list): Pending requests.
+        timestamp (str|pd.Timestamp): Current timestamp.
+        port_shares (dict): Current shares by symbol.
+        cashflow (float): Available cash.
+        port_totals (dict): Totals by symbol.
+
     Returns:
-        request_list: the updated list of requests
-        port_shares: the updated dictionary of the shares of the user
-        cashflow: the updated money of the user
-        port_totals: the updated dictionary of the total price of the user
+        tuple: (updated requests or no_update, shares dict, cashflow, totals dict)
     """
     old_req = request_list.copy()
 
@@ -208,13 +205,14 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     prevent_initial_call=True
 )
 def cb_display_requests(req):
+    """Render the requests list into a selectable table.
+
+    Args:
+        req (list): Current requests.
+
+    Returns:
+        dmc.Table: Table with delete buttons for each row.
     """
-       Create the table of the requests.
-       Args:
-           req: the list of requests
-       Returns:
-           dmc.Table: the table of the requests
-       """
 
     df = pd.DataFrame(req)
     sell = tls[page_registry['lang']]['request-action']['choices'][0]['label']
@@ -244,15 +242,15 @@ def cb_display_requests(req):
     prevent_initial_call=True
 )
 def remove_request(n, values_to_remove, req):
-    """
-    Remove the selected requests.
+    """Remove selected requests or clear all completed ones.
+
     Args:
-        n: the button nb click
-        values_to_remove: the selected rows
-        request_list: the list of requests
+        n (int): Clicks on the clear-all button.
+        values_to_remove (list[int|None]): Per-row delete clicks.
+        req (list): Current requests list.
+
     Returns:
-        request_list: the updated list of requests
-        list: reset the nb of clicks of each delete button
+        list|no_update: Updated requests list or no_update.
     """
 
     if ctx.triggered_id == 'clear-done-btn':
@@ -271,6 +269,15 @@ def remove_request(n, values_to_remove, req):
     Input("nbr-share-input", "value"),
 )
 def total_cost(price,nb):
+    """Display total estimated cost on the submit button label.
+
+    Args:
+        price (float|None): Limit price.
+        nb (int|None): Number of shares.
+
+    Returns:
+        str: Label including total cost when possible.
+    """
     if price == 0 or nb == 0 or price == "" or nb == "" or price is None or nb is None:
         return tls[page_registry['lang']]['submit-request']
     else:
@@ -287,6 +294,19 @@ def total_cost(price,nb):
     prevent_initial_call=True
 )
 def max_share(btn,price,cashflow,action,company,portfolio):
+    """Compute the maximum shares purchasable/sellable based on context.
+
+    Args:
+        btn (int): Clicks on max-share button (unused, triggers only).
+        price (float|None): Current limit price.
+        cashflow (float|None): Available cash.
+        action (str): 'buy' or 'sell'.
+        company (str): Target company ticker.
+        portfolio (dict): Current shares by symbol.
+
+    Returns:
+        int|no_update: Suggested number of shares or no_update when not applicable.
+    """
 
     if action == "buy":
 

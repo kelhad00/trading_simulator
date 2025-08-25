@@ -20,13 +20,14 @@ from trade.locales import translations as tls
     prevent_initial_call=True
 )
 def select_all_companies(n, companies):
-    """
-    Select all companies
+    """Select all companies having charts and not being indices.
+
     Args:
-        n: The number of clicks
-        companies: The companies
+        n (int): Clicks count.
+        companies (dict): Companies metadata.
+
     Returns:
-        all the companies which have charts and are not an indice
+        list[str]: Selected tickers.
     """
     if n is None:
         raise PreventUpdate
@@ -41,14 +42,15 @@ def select_all_companies(n, companies):
     Input("select-companies-revenues", "value")
 )
 def display_revenues(tabs, modal, companies):
-    """
-    Display the revenues
+    """Render revenue charts for selected companies.
+
     Args:
-        tabs: The tabs (used to trigger the callback)
-        modal: The modal display state (used to trigger the callback)
-        companies: The companies
+        tabs (str): Current tab id (triggers refresh).
+        modal (bool): Modal open state (triggers refresh).
+        companies (list[str]): Selected tickers.
+
     Returns:
-        The revenues
+        list: List of dcc.Graph components.
     """
     if companies is None or companies == []:
         raise PreventUpdate
@@ -99,9 +101,7 @@ def display_revenues(tabs, modal, companies):
     prevent_initial_call=True
 )
 def open_modal(n, opened, companies):
-    """
-    Open the modal to generate charts and automatically select the company in the dropdown
-    """
+    """Toggle modal open state and mirror selected companies into modal select."""
     return not opened, companies
 
 
@@ -113,13 +113,14 @@ def open_modal(n, opened, companies):
     Input("companies", "data"),
 )
 def update_options_news_companies(tabs, companies):
-    """
-    Update the options for the news select company dropdown
+    """Build options for companies dropdowns used in revenues section.
+
     Args:
-        tabs: The tab selected (only to trigger the callback)
-        companies: The list of companies
+        tabs (str): Current tab id (refresh trigger).
+        companies (dict): Companies metadata.
+
     Returns:
-        The options for the dropdown
+        tuple[list, list]: Options for main and modal dropdowns.
     """
 
     options = [{"label": company["label"], "value": stock} for stock, company in companies.items() if company["got_charts"] and company['activity'] != 'Indice']
@@ -134,14 +135,15 @@ def update_options_news_companies(tabs, companies):
     prevent_initial_call=True
 )
 def select_all_companies_modal(n, companies):
+    """Select all eligible companies in the modal dropdown.
+
+    Args:
+        n (int): Clicks count.
+        companies (dict): Companies metadata.
+
+    Returns:
+        list[str]: Selected tickers.
     """
-      Select all companies
-      Args:
-          n: The number of clicks
-          companies: The companies
-      Returns:
-          all the companies which have charts and are not an indice
-      """
     if n is None:
         raise PreventUpdate
     value = [company for company in companies.keys() if companies[company]["got_charts"] and companies[company]['activity'] != 'Indice']
@@ -153,13 +155,14 @@ def select_all_companies_modal(n, companies):
     Input("modal-radio-mode-revenues", "value"),
 )
 def update_revenues_inputs(companies, mode):
-    """
-    Update the revenues inputs
+    """Render editable inputs for revenues/net incomes by company and year.
+
     Args:
-        companies: The companies
-        mode: The mode
+        companies (list[str]): Selected tickers.
+        mode (str): 'auto' or 'manual' mode; 'auto' disables inputs.
+
     Returns:
-        The revenues inputs by company and by year
+        list: Children containing per-company inputs grouped by year.
     """
     if companies is None or companies == [] or mode is None:
         return []
@@ -249,18 +252,19 @@ def update_revenues_inputs(companies, mode):
     prevent_initial_call=True
 )
 def export_revenues(n, companies, mode, revenues, revenues_label, incomes, incomes_label):
-    """
-    Export the revenues
+    """Persist edited revenues/net incomes to CSV and close modal.
+
     Args:
-        n: The number of clicks
-        companies: The companies selected
-        mode: The mode selected
-        revenues: list of int : revenues
-        revenues_label: list of dict : labels of revenues
-        incomes: list of int : incomes
-        incomes_label: list of dict : labels of incomes
+        n (int): Clicks on generate button.
+        companies (list[str]): Selected tickers.
+        mode (str): Mode used (unused; for validation).
+        revenues (list[int|float|None]): Revenue values.
+        revenues_label (list[dict]): Mapping with company/year identifiers.
+        incomes (list[int|float|None]): Net income values.
+        incomes_label (list[dict]): Mapping with company/year identifiers.
+
     Returns:
-        False : Close the modal
+        bool: False to close the modal on success.
     """
     if companies is None or companies == [] or mode is None:
         raise PreventUpdate
@@ -305,13 +309,14 @@ def export_revenues(n, companies, mode, revenues, revenues_label, incomes, incom
     prevent_initial_call=True
 )
 def delete_revenues(n, companies):
-    """
-    Delete the revenues
+    """Delete revenues columns for selected companies and write CSV.
+
     Args:
-        n: The number of clicks
-        company: The company selected
+        n (int): Clicks on delete.
+        companies (list[str]): Selected tickers.
+
     Returns:
-        The revenues
+        dcc.Graph: Placeholder graph to refresh the area.
     """
     if companies is None or companies == []:
         raise PreventUpdate

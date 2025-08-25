@@ -4,7 +4,7 @@ from trade.locales import translations as tls
 
 
 def parse_size_data_for_tooltip(size_data):
-    """Parse size data to extract trends for tooltip display"""
+    """Parse size data to extract trend labels for tooltip display."""
     lang = page_registry["lang"]
     tl = tls[lang]["settings"]["charts"]["table"]
 
@@ -31,6 +31,11 @@ def parse_size_data_for_tooltip(size_data):
     Input("company-configs", "data"),
 )
 def render_companies_config_table(companies, company_configs):
+    """Render a table summarizing which companies are configured for charts.
+
+    Shows a badge per company, with tooltip listing configured trend blocks
+    when available.
+    """
     lang = page_registry["lang"]
     chart_tl = tls[lang]["settings"]["charts"]
     table_tl = chart_tl.get("table", {})

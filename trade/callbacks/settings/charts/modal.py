@@ -34,18 +34,18 @@ def _debug(msg: str):
     prevent_initial_call=True
 )
 def generate_new_charts(alpha, length, start_value, radio_trends, companies, dates=None):
-    """
-    Generate the charts based on the parameters selected in the modal
+    """Generate OHLC charts based on modal parameters for selected companies.
+
     Args:
-        alpha (int): alpha value for the trends
-        length (int): length of the trends
-        start_value (int): start value for the scaling
-        radio_trends (list): list of the selected trends
-        companies (list): list of the selected companies
-        dates (pd.DatetimeIndex, optional): specific dates to use for the data
+        alpha (int): Alpha used to scale trend amplitude.
+        length (int): Number of candles per trend block.
+        start_value (int): Initial scaling value for the first block.
+        radio_trends (list[str]): Sequence of trends ('bull', 'bear', 'flat').
+        companies (list[str]): Selected company tickers.
+        dates (pd.DatetimeIndex|None): Optional explicit dates for the data.
+
     Returns:
-        list: list of the charts
-        list: list of the dataframes associated with the charts
+        tuple[list, list]: (list of figures, list of DataFrame dicts)
     """
     start_date = dlt.start_date
 
@@ -157,19 +157,17 @@ def generate_new_charts(alpha, length, start_value, radio_trends, companies, dat
     prevent_initial_call=True
 )
 def export_generated_charts(n, datas, companies_selected, nb_radio, companies):
-    """
-    Export the generated charts in the data folder (generated_data.csv) when the generate button is clicked
+    """Persist generated charts into CSV and mark companies as configured.
+
     Args:
-        n (int): number of clicks on the generate button
-        datas (list): list of the dataframes associated with the charts
-        companies_selected (list): list of the selected companies
-        nb_radio (int): number of radio input
-        companies (dict): companies data
+        n (int): Clicks on generate.
+        datas (list): Generated DataFrames as dicts.
+        companies_selected (list[str]): Selected tickers (aligned with datas).
+        nb_radio (int): Number of trend blocks (to reset radios).
+        companies (dict): Companies store.
+
     Returns:
-        list: list of the dataframes associated with the charts (reset to empty list because the datas are exported)
-        bool: opened state of the modal (closed)
-        list: list of the radio input values (reset the trends)
-        companies (dict): companies data with the got_charts flag updated
+        tuple: (cleared figures store, close modal, reset radio values, updated companies)
     """
     if datas is None or datas == []:
         raise PreventUpdate
@@ -196,9 +194,7 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies):
     prevent_initial_call=True
 )
 def select_all_stocks(n, companies):
-    """
-    Select all the stocks in the dropdown
-    """
+    """Select all companies in the modal multiselect."""
     return list(companies.keys())
 
 
@@ -210,15 +206,16 @@ def select_all_stocks(n, companies):
     prevent_initial_call=True
 )
 def update_timeline(nb, children, min=1, max=5):
-    """
-    Update the number of radio input (for market movement) to displayed in the modal
+    """Update number of trend radio blocks to display in the modal.
+
     Args:
-        nb (int): number of radio input to display
-        children (list): list of radio input
-        min (int): minimum number of radio input
-        max (int): maximum number of radio input
+        nb (int): Desired count of radio inputs.
+        children (list): Existing radio inputs.
+        min (int): Minimum allowed.
+        max (int): Maximum allowed.
+
     Returns:
-        list: updated children
+        list: Updated children list.
     """
 
     if nb == "" or nb is None or nb < min or nb > max:
@@ -251,10 +248,7 @@ def update_timeline(nb, children, min=1, max=5):
     Input({"type": f"timeline-radio", "index": ALL}, "value"),
 )
 def update_values(values):
-    """
-    Update the active state of each point of the timeline
-    It stops at the first None value found in the list
-    """
+    """Compute active index of the timeline, stopping at first None value."""
     if None in values:
         return values.index(None) - 1
     else:

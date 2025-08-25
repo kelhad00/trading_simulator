@@ -57,6 +57,16 @@ PATTERN_PARAMS = {
     State({"type": "pattern-param", "name": ALL}, "id"),
 )
 def update_pattern_preview(pattern_name, param_values, param_ids):
+    """Render a live preview for the selected pattern with given parameters.
+
+    Args:
+        pattern_name (str): Selected pattern key.
+        param_values (list): Parameter values from sliders.
+        param_ids (list): Parameter metadata including names.
+
+    Returns:
+        go.Figure: Preview figure or empty figure when not applicable.
+    """
     if not pattern_name:
         return go.Figure()
 
@@ -148,6 +158,10 @@ def update_pattern_preview(pattern_name, param_values, param_ids):
     prevent_initial_call=True
 )
 def save_pattern_config(n_clicks, pattern_name, param_values, param_ids):
+    """Persist current pattern parameters into `pattern_configs.json`.
+
+    Returns a translated success/error alert component.
+    """
     # Récupérer la langue courante
     lang = page_registry['lang']
     if not pattern_name:
@@ -186,6 +200,7 @@ def save_pattern_config(n_clicks, pattern_name, param_values, param_ids):
     prevent_initial_call=True
 )
 def update_pattern_params(pattern_name, reset_clicks, current_values, current_ids):
+    """Render parameter sliders for a pattern, loading/saving defaults as needed."""
     ctx = dash.callback_context
     triggered = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
     if not pattern_name:
@@ -247,5 +262,5 @@ def update_pattern_params(pattern_name, reset_clicks, current_values, current_id
     State({"type": "pattern-param", "name": ALL}, "id"),
 )
 def update_pattern_param_values(values, ids):
-    # Retourne la valeur sous forme de string pour chaque slider
+    """Return textual values for each parameter slider to display alongside."""
     return [str(v) for v in values]

@@ -14,8 +14,14 @@ from trade.utils.news_generation.display import display_chart
     State('nbr-news-container', 'children')
 )
 def update_display_container_nbr_news(mode, children):
-    """
-    Switch the display of inputs (number of positive and negative news) depending on the generation mode
+    """Show/hide positive/negative news inputs depending on generation mode.
+
+    Args:
+        mode (str): 'random' or other modes.
+        children: Existing children (unused; only triggers re-render).
+
+    Returns:
+        dict: CSS style dict controlling visibility.
     """
     if mode == 'random':
         return {'display': 'block'}
@@ -41,21 +47,21 @@ def update_display_container_nbr_news(mode, children):
 )
 def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta, generation_mode,
                             nbr_positive_news, nbr_negative_news, n):
-    """
-    Generate news for all the companies
+    """Generate news for each company and notify the user.
+
     Args:
-        companies: The list of companies
-        api_key: The API key
-        alpha:  the minimum percentage of market variation to place a news
-        alpha_day_interval: the number of days between the two days used to calculate the percentage change
-        delta: the number of days to shift the news position
-        generation_mode: The generation mode (rand or linear)
-        nbr_positive_news: The number of positive news
-        nbr_negative_news: The number of negative news
-        n: The number of clicks on the button
+        companies (dict): Companies metadata.
+        api_key (str): API key for news generation service.
+        alpha (float): Minimum percent market variation to place a news.
+        alpha_day_interval (int): Days between points used to compute percent change.
+        delta (int): Day shift for positioning news.
+        generation_mode (str): 'rand' or 'linear'.
+        nbr_positive_news (int): Number of positive news to generate.
+        nbr_negative_news (int): Number of negative news to generate.
+        n (int): Clicks on generate button.
+
     Returns:
-        A notification to inform the user when the generation is complete
-        reset loading state (False)
+        tuple: (notification component, False to reset loading state)
     """
 
 
@@ -94,9 +100,7 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
     prevent_initial_call=True
 )
 def update_loading(n):
-    """
-    Set the loading state to True when the button is clicked
-    """
+    """Set the generate button loading state to True on click."""
     if n is None:
         raise PreventUpdate
 
@@ -109,13 +113,14 @@ def update_loading(n):
     Input("companies", "data"),
 )
 def update_options_news_companies(tabs, companies):
-    """
-    Update the options for the news select company dropdown
+    """Build options for the company dropdown used in news tab.
+
     Args:
-        tabs: The tab selected (only to trigger the callback)
-        companies: The list of companies
+        tabs (str): Current tab id (unused; triggers refresh).
+        companies (dict): Companies list.
+
     Returns:
-        The options for the dropdown
+        list[dict]: Options for dmc.Select-like component.
     """
 
     options = [{"label": company["label"], "value": stock} for stock, company in companies.items() if company["got_charts"]]
@@ -133,18 +138,19 @@ def update_options_news_companies(tabs, companies):
     prevent_initial_call=True
 )
 def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_positive_news, nbr_negative_news):
-    """
-    Update the news graph
+    """Render the news-position preview chart for a selected company.
+
     Args:
-        company: The company
-        alpha: The alpha value
-        alpha_day_interval: The alpha day interval
-        delta: The delta value
-        mode: The generation mode
-        nbr_positive_news: The number of positive news
-        nbr_negative_news: The number of negative news
+        company (str): Company ticker.
+        alpha (float): Alpha value for detection.
+        alpha_day_interval (int): Interval for computing change.
+        delta (int): Shift applied to positions.
+        mode (str): 'linear' or 'random'.
+        nbr_positive_news (int): Count of positive news when random mode.
+        nbr_negative_news (int): Count of negative news when random mode.
+
     Returns:
-        The updated graph
+        plotly.graph_objs.Figure|no_update: Preview figure or no_update on error.
     """
     if company is None:
         return no_update

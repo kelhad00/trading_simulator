@@ -14,15 +14,14 @@ from trade.defaults import defaults as dlt
 
 
 def get_next_timestamp_by_granularity(current_timestamp, granularity):
-    """
-    Get the next timestamp based on the granularity setting
-    
+    """Compute the next timestamp based on the selected granularity.
+
     Args:
-        current_timestamp: The current timestamp
-        granularity: The granularity setting ('h', 'D', 'W', 'ME')
-    
+        current_timestamp: Current timestamp value (str|pd.Timestamp).
+        granularity (str): One of 'h', 'D', 'W', 'ME'.
+
     Returns:
-        The next timestamp based on granularity
+        pd.Timestamp: Next timestamp advanced by one unit of granularity.
     """
     if not current_timestamp:
         return current_timestamp
@@ -52,15 +51,14 @@ def get_next_timestamp_by_granularity(current_timestamp, granularity):
 
 
 def get_timestamp_display_format(timestamp, granularity):
-    """
-    Get the appropriate display format for the timestamp based on granularity
-    
+    """Format a timestamp string according to the selected granularity.
+
     Args:
-        timestamp: The timestamp to format
-        granularity: The granularity setting
-    
+        timestamp: Timestamp to format (str|pd.Timestamp).
+        granularity (str): One of 'h', 'D', 'W', 'ME'.
+
     Returns:
-        Formatted timestamp string
+        str: Human-readable timestamp string.
     """
     if not timestamp:
         return ""
@@ -91,14 +89,14 @@ def get_timestamp_display_format(timestamp, granularity):
     State("company-selector", "data"),
 )
 def update_select_companies_options(companies, select_options):
-    """
-    Function to update the options of the company selector
+    """Update company selector options and value.
+
     Args:
-        companies: The list of companies --> it contains all the companies, even the ones that don't have charts assigned
-        select_options: The current options of the company selector
+        companies (dict): All companies, including those without charts.
+        select_options (list): Current options for the selector.
+
     Returns:
-        The new options of the company selector
-        the value of the company selector
+        tuple: (options list, selected value)
     """
     # Get the companies that are in the portfolio
     options = [{"label": value["label"], "value": key} for key, value in companies.items() if value["got_charts"]]
@@ -129,7 +127,7 @@ def open_modal_on_end_or_last(timestamp):
     Input("update-time", "data"),
 )
 def update_interval(update_time):
-    """Function to update the interval of the periodic updater"""
+    """Update the interval (ms) of the periodic updater from user setting."""
     try:
         # Ensure update_time is numeric and not NaN
         if update_time is None or (isinstance(update_time, float) and math.isnan(update_time)):
@@ -153,15 +151,17 @@ def update_interval(update_time):
     State('company-graph', 'figure'),
 )
 def update_graph(n, company, selected_interval, timestamp, current_fig, range=100):
-    """
-    Function to update the market graph with the latest data and timestamp
+    """Update the candlestick graph, timestamp, price label and clock.
 
     Args:
-        company: The selected company
-        timestamp: The last timestamp
-        current_fig: The current state of the figure
+        company (str): Selected company ticker.
+        selected_interval (str|None): Override interval; falls back to defaults.
+        timestamp (str|pd.Timestamp): Current timestamp.
+        current_fig (dict): Previous figure to preserve traces visibility.
+        range (int): Graph window size.
+
     Returns:
-        The updated timestamp and the new graph
+        tuple: (timestamp, figure, stock_price_label, formatted_timestamp) or no_update on failure.
     """
     try:
         # Determining which callback input changed
@@ -318,13 +318,16 @@ def update_graph(n, company, selected_interval, timestamp, current_fig, range=10
     State('selected-interval', 'data')
 )
 def update_revenue(n, company, timestamp, companies, selected_interval):
-    """
-    Function to update the revenue graph with the latest data
+    """Update the revenue graph when appropriate based on selected interval.
+
     Args:
-        company: The selected company
-        timestamp: The last timestamp
+        company (str): Selected company ticker.
+        timestamp (str|pd.Timestamp): Current timestamp.
+        companies (dict): Companies metadata.
+        selected_interval (str|None): Selected interval to drive refresh cadence.
+
     Returns:
-        The new revenue graph
+        go.Figure|no_update: Updated revenue bar chart or no_update.
     """
     try:
         # If the company is an index, don't display the revenue graph
@@ -417,12 +420,13 @@ def update_revenue(n, company, timestamp, companies, selected_interval):
     Input('segmented', "value")
 )
 def toggle_graph_type(value):
-    """
-    Function to toggle between the market graph and the revenue graph
+    """Toggle visibility between market and revenue graphs based on tab value.
+
     Args:
-        value: The value of the segmented control
+        value (str): Selected segmented control label.
+
     Returns:
-        The style of the revenue graph and the market graph
+        tuple[dict, dict]: Styles dicts for revenue and market graphs.
     """
     lang = page_registry['lang']
 
@@ -439,13 +443,14 @@ def toggle_graph_type(value):
     State('selected-interval', 'data')
 )
 def update_selected_interval(new_interval, current_interval):
-    """
-    Function to update the selected time unit for candlesticks
+    """Validate and store selected candlestick interval against minimum granularity.
+
     Args:
-        new_interval: The new time unit selected by the user
-        current_interval: The current time unit stored in the Store
+        new_interval (str): User-selected interval.
+        current_interval (str): Current stored interval.
+
     Returns:
-        The new time unit to store and the corrected selector value
+        tuple[str, str]: (stored interval, selector value)
     """
     # Vérifier que l'unité de temps sélectionnée n'est pas plus petite que la granularité définie dans defaults
     granularity_order = {'h': 1, 'D': 2, 'W': 3, 'ME': 4}

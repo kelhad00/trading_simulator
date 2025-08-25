@@ -20,17 +20,17 @@ from trade.defaults import defaults as dlt
     prevent_initial_call=True
 )
 def add_company_and_activity(n, stock, company, activity, companies):
-    """
-    Add a company and an activity to the stores
+    """Add a new company with activity to the store and notify success.
+
     Args:
-        n: number of clicks
-        stock: stock ticker
-        company: company name
-        activity: activity name
-        companies: dictionary of companies
+        n (int): Clicks on add button.
+        stock (str): Ticker symbol.
+        company (str): Display label.
+        activity (str): Sector/activity name.
+        companies (dict): Current companies store.
+
     Returns:
-        companies: updated dictionary of companies
-        notif: notification displayed
+        tuple: (updated companies dict, success notification)
     """
     if not n:
         raise PreventUpdate
@@ -60,13 +60,14 @@ def add_company_and_activity(n, stock, company, activity, companies):
     Input("settings-tabs", "value")
 )
 def display_companies(companies, tabs):
-    """
-    Display the list of companies in the stocks tab
+    """Render list of companies for the stocks tab.
+
     Args:
-        companies: dictionary of companies
-        tabs: current tab (used to update the callback)
+        companies (dict): Companies store.
+        tabs (str): Current tab id (trigger only).
+
     Returns:
-        list of companies displayed
+        list: Rendered list elements.
     """
     lang = page_registry["lang"]
     return [stock_list_element(stock, company["label"], lang) for stock, company in companies.items()]
@@ -84,6 +85,16 @@ def display_companies(companies, tabs):
     State("select-company", "value"),
 )
 def update_select_company_options(companies, tabs, company):
+    """Update companies options for various selects and maintain value.
+
+    Args:
+        companies (dict): Companies store.
+        tabs (str): Current tab id (trigger only).
+        company (str|None): Currently selected ticker.
+
+    Returns:
+        tuple[list, list, list, str]: Options for selects and the ensured selected value.
+    """
     # join companies and indexes
     # TODO : handle indexes
     # options = {**companies, **dlt.indexes}
@@ -105,13 +116,14 @@ Output("companies", "data", allow_duplicate=True),
     prevent_initial_call=True
 )
 def update_companies(tabs, companies):
-    """
-    Update the companies select options
+    """Mark companies as having charts when data exists in generated_data.csv.
+
     Args:
-        tabs: current tab (used to update the callback)
-        companies: dictionary of companies
+        tabs (str): Current tab id (trigger only).
+        companies (dict): Companies store.
+
     Returns:
-        data: updated companies select options
+        dict: Updated companies store.
     """
     df = get_generated_data()  # Get the data of all companies
     df_companies = df.columns.get_level_values('symbol').unique()  # Get the list of companies in the csv file
@@ -131,7 +143,14 @@ def update_companies(tabs, companies):
     prevent_initial_call=True
 )
 def reset_stocks(n):
-    """ Reset the companies list with the default companies """
+    """Reset the companies list to defaults while preserving got_charts flags.
+
+    Args:
+        n (int): Clicks on reset.
+
+    Returns:
+        dict: Reset companies store.
+    """
     df = get_generated_data()  # Get the data of all companies
     df_companies = df.columns.get_level_values('symbol').unique()  # Get the list of companies in the csv file
     companies = dlt.companies_list
@@ -150,13 +169,13 @@ def reset_stocks(n):
     prevent_initial_call=True
 )
 def update_portfolio(companies):
-    """
-    Update the portfolio shares and totals
+    """Initialize portfolio shares and totals to zero for companies with charts.
+
     Args:
-        companies: dictionary of companies
+        companies (dict): Companies store.
+
     Returns:
-        portfolio_shares: updated portfolio shares
-        portfolio_totals: updated portfolio totals
+        tuple[dict, dict]: Shares and totals dicts with zeros.
     """
     value = {stock: 0 for stock, company in companies.items() if company["got_charts"]}
     return value, value
@@ -178,20 +197,17 @@ def update_portfolio(companies):
     prevent_initial_call=True
 )
 def delete_companies(clicks, companies, children, portfolio_shares, portfolio_totals):
-    """
-    Delete a specific stock in the store and the csv file
+    """Delete selected companies, remove their data, and update portfolio stores.
+
     Args:
-        clicks: list of clicks
-        companies: dictionary of companies
-        children: list of children displayed
-        portfolio_shares: dictionary of portfolio shares
-        portfolio_totals: dictionary of portfolio totals
+        clicks (list[int|None]): Clicks for each delete button.
+        companies (dict): Companies store.
+        children (list): Rendered list children.
+        portfolio_shares (dict): Portfolio shares store.
+        portfolio_totals (dict): Portfolio totals store.
+
     Returns:
-        children: list of children displayed updated
-        companies: dictionary of companies updated
-        clicks: reset list of clicks
-        portfolio_shares: dictionary of portfolio shares updated
-        portfolio_totals: dictionary of portfolio totals updated
+        tuple: (children, companies, reset_clicks, portfolio_shares, portfolio_totals)
     """
 
     if not clicks or not 1 in clicks:
@@ -230,13 +246,14 @@ def delete_companies(clicks, companies, children, portfolio_shares, portfolio_to
     Input("settings-tabs", "value"),
 )
 def update_activities(companies, tabs):
-    """
-    Update the activities select options
+    """Rebuild activities options from current companies list.
+
     Args:
-        companies: all the companies with an activity field for each
-        tabs: current tab (used to update the callback)
+        companies (dict): Companies store including activity field.
+        tabs (str): Current tab id (trigger only).
+
     Returns:
-        data: updated activities select options
+        list[dict]: Options for activities select component.
     """
     # get all the unique activities in companies dictionary
     activities = list(set([company["activity"] for company in companies.values()]))

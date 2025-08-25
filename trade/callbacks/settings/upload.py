@@ -10,8 +10,14 @@ from trade.utils.settings.create_market_data import get_generated_data
 
 
 def upload(contents, filename):
-    """
-    Upload a file to the data folder
+    """Decode and save a base64-encoded file into the data folder.
+
+    Args:
+        contents (str|None): Dash Upload contents string (data URL).
+        filename (str): Target filename to save under `dlt.data_path`.
+
+    Returns:
+        dmc.Notification|no_update: Success or error notification; no_update if nothing to do.
     """
     try:
         if contents is not None:
@@ -51,6 +57,15 @@ def upload(contents, filename):
     prevent_initial_call=True,
 )
 def upload_charts(contents, companies):
+    """Handle upload of generated charts CSV and update companies got_charts flags.
+
+    Args:
+        contents (str|None): Uploaded content for generated_data.csv.
+        companies (dict): Companies store.
+
+    Returns:
+        tuple: (notification, updated companies)
+    """
     if contents is None:
         return no_update, no_update
 
@@ -74,6 +89,7 @@ def upload_charts(contents, companies):
     prevent_initial_call=True
 )
 def upload_news(contents):
+    """Handle upload of `news_fr.csv` with feedback notification."""
     return upload(contents, 'news_fr.csv')
 
 
@@ -83,5 +99,6 @@ def upload_news(contents):
     prevent_initial_call=True
 )
 def upload_revenues(contents):
+    """Handle upload of `revenues.csv` with feedback notification."""
     return upload(contents, 'revenues.csv')
 

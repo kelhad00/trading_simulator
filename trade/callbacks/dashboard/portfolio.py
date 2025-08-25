@@ -15,13 +15,14 @@ import pandas as pd
     Input('cashflow', 'data'),
 )
 def display_portfolio_updated(n, totals, cashflow):
-    """
-    Display the portfolio cashflow and investment updated
+    """Display updated cashflow and total investment.
+
     Args:
-        totals: The portfolio totals
-        cashflow: The portfolio cashflow
+        totals (dict): Portfolio totals by symbol.
+        cashflow (float): Available cash.
+
     Returns:
-        The updated portfolio cashflow and investment
+        tuple[str, str]: Formatted cashflow and investment strings with euro suffix.
     """
     # Convert to Series and ensure numeric types
     totals = pd.Series(totals)
@@ -38,13 +39,14 @@ def display_portfolio_updated(n, totals, cashflow):
     Input('portfolio-shares', 'data'),
 )
 def display_portfolio_table_updated(n, totals, shares):
-    """
-    Display the updated portfolio table
+    """Render portfolio table combining shares and current totals.
+
     Args:
-        totals: The portfolio totals
-        shares: The portfolio shares
+        totals (dict): Portfolio totals by symbol.
+        shares (dict): Portfolio shares by symbol.
+
     Returns:
-        The updated portfolio table
+        dmc.Table: Table component rendering portfolio positions.
     """
     lang = page_registry['lang']
 

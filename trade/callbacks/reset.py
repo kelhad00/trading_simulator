@@ -18,6 +18,14 @@ market_df = get_market_dataframe()
     Input("timestamp", "data"),
 )
 def disable_button(timestamp):
+    """Enable or disable the settings button depending on the current timestamp.
+
+    Args:
+        timestamp: Current timestamp stored in the app state.
+
+    Returns:
+        bool: False to enable when at the first available timestamp, True otherwise.
+    """
     timestamp = pd.to_datetime(timestamp)
     timestamp = format_timestamp(timestamp)
     first_timestamp = get_first_timestamp(market_df, 100)
@@ -42,14 +50,22 @@ def disable_button(timestamp):
     prevent_initial_call=True,
 )
 def reset_data(btn, initial_cashflow, nb_export):
-    """
-    Function to reset the simulation data
+    """Reset all simulation stores and archive current export files.
+
     Args:
-        btn: The reset button
-        initial_cashflow: The initial cashflow
-        nb_export: The number of exported data
+        btn: Number of clicks on the reset button.
+        initial_cashflow (float): Initial cash available for the portfolio.
+        nb_export (int): Current export session counter.
+
     Returns:
-        The initial data of the simulation
+        tuple: (
+            timestamp (str),
+            cashflow (float),
+            requests (list),
+            portfolio_shares (dict[str, int]),
+            portfolio_totals (dict[str, float]),
+            nb_export (int)
+        )
     """
 
     if btn is None or btn == 0:
@@ -102,4 +118,14 @@ def reset_data(btn, initial_cashflow, nb_export):
     prevent_initial_call=True,
 )
 def reset_modal(btn, initial_cashflow, nb_export):
+    """Proxy for `reset_data` when reset originates from the modal.
+
+    Args:
+        btn: Number of clicks on the modal reset button.
+        initial_cashflow (float): Initial cash available.
+        nb_export (int): Current export session counter.
+
+    Returns:
+        Same values as returned by `reset_data`.
+    """
     return reset_data(btn, initial_cashflow, nb_export)

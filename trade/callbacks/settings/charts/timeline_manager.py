@@ -22,6 +22,18 @@ bear_pattern = [
 ]
 
 def make_timeline_block(label, color, index, pattern_id=None, pattern_type="with"):
+    """Build a draggable/resizable timeline block for a trend or pattern.
+
+    Args:
+        label (str): Display label.
+        color (str): Background color.
+        index (int): Block index in the timeline.
+        pattern_id (str|None): Optional pattern identifier used in element id.
+        pattern_type (str): 'with', 'without', or 'dont' (only pattern).
+
+    Returns:
+        html.Div: Configured block component.
+    """
     # pattern_id: si fourni, utilisé pour l'id du bloc (sinon label)
     type_label = "Avec pattern" if pattern_type == "with" else "Sans pattern" if pattern_type != "dont" else None
     return html.Div(
@@ -125,6 +137,7 @@ def make_timeline_block(label, color, index, pattern_id=None, pattern_type="with
     prevent_initial_call=True
 )
 def add_item_to_timeline(*args):
+    """Append a new block to the timeline based on which add-button was pressed."""
     timeline_children = args[-1]
 
     if not dash.ctx.triggered:
@@ -272,16 +285,15 @@ def add_item_to_timeline(*args):
     prevent_initial_call=True
 )
 def move_item(left_clicks, right_clicks, timeline_children, data, size_data):
-    """
-    Move a timeline item left or right based on button clicks.
+    """Move a timeline item left or right preserving widths and configs.
 
     Args:
-        left_clicks (list): List of click counts for left movement buttons
-        right_clicks (list): List of click counts for right movement buttons
-        timeline_children (list): Current list of timeline items
+        left_clicks (list): Click counts for move-left buttons.
+        right_clicks (list): Click counts for move-right buttons.
+        timeline_children (list): Current timeline items.
 
     Returns:
-        list: Updated timeline items with the moved item in its new position
+        tuple: (updated timeline children, updated special-pattern-config)
     """
     ctx = dash.callback_context
     if not ctx.triggered:
@@ -382,6 +394,7 @@ def move_item(left_clicks, right_clicks, timeline_children, data, size_data):
     prevent_initial_call=True
 )
 def add_pattern_block(n_clicks, selected_pattern, timeline_children, section_ids):
+    """Insert a standalone pattern block into the timeline."""
     if not selected_pattern:
         raise PreventUpdate
     if not isinstance(timeline_children, list):
@@ -419,13 +432,13 @@ def add_pattern_block(n_clicks, selected_pattern, timeline_children, section_ids
     prevent_initial_call=True
 )
 def delete_smash(delete_clicks, timeline_children, size_data, data):
-    """
-    Delete a timeline item based on button clicks and synchronise with size_data.
+    """Delete a timeline item and synchronize related stores accordingly.
+
     Args:
-        delete_clicks (list): List of click counts for delete buttons
-        timeline_children (list): Current list of timeline items
-        size_data (dict): Current size_data
-        data (dict): Current special-pattern-config
+        delete_clicks (list): Click counts for delete buttons.
+        timeline_children (list): Current timeline items.
+        size_data (dict): Current size-store data.
+        data (dict): Current special-pattern-config.
     """
     triggered = dash.ctx.triggered_id
     if not triggered or not isinstance(triggered, dict):
@@ -477,6 +490,7 @@ def delete_smash(delete_clicks, timeline_children, size_data, data):
     prevent_initial_call=True
 )
 def open_dynamic_modal(open_clicks, timeline ,size_data):
+    """Open the configuration modal associated with the clicked timeline block."""
     triggered = dash.ctx.triggered_id
     if not triggered or not isinstance(triggered, dict):
         raise dash.exceptions.PreventUpdate
@@ -522,6 +536,7 @@ def open_dynamic_modal(open_clicks, timeline ,size_data):
     State("special-pattern-config", "data"),
 )
 def render_form(selected_form, form_info,data_pattern):
+    """Render dynamic form content for pattern selection/count configuration."""
     trend = form_info['trend']
     index = form_info['index']
 
@@ -583,6 +598,7 @@ def render_form(selected_form, form_info,data_pattern):
     return html.Div()
 
 def checkbox_group_from_list(items, id="my-checkboxes", label="Choix", lst= []):
+    """Build a CheckboxGroup from a list of items with translations."""
     lang =  page_registry['lang']
     tl = tls[lang]["settings"]["charts"]
     return dmc.CheckboxGroup(
@@ -594,6 +610,7 @@ def checkbox_group_from_list(items, id="my-checkboxes", label="Choix", lst= []):
     )
 
 def modal_config_pattern(trend,index):
+    """Construct the modal content for configuring patterns of a timeline block."""
     if "Small" in trend or "Medium" in trend or "Large" in trend:
         title = "Item n° "+str(index+1)+" : "+str(trend)
     else:
@@ -631,6 +648,7 @@ def modal_config_pattern(trend,index):
     prevent_initial_call=True
 )
 def store_pattern_config(n_clicks, selected_patterns, form_info, data, opened):
+    """Store selected patterns (without counts) into `special-pattern-config`."""
     if n_clicks is None or n_clicks == 0:
         raise PreventUpdate
 
@@ -652,6 +670,7 @@ def store_pattern_config(n_clicks, selected_patterns, form_info, data, opened):
     prevent_initial_call=True
 )
 def update_pattern_with_count(n_clicks, checked_list, pattern_ids, count_list, form_info, current_data, opened):
+    """Store selected patterns with counts into `special-pattern-config`."""
     if n_clicks is None or n_clicks == 0:
         raise PreventUpdate
 

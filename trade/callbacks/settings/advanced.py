@@ -17,9 +17,18 @@ Output("input-update-time", "value"),
     Input("initial-cashflow", "data"),
 )
 def set_advanced_settings_default_values(tabs, update_time, max_requests, init_cashflow):
-    """
-    Default values for the advanced settings inputs
-    (PS : settings-tabs is used to refresh the callback when the tab is switched)
+    """Populate advanced settings inputs with current store values.
+
+    Note: `settings-tabs` is included only to refresh values on tab switch.
+
+    Args:
+        tabs (str): Current tab id (unused, only triggers refresh).
+        update_time (int|float|None): Current update interval in ms.
+        max_requests (int|None): Maximum number of requests.
+        init_cashflow (float|None): Initial cashflow value.
+
+    Returns:
+        tuple: (update_time, max_requests, init_cashflow)
     """
     return update_time, max_requests, init_cashflow
 
@@ -38,7 +47,17 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     prevent_initial_call=True
 )
 def update_advanced_settings(n, update_time, max_requests, init_cashflow):
-    """Update the advanced settings stores with inputs values when the button is clicked"""
+    """Update stores from advanced settings inputs when button is clicked.
+
+    Args:
+        n (int): Clicks on the update button.
+        update_time (int|float|None): Update interval in ms.
+        max_requests (int|None): Maximum number of requests.
+        init_cashflow (float|None): Initial cashflow value.
+
+    Returns:
+        tuple: Updated stores and a feedback notification component.
+    """
 
     if n is None or n == 0:
         raise PreventUpdate
@@ -62,6 +81,14 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow):
             message=tls[page_registry["lang"]]["settings"]["advanced"]["notification"]["message_update"],
         )
 def convertible_in_int(str):
+    """Check whether a value can be converted to int.
+
+    Args:
+        str: Value to test.
+
+    Returns:
+        bool: True if convertible, False otherwise.
+    """
     try:
         int(str)
         return True

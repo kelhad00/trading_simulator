@@ -16,13 +16,14 @@ from trade.utils.settings.create_market_data import get_generated_data
     prevent_initial_call=True
 )
 def delete_revenues(n, company, companies):
-    """
-    Delete the revenues
+    """Delete generated data for a selected company and update store flags.
+
     Args:
-        n: The number of clicks
-        company: The company selected
+        n (int): Clicks on delete charts button.
+        company (str): Selected company ticker.
+
     Returns:
-        The revenues
+        tuple: (empty figure, updated companies store)
     """
     if company is None:
         raise PreventUpdate

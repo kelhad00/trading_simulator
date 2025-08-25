@@ -23,9 +23,30 @@ from trade.utils.export import export_data
 
 )
 def export_display_update(company, title, graph_segmented, request_segmented, requests, delete_requests, delete_all_requests, restyle_data, cashflow, timestamp, shares, totals, max_requests):
-    """
-    Function triggered when the user interacts with the dashboard
-    Update the logs with the latest data
+    """Export dashboard state and interactions to disk.
+
+    This callback reacts to various dashboard interactions (company selection,
+    request deletions, visibility changes on the graph, etc.) and writes a
+    consolidated snapshot using `export_data`. It does not update the UI
+    directly and returns `no_update`.
+
+    Args:
+        company (str): Selected company ticker.
+        title (str): Current description title.
+        graph_segmented (str): Selected tab for the main graph.
+        request_segmented (str): Selected tab for the requests view.
+        requests (list): Current list of pending requests.
+        delete_requests (list): Per-row delete button click counts.
+        delete_all_requests (int): Click count for the clear-all button.
+        restyle_data (dict|list): Plotly restyle data when traces visibility changes.
+        cashflow (float): Current available cash.
+        timestamp (str): Current market timestamp.
+        shares (dict): Portfolio shares by symbol.
+        totals (dict): Portfolio totals by symbol.
+        max_requests (int): Maximum allowed number of requests.
+
+    Returns:
+        no_update: No UI change; side effects are handled by `export_data`.
     """
     if ctx.triggered_id == 'clear-done-btn':
         delete = ["all"]

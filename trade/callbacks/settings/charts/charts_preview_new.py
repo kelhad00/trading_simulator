@@ -77,6 +77,21 @@ def _progress_bar(done: int, total: int, width: int = 10) -> str:
     prevent_initial_call=True
 )
 def graph_preview_new(n_click, size_data, start_date, end_date, granularity, current_df, data_pattern, company_configs):
+    """Generate preview graphs and export-ready data for configured companies.
+
+    Args:
+        n_click (int): Clicks on refresh button.
+        size_data (dict): Timeline segments configuration with sizes and labels.
+        start_date (str): Start date for generated data.
+        end_date (str): End date for generated data.
+        granularity (str): Pandas frequency string.
+        current_df (dict|None): Existing data (unused; placeholder for future diffing).
+        data_pattern (dict): Special patterns configuration per segment index.
+        company_configs (dict): Per-company timeline and pattern configuration.
+
+    Returns:
+        tuple: (preview container children, simplified data dict for export)
+    """
     # Loading placeholder while generating (use dcc.Loading for compatibility)
     loading = dcc.Loading(
         children=html.Div(style={"height": "300px"}),
@@ -189,6 +204,10 @@ def graph_preview_new(n_click, size_data, start_date, end_date, granularity, cur
 
 
 def handle_pattern_none(company_df, date_cursor, dates, length, trend):
+    """Insert a configured complex pattern over a segment without extra patterns.
+
+    Ensures continuity with previous values and sanitizes OHLC.
+    """
     pattern_name = trend
     # Charger les paramètres du pattern depuis le JSON
     params = {}
@@ -267,6 +286,10 @@ def handle_pattern_none(company_df, date_cursor, dates, length, trend):
 
 
 def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, trend, custom_pattern_item: list ,custom_pattern_item_count):
+    """Generate a segment possibly containing candlestick patterns.
+
+    Tries to insert patterns respecting continuity; falls back to trend-based data.
+    """
     # Charger la longueur du plus long pattern depuis pattern_configs.json
     import os, json
     file_path = os.path.join(dlt.data_path, "pattern_configs.json")
@@ -522,6 +545,7 @@ def handle_pattern_with(alpha, company, company_df, date_cursor, dates, length, 
 
 
 def handle_pattern_without(alpha, company, company_df, date_cursor, length, trend, trend_dates):
+    """Generate a pure trend segment without patterns, keeping OHLC continuity."""
     last_close = get_last_close(company_df, date_cursor)
     if last_close is None:
         start_value = randint(100, 1000)
@@ -565,6 +589,7 @@ def handle_pattern_without(alpha, company, company_df, date_cursor, length, tren
 
 
 def get_pattern_length(label):
+    """Return expected number of candles for a given pattern label."""
     file_path = os.path.join(dlt.data_path, "pattern_configs.json")
     pattern_key = label.lower().replace(" ", "_")
     try:
@@ -584,9 +609,7 @@ def get_pattern_length(label):
 
 
 def get_last_close(company_df, date_cursor):
-    """
-    Cherche la dernière valeur non-NaN de Close avant date_cursor
-    """
+    """Find the last non-NaN Close before the given index for continuity."""
     if date_cursor == 0:
         return None
     prev_closes = company_df['Close'].iloc[:date_cursor].dropna()
@@ -596,14 +619,17 @@ def get_last_close(company_df, date_cursor):
 
 
 def is_input_valid(size_data, start_date, end_date, granularity):
+    """Check minimal validity of preview inputs."""
     return all([size_data, start_date, end_date, granularity])
 
 
 def generate_date_range(start_date, end_date, granularity):
+    """Generate a pandas.DatetimeIndex based on dates and frequency."""
     return pd.date_range(start=start_date, end=end_date, freq=granularity)
 
 
 def parse_size_data(size_data, global_length):
+    """Parse timeline blocks into trends, alphas, lengths and types lists."""
     alpha_map = {
         "Very Bull": 1000, "Medium Bull": 500, "Small Bull": 250,
         "Flat": 100,
@@ -630,6 +656,7 @@ def parse_size_data(size_data, global_length):
 
 
 def resize_lengths_to_fit(lengths, target):
+    """Rescale block lengths so their sum equals target size."""
     total = sum(lengths)
     if total == 0:
         return [0] * len(lengths)
@@ -640,6 +667,7 @@ def resize_lengths_to_fit(lengths, target):
 
 
 def generate_company_dataframes(dates, companies, trends, alphas, lengths, pattern_types, custom_pattern_list, custom_pattern_count_list):
+    """Produce per-company OHLC DataFrames for preview/export based on configs."""
     company_dfs = {}
     total = len(companies)
     done = 0
@@ -668,6 +696,7 @@ def generate_company_dataframes(dates, companies, trends, alphas, lengths, patte
 
 
 def compute_indicators(df):
+    """Compute common indicators (moving averages and RSI) on Close series."""
     if "Close" not in df.columns:
         return
     df['short_MA'] = df['Close'].rolling(window=20, min_periods=1).mean()
@@ -682,6 +711,7 @@ def compute_indicators(df):
 
 
 def ensure_column_order(df):
+    """Ensure a stable column order with all expected fields present."""
     expected_cols = ['Open', 'High', 'Low', 'Close', 'adjclose', 'Volume', 'long_MA', 'short_MA', '200_MA', 'RSI']
     for col in expected_cols:
         if col not in df.columns:
@@ -732,10 +762,10 @@ def sanitize_ohlc(df: pd.DataFrame) -> None:
 
 
 def add_micro_variation(df: pd.DataFrame, tol: float = 1e-9, eps_pct: float = 0.001) -> None:
-    """Inject a tiny day-to-day variation when consecutive closes are strictly flat.
+    """Inject tiny variation when consecutive closes are strictly flat.
 
-    eps_pct is relative to previous close (e.g. 0.001 = 0.1%).
-    Keeps OHLC consistency after adjustment.
+    eps_pct is relative to previous close (e.g. 0.001 = 0.1%). Keeps OHLC
+    consistency after adjustment.
     """
     if 'Close' not in df.columns:
         return
@@ -765,7 +795,7 @@ def add_small_wicks(
     wick_max: float = 0.002,
     wick_cap: float = 0.02,
 ) -> None:
-    """Ensure wicks exist but stay reasonable.
+    """Ensure wicks exist but remain within reasonable bounds.
 
     - Adds a tiny random wick (between wick_min and wick_max)
     - Caps wick size to wick_cap relative to max(Open, Close) and min(Open, Close)
@@ -800,9 +830,9 @@ def finalize_company_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def rebase_chunk_to_last_close(df: pd.DataFrame, target_close: float) -> None:
-    """Rescale entire OHLC chunk so that the first Close equals target_close.
+    """Rescale OHLC chunk so first Close equals target_close.
 
-    Keeps the relative shape, removes jumps at junction.
+    Preserves relative shape and removes junction jumps.
     """
     if df.empty or not {'Open','High','Low','Close'}.issubset(df.columns):
         return
@@ -822,6 +852,7 @@ def rebase_chunk_to_last_close(df: pd.DataFrame, target_close: float) -> None:
 
 
 def package_dataframe_for_export(company_dfs):
+    """Pack multi-company DataFrame and a simplified dict for serialization."""
     df_global = pd.concat(company_dfs.values(), axis=1, keys=company_dfs.keys(), names=['symbol'])
     data_dict = {
         'data': {
@@ -836,6 +867,7 @@ def package_dataframe_for_export(company_dfs):
 
 
 def build_preview_graphs(company_dfs):
+    """Build Plotly preview graphs per company from generated DataFrames."""
     graphs = []
     for company, df in company_dfs.items():
         # Sanitize to avoid incoherent flat steps and NaNs

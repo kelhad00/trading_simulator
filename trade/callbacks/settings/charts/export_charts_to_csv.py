@@ -18,18 +18,23 @@ from trade.defaults import defaults as dlt
     prevent_initial_call=True
 )
 def export_to_csv(n, start_date, end_date, granularity, graph_data):
-    """
-    Export all companies data to CSV when the modify button is clicked.
-    Also updates start_date and granularity in trade/defaults.py.
+    """Export generated OHLC data to CSV and update defaults.
+
+    On success, writes `generated_data.csv` under `dlt.data_path` and updates
+    `start_date` and `granularity` in `trade/defaults.py`.
+
     Args:
-        n (int): Number of clicks on the modify button
-        start_date (str): Selected start date
-        granularity (str): Selected granularity
-        graph_data (dict): Dictionary containing all companies data in simplified format
+        n (int): Clicks on modify button.
+        start_date (str): Selected start date.
+        end_date (str): Selected end date.
+        granularity (str): Frequency string.
+        graph_data (dict): Simplified export payload from preview.
+
     Returns:
-        dict: No update to the current chart figure if successful, or error message if failed
+        no_update: Figure is not modified; the export is a side effect.
+
     Raises:
-        PreventUpdate: If graph_data is empty
+        PreventUpdate: If `graph_data` is empty.
     """
     if not graph_data:
         raise PreventUpdate

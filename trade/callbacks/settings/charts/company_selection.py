@@ -8,6 +8,7 @@ from dash.exceptions import PreventUpdate
     Input("companies", "data"),
 )
 def update_companies_multiselect(_tabs, companies):
+    """Build options for the multi-select listing available companies."""
     if not companies:
         return []
     # Show ticker only as label/value
@@ -21,6 +22,7 @@ def update_companies_multiselect(_tabs, companies):
     prevent_initial_call=True,
 )
 def select_all_companies_charts(n_clicks, companies):
+    """Select all companies for charts configuration."""
     if not n_clicks:
         raise PreventUpdate
     return list(companies.keys()) if companies else []
@@ -34,6 +36,7 @@ def select_all_companies_charts(n_clicks, companies):
     prevent_initial_call=True,
 )
 def select_unconfigured_companies_charts(n_clicks, companies, company_configs):
+    """Select companies that do not yet have a saved configuration."""
     if not n_clicks:
         raise PreventUpdate
     if not companies:

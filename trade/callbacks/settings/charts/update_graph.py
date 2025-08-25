@@ -11,13 +11,14 @@ from trade.utils.settings.display import display_chart
     prevent_initial_call=True
 )
 def update_graph(company, data):
-    """
-    Update the graph with the selected company
+    """Update the chart figure when the selected company or data changes.
+
     Args:
-        company: The selected company
-        (data: (is only used to trigger the callback when new generated charts are stored in the csv file))
+        company (str): Selected company ticker.
+        data: Only used as a trigger when new charts are stored.
+
     Returns:
-        The updated graph
+        dict: Plotly figure dict for the selected company's chart.
     """
     try:
         df = get_generated_data()[company]

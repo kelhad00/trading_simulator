@@ -10,15 +10,14 @@ from trade.defaults import defaults as dlt
 
 
 def get_next_timestamp_by_granularity(current_timestamp, granularity):
-    """
-    Get the next timestamp based on the granularity setting
-    
+    """Compute the next timestamp based on the selected granularity.
+
     Args:
-        current_timestamp: The current timestamp
-        granularity: The granularity setting ('H', 'D', 'W', 'M')
-    
+        current_timestamp: Current timestamp value (str|pd.Timestamp).
+        granularity (str): One of 'H', 'D', 'W', 'M'.
+
     Returns:
-        The next timestamp based on granularity
+        pd.Timestamp: Next timestamp advanced by one unit of granularity.
     """
     if not current_timestamp:
         return current_timestamp
@@ -54,12 +53,16 @@ def get_next_timestamp_by_granularity(current_timestamp, granularity):
     State('timestamp', 'data'),
 )
 def cb_update_news_table(n, selected_interval, timestamp, range=50):
-    """
-    Function to display the latest news in the table from the timestamp
+    """Render the news table up to the next timestamp window.
+
     Args:
-        timestamp: The last timestamp
+        n (int): Interval ticks (ignored, only triggers refresh).
+        selected_interval (str|None): Selected interval controlling time window.
+        timestamp (str|pd.Timestamp): Current timestamp.
+        range (int): Maximum number of rows to display.
+
     Returns:
-        The updated news table
+        dmc.Table: Table component containing latest news.
     """
     lang = page_registry['lang']
 
@@ -121,19 +124,21 @@ def cb_update_news_table(n, selected_interval, timestamp, range=50):
     prevent_initial_call=True,
 )
 def toggle_news_display_type(n, cell_clicked, table):
-    """
-    Function to toggle the display of the news table and the news article
-    If a cell is clicked, display the article clicked and hide the table
+    """Toggle between list view and article view for news.
+
     Args:
-        n: The back button
-        cell_clicked: The cell clicked
-        table: The news table
+        n (int): Back button clicks.
+        cell_clicked (list[int|None]): Click states per row in the news table.
+        table (dict): Rendered news table children used to retrieve titles.
+
     Returns:
-        style of the news table
-        title of the article
-        content of the article
-        style of the news article
-        n_clicks of the back button (to reset the state)
+        tuple: (
+            news_table_style,
+            article_title,
+            article_content,
+            article_style,
+            back_button_clicks
+        )
     """
 
     # If the back button is clicked, go back to the news list

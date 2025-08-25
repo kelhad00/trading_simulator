@@ -5,12 +5,14 @@ import random
 
 
 def interpolate_series(series, target_len):
+    """Linearly interpolate a series to a target length."""
     x_old = np.linspace(0, 1, len(series))
     x_new = np.linspace(0, 1, target_len)
     return np.interp(x_new, x_old, series)
 
 
 def scale_amplitude(series, amplitude, base_price):
+    """Scale the amplitude of a price series around a base price."""
     min_val = min(series)
     max_val = max(series)
     current_amp = (max_val - min_val) / base_price if base_price != 0 else 1
@@ -19,8 +21,11 @@ def scale_amplitude(series, amplitude, base_price):
 
 
 def fill_ohlc_from_dataset(opens, highs, lows, closes, day, pattern_name, amplitude, duree, dataset_dir=None):
-    """
-    Remplit les tableaux OHLC à partir d'un fichier dataset du pattern donné, interpolé à la durée et amplitude demandées.
+    """Fill OHLC arrays using a sampled dataset for a given pattern.
+
+    Pulls a random example from the dataset, interpolates it to requested
+    duration and amplitude, ensures continuity, and writes values into the
+    provided OHLC arrays starting at a given day index.
     """
     import sys
     from trade.defaults import defaults as dlt

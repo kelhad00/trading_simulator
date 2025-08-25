@@ -9,7 +9,7 @@ from dash.exceptions import PreventUpdate
     Input("settings-tabs", "value"),
 )
 def load_company_configs(_tab):
-    # Start empty on page load; no persistence
+    """Initialize in-memory company configs on tab load (no persistence)."""
     return {}
 
 
@@ -25,6 +25,18 @@ def load_company_configs(_tab):
     prevent_initial_call=True,
 )
 def save_company_configs(n_clicks, selected_tickers, size_data, special_cfg, current_configs):
+    """Persist per-company timeline and special pattern configs in memory.
+
+    Args:
+        n_clicks (int): Clicks on save button.
+        selected_tickers (list[str]): Companies to save config for.
+        size_data (dict): Timeline blocks configuration.
+        special_cfg (dict): Special per-block pattern configuration.
+        current_configs (dict): Existing in-memory configs.
+
+    Returns:
+        tuple: (updated configs, cleared timeline children, cleared selected values)
+    """
     if not n_clicks:
         raise PreventUpdate
     if not selected_tickers:
@@ -47,7 +59,7 @@ def save_company_configs(n_clicks, selected_tickers, size_data, special_cfg, cur
     Input('companies', 'data'),
 )
 def toggle_refresh_disabled(company_configs, companies):
-    # Disable until all companies have a saved config
+    """Disable refresh until all companies have at least one saved config."""
     if not companies:
         return True
     company_configs = company_configs or {}
@@ -60,7 +72,7 @@ def toggle_refresh_disabled(company_configs, companies):
     Input('timeline', 'children'),
 )
 def toggle_save_button_disabled(timeline_children):
-    """Disable save button when timeline is empty"""
+    """Disable save button when timeline is empty."""
     if not timeline_children or len(timeline_children) == 0:
         return True
     return False 
