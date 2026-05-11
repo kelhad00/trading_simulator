@@ -92,6 +92,7 @@ translation = {
                     "preview": "Preview",
                     "parameters": "Market movement parameters",
                     "trends": "Charts trends",
+                    "curve": "Growth curve profile",
                 },
                 "button": {
                     "modify": "Modify",
@@ -103,6 +104,17 @@ translation = {
                     "alpha": "Select alpha value",
                     "length": "Select length of a market movement",
                     "start": "Select start date",
+                    "curve-profile": "Growth curve profile",
+                    "noise": "Noise / volatility level (%)",
+                    "crash-point": "Crash point (% of duration)",
+                },
+                "curve-profiles": {
+                    "segments": "Market segments",
+                    "linear": "Linear",
+                    "exponential": "Exponential",
+                    "logarithmic": "Logarithmic",
+                    "volatile": "Volatile",
+                    "crash": "Crash",
                 },
                 "radio": {
                     "title": "market movement",
@@ -121,11 +133,23 @@ translation = {
                 "button": {
                     "add": "Add",
                     "reset": "Reset",
+                    "edit": "Edit",
+                    "save": "Save",
                 },
                 "input": {
                     "company": "Company",
                     "ticker": "Ticker",
                     "activity": "Activity",
+                },
+                "notification": {
+                    "success-title": "Renamed",
+                    "success-msg": "{ticker} has been renamed to \"{name}\"",
+                    "error-title": "Error",
+                    "error-msg": "Company name cannot be empty",
+                },
+                "validation": {
+                    "missing-label-title": "Validation",
+                    "missing-label-msg": "All active companies must have a name before starting the simulation.",
                 },
             },
             "news": {
