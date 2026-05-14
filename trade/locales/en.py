@@ -164,6 +164,7 @@ translation = {
                 },
                 "input": {
                     "key": "Enter your Groq API key",
+                    "key-placeholder": "Loaded from .env — type here to override",
                     "alpha": "Indicate the alpha value : The alpha parameter is a percentage of variation between two days.",
                     "alpha-day-interval": "Indicate the alpha day interval : The alpha day interval is the interval between the two days used for the calculation of alpha.",
                     "delta": "Indicate the delta value : The delta value shifts the news days by a certain number of days.",

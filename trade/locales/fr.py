@@ -177,6 +177,7 @@ translation = {
                 },
                 "input": {
                     "key": "Clé API Groq",
+                    "key-placeholder": "Chargée depuis .env — saisir ici pour remplacer",
                     "alpha": "Indiquer un pourcentage de variation de marché entre 2 jours",
                     "alpha-day-interval": "Indiquer l'intervalle de jours pour le calcul de l'alpha",
                     "delta": "Indiquer une valeur de décallage",

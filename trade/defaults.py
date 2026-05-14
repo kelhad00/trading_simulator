@@ -1,3 +1,9 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 class Defaults:
     """Default values used in the trade-legacy"""
 
@@ -16,8 +22,8 @@ class Defaults:
     # Path to the data folder
     data_path = "../data"
 
-    # News settings
-    api_key = "YOUR_API_KEY"
+    # News settings — loaded from GROQ_API_KEY in .env; UI input is an optional override
+    api_key = ""
 
 
     # Stocks and Indexes used in the interface

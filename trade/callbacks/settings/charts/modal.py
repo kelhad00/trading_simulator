@@ -1,5 +1,8 @@
-import os.path
+import os
+import threading
+
 import pandas as pd
+import dash_mantine_components as dmc
 
 from dash import callback, Input, Output, State, ALL, no_update, dcc, page_registry
 from dash.exceptions import PreventUpdate
@@ -16,6 +19,9 @@ from trade.utils.settings.data_handler import scale_market_data, load_data, get_
 from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
+from trade.utils.news_generation.news_creation import (
+    get_news_position_for_companies, create_news_for_companies,
+)
 
 
 # ── Crash-point slider visibility ────────────────────────────────────────────
@@ -179,22 +185,47 @@ def generate_new_charts(
 
 # ── Export confirmed charts to CSV ────────────────────────────────────────────
 
+def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang, key):
+    """Run news generation in a background thread so the UI is not blocked."""
+    try:
+        positions = get_news_position_for_companies(
+            companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta
+        )
+        create_news_for_companies(companies_subset, positions, lang, key)
+        print("Auto news regeneration complete for: " + ", ".join(companies_subset.keys()))
+    except Exception as e:
+        print("Auto news regeneration failed:", e)
+
+
 @callback(
     Output("figures", "data", allow_duplicate=True),
     Output("modal", "opened", allow_duplicate=True),
     Output({"type": "timeline-radio", "index": ALL}, "value"),
     Output("companies", "data", allow_duplicate=True),
+    Output("notifications", "children", allow_duplicate=True),
 
     Input("generate-button", "n_clicks"),
     State("figures", "data"),
     State("modal-select-companies", "value"),
     State("number-trends", "value"),
     State("companies", "data"),
+    State("select-curve-profile", "value"),
+    State("input-api-key", "value"),
+    State("input-alpha", "value"),
+    State("input-alpha-day-interval", "value"),
+    State("input-delta", "value"),
+    State("input-generation-mode", "value"),
+    State("input-nbr-positive-news", "value"),
+    State("input-nbr-negative-news", "value"),
+    State("url", "search"),
     prevent_initial_call=True,
 )
-def export_generated_charts(n, datas, companies_selected, nb_radio, companies):
+def export_generated_charts(n, datas, companies_selected, nb_radio, companies, curve_profile,
+                             api_key, alpha, alpha_day_interval, delta, generation_mode,
+                             nbr_positive_news, nbr_negative_news, search):
     """
-    Export the generated charts to generated_data.csv when the generate button is clicked.
+    Export the generated charts to generated_data.csv when the generate button is clicked,
+    then automatically regenerate news for those companies in a background thread.
     """
     if datas is None or datas == []:
         raise PreventUpdate
@@ -204,8 +235,40 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies):
         df = pd.DataFrame.from_dict(data)
         export_generated_data(df, company)
         companies[company]["got_charts"] = True
+        companies[company]["curve_profile"] = curve_profile
 
-    return list(), False, [None] * nb_radio, companies
+    # Build subset of only the companies whose charts were just confirmed
+    companies_subset = {c: companies[c] for c in companies_selected}
+
+    effective_key = (api_key or "").strip() or os.environ.get("GROQ_API_KEY", "")
+    lang = "en" if (search and "lang=en" in search) else "fr"
+
+    thread = threading.Thread(
+        target=_auto_generate_news,
+        args=(
+            companies_subset,
+            generation_mode or "random",
+            nbr_positive_news or 2,
+            nbr_negative_news or 2,
+            alpha or 0.5,
+            alpha_day_interval or 3,
+            delta or 0,
+            lang,
+            effective_key,
+        ),
+        daemon=True,
+    )
+    thread.start()
+
+    notification = dmc.Notification(
+        id="notif-news-auto",
+        title="News",
+        action="show",
+        color="blue",
+        message="News generation started for " + ", ".join(companies_selected) + ". This runs in the background.",
+    )
+
+    return list(), False, [None] * nb_radio, companies, notification
 
 
 # ── Select-all shortcut ───────────────────────────────────────────────────────

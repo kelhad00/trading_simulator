@@ -1,3 +1,5 @@
+import os
+
 from dash import Output, Input, State, callback, no_update
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
@@ -35,12 +37,13 @@ def update_display_container_nbr_news(mode, children):
     State('input-generation-mode', 'value'),
     State('input-nbr-positive-news', 'value'),
     State('input-nbr-negative-news', 'value'),
+    State('url', 'search'),
 
     Input('generate-news', 'n_clicks'),
     prevent_initial_call=True
 )
 def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta, generation_mode,
-                            nbr_positive_news, nbr_negative_news, n):
+                            nbr_positive_news, nbr_negative_news, search, n):
     """
     Generate news for all the companies
     Args:
@@ -64,8 +67,13 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
         news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news,
                                                         alpha, alpha_day_interval, delta)
 
+        lang = "en" if (search and "lang=en" in search) else "fr"
+
+        # Use the UI input key if provided, otherwise fall back to the .env key
+        effective_key = api_key or os.environ.get("GROQ_API_KEY", "")
+
         # Create the news for all the companies
-        create_news_for_companies(companies, news_position, api_key)
+        create_news_for_companies(companies, news_position, lang, effective_key)
 
         return dmc.Notification(
             id="notification-news-generated",
@@ -143,6 +151,8 @@ def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_posit
     Returns:
         The updated graph
     """
+    if not company or alpha is None or alpha_day_interval is None or delta is None:
+        raise PreventUpdate
     try:
         df = get_generated_data()[company]
 

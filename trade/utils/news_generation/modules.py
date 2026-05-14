@@ -36,5 +36,13 @@ def percentage_change(previous, actual):
     '''
     Calculate the percentage change between two values
     '''
-
-    return ((actual - previous) / previous) * 100
+    try:
+        if previous == 0:
+            return 0.0
+        result = ((actual - previous) / previous) * 100
+        # NaN != NaN is True — catches numpy/pandas NaN without extra imports
+        if result != result:
+            return 0.0
+        return result
+    except (TypeError, ValueError):
+        return 0.0
