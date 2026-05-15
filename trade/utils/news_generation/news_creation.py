@@ -26,9 +26,12 @@ def create_news_for_companies(companies, news_position, lang, api):
             # Save immediately after each company so a crash never loses progress.
             # Replace only this company's existing news, keep everyone else's.
             if os.path.exists(news_path):
-                existing = load_data(news_path)
-                existing = existing[existing['ticker'] != company_name]
-                n = pd.concat([existing, n]).reset_index(drop=True)
+                try:
+                    existing = load_data(news_path)
+                    existing = existing[existing['ticker'] != company_name]
+                    n = pd.concat([existing, n]).reset_index(drop=True)
+                except pd.errors.EmptyDataError:
+                    pass  # empty file — nothing to merge, just save the new news
 
             save_data(n, news_path)
             print(f'News saved for {company_name}')
