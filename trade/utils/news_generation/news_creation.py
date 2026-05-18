@@ -20,8 +20,9 @@ def create_news_for_companies(companies, news_position, lang, api):
         company_sector = company_info['activity']
         company_name = company_info['label']
         curve_profile = company_info.get('curve_profile', 'linear')
+        company_description = company_info.get('description', '')
         if company_info['got_charts'] is True and ticker in news_position:
-            n = create_news(ticker, company_name, company_sector, curve_profile, lang, news_position[ticker], model, api)
+            n = create_news(ticker, company_name, company_sector, curve_profile, lang, news_position[ticker], model, api, company_description)
 
             # Save immediately after each company so a crash never loses progress.
             # Replace only this company's existing news, keep everyone else's.
@@ -140,7 +141,7 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta):
 
     return (positive_positions, negative_positions)
 
-def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position, model, api):
+def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position, model, api, company_description=""):
     '''
     Create news for a company based on the position in market data given
     '''
@@ -172,7 +173,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         i = 0
         for position in news_position[0]:
             # Create the news
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment)
+            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
             title = transform_news_title(content, company_name, curve_profile, lang, client, model)
 
             # Create a new row in news_created
@@ -205,7 +206,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         i = 0
         for position in news_position[1]:
             # Create the news
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment)
+            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
             title = transform_news_title(content, company_name, curve_profile, lang, client, model)
 
             # Create a new row in news_created
@@ -226,7 +227,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     return news_created
 
 
-def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment):
+def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment, company_description=""):
     '''
     Transform the content of a news into a news for the company with a LLM
     '''
@@ -254,8 +255,14 @@ def transform_news_content(content, company, sector, curve_profile, lang, client
 
     language_instruction = "The response must be written in English." if lang == "en" else "La réponse doit être en français."
 
+    description_line = (
+        f"\nCompany description: {company_description}" if lang == "en" and company_description.strip()
+        else f"\nDescription de l'entreprise : {company_description}" if company_description.strip()
+        else ""
+    )
+
     p = """Context:
-You receive a reference financial news article. Rewrite it to be specifically about the company {company}, which operates in the sector: {sector}.
+You receive a reference financial news article. Rewrite it to be specifically about the company {company}, which operates in the sector: {sector}.{description_line}
 
 Company market profile: {curve_description}
 
@@ -269,6 +276,7 @@ Rewrite this article so it is directly about {company}, taking into account its 
         data=content,
         company=company,
         sector=sector,
+        description_line=description_line,
         curve_description=curve_description,
         curve_description_short=curve_description_short,
         sentiment_label=sentiment_label,

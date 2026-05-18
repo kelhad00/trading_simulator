@@ -140,7 +140,9 @@ translation = {
                     "company": "Company",
                     "ticker": "Ticker",
                     "activity": "Activity",
+                    "description": "Description (optional)",
                 },
+                "description-placeholder": "e.g. Global luxury goods conglomerate specialising in fashion, leather goods, perfumes and cosmetics.",
                 "notification": {
                     "success-title": "Renamed",
                     "success-msg": "{ticker} has been renamed to \"{name}\"",

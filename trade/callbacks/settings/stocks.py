@@ -17,10 +17,11 @@ from trade.defaults import defaults as dlt
     State("input-stock", "value"),
     State("input-company", "value"),
     State("input-activity", "value"),
+    State("input-description", "value"),
     State("companies", "data"),
     prevent_initial_call=True
 )
-def add_company_and_activity(n, stock, company, activity, companies):
+def add_company_and_activity(n, stock, company, activity, description, companies):
     """
     Add a company and an activity to the stores
     Args:
@@ -41,6 +42,7 @@ def add_company_and_activity(n, stock, company, activity, companies):
         "label": company,
         "activity": activity,
         "got_charts": False,
+        "description": description or "",
     }
 
     # Success notification
