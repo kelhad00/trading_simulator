@@ -1,5 +1,4 @@
-from time import sleep
-from groq import Groq
+from openai import OpenAI
 import pandas as pd
 import os
 import random
@@ -12,8 +11,8 @@ from trade.utils.news_generation.modules import find_sector_for_company
 from trade.defaults import defaults as dlt
 
 
-def create_news_for_companies(companies, news_position, lang, api):
-    model = 'llama-3.1-8b-instant'
+def create_news_for_companies(companies, news_position, lang, base_url="http://localhost:11434/v1"):
+    model = 'llama3.1:8b'
     news_path = os.path.join(dlt.data_path, 'news.csv')
 
     for ticker, company_info in companies.items():
@@ -21,7 +20,7 @@ def create_news_for_companies(companies, news_position, lang, api):
         company_name = company_info['label']
         curve_profile = company_info.get('curve_profile', 'linear')
         if company_info['got_charts'] is True and ticker in news_position:
-            n = create_news(ticker, company_name, company_sector, curve_profile, lang, news_position[ticker], model, api)
+            n = create_news(ticker, company_name, company_sector, curve_profile, lang, news_position[ticker], model, base_url)
 
             # Save immediately after each company so a crash never loses progress.
             # Replace only this company's existing news, keep everyone else's.
@@ -140,7 +139,7 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta):
 
     return (positive_positions, negative_positions)
 
-def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position, model, api):
+def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position, model, base_url="http://localhost:11434/v1"):
     '''
     Create news for a company based on the position in market data given
     '''
@@ -148,10 +147,8 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     # Paths
     dataset_path = os.path.join(dlt.data_path, 'news_dataset.csv')
 
-    # Create a Groq client
-    client = Groq(
-        api_key=api,
-    )
+    # Create an Ollama client via the OpenAI-compatible API
+    client = OpenAI(base_url=base_url, api_key="ollama")
 
     # Load the dataset & market data
     dataset = load_data(dataset_path)
@@ -187,9 +184,6 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             print("News created for " + company_name)
             i += 1
 
-            # Set a delay to avoid the rate limit
-            sleep(6)
-
     else:
         # The sector is not in the dataset or there are not enough of them
         raise Exception('There are not enough positive news for the sector of ' + company_name + ' in the dataset')
@@ -215,9 +209,6 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
             print("News created for " + company_name)
             i += 1
-
-            # Set a delay to avoid the rate limit
-            sleep(6)
 
     else:
         # The sector is not in the dataset or there are not enough of them

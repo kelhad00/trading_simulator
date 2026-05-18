@@ -185,13 +185,13 @@ def generate_new_charts(
 
 # ── Export confirmed charts to CSV ────────────────────────────────────────────
 
-def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang, key):
+def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang, base_url):
     """Run news generation in a background thread so the UI is not blocked."""
     try:
         positions = get_news_position_for_companies(
             companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta
         )
-        create_news_for_companies(companies_subset, positions, lang, key)
+        create_news_for_companies(companies_subset, positions, lang, base_url)
         print("Auto news regeneration complete for: " + ", ".join(companies_subset.keys()))
     except Exception as e:
         print("Auto news regeneration failed:", e)
@@ -240,7 +240,7 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies, c
     # Build subset of only the companies whose charts were just confirmed
     companies_subset = {c: companies[c] for c in companies_selected}
 
-    effective_key = (api_key or "").strip() or os.environ.get("GROQ_API_KEY", "")
+    effective_url = (api_key or "").strip() or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
     lang = "en" if (search and "lang=en" in search) else "fr"
 
     thread = threading.Thread(
@@ -254,7 +254,7 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies, c
             alpha_day_interval or 3,
             delta or 0,
             lang,
-            effective_key,
+            effective_url,
         ),
         daemon=True,
     )

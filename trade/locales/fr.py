@@ -167,7 +167,7 @@ translation = {
             },
             "news": {
                 "subtitles": {
-                    "key": "Clé API Groq",
+                    "key": "URL Ollama",
                     "parameters": "Paramètres de génération",
                     "mode": "Mode de génération",
                     "preview": "Prévisualisation",
@@ -176,8 +176,8 @@ translation = {
                     "generate": "Générer pour toutes les actions",
                 },
                 "input": {
-                    "key": "Clé API Groq",
-                    "key-placeholder": "Chargée depuis .env — saisir ici pour remplacer",
+                    "key": "URL de base Ollama",
+                    "key-placeholder": "Chargée depuis .env — saisir ici pour remplacer (ex : http://localhost:11434/v1)",
                     "alpha": "Indiquer un pourcentage de variation de marché entre 2 jours",
                     "alpha-day-interval": "Indiquer l'intervalle de jours pour le calcul de l'alpha",
                     "delta": "Indiquer une valeur de décallage",

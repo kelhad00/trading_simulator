@@ -154,7 +154,7 @@ translation = {
             },
             "news": {
                 "subtitles": {
-                    "key": "Groq API key",
+                    "key": "Ollama URL",
                     "parameters": "News generation parameters",
                     "mode": "Generation mode",
                     "preview": "Preview",
@@ -163,8 +163,8 @@ translation = {
                     "generate": "Generate news for all stocks",
                 },
                 "input": {
-                    "key": "Enter your Groq API key",
-                    "key-placeholder": "Loaded from .env — type here to override",
+                    "key": "Enter the Ollama base URL",
+                    "key-placeholder": "Loaded from .env — type here to override (e.g. http://localhost:11434/v1)",
                     "alpha": "Indicate the alpha value : The alpha parameter is a percentage of variation between two days.",
                     "alpha-day-interval": "Indicate the alpha day interval : The alpha day interval is the interval between the two days used for the calculation of alpha.",
                     "delta": "Indicate the delta value : The delta value shifts the news days by a certain number of days.",

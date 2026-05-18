@@ -69,11 +69,11 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
 
         lang = "en" if (search and "lang=en" in search) else "fr"
 
-        # Use the UI input key if provided, otherwise fall back to the .env key
-        effective_key = api_key or os.environ.get("GROQ_API_KEY", "")
+        # Use the UI input URL if provided, otherwise fall back to the .env value
+        effective_url = (api_key or "").strip() or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 
         # Create the news for all the companies
-        create_news_for_companies(companies, news_position, lang, effective_key)
+        create_news_for_companies(companies, news_position, lang, effective_url)
 
         return dmc.Notification(
             id="notification-news-generated",
@@ -89,7 +89,7 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
             title="Error",
             action="show",
             color="red",
-            message=f"Error while generating news! it may be due to the API key or the parameters",
+            message=f"Error while generating news! It may be due to the Ollama URL, the model, or the parameters.",
         ), False
 
 
