@@ -11,6 +11,10 @@ from trade.defaults import defaults as dlt
 @callback(
     Output("companies", "data"),
     Output("notifications", "children"),
+    Output("input-stock", "value"),
+    Output("input-company", "value"),
+    Output("input-activity", "value"),
+    Output("input-description", "value"),
 
     Input("add-company", "n_clicks"),
 
@@ -54,7 +58,7 @@ def add_company_and_activity(n, stock, company, activity, description, companies
         message=f"{company} has been added to the list of companies",
     )
 
-    return companies, notif
+    return companies, notif, "", None, None, ""
 
 
 @callback(
