@@ -7,6 +7,97 @@ from trade.utils.settings.data_handler import scale_market_data, random_number, 
 from trade.defaults import defaults as dlt
 
 
+def generate_synthetic_ohlcv(n_periods, profile, noise_pct, start_value, start_date, crash_point_pct=70):
+    """
+    Generate a synthetic OHLCV DataFrame shaped by the requested growth curve profile.
+
+    Parameters
+    ----------
+    n_periods : int
+        Total number of trading periods (rows).
+    profile : str
+        One of 'linear', 'exponential', 'logarithmic', 'volatile', 'crash'.
+    noise_pct : float
+        Noise / volatility level as a percentage (0–100).
+    start_value : float
+        Starting close price.
+    start_date : str or datetime-like
+        First date in the generated series.
+    crash_point_pct : float
+        For the 'crash' profile: percentage of n_periods at which the decline starts (0–100).
+
+    Returns
+    -------
+    pd.DataFrame
+        Columns: Date, Open, High, Low, Close, Adj Close, Volume
+        Index:   RangeIndex (0 … n_periods-1)
+    """
+    rng = np.random.default_rng()
+    n = max(int(n_periods), 2)
+    noise = noise_pct / 100.0  # 0.0 – 1.0
+    t = np.arange(n)
+
+    # ── Base price curve ──────────────────────────────────────────────────────
+    if profile == "exponential":
+        # Doubles by end of series
+        growth = start_value * np.exp(np.log(2) * t / (n - 1))
+
+    elif profile == "logarithmic":
+        # Fast early growth that flattens (~50 % total gain)
+        growth = start_value * (1 + 0.5 * np.log1p(t) / np.log1p(n - 1))
+
+    elif profile == "volatile":
+        # Pure random walk; noise_pct controls daily volatility
+        daily_vol = 0.005 + 0.02 * noise
+        daily_ret = rng.normal(0.0002, daily_vol, n)
+        growth = start_value * np.cumprod(1 + daily_ret)
+
+    elif profile == "crash":
+        crash_idx = max(1, min(n - 1, int(n * crash_point_pct / 100)))
+        # Growth phase: +80 % up to crash point
+        t_up = np.arange(crash_idx)
+        growth_up = start_value * (1 + 0.8 * t_up / crash_idx)
+        peak = float(growth_up[-1])
+        # Decline phase: exponential decay to ~30 % of peak
+        t_dn = np.arange(n - crash_idx)
+        growth_dn = peak * np.exp(-np.log(10 / 3) * t_dn / max(n - crash_idx - 1, 1))
+        growth = np.concatenate([growth_up, growth_dn])
+
+    else:
+        # Default / 'linear': steady +50 % over the series
+        growth = start_value * (1 + 0.5 * t / (n - 1))
+
+    # ── Add proportional noise to close prices ────────────────────────────────
+    noise_scale = max(noise * 0.015, 1e-8)
+    price_noise = rng.normal(0, noise_scale, n) * growth
+    close = np.maximum(growth + price_noise, 0.1)
+
+    # ── Derive O / H / L from Close ───────────────────────────────────────────
+    spread = np.maximum(noise * 0.01 * close, 0.5)
+    open_ = np.empty(n)
+    open_[0] = start_value
+    open_[1:] = close[:-1] * (1 + rng.normal(0, max(noise * 0.003, 1e-8), n - 1))
+    open_ = np.maximum(open_, 0.1)
+
+    high = np.maximum(open_, close) + rng.uniform(0, spread, n)
+    low  = np.minimum(open_, close) - rng.uniform(0, spread, n)
+    low  = np.maximum(low, 0.1)
+
+    volume = rng.integers(100_000, 1_000_000, n)
+
+    dates = pd.date_range(start=start_date, periods=n, freq='D')
+
+    return pd.DataFrame({
+        'Date':      dates,
+        'Open':      open_,
+        'High':      high,
+        'Low':       low,
+        'Close':     close,
+        'Adj Close': close,
+        'Volume':    volume,
+    })
+
+
 def bull_trend(data, data_size, alpha=500, length=100):
     # Parameters
     # alpha: the difference between the close price at the start and end of the trend

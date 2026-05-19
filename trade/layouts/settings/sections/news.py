@@ -3,7 +3,6 @@ import dash_mantine_components as dmc
 
 from trade.components.sections import section
 from trade.locales import translations as tls
-from trade.defaults import Defaults as dlt
 
 
 def news_settings(lang="fr"):
@@ -14,8 +13,8 @@ def news_settings(lang="fr"):
                 dmc.TextInput(
                     id="input-api-key",
                     label=tl["input"]["key"],
+                    placeholder=tl["input"]["key-placeholder"],
                     className="flex-1",
-                    value=dlt.api_key
                 ),
             ], className="flex w-full"),
         ]),
@@ -25,7 +24,7 @@ def news_settings(lang="fr"):
                     id="input-alpha",
                     label=tl["input"]["alpha"],
                     className="flex-1",
-                    value=3,
+                    value=0.5,
                 ),
             ], className="flex w-full"),
 
@@ -67,15 +66,27 @@ def news_settings(lang="fr"):
                     id="input-nbr-positive-news",
                     label=tl["input"]["nbr-positive-news"],
                     className="flex-1",
-                    value=5,
+                    value=2,
                 ),
                 dmc.NumberInput(
                     id="input-nbr-negative-news",
                     label=tl["input"]["nbr-negative-news"],
                     className="flex-1",
-                    value=5,
+                    value=2,
                 ),
             ], className="flex w-full", id="nbr-news-container"),
+
+            # Display top-K input only in linear mode
+            html.Div([
+                dmc.NumberInput(
+                    id="input-top-k",
+                    label=tl["input"]["top-k"],
+                    description=tl["input"]["top-k-description"],
+                    className="flex-1",
+                    value=0,
+                    min=0,
+                ),
+            ], className="flex w-full", id="top-k-container", style={"display": "none"}),
         ]),
 
 
