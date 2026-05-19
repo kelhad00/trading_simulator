@@ -92,7 +92,6 @@ translation = {
                     "preview": "Preview",
                     "parameters": "Market movement parameters",
                     "trends": "Charts trends",
-                    "curve": "Growth curve profile",
                 },
                 "button": {
                     "modify": "Modify",
@@ -104,17 +103,6 @@ translation = {
                     "alpha": "Select alpha value",
                     "length": "Select length of a market movement",
                     "start": "Select start date",
-                    "curve-profile": "Growth curve profile",
-                    "noise": "Noise / volatility level (%)",
-                    "crash-point": "Crash point (% of duration)",
-                },
-                "curve-profiles": {
-                    "segments": "Market segments",
-                    "linear": "Linear",
-                    "exponential": "Exponential",
-                    "logarithmic": "Logarithmic",
-                    "volatile": "Volatile",
-                    "crash": "Crash",
                 },
                 "radio": {
                     "title": "market movement",
@@ -133,28 +121,16 @@ translation = {
                 "button": {
                     "add": "Add",
                     "reset": "Reset",
-                    "edit": "Edit",
-                    "save": "Save",
                 },
                 "input": {
                     "company": "Company",
                     "ticker": "Ticker",
                     "activity": "Activity",
                 },
-                "notification": {
-                    "success-title": "Renamed",
-                    "success-msg": "{ticker} has been renamed to \"{name}\"",
-                    "error-title": "Error",
-                    "error-msg": "Company name cannot be empty",
-                },
-                "validation": {
-                    "missing-label-title": "Validation",
-                    "missing-label-msg": "All active companies must have a name before starting the simulation.",
-                },
             },
             "news": {
                 "subtitles": {
-                    "key": "Ollama URL",
+                    "key": "Groq API key",
                     "parameters": "News generation parameters",
                     "mode": "Generation mode",
                     "preview": "Preview",
@@ -163,15 +139,12 @@ translation = {
                     "generate": "Generate news for all stocks",
                 },
                 "input": {
-                    "key": "Enter the Ollama base URL",
-                    "key-placeholder": "Loaded from .env — type here to override (e.g. http://localhost:11434/v1)",
+                    "key": "Enter your Groq API key",
                     "alpha": "Indicate the alpha value : The alpha parameter is a percentage of variation between two days.",
                     "alpha-day-interval": "Indicate the alpha day interval : The alpha day interval is the interval between the two days used for the calculation of alpha.",
                     "delta": "Indicate the delta value : The delta value shifts the news days by a certain number of days.",
                     "nbr-positive-news": "Number of positive news",
                     "nbr-negative-news": "Number of negative news",
-                    "top-k": "Top-K filter (linear mode only)",
-                    "top-k-description": "Keep only the K news with the biggest price swings. Set to 0 to keep all positions above alpha.",
                 },
                 "select": {
                     "ticker": "Select a stock",

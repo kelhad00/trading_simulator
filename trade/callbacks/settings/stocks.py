@@ -1,9 +1,8 @@
-from dash import callback, Input, Output, State, ALL, MATCH, no_update, html, page_registry
+from dash import callback, Input, Output, State, ALL, no_update, html, page_registry
 import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
 
 from trade.components.list import stock_list_element
-from trade.locales import translations as tls
 from trade.utils.settings.create_market_data import delete_generated_data, get_generated_data
 from trade.defaults import defaults as dlt
 
@@ -85,6 +84,9 @@ def display_companies(companies, tabs):
     State("select-company", "value"),
 )
 def update_select_company_options(companies, tabs, company):
+    # join companies and indexes
+    # TODO : handle indexes
+    # options = {**companies, **dlt.indexes}
     options = companies
 
     # if company not in options, select first company
@@ -96,9 +98,8 @@ def update_select_company_options(companies, tabs, company):
 
     return options, options, options, company
 
-
 @callback(
-    Output("companies", "data", allow_duplicate=True),
+Output("companies", "data", allow_duplicate=True),
     Input("settings-tabs", "value"),
     State("companies", "data"),
     prevent_initial_call=True
@@ -241,77 +242,3 @@ def update_activities(companies, tabs):
     activities = list(set([company["activity"] for company in companies.values()]))
     data = [{"label": activity, "value": activity} for activity in activities]
     return data
-
-
-# ── Inline label editing ──────────────────────────────────────────────────────
-
-@callback(
-    Output({"type": "company-name-text", "index": MATCH}, "style"),
-    Output({"type": "edit-stock-input", "index": MATCH}, "style"),
-    Output({"type": "edit-stock", "index": MATCH}, "style"),
-    Output({"type": "save-stock", "index": MATCH}, "style"),
-    Input({"type": "edit-stock", "index": MATCH}, "n_clicks"),
-)
-def enter_edit_mode(n):
-    """Switch a single company row from read-only to edit mode."""
-    if not n:
-        raise PreventUpdate
-    return (
-        {"display": "none"},   # hide the plain-text label
-        {"display": "block"},  # show the text input
-        {"display": "none"},   # hide the Edit button
-        {"display": "flex"},   # show the Save button
-    )
-
-
-@callback(
-    Output("companies", "data", allow_duplicate=True),
-    Output("notifications", "children", allow_duplicate=True),
-    Input({"type": "save-stock", "index": ALL}, "n_clicks"),
-    State({"type": "edit-stock-input", "index": ALL}, "value"),
-    State("companies", "data"),
-    prevent_initial_call=True,
-)
-def save_company_label(clicks, new_labels, companies):
-    """
-    Persist the edited company label to the companies store.
-
-    After this callback updates the store, display_companies re-renders the
-    entire list — every row returns to read-only mode automatically.
-    """
-    if not clicks or not any(clicks):
-        raise PreventUpdate
-
-    index = next((i for i, c in enumerate(clicks) if c), None)
-    if index is None:
-        raise PreventUpdate
-
-    ticker = list(companies.keys())[index]
-    new_label = new_labels[index] if index < len(new_labels) else None
-
-    lang = page_registry.get("lang", "fr")
-    tl = tls[lang]["settings"]["tickers"]["notification"]
-
-    if not new_label or not new_label.strip():
-        notif = dmc.Notification(
-            id="notif-label-error",
-            title=tl["error-title"],
-            message=tl["error-msg"],
-            color="red",
-            action="show",
-            autoClose=4000,
-        )
-        return no_update, notif
-
-    companies[ticker]["label"] = new_label.strip()
-
-    notif = dmc.Notification(
-        id="notif-label-saved",
-        title=tl["success-title"],
-        message=tl["success-msg"].format(ticker=ticker, name=new_label.strip()),
-        color="green",
-        action="show",
-        autoClose=3000,
-    )
-
-    return companies, notif
