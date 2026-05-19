@@ -12,17 +12,19 @@ from trade.utils.news_generation.display import display_chart
 
 @callback(
     Output('nbr-news-container', 'style'),
+    Output('top-k-container', 'style'),
     Input('input-generation-mode', 'value'),
-    State('nbr-news-container', 'children')
 )
-def update_display_container_nbr_news(mode, children):
+def update_display_container_nbr_news(mode):
     """
-    Switch the display of inputs (number of positive and negative news) depending on the generation mode
+    Switch the display of inputs depending on the generation mode:
+    - random mode: show nbr positive/negative inputs
+    - linear mode: show top-k input
     """
     if mode == 'random':
-        return {'display': 'block'}
+        return {'display': 'block'}, {'display': 'none'}
     else:
-        return {'display': 'none'}
+        return {'display': 'none'}, {'display': 'block'}
 
 
 @callback(
@@ -37,13 +39,14 @@ def update_display_container_nbr_news(mode, children):
     State('input-generation-mode', 'value'),
     State('input-nbr-positive-news', 'value'),
     State('input-nbr-negative-news', 'value'),
+    State('input-top-k', 'value'),
     State('url', 'search'),
 
     Input('generate-news', 'n_clicks'),
     prevent_initial_call=True
 )
 def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta, generation_mode,
-                            nbr_positive_news, nbr_negative_news, search, n):
+                            nbr_positive_news, nbr_negative_news, top_k, search, n):
     """
     Generate news for all the companies
     Args:
@@ -65,15 +68,15 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
     try:
         # Get the news position (timestamp) for all the companies
         news_position = get_news_position_for_companies(companies, generation_mode, nbr_positive_news, nbr_negative_news,
-                                                        alpha, alpha_day_interval, delta)
+                                                        alpha, alpha_day_interval, delta, k=top_k or 0)
 
         lang = "en" if (search and "lang=en" in search) else "fr"
 
-        # Use the UI input key if provided, otherwise fall back to the .env key
-        effective_key = api_key or os.environ.get("GROQ_API_KEY", "")
+        # Use the UI input URL if provided, otherwise fall back to the .env value
+        effective_url = (api_key or "").strip() or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 
         # Create the news for all the companies
-        create_news_for_companies(companies, news_position, lang, effective_key)
+        create_news_for_companies(companies, news_position, lang, effective_url)
 
         return dmc.Notification(
             id="notification-news-generated",
@@ -89,7 +92,7 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
             title="Error",
             action="show",
             color="red",
-            message=f"Error while generating news! it may be due to the API key or the parameters",
+            message=f"Error while generating news! It may be due to the Ollama URL, the model, or the parameters.",
         ), False
 
 
@@ -135,21 +138,12 @@ def update_options_news_companies(tabs, companies):
     Input('input-generation-mode', 'value'),
     Input('input-nbr-positive-news', 'value'),
     Input('input-nbr-negative-news', 'value'),
+    Input('input-top-k', 'value'),
     prevent_initial_call=True
 )
-def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_positive_news, nbr_negative_news):
+def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_positive_news, nbr_negative_news, top_k):
     """
     Update the news graph
-    Args:
-        company: The company
-        alpha: The alpha value
-        alpha_day_interval: The alpha day interval
-        delta: The delta value
-        mode: The generation mode
-        nbr_positive_news: The number of positive news
-        nbr_negative_news: The number of negative news
-    Returns:
-        The updated graph
     """
     if not company or alpha is None or alpha_day_interval is None or delta is None:
         raise PreventUpdate
@@ -157,7 +151,7 @@ def update_graph_news(company, alpha, alpha_day_interval, delta, mode, nbr_posit
         df = get_generated_data()[company]
 
         if mode == "linear":
-            news_position = get_news_position_lin(df, alpha, alpha_day_interval, delta)
+            news_position = get_news_position_lin(df, alpha, alpha_day_interval, delta, k=top_k or 0)
         else:
             news_position = get_news_position_rand(df, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
 

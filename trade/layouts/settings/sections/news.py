@@ -75,6 +75,18 @@ def news_settings(lang="fr"):
                     value=2,
                 ),
             ], className="flex w-full", id="nbr-news-container"),
+
+            # Display top-K input only in linear mode
+            html.Div([
+                dmc.NumberInput(
+                    id="input-top-k",
+                    label=tl["input"]["top-k"],
+                    description=tl["input"]["top-k-description"],
+                    className="flex-1",
+                    value=0,
+                    min=0,
+                ),
+            ], className="flex w-full", id="top-k-container", style={"display": "none"}),
         ]),
 
 
