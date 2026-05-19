@@ -183,6 +183,8 @@ translation = {
                     "delta": "Indiquer une valeur de décallage",
                     "nbr-positive-news": "Nombre d'actualités positives",
                     "nbr-negative-news": "Nombre d'actualités négatives",
+                    "top-k": "Filtre Top-K (mode linéaire uniquement)",
+                    "top-k-description": "Garder uniquement les K actualités avec les plus grandes variations de prix. Mettre 0 pour garder toutes les positions au-dessus de l'alpha.",
                 },
                 "select": {
                     "ticker": "Sélectionner une action",

@@ -170,6 +170,8 @@ translation = {
                     "delta": "Indicate the delta value : The delta value shifts the news days by a certain number of days.",
                     "nbr-positive-news": "Number of positive news",
                     "nbr-negative-news": "Number of negative news",
+                    "top-k": "Top-K filter (linear mode only)",
+                    "top-k-description": "Keep only the K news with the biggest price swings. Set to 0 to keep all positions above alpha.",
                 },
                 "select": {
                     "ticker": "Select a stock",

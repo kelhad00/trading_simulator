@@ -36,12 +36,13 @@ def create_news_for_companies(companies, news_position, lang, base_url="http://l
             print(f'News saved for {company_name}')
         
 
-def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta):
+def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta, k=0):
     '''
     Get the position of the news for all companies
     Parameters:
         - companies : the companies to generate the news position
         - mode : the mode to generate the news position
+        - k : top-K filter for linear mode (0 = no limit, use all positions above alpha)
     '''
 
     # Load the market data
@@ -57,7 +58,7 @@ def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_nega
                     if mode == "random":
                         news_positions[company] = get_news_position_rand(generated_market_data[company], nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
                     else:
-                        news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta)
+                        news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta, k)
                 except Exception as e:
                     print(f"Skipping news positions for {company}: {e}")
 
@@ -112,30 +113,34 @@ def get_news_position_rand(market_data, nbr_positive_news, nbr_negative_news, al
     )
 
 
-def get_news_position_lin(market_data, alpha, alpha_day_interval, delta):
+def get_news_position_lin(market_data, alpha, alpha_day_interval, delta, k=0):
     '''
-    Get all possible position of the news in the market data in function of the parameters
-    Parameters:
-        - alpha : the minimum percentage of market variation to place a news
-        - alpha_day_interval : the number of days between the two days used to calculate the percentage change
-        - delta : the number of days to shift the news position
+    Get possible positions of the news in the market data in function of the parameters.
+    If k=0, all positions above alpha are returned (original behaviour).
+    If k>0, only the top-k positions with the highest absolute change are returned.
     '''
 
-    # List of possible positions
-    positive_positions = []
-    negative_positions = []
+    positive_scored = []
+    negative_scored = []
 
-    # Get the size of the market data
     data_size = market_data.shape[0]
 
     for index in range(alpha_day_interval, data_size - alpha_day_interval):
-        # Calculate the percentage change compared to 3 days later
         change = percentage_change(market_data['Close'].iloc[index], market_data['Close'].iloc[index + alpha_day_interval])
 
         if change >= alpha:
-            positive_positions.append(index - delta)
+            positive_scored.append((change, index - delta))
         elif change <= -alpha:
-            negative_positions.append(index - delta)
+            negative_scored.append((change, index - delta))
+
+    if k > 0:
+        positive_scored.sort(key=lambda x: x[0], reverse=True)
+        negative_scored.sort(key=lambda x: x[0])
+        positive_positions = [pos for _, pos in positive_scored[:k]]
+        negative_positions = [pos for _, pos in negative_scored[:k]]
+    else:
+        positive_positions = [pos for _, pos in positive_scored]
+        negative_positions = [pos for _, pos in negative_scored]
 
     return (positive_positions, negative_positions)
 
@@ -170,7 +175,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         for position in news_position[0]:
             # Create the news
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment)
-            title = transform_news_title(content, company_name, curve_profile, lang, client, model)
+            title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
 
             # Create a new row in news_created
 
@@ -200,7 +205,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         for position in news_position[1]:
             # Create the news
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment)
-            title = transform_news_title(content, company_name, curve_profile, lang, client, model)
+            title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
 
             # Create a new row in news_created
             date = market_data.iloc[position]['date']
@@ -280,7 +285,7 @@ Rewrite this article so it is directly about {company}, taking into account its 
     return response.choices[0].message.content
 
 
-def transform_news_title(content, company_name, curve_profile, lang, client, model):
+def transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment):
     '''
     Create a title from a content of a news for the company with a LLM
     '''
@@ -293,6 +298,11 @@ def transform_news_title(content, company_name, curve_profile, lang, client, mod
             "volatile":    "high volatility",
             "crash":       "crisis and decline",
         }
+        sentiment_instruction = (
+            "The headline MUST sound clearly and unmistakably NEGATIVE — use words like 'drops', 'falls', 'crisis', 'loss', 'decline', 'slump', 'fears', 'warning', 'cut', 'crash', or similar. A reader must instantly know it is bad news without reading the article."
+            if sentiment == "negative" else
+            "The headline MUST sound clearly and unmistakably POSITIVE — use words like 'rises', 'surges', 'record', 'growth', 'gain', 'boost', 'strong', 'soars', 'leads', or similar. A reader must instantly know it is good news without reading the article."
+        )
     else:
         curve_descriptions_short = {
             "linear":      "croissance stable",
@@ -301,6 +311,11 @@ def transform_news_title(content, company_name, curve_profile, lang, client, mod
             "volatile":    "forte volatilité",
             "crash":       "crise et déclin",
         }
+        sentiment_instruction = (
+            "Le titre DOIT sonner clairement et sans ambiguïté NÉGATIF — utilisez des mots comme 'chute', 'baisse', 'crise', 'perte', 'déclin', 'avertissement', 'effondrement' ou similaires. Le lecteur doit immédiatement savoir que c'est une mauvaise nouvelle sans lire l'article."
+            if sentiment == "negative" else
+            "Le titre DOIT sonner clairement et sans ambiguïté POSITIF — utilisez des mots comme 'hausse', 'bond', 'record', 'croissance', 'gain', 'solide', 's'envole' ou similaires. Le lecteur doit immédiatement savoir que c'est une bonne nouvelle sans lire l'article."
+        )
 
     curve_description_short = curve_descriptions_short.get(curve_profile, list(curve_descriptions_short.values())[0])
     language_instruction = "The response must be written in English." if lang == "en" else "La réponse doit être en français."
@@ -312,10 +327,11 @@ Article:
 {data}
 
 Task:
-Write a short, punchy headline for this article. The headline must mention {company} and reflect the {curve_description_short} tone. Reply ONLY with the headline, no preamble or trailing punctuation. {language_instruction}""".format(
+Write a short, punchy headline for this article. The headline must mention {company}. {sentiment_instruction} Reply ONLY with the headline, no preamble or trailing punctuation. {language_instruction}""".format(
         data=content,
         company=company_name,
         curve_description_short=curve_description_short,
+        sentiment_instruction=sentiment_instruction,
         language_instruction=language_instruction,
     )
 
