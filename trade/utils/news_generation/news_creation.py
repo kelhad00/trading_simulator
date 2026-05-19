@@ -84,7 +84,10 @@ def get_news_position_rand(market_data, nbr_positive_news, nbr_negative_news, al
         curr = close.iloc[index + alpha_day_interval]
         if pd.isna(prev) or pd.isna(curr) or prev == 0:
             continue
-        scored.append((percentage_change(prev, curr), index + delta))
+        shifted_pos = index + delta
+        if shifted_pos < 0 or shifted_pos >= data_size:
+            continue
+        scored.append((percentage_change(prev, curr), shifted_pos))
 
     needed = nbr_positive_news + nbr_negative_news
     if len(scored) < needed:
@@ -127,11 +130,13 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta, k=0):
 
     for index in range(alpha_day_interval, data_size - alpha_day_interval):
         change = percentage_change(market_data['Close'].iloc[index], market_data['Close'].iloc[index + alpha_day_interval])
-
+        shifted_pos = index + delta
+        if shifted_pos < 0 or shifted_pos >= data_size:
+            continue
         if change >= alpha:
-            positive_scored.append((change, index + delta))
+            positive_scored.append((change, shifted_pos))
         elif change <= -alpha:
-            negative_scored.append((change, index + delta))
+            negative_scored.append((change, shifted_pos))
 
     if k > 0:
         positive_scored.sort(key=lambda x: x[0], reverse=True)
