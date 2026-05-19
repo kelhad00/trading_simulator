@@ -136,7 +136,22 @@ translation = {
                 },
                 "input": {
                     "trends": "Nombre de tendances",
-                }
+                },
+                "pattern-select": {
+                    "label": "Modèle technique (facultatif)",
+                    "none": "Aucun",
+                    "double_top": "Double sommet",
+                    "double_bottom": "Double creux",
+                    "head_and_shoulders": "Tête et épaules",
+                    "inverse_head_and_shoulders": "Tête et épaules inversé",
+                    "ascending_triangle": "Triangle ascendant",
+                    "descending_triangle": "Triangle descendant",
+                    "bullish_flag": "Drapeau haussier",
+                    "bearish_flag": "Drapeau baissier",
+                    "cup_and_handle": "Tasse avec anse",
+                    "rising_wedge": "Biseau ascendant",
+                    "falling_wedge": "Biseau descendant",
+                },
             },
             "tickers": {
                 "subtitles": {

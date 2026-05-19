@@ -112,15 +112,41 @@ def generate_charts_modal(lang="fr"):
 
 
 def timeline_item(id, index, title):
-    label = tls[page_registry["lang"]]["settings"]["charts"]["radio"]["label"]
-    option_values = tls[page_registry["lang"]]["settings"]["charts"]["radio"]["options"]
+    lang = page_registry["lang"]
+    tl = tls[lang]["settings"]["charts"]
+    label = tl["radio"]["label"]
+    option_values = tl["radio"]["options"]
+    pattern_tl = tl["pattern-select"]
 
     options = [("bull", option_values[0]), ("bear", option_values[1]), ("flat", option_values[2])]
+
+    pattern_options = [
+        {"label": pattern_tl["none"],                        "value": "none"},
+        {"label": pattern_tl["double_top"],                  "value": "double_top"},
+        {"label": pattern_tl["double_bottom"],               "value": "double_bottom"},
+        {"label": pattern_tl["head_and_shoulders"],          "value": "head_and_shoulders"},
+        {"label": pattern_tl["inverse_head_and_shoulders"],  "value": "inverse_head_and_shoulders"},
+        {"label": pattern_tl["ascending_triangle"],          "value": "ascending_triangle"},
+        {"label": pattern_tl["descending_triangle"],         "value": "descending_triangle"},
+        {"label": pattern_tl["bullish_flag"],                "value": "bullish_flag"},
+        {"label": pattern_tl["bearish_flag"],                "value": "bearish_flag"},
+        {"label": pattern_tl["cup_and_handle"],              "value": "cup_and_handle"},
+        {"label": pattern_tl["rising_wedge"],                "value": "rising_wedge"},
+        {"label": pattern_tl["falling_wedge"],               "value": "falling_wedge"},
+    ]
 
     return dmc.TimelineItem(
         title=title,
         children=[
             radio(options, label, {"type": f"{id}-radio", "index": index}),
+            dmc.Select(
+                id={"type": f"{id}-pattern", "index": index},
+                label=pattern_tl["label"],
+                data=pattern_options,
+                value="none",
+                size="sm",
+                className="w-full mt-2",
+            ),
         ],
         className="pb-4"
     )

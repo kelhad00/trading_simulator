@@ -123,7 +123,22 @@ translation = {
                 },
                 "input": {
                     "trends": "Number of charts trends",
-                }
+                },
+                "pattern-select": {
+                    "label": "Technical pattern (optional)",
+                    "none": "None",
+                    "double_top": "Double Top",
+                    "double_bottom": "Double Bottom",
+                    "head_and_shoulders": "Head & Shoulders",
+                    "inverse_head_and_shoulders": "Inverse Head & Shoulders",
+                    "ascending_triangle": "Ascending Triangle",
+                    "descending_triangle": "Descending Triangle",
+                    "bullish_flag": "Bullish Flag",
+                    "bearish_flag": "Bearish Flag",
+                    "cup_and_handle": "Cup & Handle",
+                    "rising_wedge": "Rising Wedge",
+                    "falling_wedge": "Falling Wedge",
+                },
             },
             "tickers": {
                 "subtitles": {

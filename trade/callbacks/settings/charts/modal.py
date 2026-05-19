@@ -12,7 +12,7 @@ from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import (
     bull_trend, bear_trend, flat_trend,
     export_generated_data, get_generated_data,
-    generate_synthetic_ohlcv,
+    generate_synthetic_ohlcv, inject_pattern,
 )
 from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
@@ -71,6 +71,7 @@ def toggle_segment_controls(profile):
     Input("slider-length", "value"),
     Input("slider-start", "value"),
     Input({"type": "timeline-radio", "index": ALL}, "value"),
+    Input({"type": "timeline-pattern", "index": ALL}, "value"),
     Input("modal-select-companies", "value"),
     Input("select-curve-profile", "value"),
     Input("slider-noise", "value"),
@@ -79,7 +80,7 @@ def toggle_segment_controls(profile):
 )
 def generate_new_charts(
     alpha, length, start_value,
-    radio_trends, companies,
+    radio_trends, pattern_trends, companies,
     curve_profile, noise_level, crash_point,
     start_date=dlt.start_date,
 ):
@@ -119,7 +120,6 @@ def generate_new_charts(
                     start_date=first_timestamp,
                     crash_point_pct=crash_pct,
                 )
-                # display_chart expects the index to be used as x-axis
                 df_indexed = df.set_index("Date")
                 fig = display_chart(df_indexed, 0, df_indexed.shape[0], company)
                 figures.append(fig)
@@ -163,8 +163,13 @@ def generate_new_charts(
                     data_list[0] = scale_market_data(segment, start_value)
                 else:
                     data_list[i] = scale_market_data(
-                        segment, data_list[i - 1].at[length - 1, "Close"]
+                        segment, data_list[i - 1].iloc[-1]["Close"]
                     )
+
+            # Inject per-segment patterns (skip "none" and unset values)
+            for i, pattern_type in enumerate(pattern_trends or []):
+                if i < len(data_list) and pattern_type and pattern_type != "none":
+                    data_list[i] = inject_pattern(data_list[i], pattern_type)
 
             final_chart = pd.concat(data_list).reset_index(drop=True)
             final_chart["Date"] = pd.date_range(
