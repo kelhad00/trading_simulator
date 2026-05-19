@@ -15,45 +15,48 @@ from trade.utils.news import get_news_dataframe
     State('timestamp', 'data'),
 )
 def cb_update_news_table(n, timestamp, range=50, daily=True):
+    """
+    Function to display the latest news in the table from the timestamp
+    Args:
+        timestamp: The last timestamp
+    Returns:
+        The updated news table
+    """
+
     try:
         news_df = get_news_dataframe()
-    except Exception as e:
-        print(f"[NEWS] Could not load news.csv: {e}")
-        raise PreventUpdate
+    except FileNotFoundError:
+        raise "The news.csv file was not generated."
 
     lang = page_registry['lang']
 
-    # Normalise column name: support both 'title' and 'article'
-    if 'title' in news_df.columns:
-        news_df = news_df.rename(columns={'title': 'article'})
-    elif 'article' not in news_df.columns:
-        print("[NEWS] news.csv has no 'title' or 'article' column — columns found:", news_df.columns.tolist())
-        raise PreventUpdate
-
-    news_df = news_df.drop_duplicates(subset=['article'], keep='first')
-
-    # Parse dates robustly
+    # Format the news dataframe
     try:
-        news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
-    except Exception as e:
-        print(f"[NEWS] Date parsing failed: {e}")
-        raise PreventUpdate
+        news_df = news_df.drop_duplicates(subset=['title'], keep='first') \
+            .rename({'title': 'article'}, axis=1)
+    except KeyError:  # Else, if news_df contains an article column
+        try:
+            news_df = news_df.drop_duplicates(subset=['article'], keep='first')
+        except KeyError:  # news _df is not correctly formatted
+            print('WARNING: The `news.csv` file must contain a `title` or `article` column.')
+            raise PreventUpdate
 
-    # Convert simulation timestamp to tz-naive for comparison
-    try:
-        ts = pd.to_datetime(timestamp).replace(tzinfo=None)
-        if daily:
-            ts = ts + pd.Timedelta(days=1)
-    except Exception as e:
-        print(f"[NEWS] Timestamp conversion failed (value={timestamp}): {e}")
-        ts = pd.Timestamp.now()
+    # Convert the date column and the timestamp to datetime
+    news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
+    timestamp = pd.to_datetime(timestamp).tz_localize(None)
 
-    nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
+    if daily:
+        timestamp = timestamp + pd.Timedelta(days=1)  # get the date of the next day
 
-    nl = nl[['article', 'date']].head(range).astype(str)
+    # Get the news before the timestamp
+    nl = news_df.loc[news_df['date'] <= timestamp].sort_values(by='date', ascending=False).astype(str)
+
+    #Display article and date columns
+    nl = nl[['article', 'date']]
+    nl = nl[:range]
     nl = nl.rename(columns={
         'date': tls[lang]['news-table']['date'],
-        'article': tls[lang]['news-table']['article'],
+        'article': tls[lang]['news-table']['article']
     })
 
     return dmc.Table(children=create_table(nl, id="news-lines"))

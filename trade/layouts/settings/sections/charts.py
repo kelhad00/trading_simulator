@@ -37,14 +37,6 @@ def generate_charts(lang="fr"):
 
 def generate_charts_modal(lang="fr"):
     tl = tls[lang]["settings"]["charts"]
-    curve_data = [
-        {"label": tl["curve-profiles"]["segments"],    "value": "segments"},
-        {"label": tl["curve-profiles"]["linear"],      "value": "linear"},
-        {"label": tl["curve-profiles"]["exponential"], "value": "exponential"},
-        {"label": tl["curve-profiles"]["logarithmic"], "value": "logarithmic"},
-        {"label": tl["curve-profiles"]["volatile"],    "value": "volatile"},
-        {"label": tl["curve-profiles"]["crash"],       "value": "crash"},
-    ]
     return modal(
         id="modal",
         title=tl["subtitles"]["modal"],
@@ -61,27 +53,8 @@ def generate_charts_modal(lang="fr"):
                     ], className="flex gap-4 w-full items-end")
                 ]),
 
-                section(tl["subtitles"]["curve"], [
-                    dmc.Select(
-                        id="select-curve-profile",
-                        label=tl["select"]["curve-profile"],
-                        data=curve_data,
-                        value="segments",
-                        className="w-full",
-                    ),
-                    slider(tl["select"]["noise"], "slider-noise", 0, 100, 10),
-                    html.Div(
-                        slider(tl["select"]["crash-point"], "slider-crash-point", 0, 100, 70),
-                        id="crash-point-container",
-                        style={"display": "none"},
-                    ),
-                ]),
-
                 section(tl["subtitles"]["parameters"], [
-                    html.Div(
-                        slider(tl["select"]["alpha"], "slider-alpha", 0, 2000, 500),
-                        id="alpha-section",
-                    ),
+                    slider(tl["select"]["alpha"], "slider-alpha", 0, 2000, 500),
                     slider(tl["select"]["length"], "slider-length", 0, 500, 100),
                     slider(tl["select"]["start"], "slider-start", 0, 1000, 250)
                 ]),
@@ -93,10 +66,7 @@ def generate_charts_modal(lang="fr"):
                         min=1, max=5, value=2, step=1,
                         className="w-full"
                     ),
-                    html.Div(
-                        timeline('timeline', 2),
-                        id="timeline-radio-section",
-                    ),
+                    timeline('timeline', 2)
                 ]),
 
                 section(tl["subtitles"]["preview"], [

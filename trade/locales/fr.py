@@ -105,7 +105,6 @@ translation = {
                     "preview": "Prévisualisation",
                     "parameters": "Paramètres des données de marché",
                     "trends": "Tendances des graphiques",
-                    "curve": "Profil de croissance",
                 },
                 "button": {
                     "modify": "Modifier",
@@ -117,17 +116,6 @@ translation = {
                     "alpha": "Sélectionner la valeur d'alpha",
                     "length": "Sélectionner la longueur d'un mouvement de marché",
                     "start": "Sélectionner la valeur de départ",
-                    "curve-profile": "Profil de courbe de croissance",
-                    "noise": "Niveau de bruit / volatilité (%)",
-                    "crash-point": "Point de crash (% de la durée)",
-                },
-                "curve-profiles": {
-                    "segments": "Segments de marché",
-                    "linear": "Linéaire",
-                    "exponential": "Exponentiel",
-                    "logarithmic": "Logarithmique",
-                    "volatile": "Volatil",
-                    "crash": "Crash",
                 },
                 "radio": {
                     "title": "mouvemement de marché",
@@ -146,28 +134,16 @@ translation = {
                 "button": {
                     "add": "Ajouter",
                     "reset": "Réinitialiser",
-                    "edit": "Modifier",
-                    "save": "Enregistrer",
                 },
                 "input": {
                     "company": "Entreprise",
                     "ticker": "Mnémonique",
                     "activity": "Catégorie",
                 },
-                "notification": {
-                    "success-title": "Renommé",
-                    "success-msg": "{ticker} a été renommé en « {name} »",
-                    "error-title": "Erreur",
-                    "error-msg": "Le nom de l'entreprise ne peut pas être vide",
-                },
-                "validation": {
-                    "missing-label-title": "Validation",
-                    "missing-label-msg": "Toutes les entreprises actives doivent avoir un nom avant de démarrer la simulation.",
-                },
             },
             "news": {
                 "subtitles": {
-                    "key": "URL Ollama",
+                    "key": "Clé API Groq",
                     "parameters": "Paramètres de génération",
                     "mode": "Mode de génération",
                     "preview": "Prévisualisation",
@@ -176,15 +152,12 @@ translation = {
                     "generate": "Générer pour toutes les actions",
                 },
                 "input": {
-                    "key": "URL de base Ollama",
-                    "key-placeholder": "Chargée depuis .env — saisir ici pour remplacer (ex : http://localhost:11434/v1)",
+                    "key": "Clé API Groq",
                     "alpha": "Indiquer un pourcentage de variation de marché entre 2 jours",
                     "alpha-day-interval": "Indiquer l'intervalle de jours pour le calcul de l'alpha",
                     "delta": "Indiquer une valeur de décallage",
                     "nbr-positive-news": "Nombre d'actualités positives",
                     "nbr-negative-news": "Nombre d'actualités négatives",
-                    "top-k": "Filtre Top-K (mode linéaire uniquement)",
-                    "top-k-description": "Garder uniquement les K actualités avec les plus grandes variations de prix. Mettre 0 pour garder toutes les positions au-dessus de l'alpha.",
                 },
                 "select": {
                     "ticker": "Sélectionner une action",

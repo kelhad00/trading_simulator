@@ -42,9 +42,6 @@ app.layout = dmc.MantineProvider([
     dmc.NotificationsProvider([
         html.Div(id="notifications"),
 
-        # Global location tracker — lets navigation-triggered callbacks re-fire
-        dcc.Location(id="url", refresh=False),
-
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
         dcc.Store(id='portfolio-shares', data=portfolio_value, storage_type="session"),
