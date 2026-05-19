@@ -153,7 +153,9 @@ translation = {
                     "company": "Entreprise",
                     "ticker": "Mnémonique",
                     "activity": "Catégorie",
+                    "description": "Description (facultative)",
                 },
+                "description-placeholder": "ex. Conglomérat mondial de luxe spécialisé dans la mode, la maroquinerie, les parfums et les cosmétiques.",
                 "notification": {
                     "success-title": "Renommé",
                     "success-msg": "{ticker} a été renommé en « {name} »",

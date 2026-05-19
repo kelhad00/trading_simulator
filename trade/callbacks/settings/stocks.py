@@ -11,16 +11,21 @@ from trade.defaults import defaults as dlt
 @callback(
     Output("companies", "data"),
     Output("notifications", "children"),
+    Output("input-stock", "value"),
+    Output("input-company", "value"),
+    Output("input-activity", "value"),
+    Output("input-description", "value"),
 
     Input("add-company", "n_clicks"),
 
     State("input-stock", "value"),
     State("input-company", "value"),
     State("input-activity", "value"),
+    State("input-description", "value"),
     State("companies", "data"),
     prevent_initial_call=True
 )
-def add_company_and_activity(n, stock, company, activity, companies):
+def add_company_and_activity(n, stock, company, activity, description, companies):
     """
     Add a company and an activity to the stores
     Args:
@@ -41,6 +46,7 @@ def add_company_and_activity(n, stock, company, activity, companies):
         "label": company,
         "activity": activity,
         "got_charts": False,
+        "description": description or "",
     }
 
     # Success notification
@@ -52,7 +58,7 @@ def add_company_and_activity(n, stock, company, activity, companies):
         message=f"{company} has been added to the list of companies",
     )
 
-    return companies, notif
+    return companies, notif, "", None, None, ""
 
 
 @callback(
