@@ -37,7 +37,31 @@ def create_news_for_companies(companies, news_position, lang, base_url="http://l
             print(f'News saved for {company_name}')
         
 
-def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta, k=0):
+def get_news_position_manual(market_data, positive_dates, negative_dates):
+    '''
+    Convert user-provided dates to row indices for manual news placement.
+    Normalises both the market data index and the stored dates to YYYY-MM-DD
+    so timezone suffixes and time components never cause a mismatch.
+    Returns the same (positive_positions, negative_positions) tuple as the
+    other position functions.
+    '''
+    index_list = [str(d)[:10] for d in market_data.index]
+    data_size = len(index_list)
+
+    def to_index(date_str):
+        prefix = str(date_str)[:10]
+        try:
+            idx = index_list.index(prefix)
+            return idx if 0 <= idx < data_size else None
+        except ValueError:
+            return None
+
+    positive_positions = [i for d in positive_dates if (i := to_index(d)) is not None]
+    negative_positions = [i for d in negative_dates if (i := to_index(d)) is not None]
+    return (positive_positions, negative_positions)
+
+
+def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta, k=0, manual_positions=None):
     '''
     Get the position of the news for all companies
     Parameters:
@@ -56,7 +80,14 @@ def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_nega
         if values["got_charts"] is True:
             if company in generated_market_data.keys():
                 try:
-                    if mode == "random":
+                    if manual_positions and company in manual_positions:
+                        pos = manual_positions[company]
+                        news_positions[company] = get_news_position_manual(
+                            generated_market_data[company],
+                            pos.get("positive", []),
+                            pos.get("negative", []),
+                        )
+                    elif mode == "random":
                         news_positions[company] = get_news_position_rand(generated_market_data[company], nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
                     else:
                         news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta, k)
