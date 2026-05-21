@@ -219,6 +219,8 @@ translation = {
                     "counter": "{positive} positive(s), {negative} négative(s) placée(s) pour cette entreprise",
                     "counter-empty": "Aucune position placée pour cette entreprise",
                     "clear": "Effacer cette entreprise",
+                    "clear-notif-title": "Positions manuelles effacées",
+                    "clear-notif-msg": "Les positions manuelles de {company} ont été effacées.",
                     "date-label": "Ou choisir une date manuellement",
                     "date-add": "Ajouter",
                     "flagged-notice": "{count} entreprise a des positions manuelles — elles seront utilisées lors de la génération.",
