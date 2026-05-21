@@ -208,7 +208,21 @@ translation = {
                 },
                 "radio": {
                     "label": "Mode de génération des actualités",
-                    "options": ["Mode aléatoire", "Mode linéaire"],
+                    "options": ["Mode aléatoire", "Mode linéaire", "Mode manuel"],
+                },
+                "manual": {
+                    "sentiment-label": "Type d'actualité",
+                    "sentiment-positive": "Positive",
+                    "sentiment-negative": "Négative",
+                    "hover-text-idle": "Survolez le graphique puis cliquez pour placer",
+                    "hover-text-active": "Cliquer pour placer comme {sentiment} le {date}",
+                    "counter": "{positive} positive(s), {negative} négative(s) placée(s) pour cette entreprise",
+                    "counter-empty": "Aucune position placée pour cette entreprise",
+                    "clear": "Effacer cette entreprise",
+                    "date-label": "Ou choisir une date manuellement",
+                    "date-add": "Ajouter",
+                    "flagged-notice": "{count} entreprise a des positions manuelles — elles seront utilisées lors de la génération.",
+                    "flagged-notice-plural": "{count} entreprises ont des positions manuelles — elles seront utilisées lors de la génération.",
                 },
             },
 

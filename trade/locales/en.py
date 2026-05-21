@@ -195,7 +195,21 @@ translation = {
                 },
                 "radio": {
                     "label": "Generation mode",
-                    "options": ["Random mode", "Linear mode"],
+                    "options": ["Random mode", "Linear mode", "Manual mode"],
+                },
+                "manual": {
+                    "sentiment-label": "Place news as",
+                    "sentiment-positive": "Positive",
+                    "sentiment-negative": "Negative",
+                    "hover-text-idle": "Hover over the chart, then click to place",
+                    "hover-text-active": "Click to place as {sentiment} on {date}",
+                    "counter": "{positive} positive, {negative} negative placed for this company",
+                    "counter-empty": "No positions placed yet for this company",
+                    "clear": "Clear this company",
+                    "date-label": "Or pick a date manually",
+                    "date-add": "Add",
+                    "flagged-notice": "{count} company has manual positions — it will override auto-generation when generating.",
+                    "flagged-notice-plural": "{count} companies have manual positions — they will override auto-generation when generating.",
                 },
             },
 
