@@ -4,7 +4,7 @@ import threading
 import pandas as pd
 import dash_mantine_components as dmc
 
-from dash import callback, Input, Output, State, ALL, no_update, dcc, page_registry
+from dash import callback, Input, Output, State, ALL, no_update, dcc
 from dash.exceptions import PreventUpdate
 
 from trade.utils.market import get_first_timestamp

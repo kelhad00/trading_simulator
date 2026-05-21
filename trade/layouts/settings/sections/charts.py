@@ -6,7 +6,6 @@ from trade.components.radio import radio
 from trade.components.sections import section
 from trade.components.slider import slider
 from trade.locales import translations as tls
-from trade.defaults import defaults as dlt
 from trade.utils.ordinal import ordinal
 
 
@@ -187,10 +186,3 @@ def timeline(id, nb=5):
             ) for i in range(1, nb + 1)],
         ]
     )
-
-
-
-
-
-
-

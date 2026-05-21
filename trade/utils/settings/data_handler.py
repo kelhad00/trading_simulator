@@ -45,40 +45,6 @@ def random_number(data_size):
 
     return random.randint(1, data_size)
 
-def random_file():
-    '''
-    Function get a random file from the data path
-    '''
-
-    DATA_PATH = os.path.join(dlt.data_path, 'patterns')
-
-    # Folder list
-    folders = glob.glob(DATA_PATH + '/*')
-
-    # Random folder
-    random_folder = random.choice(folders)
-
-    # File list
-    files = glob.glob(random_folder + '/*')
-
-    # Random file
-    random_file = random.choice(files)
-
-    return random_file
-
-
-def get_pattern_file(pattern_type):
-    '''
-    Return a random CSV file from the specific pattern_type folder (e.g. "double_top").
-    Returns None if the folder does not exist or is empty.
-    '''
-    folder = os.path.join(dlt.data_path, 'patterns', pattern_type)
-    files = glob.glob(folder + '/*.csv')
-    if not files:
-        return None
-    return random.choice(files)
-
-
 def get_pattern_file_excluding(pattern_type, used_paths):
     """
     Return a random CSV from pattern_type folder that is not in used_paths.
@@ -93,18 +59,3 @@ def get_pattern_file_excluding(pattern_type, used_paths):
     return random.choice(available if available else all_files)
 
 
-def calculate_market_change(df):
-    '''
-    NOT USED
-    Convert the market data into percentage change compared to the open price
-    '''
-
-    # Check if the DataFrame contains the required columns
-    if not {'Open', 'High', 'Low', 'Close'}.issubset(df.columns):
-        raise ValueError("The DataFrame must contain the columns ['Open', 'High', 'Low', 'Close']")
-    
-    
-    # Create a new column & Calculate the percentage of change
-    df['Percentage Change'] = ((df['Close'] - df['Open']) / df['Open']) * 100
-    
-    return df

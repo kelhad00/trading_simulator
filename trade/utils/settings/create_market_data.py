@@ -1,8 +1,8 @@
-import os.path
+import os
 
 import numpy as np
 import pandas as pd
-from trade.utils.settings.data_handler import scale_market_data, random_number, load_data, random_file, get_pattern_file
+from trade.utils.settings.data_handler import scale_market_data, random_number, load_data
 
 from trade.defaults import defaults as dlt
 
@@ -83,112 +83,6 @@ def flat_trend(data, data_size, alpha=50, length=100):
 
     # Return the index of the trend
     return rand
-
-
-def add_pattern(chart, nbr_pattern):
-    '''
-    Add patterns to the chart and return the final chart
-    '''
-
-    final_chart = chart
-
-    # Split the chart into n parts
-    split_chart = np.array_split(final_chart, nbr_pattern)
-
-    # Add pattern to the chart
-    for i in range(nbr_pattern):
-
-        # Get a random pattern
-        random_file_path = random_file()
-
-        # Load the pattern
-        pattern = load_data(random_file_path)
-
-        # Reset the index of the split chart
-        split_chart[i] = split_chart[i].reset_index(drop=True)
-
-        # Random position for the pattern
-        position = random_number(split_chart[i].shape[0]-1)
-
-        # Split the chart
-        chart1 = split_chart[i].iloc[:position].reset_index(drop=True)
-        chart2 = split_chart[i].iloc[position:].reset_index(drop=True)
-
-        # Scale the pattern & the second part of the chart
-        pattern = scale_market_data(pattern, split_chart[i].at[position, 'Close'])
-        last_close = pattern.at[pattern.shape[0] - 1, 'Close']
-        chart2 = scale_market_data(chart2, last_close)
-
-        # Concatenate the data
-        split_chart[i] = pd.concat([chart1, pattern, chart2]).reset_index(drop=True)
-
-    # Concatenate the n parts
-    final_chart = pd.concat(split_chart).reset_index(drop=True)
-
-    return final_chart
-
-
-def _apply_hamming_taper(df, taper_pct=0.10):
-    """
-    Compress OHLC candle spread at pattern entry and exit using a Hamming ramp.
-
-    At the boundary (w=0) each candle collapses to its Open price (flat doji).
-    At the interior (w=1) candles retain their full shape.  This prevents
-    the abrupt volatility jump that otherwise appears where the pattern is
-    spliced into the surrounding segment.
-    """
-    df = df.copy().reset_index(drop=True)
-    n = len(df)
-    taper_n = max(3, int(n * taper_pct))
-    cols = [c for c in ('High', 'Low', 'Close', 'Adj Close') if c in df.columns]
-
-    for i in range(taper_n):
-        w = 0.5 * (1 - np.cos(np.pi * i / max(taper_n - 1, 1)))  # 0 → 1
-
-        mid = df.at[i, 'Open']                          # entry
-        for col in cols:
-            df.at[i, col] = mid + w * (df.at[i, col] - mid)
-
-        j = n - 1 - i                                   # exit (mirror)
-        if j != i:
-            mid = df.at[j, 'Open']
-            for col in cols:
-                df.at[j, col] = mid + w * (df.at[j, col] - mid)
-
-    return df
-
-
-def inject_pattern(segment, pattern_type):
-    """
-    Inject a specific technical pattern into a market data segment.
-
-    pattern_type must match a folder name under Data/patterns/ (e.g. "double_top").
-    The pattern is tapered in/out with a Hamming window to smooth the splice.
-    Returns the segment unchanged if no pattern file is found.
-    """
-    path = get_pattern_file(pattern_type)
-    if path is None:
-        return segment
-
-    pattern = load_data(path)
-    segment = segment.reset_index(drop=True)
-    n = segment.shape[0]
-
-    if n < 3:
-        return segment
-
-    position = np.random.randint(1, n - 1)
-
-    chart1 = segment.iloc[:position].reset_index(drop=True)
-    chart2 = segment.iloc[position:].reset_index(drop=True)
-
-    pattern = scale_market_data(pattern, segment.at[position, 'Close'])
-    pattern = _apply_hamming_taper(pattern)
-
-    last_close = pattern.at[pattern.shape[0] - 1, 'Close']
-    chart2 = scale_market_data(chart2, last_close)
-
-    return pd.concat([chart1, pattern, chart2]).reset_index(drop=True)
 
 
 def apply_event_overlay(df, event_type, position_pct, magnitude_pct):
@@ -288,16 +182,9 @@ def format_generated_data(data, stock):
     if data['Close'].dropna().shape[0] < 20:
         print("Not enough non-NaN values to compute the rolling mean")
 
-    # Compute the rolling mean for 'long_MA'
     data['long_MA'] = data['Close'].rolling(window=20, min_periods=1).mean()
     data['short_MA'] = data['Close'].rolling(window=50, min_periods=1).mean()
     data['200_MA'] = data['Close'].rolling(window=200, min_periods=1).mean()
-
-    # data['long_MA'] = data['Close'].rolling(int(20)).mean()
-    # data['short_MA'] = data['Close'].rolling(int(50)).mean()
-    # data['200_MA'] = data['Close'].rolling(int(200)).mean()
-
-
 
     #rename col Adj Close to adjclose
     data.rename(columns={'Adj Close': 'adjclose'}, inplace=True)
