@@ -67,6 +67,18 @@ def random_file():
     return random_file
 
 
+def get_pattern_file(pattern_type):
+    '''
+    Return a random CSV file from the specific pattern_type folder (e.g. "double_top").
+    Returns None if the folder does not exist or is empty.
+    '''
+    folder = os.path.join(dlt.data_path, 'patterns', pattern_type)
+    files = glob.glob(folder + '/*.csv')
+    if not files:
+        return None
+    return random.choice(files)
+
+
 def calculate_market_change(df):
     '''
     NOT USED

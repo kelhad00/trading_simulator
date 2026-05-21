@@ -5,6 +5,7 @@ from dash.exceptions import PreventUpdate
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
+import trade.callbacks.settings.stocks as stocks_callbacks
 
 
 @callback(
@@ -78,6 +79,7 @@ def delete_revenues(n, company, companies):
     df.to_csv(file_path)
 
     companies[company]['got_charts'] = False
+    stocks_callbacks._cached_df_companies = None
 
     return {"data": [], "layout": {}, "frames": []}, companies
 

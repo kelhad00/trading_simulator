@@ -25,8 +25,11 @@ def _missing_labels(companies):
     ]
 
 
+_LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
+
 @callback(
     Output("start-simulation-btn", "disabled"),
+    Output("start-simulation-btn-link", "style"),
     Input("companies", "data"),
     Input("url", "pathname"),
     prevent_initial_call=False,
@@ -37,11 +40,9 @@ def update_start_button(companies, pathname):
     when any active company has an empty label.  Fires on page navigation so
     state is always current when the user lands on the home page.
     """
-    if not _files_ok():
-        return True
-    if _missing_labels(companies):
-        return True
-    return False
+    is_disabled = not _files_ok() or bool(_missing_labels(companies))
+    link_style = {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
+    return is_disabled, link_style
 
 
 @callback(

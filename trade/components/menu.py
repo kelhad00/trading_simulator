@@ -58,8 +58,7 @@ def dashboard_menu(lang="fr"):
             dmc.MenuDropdown(
                 [
                     dmc.MenuLabel("Simulation"),
-                    dmc.MenuItem("Pause", icon=DashIconify(icon="carbon:pause"), id="pause-button",
-                                 href=f"/?lang={lang}"),
+                    dmc.MenuItem("Pause", icon=DashIconify(icon="carbon:pause"), id="pause-button", n_clicks=0),
                     dmc.MenuItem("Reset", icon=DashIconify(icon="carbon:reset"), id="reset-button", n_clicks=0,
                                  color="red"),
                     dmc.MenuDivider(),
