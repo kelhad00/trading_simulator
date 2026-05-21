@@ -7,20 +7,37 @@ from trade.locales import translations as tls
 from trade.utils.settings.create_market_data import delete_generated_data, get_generated_data
 from trade.defaults import defaults as dlt
 
+_cached_df_companies = None
+
+def get_cached_df_companies():
+    global _cached_df_companies
+    if _cached_df_companies is None:
+        df = get_generated_data()
+        if df is not None:
+            _cached_df_companies = set(df.columns.get_level_values('symbol').unique())
+        else:
+            _cached_df_companies = set()
+    return _cached_df_companies
+
 
 @callback(
     Output("companies", "data"),
     Output("notifications", "children"),
+    Output("input-stock", "value"),
+    Output("input-company", "value"),
+    Output("input-activity", "value"),
+    Output("input-description", "value"),
 
     Input("add-company", "n_clicks"),
 
     State("input-stock", "value"),
     State("input-company", "value"),
     State("input-activity", "value"),
+    State("input-description", "value"),
     State("companies", "data"),
     prevent_initial_call=True
 )
-def add_company_and_activity(n, stock, company, activity, companies):
+def add_company_and_activity(n, stock, company, activity, description, companies):
     """
     Add a company and an activity to the stores
     Args:
@@ -41,6 +58,7 @@ def add_company_and_activity(n, stock, company, activity, companies):
         "label": company,
         "activity": activity,
         "got_charts": False,
+        "description": description or "",
     }
 
     # Success notification
@@ -52,7 +70,7 @@ def add_company_and_activity(n, stock, company, activity, companies):
         message=f"{company} has been added to the list of companies",
     )
 
-    return companies, notif
+    return companies, notif, "", None, None, ""
 
 
 @callback(
@@ -104,23 +122,15 @@ def update_select_company_options(companies, tabs, company):
     prevent_initial_call=True
 )
 def update_companies(tabs, companies):
-    """
-    Update the companies select options
-    Args:
-        tabs: current tab (used to update the callback)
-        companies: dictionary of companies
-    Returns:
-        data: updated companies select options
-    """
-    df = get_generated_data()  # Get the data of all companies
-    df_companies = df.columns.get_level_values('symbol').unique()  # Get the list of companies in the csv file
-
-    # Get the intersection between the companies in the csv file and the companies in the store
-    intersection = list(set(df_companies) & set(companies))
-    for company in intersection:
-        # Update the got_charts value of the companies in the store
-        companies[company]['got_charts'] = True
-
+    df_companies = get_cached_df_companies()
+    updated = False
+    for company in companies:
+        should_have_charts = company in df_companies
+        if companies[company]['got_charts'] != should_have_charts:
+            companies[company]['got_charts'] = should_have_charts
+            updated = True
+    if not updated:
+        raise PreventUpdate
     return companies
 
 

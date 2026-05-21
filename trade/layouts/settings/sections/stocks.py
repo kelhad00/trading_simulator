@@ -31,6 +31,14 @@ def stocks_settings(lang="fr"):
                         className="flex-1"
                     ),
                 ], className="flex gap-4 w-full justify-between"),
+                dmc.Textarea(
+                    id="input-description",
+                    label=tl["input"]["description"],
+                    placeholder=tl["description-placeholder"],
+                    autosize=True,
+                    minRows=2,
+                    className="w-full"
+                ),
             ], className="flex flex-col gap-2"),
 
             dmc.Button(tl["button"]["add"], id="add-company", color="dark", size="md"),

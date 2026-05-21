@@ -123,7 +123,22 @@ translation = {
                 },
                 "input": {
                     "trends": "Number of charts trends",
-                }
+                },
+                "pattern-select": {
+                    "label": "Technical pattern (optional)",
+                    "none": "None",
+                    "double_top": "Double Top",
+                    "double_bottom": "Double Bottom",
+                    "head_and_shoulders": "Head & Shoulders",
+                    "inverse_head_and_shoulders": "Inverse Head & Shoulders",
+                    "ascending_triangle": "Ascending Triangle",
+                    "descending_triangle": "Descending Triangle",
+                    "bullish_flag": "Bullish Flag",
+                    "bearish_flag": "Bearish Flag",
+                    "cup_and_handle": "Cup & Handle",
+                    "rising_wedge": "Rising Wedge",
+                    "falling_wedge": "Falling Wedge",
+                },
             },
             "tickers": {
                 "subtitles": {
@@ -140,7 +155,9 @@ translation = {
                     "company": "Company",
                     "ticker": "Ticker",
                     "activity": "Activity",
+                    "description": "Description (optional)",
                 },
+                "description-placeholder": "e.g. Global luxury goods conglomerate specialising in fashion, leather goods, perfumes and cosmetics.",
                 "notification": {
                     "success-title": "Renamed",
                     "success-msg": "{ticker} has been renamed to \"{name}\"",
@@ -170,13 +187,29 @@ translation = {
                     "delta": "Indicate the delta value : The delta value shifts the news days by a certain number of days.",
                     "nbr-positive-news": "Number of positive news",
                     "nbr-negative-news": "Number of negative news",
+                    "top-k": "Top-K filter (linear mode only)",
+                    "top-k-description": "Keep only the K news with the biggest price swings. Set to 0 to keep all positions above alpha.",
                 },
                 "select": {
                     "ticker": "Select a stock",
                 },
                 "radio": {
                     "label": "Generation mode",
-                    "options": ["Random mode", "Linear mode"],
+                    "options": ["Random mode", "Linear mode", "Manual mode"],
+                },
+                "manual": {
+                    "sentiment-label": "Place news as",
+                    "sentiment-positive": "Positive",
+                    "sentiment-negative": "Negative",
+                    "hover-text-idle": "Hover over the chart, then click to place",
+                    "hover-text-active": "Click to place as {sentiment} on {date}",
+                    "counter": "{positive} positive, {negative} negative placed for this company",
+                    "counter-empty": "No positions placed yet for this company",
+                    "clear": "Clear this company",
+                    "date-label": "Or pick a date manually",
+                    "date-add": "Add",
+                    "flagged-notice": "{count} company has manual positions — it will override auto-generation when generating.",
+                    "flagged-notice-plural": "{count} companies have manual positions — they will override auto-generation when generating.",
                 },
             },
 

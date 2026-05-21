@@ -58,11 +58,16 @@ def update_modal(timestamp):
 
 @callback(
     Output("periodic-updater", "interval"),
+    Output("periodic-updater", "disabled"),
     Input("update-time", "data"),
+    Input("pause-button", "n_clicks"),
+    State("periodic-updater", "disabled"),
 )
-def update_interval(update_time):
-    """Function to update the interval of the periodic updater"""
-    return int(update_time)
+def update_interval(update_time, pause_clicks, currently_disabled):
+    """Update the interval of the periodic updater and handle pause toggle."""
+    if ctx.triggered_id == "pause-button":
+        return no_update, not currently_disabled
+    return int(update_time), False
 
 
 @callback(

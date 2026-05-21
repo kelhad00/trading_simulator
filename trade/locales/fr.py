@@ -136,7 +136,22 @@ translation = {
                 },
                 "input": {
                     "trends": "Nombre de tendances",
-                }
+                },
+                "pattern-select": {
+                    "label": "Modèle technique (facultatif)",
+                    "none": "Aucun",
+                    "double_top": "Double sommet",
+                    "double_bottom": "Double creux",
+                    "head_and_shoulders": "Tête et épaules",
+                    "inverse_head_and_shoulders": "Tête et épaules inversé",
+                    "ascending_triangle": "Triangle ascendant",
+                    "descending_triangle": "Triangle descendant",
+                    "bullish_flag": "Drapeau haussier",
+                    "bearish_flag": "Drapeau baissier",
+                    "cup_and_handle": "Tasse avec anse",
+                    "rising_wedge": "Biseau ascendant",
+                    "falling_wedge": "Biseau descendant",
+                },
             },
             "tickers": {
                 "subtitles": {
@@ -153,7 +168,9 @@ translation = {
                     "company": "Entreprise",
                     "ticker": "Mnémonique",
                     "activity": "Catégorie",
+                    "description": "Description (facultative)",
                 },
+                "description-placeholder": "ex. Conglomérat mondial de luxe spécialisé dans la mode, la maroquinerie, les parfums et les cosmétiques.",
                 "notification": {
                     "success-title": "Renommé",
                     "success-msg": "{ticker} a été renommé en « {name} »",
@@ -183,13 +200,29 @@ translation = {
                     "delta": "Indiquer une valeur de décallage",
                     "nbr-positive-news": "Nombre d'actualités positives",
                     "nbr-negative-news": "Nombre d'actualités négatives",
+                    "top-k": "Filtre Top-K (mode linéaire uniquement)",
+                    "top-k-description": "Garder uniquement les K actualités avec les plus grandes variations de prix. Mettre 0 pour garder toutes les positions au-dessus de l'alpha.",
                 },
                 "select": {
                     "ticker": "Sélectionner une action",
                 },
                 "radio": {
                     "label": "Mode de génération des actualités",
-                    "options": ["Mode aléatoire", "Mode linéaire"],
+                    "options": ["Mode aléatoire", "Mode linéaire", "Mode manuel"],
+                },
+                "manual": {
+                    "sentiment-label": "Type d'actualité",
+                    "sentiment-positive": "Positive",
+                    "sentiment-negative": "Négative",
+                    "hover-text-idle": "Survolez le graphique puis cliquez pour placer",
+                    "hover-text-active": "Cliquer pour placer comme {sentiment} le {date}",
+                    "counter": "{positive} positive(s), {negative} négative(s) placée(s) pour cette entreprise",
+                    "counter-empty": "Aucune position placée pour cette entreprise",
+                    "clear": "Effacer cette entreprise",
+                    "date-label": "Ou choisir une date manuellement",
+                    "date-add": "Ajouter",
+                    "flagged-notice": "{count} entreprise a des positions manuelles — elles seront utilisées lors de la génération.",
+                    "flagged-notice-plural": "{count} entreprises ont des positions manuelles — elles seront utilisées lors de la génération.",
                 },
             },
 

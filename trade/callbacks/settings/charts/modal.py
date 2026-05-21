@@ -12,7 +12,7 @@ from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import (
     bull_trend, bear_trend, flat_trend,
     export_generated_data, get_generated_data,
-    generate_synthetic_ohlcv,
+    generate_synthetic_ohlcv, inject_pattern,
 )
 from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
@@ -22,6 +22,7 @@ from trade.locales import translations as tls
 from trade.utils.news_generation.news_creation import (
     get_news_position_for_companies, create_news_for_companies,
 )
+import trade.callbacks.settings.stocks as stocks_callbacks
 
 
 # ── Crash-point slider visibility ────────────────────────────────────────────
@@ -71,6 +72,7 @@ def toggle_segment_controls(profile):
     Input("slider-length", "value"),
     Input("slider-start", "value"),
     Input({"type": "timeline-radio", "index": ALL}, "value"),
+    Input({"type": "timeline-pattern", "index": ALL}, "value"),
     Input("modal-select-companies", "value"),
     Input("select-curve-profile", "value"),
     Input("slider-noise", "value"),
@@ -79,7 +81,7 @@ def toggle_segment_controls(profile):
 )
 def generate_new_charts(
     alpha, length, start_value,
-    radio_trends, companies,
+    radio_trends, pattern_trends, companies,
     curve_profile, noise_level, crash_point,
     start_date=dlt.start_date,
 ):
@@ -119,7 +121,6 @@ def generate_new_charts(
                     start_date=first_timestamp,
                     crash_point_pct=crash_pct,
                 )
-                # display_chart expects the index to be used as x-axis
                 df_indexed = df.set_index("Date")
                 fig = display_chart(df_indexed, 0, df_indexed.shape[0], company)
                 figures.append(fig)
@@ -163,8 +164,13 @@ def generate_new_charts(
                     data_list[0] = scale_market_data(segment, start_value)
                 else:
                     data_list[i] = scale_market_data(
-                        segment, data_list[i - 1].at[length - 1, "Close"]
+                        segment, data_list[i - 1].iloc[-1]["Close"]
                     )
+
+            # Inject per-segment patterns (skip "none" and unset values)
+            for i, pattern_type in enumerate(pattern_trends or []):
+                if i < len(data_list) and pattern_type and pattern_type != "none":
+                    data_list[i] = inject_pattern(data_list[i], pattern_type)
 
             final_chart = pd.concat(data_list).reset_index(drop=True)
             final_chart["Date"] = pd.date_range(
@@ -185,11 +191,11 @@ def generate_new_charts(
 
 # ── Export confirmed charts to CSV ────────────────────────────────────────────
 
-def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang, base_url):
+def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang, base_url, k=0):
     """Run news generation in a background thread so the UI is not blocked."""
     try:
         positions = get_news_position_for_companies(
-            companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta
+            companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, k=k
         )
         create_news_for_companies(companies_subset, positions, lang, base_url)
         print("Auto news regeneration complete for: " + ", ".join(companies_subset.keys()))
@@ -217,12 +223,13 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
     State("input-generation-mode", "value"),
     State("input-nbr-positive-news", "value"),
     State("input-nbr-negative-news", "value"),
+    State("input-top-k", "value"),
     State("url", "search"),
     prevent_initial_call=True,
 )
 def export_generated_charts(n, datas, companies_selected, nb_radio, companies, curve_profile,
                              api_key, alpha, alpha_day_interval, delta, generation_mode,
-                             nbr_positive_news, nbr_negative_news, search):
+                             nbr_positive_news, nbr_negative_news, top_k, search):
     """
     Export the generated charts to generated_data.csv when the generate button is clicked,
     then automatically regenerate news for those companies in a background thread.
@@ -236,6 +243,8 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies, c
         export_generated_data(df, company)
         companies[company]["got_charts"] = True
         companies[company]["curve_profile"] = curve_profile
+
+    stocks_callbacks._cached_df_companies = None  # invalidate cache — CSV has changed
 
     # Build subset of only the companies whose charts were just confirmed
     companies_subset = {c: companies[c] for c in companies_selected}
@@ -255,6 +264,7 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies, c
             delta or 0,
             lang,
             effective_url,
+            top_k or 0,
         ),
         daemon=True,
     )

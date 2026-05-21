@@ -1,4 +1,5 @@
 import os
+import threading
 
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
 from dash.exceptions import PreventUpdate
@@ -11,15 +12,34 @@ from trade.utils.settings.create_market_data import get_generated_data
 market_df = get_market_dataframe()
 
 
+def _archive_exports(nb_export):
+    """Move export files to a numbered session folder in the background."""
+    try:
+        session_path = os.path.join(dlt.data_path, "exports", str(nb_export))
+        os.makedirs(session_path, exist_ok=True)
+        content_path = os.path.join(dlt.data_path, "export")
+        for file in os.listdir(content_path):
+            os.rename(
+                os.path.join(content_path, file),
+                os.path.join(session_path, file)
+            )
+    except Exception as e:
+        print("Error archiving exports:", e)
+
+
+_LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
+
 @callback(
     Output("settings-button", "disabled"),
+    Output("settings-button-link", "style"),
+    Input("_pages_location", "pathname"),
     Input("timestamp", "data"),
 )
-def disable_button(timestamp):
-    if timestamp == get_first_timestamp(market_df, 100):
-        return False
-    else:
-        return True
+def disable_button(pathname, timestamp):
+    if pathname != "/":
+        raise PreventUpdate
+    is_disabled = timestamp != get_first_timestamp(market_df, 100)
+    return is_disabled, {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
 
 
 @callback(
@@ -35,42 +55,17 @@ def disable_button(timestamp):
     prevent_initial_call=True,
 )
 def reset_data(btn, initial_cashflow, nb_export):
-    """
-    Function to reset the simulation data
-    Args:
-        btn: The reset button
-    Returns:
-        The initial data of the simulation
-    """
-
     if btn is None or btn == 0:
         raise PreventUpdate
 
+    threading.Thread(target=_archive_exports, args=(nb_export,), daemon=True).start()
 
-    # Reset the data of each dcc.Store component
     timestamp = get_first_timestamp(market_df, 100)
-    cashflow = initial_cashflow
-
-    df = get_generated_data()  # Get the data of all companies
-    companies = df.columns.get_level_values('symbol').unique()
+    df = get_generated_data()
+    companies = df.columns.get_level_values('symbol').unique() if df is not None else []
     portfolio_value = {c: 0 for c in companies}
 
-    requests = []
-
-    # create dir named nb_export in data folder
-    session_path = os.path.join(dlt.data_path, "exports", str(nb_export))
-    os.makedirs(session_path, exist_ok=True)
-
-    content_path = os.path.join(dlt.data_path, "export")
-
-    # move all files from data/export to data/exports/nb_export
-    for file in os.listdir(content_path):
-        os.rename(os.path.join(content_path, file), os.path.join(session_path, file))
-
-    nb_export = len(os.listdir(os.path.join(dlt.data_path, "exports")))
-
-    return timestamp, cashflow, requests, portfolio_value, portfolio_value, nb_export
-
+    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, nb_export + 1
 
 
 @callback(
@@ -83,7 +78,6 @@ def reset_data(btn, initial_cashflow, nb_export):
     Input('reset-button-1', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
-
     prevent_initial_call=True,
 )
 def reset_modal(btn, initial_cashflow, nb_export):
