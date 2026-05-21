@@ -8,7 +8,6 @@ from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
 
 
-
 @callback(
     Output('news-table', 'children'),
     Input('periodic-updater', 'n_intervals'),
@@ -16,6 +15,7 @@ from trade.utils.news import get_news_dataframe
 )
 def cb_update_news_table(n, timestamp, range=50, daily=True):
     try:
+        # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()
     except Exception as e:
         print(f"[NEWS] Could not load news.csv: {e}")
@@ -32,14 +32,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
 
     news_df = news_df.drop_duplicates(subset=['article'], keep='first')
 
-    # Parse dates robustly
-    try:
-        news_df['date'] = pd.to_datetime(news_df['date'], dayfirst=True, format='mixed')
-    except Exception as e:
-        print(f"[NEWS] Date parsing failed: {e}")
-        raise PreventUpdate
-
-    # Convert simulation timestamp to tz-naive for comparison
+    # Dates are already parsed by get_news_dataframe() — no need to re-parse
     try:
         ts = pd.to_datetime(timestamp).replace(tzinfo=None)
         if daily:
@@ -49,7 +42,6 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         ts = pd.Timestamp.now()
 
     nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
-
     nl = nl[['article', 'date']].head(range).astype(str)
     nl = nl.rename(columns={
         'date': tls[lang]['news-table']['date'],
@@ -57,7 +49,6 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     })
 
     return dmc.Table(children=create_table(nl, id="news-lines"))
-
 
 
 @callback(
@@ -74,38 +65,21 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     prevent_initial_call=True,
 )
 def toggle_news_display_type(n, cell_clicked, table):
-    """
-    Function to toggle the display of the news table and the news article
-    If a cell is clicked, display the article clicked and hide the table
-    Args:
-        n: The back button
-        cell_clicked: The cell clicked
-        table: The news table
-    Returns:
-        style of the news table
-        title of the article
-        content of the article
-        style of the news article
-        n_clicks of the back button (to reset the state)
-    """
-
-    # If the back button is clicked, go back to the news list
     if ctx.triggered_id == 'back-to-news-list':
         return {'display': 'block'}, None, None, {'display': 'none'}, [0] * len(cell_clicked)
 
-    else:
-        if cell_clicked == [] or 1 not in cell_clicked:
-            return no_update, no_update, no_update, no_update, no_update
+    if cell_clicked == [] or 1 not in cell_clicked:
+        return no_update, no_update, no_update, no_update, no_update
 
-        try:
-            index_clicked = cell_clicked.index(1)  # Get the index of the cell clicked
-            rows = table['props']['children'][1]['props']['children']  # get all the rows in the table
-            titles = [row['props']['children'][0]['props']['children'] for row in rows]  # get all the titles in the table
+    try:
+        index_clicked = cell_clicked.index(1)
+        rows = table['props']['children'][1]['props']['children']
+        titles = [row['props']['children'][0]['props']['children'] for row in rows]
 
-            news_df = get_news_dataframe()
-            article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]  # get the news clicked
-            return {'display': 'none'}, article_clicked['title'], article_clicked['content'], {'display': 'block'}, no_update
-        except Exception as e:
-            print('Error :', e)
-            return no_update, no_update, no_update, no_update, no_update
-        
+        # get_news_dataframe() is cached — negligible cost
+        news_df = get_news_dataframe()
+        article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]
+        return {'display': 'none'}, article_clicked['title'], article_clicked['content'], {'display': 'block'}, no_update
+    except Exception as e:
+        print('Error :', e)
+        return no_update, no_update, no_update, no_update, no_update
