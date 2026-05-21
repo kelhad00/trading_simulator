@@ -1,4 +1,4 @@
-from dash import html, dcc
+from dash import html
 from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 import os
@@ -27,11 +27,21 @@ def options(lang="fr"):
     disabled = disable_button()
 
     def option(label, href, icon, disabled=False, id=""):
-        return dmc.Button(
-            dcc.Link(label, href=href),
-            id=id,
-            leftIcon=DashIconify(icon=icon),
-            variant="solid", color="dark", radius="md", size="lg", disabled=disabled
+        return html.A(
+            dmc.Button(
+                label,
+                id=id,
+                leftIcon=DashIconify(icon=icon),
+                variant="solid", color="dark", radius="md", size="lg",
+                disabled=disabled, fullWidth=True
+            ),
+            href=href,
+            id=f"{id}-link" if id else None,
+            style={
+                "textDecoration": "none",
+                "display": "block",
+                "pointerEvents": "none" if disabled else "auto",
+            }
         )
 
     return html.Div([

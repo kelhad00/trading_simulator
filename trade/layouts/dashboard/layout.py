@@ -9,7 +9,7 @@ from trade.layouts.dashboard.sections.requests import request
 
 def main_layout(lang="fr"):
     return html.Div([
-        dcc.Interval(id='periodic-updater', interval=5000),
+        dcc.Interval(id='periodic-updater', interval=5000, n_intervals=0, disabled=False),
         dmc.Modal(
             id="modal",
             title=dmc.Title("Simulation terminée !", order=2, className="font-bold w-full max-w-2xl"),

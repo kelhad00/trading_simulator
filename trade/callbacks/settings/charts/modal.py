@@ -22,6 +22,7 @@ from trade.locales import translations as tls
 from trade.utils.news_generation.news_creation import (
     get_news_position_for_companies, create_news_for_companies,
 )
+import trade.callbacks.settings.stocks as stocks_callbacks
 
 
 # ── Crash-point slider visibility ────────────────────────────────────────────
@@ -242,6 +243,8 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies, c
         export_generated_data(df, company)
         companies[company]["got_charts"] = True
         companies[company]["curve_profile"] = curve_profile
+
+    stocks_callbacks._cached_df_companies = None  # invalidate cache — CSV has changed
 
     # Build subset of only the companies whose charts were just confirmed
     companies_subset = {c: companies[c] for c in companies_selected}
