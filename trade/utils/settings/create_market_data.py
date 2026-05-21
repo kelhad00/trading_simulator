@@ -176,35 +176,6 @@ def flat_trend(data, data_size, alpha=50, length=100):
     return rand
 
 
-def inject_pattern(segment, pattern_type):
-    '''
-    Inject a specific technical pattern into a single market data segment.
-    pattern_type must match a folder name under Data/patterns/ (e.g. "double_top").
-    Returns the segment unchanged if the pattern file cannot be found.
-    '''
-    path = get_pattern_file(pattern_type)
-    if path is None:
-        return segment
-
-    pattern = load_data(path)
-    segment = segment.reset_index(drop=True)
-    n = segment.shape[0]
-
-    if n < 3:
-        return segment
-
-    position = np.random.randint(1, n - 1)
-
-    chart1 = segment.iloc[:position].reset_index(drop=True)
-    chart2 = segment.iloc[position:].reset_index(drop=True)
-
-    pattern = scale_market_data(pattern, segment.at[position, 'Close'])
-    last_close = pattern.at[pattern.shape[0] - 1, 'Close']
-    chart2 = scale_market_data(chart2, last_close)
-
-    return pd.concat([chart1, pattern, chart2]).reset_index(drop=True)
-
-
 def add_pattern(chart, nbr_pattern):
     '''
     Add patterns to the chart and return the final chart
