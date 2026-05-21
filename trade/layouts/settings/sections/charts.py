@@ -13,7 +13,9 @@ from trade.utils.ordinal import ordinal
 def generate_charts(lang="fr"):
     tl = tls[lang]["settings"]["charts"]
     return html.Div([
-        dcc.Store(id="figures"),  # Store the generated data before being stored in the csv file
+        dcc.Store(id="figures"),        # final data exported to CSV on confirm
+        dcc.Store(id="base-figures"),   # CAC40 window indices, fixed until trends change
+        dcc.Store(id="pattern-files"),  # chosen pattern CSV paths, fixed until patterns change
         generate_charts_modal(lang=lang),
         section(tl["subtitles"]["ticker"], [
             dmc.Select(
@@ -37,14 +39,6 @@ def generate_charts(lang="fr"):
 
 def generate_charts_modal(lang="fr"):
     tl = tls[lang]["settings"]["charts"]
-    curve_data = [
-        {"label": tl["curve-profiles"]["segments"],    "value": "segments"},
-        {"label": tl["curve-profiles"]["linear"],      "value": "linear"},
-        {"label": tl["curve-profiles"]["exponential"], "value": "exponential"},
-        {"label": tl["curve-profiles"]["logarithmic"], "value": "logarithmic"},
-        {"label": tl["curve-profiles"]["volatile"],    "value": "volatile"},
-        {"label": tl["curve-profiles"]["crash"],       "value": "crash"},
-    ]
     return modal(
         id="modal",
         title=tl["subtitles"]["modal"],
@@ -59,22 +53,6 @@ def generate_charts_modal(lang="fr"):
                         ),
                         dmc.Button(tl["button"]["select-all"], id="select-all-stocks", color="dark", size="sm"),
                     ], className="flex gap-4 w-full items-end")
-                ]),
-
-                section(tl["subtitles"]["curve"], [
-                    dmc.Select(
-                        id="select-curve-profile",
-                        label=tl["select"]["curve-profile"],
-                        data=curve_data,
-                        value="segments",
-                        className="w-full",
-                    ),
-                    slider(tl["select"]["noise"], "slider-noise", 0, 100, 10),
-                    html.Div(
-                        slider(tl["select"]["crash-point"], "slider-crash-point", 0, 100, 70),
-                        id="crash-point-container",
-                        style={"display": "none"},
-                    ),
                 ]),
 
                 section(tl["subtitles"]["parameters"], [
@@ -99,7 +77,39 @@ def generate_charts_modal(lang="fr"):
                     ),
                 ]),
 
+                section("Event overlay", [
+                    dmc.Select(
+                        id="select-event-type",
+                        label="Event type",
+                        data=[
+                            {"label": "None",  "value": "none"},
+                            {"label": "Crash", "value": "crash"},
+                            {"label": "Rally", "value": "rally"},
+                        ],
+                        value="none",
+                        className="w-full",
+                    ),
+                    html.Div(
+                        id="event-params-container",
+                        style={"display": "none"},
+                        children=[
+                            slider("Position (%)", "slider-event-position", 0, 100, 50),
+                            slider("Magnitude (%)", "slider-event-magnitude", 5, 80, 40),
+                        ],
+                    ),
+                    dmc.Alert(
+                        id="event-overlap-warning",
+                        color="yellow",
+                        style={"display": "none"},
+                    ),
+                ]),
+
                 section(tl["subtitles"]["preview"], [
+                    dmc.Text(
+                        id="chart-bar-count",
+                        size="sm",
+                        color="dimmed",
+                    ),
                     dmc.Paper(
                         html.Div(dcc.Graph(), id="modal-generated-charts-container"),
                     )
@@ -111,8 +121,8 @@ def generate_charts_modal(lang="fr"):
 
 
 
-def timeline_item(id, index, title):
-    lang = page_registry["lang"]
+def timeline_item(id, index, title, lang=None):
+    lang = lang or page_registry["lang"]
     tl = tls[lang]["settings"]["charts"]
     label = tl["radio"]["label"]
     option_values = tl["radio"]["options"]
@@ -121,24 +131,27 @@ def timeline_item(id, index, title):
     options = [("bull", option_values[0]), ("bear", option_values[1]), ("flat", option_values[2])]
 
     pattern_options = [
-        {"label": pattern_tl["none"],                        "value": "none"},
-        {"label": pattern_tl["double_top"],                  "value": "double_top"},
-        {"label": pattern_tl["double_bottom"],               "value": "double_bottom"},
-        {"label": pattern_tl["head_and_shoulders"],          "value": "head_and_shoulders"},
-        {"label": pattern_tl["inverse_head_and_shoulders"],  "value": "inverse_head_and_shoulders"},
-        {"label": pattern_tl["ascending_triangle"],          "value": "ascending_triangle"},
-        {"label": pattern_tl["descending_triangle"],         "value": "descending_triangle"},
-        {"label": pattern_tl["bullish_flag"],                "value": "bullish_flag"},
-        {"label": pattern_tl["bearish_flag"],                "value": "bearish_flag"},
-        {"label": pattern_tl["cup_and_handle"],              "value": "cup_and_handle"},
-        {"label": pattern_tl["rising_wedge"],                "value": "rising_wedge"},
-        {"label": pattern_tl["falling_wedge"],               "value": "falling_wedge"},
+        {"label": pattern_tl["none"],                       "value": "none"},
+        {"label": pattern_tl["double_top"],                 "value": "double_top"},
+        {"label": pattern_tl["double_bottom"],              "value": "double_bottom"},
+        {"label": pattern_tl["head_and_shoulders"],         "value": "head_and_shoulders"},
+        {"label": pattern_tl["inverse_head_and_shoulders"], "value": "inverse_head_and_shoulders"},
+        {"label": pattern_tl["ascending_triangle"],         "value": "ascending_triangle"},
+        {"label": pattern_tl["descending_triangle"],        "value": "descending_triangle"},
+        {"label": pattern_tl["bullish_flag"],               "value": "bullish_flag"},
+        {"label": pattern_tl["bearish_flag"],               "value": "bearish_flag"},
+        {"label": pattern_tl["cup_and_handle"],             "value": "cup_and_handle"},
+        {"label": pattern_tl["rising_wedge"],               "value": "rising_wedge"},
+        {"label": pattern_tl["falling_wedge"],              "value": "falling_wedge"},
     ]
 
     return dmc.TimelineItem(
         title=title,
         children=[
-            radio(options, label, {"type": f"{id}-radio", "index": index}),
+            html.Div(
+                radio(options, label, {"type": f"{id}-radio", "index": index}),
+                id={"type": f"{id}-radio-container", "index": index},
+            ),
             dmc.Select(
                 id={"type": f"{id}-pattern", "index": index},
                 label=pattern_tl["label"],

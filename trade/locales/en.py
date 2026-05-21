@@ -103,7 +103,7 @@ translation = {
                     "ticker": "Select a stock",
                     "alpha": "Select alpha value",
                     "length": "Select length of a market movement",
-                    "start": "Select start date",
+                    "start": "Select starting price",
                     "curve-profile": "Growth curve profile",
                     "noise": "Noise / volatility level (%)",
                     "crash-point": "Crash point (% of duration)",

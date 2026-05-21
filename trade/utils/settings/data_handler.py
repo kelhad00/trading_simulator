@@ -79,6 +79,20 @@ def get_pattern_file(pattern_type):
     return random.choice(files)
 
 
+def get_pattern_file_excluding(pattern_type, used_paths):
+    """
+    Return a random CSV from pattern_type folder that is not in used_paths.
+    Falls back to any available file if all have been used (avoids hard failure).
+    Returns None if the folder is missing or empty.
+    """
+    folder = os.path.join(dlt.data_path, 'patterns', pattern_type)
+    all_files = glob.glob(folder + '/*.csv')
+    if not all_files:
+        return None
+    available = [f for f in all_files if f not in used_paths]
+    return random.choice(available if available else all_files)
+
+
 def calculate_market_change(df):
     '''
     NOT USED

@@ -12,10 +12,12 @@ from trade.utils.ordinal import ordinal
 from trade.utils.settings.create_market_data import (
     bull_trend, bear_trend, flat_trend,
     export_generated_data, get_generated_data,
-    generate_synthetic_ohlcv, inject_pattern,
+    apply_event_overlay,
 )
 from trade.utils.settings.display import display_chart
-from trade.utils.settings.data_handler import scale_market_data, load_data, get_data_size
+from trade.utils.settings.data_handler import (
+    scale_market_data, load_data, get_data_size, get_pattern_file_excluding,
+)
 from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
@@ -25,154 +27,242 @@ from trade.utils.news_generation.news_creation import (
 import trade.callbacks.settings.stocks as stocks_callbacks
 
 
-# ── Crash-point slider visibility ────────────────────────────────────────────
+# ── Step 1: pick CAC40 windows when trends/params change ─────────────────────
+#
+# None radios are treated as 'flat' — those segments may be overridden by a
+# pattern file chosen in step 2, so the stored index is just a safe fallback.
 
 @callback(
-    Output("crash-point-container", "style"),
-    Input("select-curve-profile", "value"),
-)
-def toggle_crash_point_visibility(profile):
-    """Show the crash-point slider only when the crash profile is selected."""
-    if profile == "crash":
-        return {"display": "block"}
-    return {"display": "none"}
-
-
-# ── Disable segment-only controls for synthetic profiles ─────────────────────
-
-_INACTIVE = {"opacity": "0.35", "pointerEvents": "none", "userSelect": "none"}
-_ACTIVE = {}
-
-
-@callback(
-    Output("slider-alpha", "disabled"),
-    Output("alpha-section", "style"),
-    Output("timeline-radio-section", "style"),
-    Input("select-curve-profile", "value"),
-)
-def toggle_segment_controls(profile):
-    """
-    Disable controls that are irrelevant for synthetic profiles:
-      - slider-alpha      : used only by bull_trend / bear_trend searches
-      - timeline radios   : bull/bear/flat choices are ignored; only the
-                            *count* of trends (number-trends) still matters
-                            as a period multiplier, so number-trends stays on.
-    """
-    if not profile or profile == "segments":
-        return False, _ACTIVE, _ACTIVE
-    return True, _INACTIVE, _INACTIVE
-
-
-# ── Chart generation (preview in modal) ──────────────────────────────────────
-
-@callback(
-    Output("modal-generated-charts-container", "children"),
-    Output("figures", "data"),
+    Output("base-figures", "data"),
     Input("slider-alpha", "value"),
     Input("slider-length", "value"),
     Input("slider-start", "value"),
     Input({"type": "timeline-radio", "index": ALL}, "value"),
-    Input({"type": "timeline-pattern", "index": ALL}, "value"),
     Input("modal-select-companies", "value"),
-    Input("select-curve-profile", "value"),
-    Input("slider-noise", "value"),
-    Input("slider-crash-point", "value"),
     prevent_initial_call=True,
 )
-def generate_new_charts(
-    alpha, length, start_value,
-    radio_trends, pattern_trends, companies,
-    curve_profile, noise_level, crash_point,
-    start_date=dlt.start_date,
-):
-    """
-    Generate preview charts for the selected companies.
-
-    When curve_profile is not 'segments', synthetic OHLCV data is produced
-    directly from the chosen growth curve.  Otherwise the existing segment-based
-    approach (extracting bull/bear/flat windows from real market data) is used.
-    """
+def generate_base_segments(alpha, length, start_value, radio_trends, companies,
+                            start_date=dlt.start_date):
     if not companies:
         raise PreventUpdate
 
     try:
         df_existing = get_generated_data()
-        first_timestamp = get_first_timestamp(df_existing)
+        first_timestamp = str(get_first_timestamp(df_existing))
     except Exception:
-        first_timestamp = start_date
+        first_timestamp = str(start_date)
 
-    # ── Synthetic curve generation ────────────────────────────────────────────
-    if curve_profile and curve_profile != "segments":
-        try:
-            nb_segments = max(len(radio_trends), 1)
-            n_periods = max(int(length or 100) * nb_segments, 2)
-            noise_pct = float(noise_level) if noise_level is not None else 10.0
-            crash_pct = float(crash_point) if crash_point is not None else 70.0
+    try:
+        dataset   = load_data(os.path.join(dlt.data_path, "CAC40.csv"))
+        data_size = get_data_size(dataset)
 
-            dataframes = []
-            figures = []
+        company_data = []
+        for company in companies:
+            indices = []
+            for trend_val in radio_trends:
+                tv = trend_val or "flat"
+                if tv == "bull":
+                    indices.append(bull_trend(dataset, data_size, alpha, length))
+                elif tv == "bear":
+                    indices.append(bear_trend(dataset, data_size, alpha, length))
+                else:
+                    indices.append(flat_trend(dataset, data_size, 20, length))
+            company_data.append({"company": company, "indices": indices})
 
-            for company in companies:
-                df = generate_synthetic_ohlcv(
-                    n_periods=n_periods,
-                    profile=curve_profile,
-                    noise_pct=noise_pct,
-                    start_value=float(start_value) if start_value else 250.0,
-                    start_date=first_timestamp,
-                    crash_point_pct=crash_pct,
-                )
-                df_indexed = df.set_index("Date")
-                fig = display_chart(df_indexed, 0, df_indexed.shape[0], company)
-                figures.append(fig)
-                dataframes.append(df.to_dict())  # keep Date as column for export
+        return {
+            "company_data": company_data,
+            "length":          length,
+            "start_value":     float(start_value) if start_value else 250.0,
+            "first_timestamp": first_timestamp,
+        }
 
-            children = [dcc.Graph(figure=fig) for fig in figures]
-            return children, dataframes
+    except Exception as e:
+        print("Error generating base segments:", e)
+        return no_update
 
-        except Exception as e:
-            print("Error while generating synthetic charts:", e)
-            return no_update, no_update
 
-    # ── Segment-based generation (original approach) ──────────────────────────
-    if None in radio_trends:
-        return no_update, no_update
+# ── Step 2: choose pattern files (no-repeat per company) ─────────────────────
+#
+# Fires when pattern dropdowns change OR when base-figures resets (new windows).
+# Picking files here — not in the render step — keeps the chosen files stable
+# when only event controls change.
+
+@callback(
+    Output("pattern-files", "data"),
+    Input({"type": "timeline-pattern", "index": ALL}, "value"),
+    Input("base-figures", "data"),
+    prevent_initial_call=True,
+)
+def select_pattern_files(pattern_trends, base_data):
+    if not base_data:
+        raise PreventUpdate
+
+    company_data = []
+    for entry in base_data["company_data"]:
+        used_paths   = set()
+        segment_files = []
+        for pattern_type in (pattern_trends or []):
+            if pattern_type and pattern_type != "none":
+                path = get_pattern_file_excluding(pattern_type, used_paths)
+                if path:
+                    used_paths.add(path)
+                segment_files.append(path)   # None only if folder is missing
+            else:
+                segment_files.append(None)   # use CAC40 window for this segment
+        company_data.append({
+            "company":       entry["company"],
+            "segment_files": segment_files,
+        })
+
+    return {"company_data": company_data}
+
+
+# ── Event overlay: show/hide position + magnitude sliders ────────────────────
+
+@callback(
+    Output("event-params-container", "style"),
+    Input("select-event-type", "value"),
+)
+def toggle_event_params(event_type):
+    if event_type and event_type != "none":
+        return {"display": "block"}
+    return {"display": "none"}
+
+
+# ── Warn when the event position overlaps a pattern segment ───────────────────
+
+@callback(
+    Output("event-overlap-warning", "style"),
+    Output("event-overlap-warning", "children"),
+    Input("select-event-type", "value"),
+    Input("slider-event-position", "value"),
+    Input("slider-length", "value"),
+    Input({"type": "timeline-pattern", "index": ALL}, "value"),
+)
+def warn_event_pattern_overlap(event_type, event_position, length, pattern_trends):
+    hidden = {"display": "none"}
+
+    if not event_type or event_type == "none":
+        return hidden, ""
+    if event_position is None or not pattern_trends:
+        return hidden, ""
+
+    n_segments = len(pattern_trends)
+    seg_length = max(int(length or 100), 1)
+    event_bar  = int(seg_length * n_segments * event_position / 100)
+    seg_index  = min(event_bar // seg_length, n_segments - 1)
+
+    pattern_at_event = pattern_trends[seg_index] if seg_index < len(pattern_trends) else None
+
+    if pattern_at_event and pattern_at_event != "none":
+        name = pattern_at_event.replace("_", " ").title()
+        msg  = (
+            "The %s starts inside segment %d which contains a %s pattern. "
+            "The pattern shape will be distorted — consider moving the event "
+            "to a segment without a pattern." % (event_type, seg_index + 1, name)
+        )
+        return {"display": "block"}, msg
+
+    return hidden, ""
+
+
+# ── Disable radio when a pattern is selected for that segment ─────────────────
+
+_DISABLED_STYLE = {"opacity": "0.35", "pointerEvents": "none", "userSelect": "none"}
+
+@callback(
+    Output({"type": "timeline-radio-container", "index": ALL}, "style"),
+    Input({"type": "timeline-pattern", "index": ALL}, "value"),
+)
+def toggle_radio_on_pattern(pattern_values):
+    return [
+        _DISABLED_STYLE if (pv and pv != "none") else {}
+        for pv in (pattern_values or [])
+    ]
+
+
+# ── Step 3: render chart from fixed windows + chosen pattern files ────────────
+#
+# base-figures is a State (not Input) so only pattern-files or event control
+# changes trigger a re-render — no double-fire when base-figures updates.
+
+def _format_bar_count(n):
+    """Convert a bar count to a human-readable duration string."""
+    years  = n // 252
+    months = (n % 252) // 21
+    parts  = []
+    if years:  parts.append('%d yr%s'  % (years,  's' if years  > 1 else ''))
+    if months: parts.append('%d mo'    % months)
+    if parts:
+        return '%d bars  (~%s of trading data)' % (n, ' '.join(parts))
+    return '%d bars  (< 1 mo of trading data)' % n
+
+
+@callback(
+    Output("modal-generated-charts-container", "children"),
+    Output("figures", "data"),
+    Output("chart-bar-count", "children"),
+    Input("pattern-files", "data"),
+    Input("select-event-type", "value"),
+    Input("slider-event-position", "value"),
+    Input("slider-event-magnitude", "value"),
+    State("base-figures", "data"),
+    prevent_initial_call=True,
+)
+def apply_patterns_and_display(pattern_files, event_type, event_position, event_magnitude,
+                                base_data):
+    if not base_data:
+        raise PreventUpdate
 
     try:
         dataset = load_data(os.path.join(dlt.data_path, "CAC40.csv"))
-        data_size = get_data_size(dataset)
 
-        dataframes = []
-        figures = []
+        length          = base_data["length"]
+        start_value     = base_data["start_value"]
+        first_timestamp = base_data["first_timestamp"]
 
-        for company in companies:
-            trends = []
-            for trend_val in radio_trends:
-                if trend_val == "bull":
-                    trends.append(bull_trend(dataset, data_size, alpha, length))
-                elif trend_val == "bear":
-                    trends.append(bear_trend(dataset, data_size, alpha, length))
+        # Build per-company file lookup: company → [path|None, ...]
+        file_lookup = {}
+        if pattern_files:
+            for entry in pattern_files["company_data"]:
+                file_lookup[entry["company"]] = entry["segment_files"]
+
+        dataframes  = []
+        figures     = []
+        bar_count_str = ""
+
+        for company_idx, entry in enumerate(base_data["company_data"]):
+            company   = entry["company"]
+            indices   = entry["indices"]
+            seg_files = file_lookup.get(company, [None] * len(indices))
+
+            data_list  = []
+            prev_close = start_value
+
+            for t, file_path in zip(indices, seg_files):
+                if file_path:
+                    segment = load_data(file_path)
                 else:
-                    trends.append(flat_trend(dataset, data_size, 20, length))
+                    segment = dataset[t: t + length].reset_index(drop=True)
 
-            data_list = [
-                dataset[t: t + length].reset_index(drop=True)
-                for t in trends
-            ]
+                segment = scale_market_data(segment, prev_close)
+                data_list.append(segment)
+                prev_close = segment.iloc[-1]["Close"]
 
-            for i, segment in enumerate(data_list):
-                if i == 0:
-                    data_list[0] = scale_market_data(segment, start_value)
-                else:
-                    data_list[i] = scale_market_data(
-                        segment, data_list[i - 1].iloc[-1]["Close"]
-                    )
-
-            # Inject per-segment patterns (skip "none" and unset values)
-            for i, pattern_type in enumerate(pattern_trends or []):
-                if i < len(data_list) and pattern_type and pattern_type != "none":
-                    data_list[i] = inject_pattern(data_list[i], pattern_type)
+            # Compute bar count from the first company (representative)
+            if company_idx == 0:
+                bar_count_str = _format_bar_count(sum(len(s) for s in data_list))
 
             final_chart = pd.concat(data_list).reset_index(drop=True)
+
+            if event_type and event_type != "none":
+                final_chart = apply_event_overlay(
+                    final_chart,
+                    event_type,
+                    float(event_position)  if event_position  is not None else 50.0,
+                    float(event_magnitude) if event_magnitude is not None else 40.0,
+                )
+
             final_chart["Date"] = pd.date_range(
                 start=first_timestamp, periods=final_chart.shape[0], freq="D"
             )
@@ -182,11 +272,11 @@ def generate_new_charts(
             dataframes.append(final_chart.to_dict())
 
         children = [dcc.Graph(figure=fig) for fig in figures]
-        return children, dataframes
+        return children, dataframes, bar_count_str
 
     except Exception as e:
-        print("Error while generating charts:", e)
-        return no_update, no_update
+        print("Error applying patterns:", e)
+        return no_update, no_update, no_update
 
 
 # ── Export confirmed charts to CSV ────────────────────────────────────────────
@@ -215,7 +305,6 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
     State("modal-select-companies", "value"),
     State("number-trends", "value"),
     State("companies", "data"),
-    State("select-curve-profile", "value"),
     State("input-api-key", "value"),
     State("input-alpha", "value"),
     State("input-alpha-day-interval", "value"),
@@ -227,7 +316,7 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
     State("url", "search"),
     prevent_initial_call=True,
 )
-def export_generated_charts(n, datas, companies_selected, nb_radio, companies, curve_profile,
+def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
                              api_key, alpha, alpha_day_interval, delta, generation_mode,
                              nbr_positive_news, nbr_negative_news, top_k, search):
     """
@@ -242,7 +331,6 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies, c
         df = pd.DataFrame.from_dict(data)
         export_generated_data(df, company)
         companies[company]["got_charts"] = True
-        companies[company]["curve_profile"] = curve_profile
 
     stocks_callbacks._cached_df_companies = None  # invalidate cache — CSV has changed
 
@@ -299,12 +387,15 @@ def select_all_stocks(n, companies):
     Output("timeline", "children"),
     Input("number-trends", "value"),
     State("timeline", "children"),
+    State("url", "search"),
     prevent_initial_call=True,
 )
-def update_timeline(nb, children, min=1, max=5):
+def update_timeline(nb, children, search, min=1, max=5):
     """Add or remove timeline radio items to match the requested trend count."""
     if nb == "" or nb is None or nb < min or nb > max:
         return no_update
+
+    lang = "en" if (search and "lang=en" in search) else "fr"
 
     try:
         while len(children) != nb:
@@ -314,9 +405,10 @@ def update_timeline(nb, children, min=1, max=5):
                         id="timeline",
                         index=len(children) + 1,
                         title=(
-                            f"{ordinal(len(children) + 1, page_registry['lang'])} "
-                            f"{tls[page_registry['lang']]['settings']['charts']['radio']['title']}"
+                            f"{ordinal(len(children) + 1, lang)} "
+                            f"{tls[lang]['settings']['charts']['radio']['title']}"
                         ),
+                        lang=lang,
                     )
                 )
             else:
@@ -332,9 +424,12 @@ def update_timeline(nb, children, min=1, max=5):
 @callback(
     Output("timeline", "active"),
     Input({"type": "timeline-radio", "index": ALL}, "value"),
+    Input({"type": "timeline-pattern", "index": ALL}, "value"),
 )
-def update_timeline_active(values):
-    """Advance the timeline highlight to the last completed item."""
-    if None in values:
-        return values.index(None) - 1
-    return len(values) - 1
+def update_timeline_active(radio_values, pattern_values):
+    """Advance the timeline highlight to the last completed item.
+    A segment is complete when it has either a radio selection or a pattern chosen."""
+    for i, (radio, pattern) in enumerate(zip(radio_values, pattern_values or [])):
+        if radio is None and (not pattern or pattern == "none"):
+            return max(0, i - 1)
+    return len(radio_values) - 1

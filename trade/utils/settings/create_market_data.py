@@ -7,97 +7,6 @@ from trade.utils.settings.data_handler import scale_market_data, random_number, 
 from trade.defaults import defaults as dlt
 
 
-def generate_synthetic_ohlcv(n_periods, profile, noise_pct, start_value, start_date, crash_point_pct=70):
-    """
-    Generate a synthetic OHLCV DataFrame shaped by the requested growth curve profile.
-
-    Parameters
-    ----------
-    n_periods : int
-        Total number of trading periods (rows).
-    profile : str
-        One of 'linear', 'exponential', 'logarithmic', 'volatile', 'crash'.
-    noise_pct : float
-        Noise / volatility level as a percentage (0–100).
-    start_value : float
-        Starting close price.
-    start_date : str or datetime-like
-        First date in the generated series.
-    crash_point_pct : float
-        For the 'crash' profile: percentage of n_periods at which the decline starts (0–100).
-
-    Returns
-    -------
-    pd.DataFrame
-        Columns: Date, Open, High, Low, Close, Adj Close, Volume
-        Index:   RangeIndex (0 … n_periods-1)
-    """
-    rng = np.random.default_rng()
-    n = max(int(n_periods), 2)
-    noise = noise_pct / 100.0  # 0.0 – 1.0
-    t = np.arange(n)
-
-    # ── Base price curve ──────────────────────────────────────────────────────
-    if profile == "exponential":
-        # Doubles by end of series
-        growth = start_value * np.exp(np.log(2) * t / (n - 1))
-
-    elif profile == "logarithmic":
-        # Fast early growth that flattens (~50 % total gain)
-        growth = start_value * (1 + 0.5 * np.log1p(t) / np.log1p(n - 1))
-
-    elif profile == "volatile":
-        # Pure random walk; noise_pct controls daily volatility
-        daily_vol = 0.005 + 0.02 * noise
-        daily_ret = rng.normal(0.0002, daily_vol, n)
-        growth = start_value * np.cumprod(1 + daily_ret)
-
-    elif profile == "crash":
-        crash_idx = max(1, min(n - 1, int(n * crash_point_pct / 100)))
-        # Growth phase: +80 % up to crash point
-        t_up = np.arange(crash_idx)
-        growth_up = start_value * (1 + 0.8 * t_up / crash_idx)
-        peak = float(growth_up[-1])
-        # Decline phase: exponential decay to ~30 % of peak
-        t_dn = np.arange(n - crash_idx)
-        growth_dn = peak * np.exp(-np.log(10 / 3) * t_dn / max(n - crash_idx - 1, 1))
-        growth = np.concatenate([growth_up, growth_dn])
-
-    else:
-        # Default / 'linear': steady +50 % over the series
-        growth = start_value * (1 + 0.5 * t / (n - 1))
-
-    # ── Add proportional noise to close prices ────────────────────────────────
-    noise_scale = max(noise * 0.015, 1e-8)
-    price_noise = rng.normal(0, noise_scale, n) * growth
-    close = np.maximum(growth + price_noise, 0.1)
-
-    # ── Derive O / H / L from Close ───────────────────────────────────────────
-    spread = np.maximum(noise * 0.01 * close, 0.5)
-    open_ = np.empty(n)
-    open_[0] = start_value
-    open_[1:] = close[:-1] * (1 + rng.normal(0, max(noise * 0.003, 1e-8), n - 1))
-    open_ = np.maximum(open_, 0.1)
-
-    high = np.maximum(open_, close) + rng.uniform(0, spread, n)
-    low  = np.minimum(open_, close) - rng.uniform(0, spread, n)
-    low  = np.maximum(low, 0.1)
-
-    volume = rng.integers(100_000, 1_000_000, n)
-
-    dates = pd.date_range(start=start_date, periods=n, freq='D')
-
-    return pd.DataFrame({
-        'Date':      dates,
-        'Open':      open_,
-        'High':      high,
-        'Low':       low,
-        'Close':     close,
-        'Adj Close': close,
-        'Volume':    volume,
-    })
-
-
 def bull_trend(data, data_size, alpha=500, length=100):
     # Parameters
     # alpha: the difference between the close price at the start and end of the trend
@@ -219,12 +128,44 @@ def add_pattern(chart, nbr_pattern):
     return final_chart
 
 
+def _apply_hamming_taper(df, taper_pct=0.10):
+    """
+    Compress OHLC candle spread at pattern entry and exit using a Hamming ramp.
+
+    At the boundary (w=0) each candle collapses to its Open price (flat doji).
+    At the interior (w=1) candles retain their full shape.  This prevents
+    the abrupt volatility jump that otherwise appears where the pattern is
+    spliced into the surrounding segment.
+    """
+    df = df.copy().reset_index(drop=True)
+    n = len(df)
+    taper_n = max(3, int(n * taper_pct))
+    cols = [c for c in ('High', 'Low', 'Close', 'Adj Close') if c in df.columns]
+
+    for i in range(taper_n):
+        w = 0.5 * (1 - np.cos(np.pi * i / max(taper_n - 1, 1)))  # 0 → 1
+
+        mid = df.at[i, 'Open']                          # entry
+        for col in cols:
+            df.at[i, col] = mid + w * (df.at[i, col] - mid)
+
+        j = n - 1 - i                                   # exit (mirror)
+        if j != i:
+            mid = df.at[j, 'Open']
+            for col in cols:
+                df.at[j, col] = mid + w * (df.at[j, col] - mid)
+
+    return df
+
+
 def inject_pattern(segment, pattern_type):
-    '''
-    Inject a specific technical pattern into a single market data segment.
+    """
+    Inject a specific technical pattern into a market data segment.
+
     pattern_type must match a folder name under Data/patterns/ (e.g. "double_top").
-    Returns the segment unchanged if the pattern file cannot be found.
-    '''
+    The pattern is tapered in/out with a Hamming window to smooth the splice.
+    Returns the segment unchanged if no pattern file is found.
+    """
     path = get_pattern_file(pattern_type)
     if path is None:
         return segment
@@ -242,10 +183,67 @@ def inject_pattern(segment, pattern_type):
     chart2 = segment.iloc[position:].reset_index(drop=True)
 
     pattern = scale_market_data(pattern, segment.at[position, 'Close'])
+    pattern = _apply_hamming_taper(pattern)
+
     last_close = pattern.at[pattern.shape[0] - 1, 'Close']
     chart2 = scale_market_data(chart2, last_close)
 
     return pd.concat([chart1, pattern, chart2]).reset_index(drop=True)
+
+
+def apply_event_overlay(df, event_type, position_pct, magnitude_pct):
+    """
+    Overlay a localised event curve on the final chart.
+
+    Formula (supervisor):  y(t) = close(t) * event_curve(t)  for t >= event_start
+
+    event_curve is 1.0 before the event, then rises/falls smoothly using a
+    half-cosine (Hamming-shaped) ramp so the transition has no abrupt kink.
+
+    Parameters
+    ----------
+    event_type    : 'crash' or 'rally'
+    position_pct  : 0–100, where in the chart the event begins
+    magnitude_pct : 0–100, depth (crash) or height (rally) as % of price
+    """
+    if event_type not in ('crash', 'rally'):
+        return df
+
+    df = df.copy().reset_index(drop=True)
+    n = len(df)
+    event_idx = max(1, min(n - 2, int(n * position_pct / 100)))
+    post_len  = n - event_idx
+    if post_len < 2:
+        return df
+
+    magnitude = magnitude_pct / 100.0
+    t_post    = np.arange(post_len) / max(post_len - 1, 1)
+    ramp      = 0.5 * (1 - np.cos(np.pi * t_post))       # smooth 0 → 1
+
+    event_curve = np.ones(n)
+    if event_type == 'crash':
+        event_curve[event_idx:] = 1.0 - magnitude * ramp
+    else:
+        event_curve[event_idx:] = 1.0 + magnitude * ramp
+
+    for col in ('Open', 'High', 'Low', 'Close', 'Adj Close'):
+        if col in df.columns:
+            df[col] = df[col] * event_curve
+
+    # Light smoothing on Close to erase the kink at the event boundary
+    df['Close'] = (
+        pd.Series(df['Close'])
+        .rolling(3, center=True, min_periods=1)
+        .mean()
+        .values
+    )
+
+    # Restore OHLC consistency after the multiplier
+    df['High'] = np.maximum(df['High'], df['Close'])
+    df['Low']  = np.minimum(df['Low'],  df['Close'])
+    df['Low']  = np.maximum(df['Low'], 0.1)
+
+    return df
 
 
 def get_generated_data():
