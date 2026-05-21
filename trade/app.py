@@ -88,4 +88,4 @@ if __name__ == '__main__':
         print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
         quit()"""
 
-    app.run_server(debug=True)
+    app.run_server(debug=False, threaded=True)

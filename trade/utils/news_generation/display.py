@@ -39,6 +39,8 @@ def display_chart(data, data_name, news_position):
         xaxis_title="Date",
         yaxis_title="Price",
         xaxis_rangeslider_visible=False,
+        # Preserves zoom/pan when news markers are added or removed
+        uirevision=data_name,
     )
 
     return fig

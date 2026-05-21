@@ -6,6 +6,9 @@ from trade.utils.settings.data_handler import scale_market_data, random_number, 
 
 from trade.defaults import defaults as dlt
 
+# mtime-based cache for generated_data.csv
+_generated_cache: list = [None, -1.0]
+
 
 def bull_trend(data, data_size, alpha=500, length=100):
     # Parameters
@@ -143,12 +146,16 @@ def apply_event_overlay(df, event_type, position_pct, magnitude_pct):
 def get_generated_data():
     file_path = os.path.join(dlt.data_path, 'generated_data.csv')
     try:
-        existing_df = pd.read_csv(file_path, index_col=0, header=[0, 1])
+        mtime = os.path.getmtime(file_path)
+        if _generated_cache[0] is not None and _generated_cache[1] == mtime:
+            return _generated_cache[0]
+        df = pd.read_csv(file_path, index_col=0, header=[0, 1])
+        _generated_cache[0] = df
+        _generated_cache[1] = mtime
+        return df
     except Exception as e:
         print('ERROR: No generated data found in ' + dlt.data_path + ' folder.')
-        existing_df = None
-
-    return existing_df
+        return None
 
 def delete_generated_data(stock):
     '''

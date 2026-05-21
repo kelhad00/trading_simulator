@@ -15,26 +15,39 @@ def create_news_for_companies(companies, news_position, lang, base_url="http://l
     model = 'llama3.1:8b'
     news_path = os.path.join(dlt.data_path, 'news.csv')
 
+    print(f"[NEWS] Starting article generation for {len(news_position)} companies using {base_url}")
+
     for ticker, company_info in companies.items():
         company_sector = company_info['activity']
         company_name = company_info['label']
         curve_profile = company_info.get('curve_profile', 'linear')
         company_description = company_info.get('description', '')
-        if company_info['got_charts'] is True and ticker in news_position:
-            n = create_news(ticker, company_name, company_sector, curve_profile, lang, news_position[ticker], model, base_url, company_description)
 
-            # Save immediately after each company so a crash never loses progress.
-            # Replace only this company's existing news, keep everyone else's.
-            if os.path.exists(news_path):
-                try:
-                    existing = load_data(news_path)
-                    existing = existing[existing['ticker'] != company_name]
-                    n = pd.concat([existing, n]).reset_index(drop=True)
-                except pd.errors.EmptyDataError:
-                    pass  # empty file — nothing to merge, just save the new news
+        if company_info.get('got_charts') is not True:
+            continue
+        if ticker not in news_position:
+            print(f"[NEWS] {company_name} ({ticker}) — no positions found, skipping")
+            continue
+        pos = news_position[ticker]
+        if not pos[0] and not pos[1]:
+            print(f"[NEWS] {company_name} ({ticker}) — position lists are empty, skipping")
+            continue
 
-            save_data(n, news_path)
-            print(f'News saved for {company_name}')
+        print(f"[NEWS] Generating articles for {company_name} — {len(pos[0])} positive, {len(pos[1])} negative")
+        n = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, base_url, company_description)
+
+        # Save immediately after each company so a crash never loses progress.
+        # Replace only this company's existing news, keep everyone else's.
+        if os.path.exists(news_path):
+            try:
+                existing = load_data(news_path)
+                existing = existing[existing['ticker'] != company_name]
+                n = pd.concat([existing, n]).reset_index(drop=True)
+            except pd.errors.EmptyDataError:
+                pass  # empty file — nothing to merge, just save the new news
+
+        save_data(n, news_path)
+        print(f'[NEWS] News saved for {company_name}')
         
 
 def get_news_position_manual(market_data, positive_dates, negative_dates):
@@ -42,6 +55,8 @@ def get_news_position_manual(market_data, positive_dates, negative_dates):
     Convert user-provided dates to row indices for manual news placement.
     Normalises both the market data index and the stored dates to YYYY-MM-DD
     so timezone suffixes and time components never cause a mismatch.
+    Delta is intentionally not applied — the user has already chosen the
+    exact date by clicking, so there is nothing to shift.
     Returns the same (positive_positions, negative_positions) tuple as the
     other position functions.
     '''
@@ -70,30 +85,47 @@ def get_news_position_for_companies(companies, mode, nbr_positive_news, nbr_nega
         - k : top-K filter for linear mode (0 = no limit, use all positions above alpha)
     '''
 
+    print(f"[NEWS] Starting position generation — mode={mode}, companies={list(companies.keys())}")
+
     # Load the market data
     generated_market_data = get_market_dataframe()
+
+    if generated_market_data is None:
+        print("[NEWS] ERROR: No market data found — cannot generate positions.")
+        return {}
+
+    available = list(generated_market_data.columns.get_level_values(0).unique())
+    print(f"[NEWS] Market data available for: {available}")
 
     # Create a dictionary to store the news positions
     news_positions = {}
 
     for company, values in companies.items():
-        if values["got_charts"] is True:
-            if company in generated_market_data.keys():
-                try:
-                    if manual_positions and company in manual_positions:
-                        pos = manual_positions[company]
-                        news_positions[company] = get_news_position_manual(
-                            generated_market_data[company],
-                            pos.get("positive", []),
-                            pos.get("negative", []),
-                        )
-                    elif mode == "random":
-                        news_positions[company] = get_news_position_rand(generated_market_data[company], nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
-                    else:
-                        news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta, k)
-                except Exception as e:
-                    print(f"Skipping news positions for {company}: {e}")
+        if values.get("got_charts") is not True:
+            print(f"[NEWS] Skipping {company} — got_charts is not True")
+            continue
+        if company not in available:
+            print(f"[NEWS] Skipping {company} — not found in market data")
+            continue
+        try:
+            if manual_positions and company in manual_positions:
+                pos = manual_positions[company]
+                news_positions[company] = get_news_position_manual(
+                    generated_market_data[company],
+                    pos.get("positive", []),
+                    pos.get("negative", []),
+                )
+                print(f"[NEWS] {company} — manual: {len(news_positions[company][0])} positive, {len(news_positions[company][1])} negative")
+            elif mode == "random":
+                news_positions[company] = get_news_position_rand(generated_market_data[company], nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
+                print(f"[NEWS] {company} — random: {len(news_positions[company][0])} positive, {len(news_positions[company][1])} negative")
+            else:
+                news_positions[company] = get_news_position_lin(generated_market_data[company], alpha, alpha_day_interval, delta, k)
+                print(f"[NEWS] {company} — linear: {len(news_positions[company][0])} positive, {len(news_positions[company][1])} negative")
+        except Exception as e:
+            print(f"[NEWS] Skipping {company} — error finding positions: {e}")
 
+    print(f"[NEWS] Position generation complete — {len(news_positions)} companies ready")
     return news_positions
 
 
