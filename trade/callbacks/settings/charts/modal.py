@@ -35,13 +35,13 @@ import trade.callbacks.settings.stocks as stocks_callbacks
 @callback(
     Output("base-figures", "data"),
     Input("slider-alpha", "value"),
-    Input("slider-length", "value"),
+    Input({"type": "timeline-length", "index": ALL}, "value"),
     Input("slider-start", "value"),
     Input({"type": "timeline-radio", "index": ALL}, "value"),
     Input("modal-select-companies", "value"),
     prevent_initial_call=True,
 )
-def generate_base_segments(alpha, length, start_value, radio_trends, companies,
+def generate_base_segments(alpha, segment_lengths, start_value, radio_trends, companies,
                             start_date=dlt.start_date):
     if not companies:
         raise PreventUpdate
@@ -59,19 +59,23 @@ def generate_base_segments(alpha, length, start_value, radio_trends, companies,
         company_data = []
         for company in companies:
             indices = []
-            for trend_val in radio_trends:
+            for i, trend_val in enumerate(radio_trends):
+                length_i = int(segment_lengths[i]) if i < len(segment_lengths) and segment_lengths[i] else 100
                 tv = trend_val or "flat"
                 if tv == "bull":
-                    indices.append(bull_trend(dataset, data_size, alpha, length))
+                    indices.append(bull_trend(dataset, data_size, alpha, length_i))
                 elif tv == "bear":
-                    indices.append(bear_trend(dataset, data_size, alpha, length))
+                    indices.append(bear_trend(dataset, data_size, alpha, length_i))
                 else:
-                    indices.append(flat_trend(dataset, data_size, 20, length))
+                    indices.append(flat_trend(dataset, data_size, 20, length_i))
             company_data.append({"company": company, "indices": indices})
 
+        lengths = [int(segment_lengths[i]) if i < len(segment_lengths) and segment_lengths[i] else 100
+                   for i in range(len(radio_trends))]
+
         return {
-            "company_data": company_data,
-            "length":          length,
+            "company_data":    company_data,
+            "segment_lengths": lengths,
             "start_value":     float(start_value) if start_value else 250.0,
             "first_timestamp": first_timestamp,
         }
@@ -136,21 +140,28 @@ def toggle_event_params(event_type):
     Output("event-overlap-warning", "children"),
     Input("select-event-type", "value"),
     Input("slider-event-position", "value"),
-    Input("slider-length", "value"),
+    Input({"type": "timeline-length", "index": ALL}, "value"),
     Input({"type": "timeline-pattern", "index": ALL}, "value"),
 )
-def warn_event_pattern_overlap(event_type, event_position, length, pattern_trends):
+def warn_event_pattern_overlap(event_type, event_position, segment_lengths, pattern_trends):
     hidden = {"display": "none"}
 
     if not event_type or event_type == "none":
         return hidden, ""
-    if event_position is None or not pattern_trends:
+    if event_position is None or not pattern_trends or not segment_lengths:
         return hidden, ""
 
-    n_segments = len(pattern_trends)
-    seg_length = max(int(length or 100), 1)
-    event_bar  = int(seg_length * n_segments * event_position / 100)
-    seg_index  = min(event_bar // seg_length, n_segments - 1)
+    lengths = [max(int(l or 100), 1) for l in segment_lengths]
+    total_bars = sum(lengths)
+    event_bar = int(total_bars * event_position / 100)
+
+    seg_index = len(lengths) - 1
+    cumulative = 0
+    for i, l in enumerate(lengths):
+        cumulative += l
+        if event_bar < cumulative:
+            seg_index = i
+            break
 
     pattern_at_event = pattern_trends[seg_index] if seg_index < len(pattern_trends) else None
 
@@ -172,13 +183,15 @@ _DISABLED_STYLE = {"opacity": "0.35", "pointerEvents": "none", "userSelect": "no
 
 @callback(
     Output({"type": "timeline-radio-container", "index": ALL}, "style"),
+    Output({"type": "timeline-length-container", "index": ALL}, "style"),
     Input({"type": "timeline-pattern", "index": ALL}, "value"),
 )
 def toggle_radio_on_pattern(pattern_values):
-    return [
+    styles = [
         _DISABLED_STYLE if (pv and pv != "none") else {}
         for pv in (pattern_values or [])
     ]
+    return styles, styles
 
 
 # ── Step 3: render chart from fixed windows + chosen pattern files ────────────
@@ -217,7 +230,7 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
     try:
         dataset = load_data(os.path.join(dlt.data_path, "CAC40.csv"))
 
-        length          = base_data["length"]
+        segment_lengths = base_data["segment_lengths"]
         start_value     = base_data["start_value"]
         first_timestamp = base_data["first_timestamp"]
 
@@ -239,11 +252,12 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
             data_list  = []
             prev_close = start_value
 
-            for t, file_path in zip(indices, seg_files):
+            for seg_i, (t, file_path) in enumerate(zip(indices, seg_files)):
+                length_i = segment_lengths[seg_i] if seg_i < len(segment_lengths) else 100
                 if file_path:
                     segment = load_data(file_path)
                 else:
-                    segment = dataset[t: t + length].reset_index(drop=True)
+                    segment = dataset[t: t + length_i].reset_index(drop=True)
 
                 segment = scale_market_data(segment, prev_close)
                 data_list.append(segment)

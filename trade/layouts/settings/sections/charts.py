@@ -59,7 +59,6 @@ def generate_charts_modal(lang="fr"):
                         slider(tl["select"]["alpha"], "slider-alpha", 0, 2000, 500),
                         id="alpha-section",
                     ),
-                    slider(tl["select"]["length"], "slider-length", 0, 500, 100),
                     slider(tl["select"]["start"], "slider-start", 0, 1000, 250)
                 ]),
 
@@ -158,6 +157,11 @@ def timeline_item(id, index, title, lang=None):
                 value="none",
                 size="sm",
                 className="w-full mt-2",
+            ),
+            html.Div(
+                slider(tl["select"]["segment-length"], {"type": f"{id}-length", "index": index}, 10, 500, 100),
+                id={"type": f"{id}-length-container", "index": index},
+                className="mt-2",
             ),
         ],
         className="pb-4"
