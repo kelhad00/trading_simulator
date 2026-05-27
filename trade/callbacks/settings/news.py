@@ -11,10 +11,39 @@ from trade.utils.news_generation.news_creation import (
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.news_generation.display import display_chart
 from trade.locales import translations as tls
+from trade.defaults import defaults as dlt
 
 
 def _lang(search):
     return "en" if (search and "lang=en" in search) else "fr"
+
+
+# ── Provider visibility ───────────────────────────────────────────────────────
+
+@callback(
+    Output("ollama-url-container", "style"),
+    Output("groq-key-container", "style"),
+    Input("input-provider", "value"),
+)
+def toggle_provider_inputs(provider):
+    if provider == "groq":
+        return {"display": "none"}, {"display": "flex"}
+    return {"display": "flex"}, {"display": "none"}
+
+
+# ── Groq key visibility toggle ────────────────────────────────────────────────
+
+@callback(
+    Output("input-groq-key", "type"),
+    Output("groq-eye-icon", "icon"),
+    Input("groq-eye-toggle", "n_clicks"),
+    State("input-groq-key", "type"),
+    prevent_initial_call=True,
+)
+def toggle_groq_key_visibility(_, current_type):
+    if current_type == "password":
+        return "text", "mdi:eye"        # field now visible  → open eye
+    return "password", "mdi:eye-off"    # field now hidden   → closed eye
 
 
 # ── Mode visibility ───────────────────────────────────────────────────────────
@@ -42,7 +71,9 @@ def update_display_container_nbr_news(mode):
     Output("manual-positions-store", "data", allow_duplicate=True),
 
     State('companies', 'data'),
+    State('input-provider', 'value'),
     State('input-api-key', 'value'),
+    State('input-groq-key', 'value'),
     State('input-alpha', 'value'),
     State('input-alpha-day-interval', 'value'),
     State('input-delta', 'value'),
@@ -56,8 +87,10 @@ def update_display_container_nbr_news(mode):
     Input('generate-news', 'n_clicks'),
     prevent_initial_call=True
 )
-def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta, generation_mode,
-                            nbr_positive_news, nbr_negative_news, top_k, search, manual_positions, n):
+def on_start_button_clicked(companies, provider, api_key, groq_key,
+                            alpha, alpha_day_interval, delta, generation_mode,
+                            nbr_positive_news, nbr_negative_news, top_k,
+                            search, manual_positions, n):
     if n is None:
         raise PreventUpdate
     try:
@@ -69,8 +102,20 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
         )
 
         lang = _lang(search)
-        effective_url = (api_key or "").strip() or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-        create_news_for_companies(companies, news_position, lang, effective_url)
+        provider = provider or "ollama"
+
+        if provider == "groq":
+            effective_groq_key = (groq_key or "").strip() or dlt.groq_api_key
+            create_news_for_companies(
+                companies, news_position, lang,
+                provider="groq", groq_api_key=effective_groq_key,
+            )
+        else:
+            effective_url = (api_key or "").strip() or dlt.ollama_base_url
+            create_news_for_companies(
+                companies, news_position, lang,
+                provider="ollama", base_url=effective_url,
+            )
 
         return dmc.Notification(
             id="notification-news-generated",
@@ -78,17 +123,18 @@ def on_start_button_clicked(companies, api_key, alpha, alpha_day_interval, delta
             action="show",
             color="green",
             message="Generation complete!",
-        ), False, {}  # clear manual positions after successful generation
+        ), False, {}
 
     except Exception as e:
         print("Error while generating news:", e)
+        provider_label = "Groq" if (provider or "ollama") == "groq" else "Ollama"
         return dmc.Notification(
             id="notification-news-generated",
             title="Error",
             action="show",
             color="red",
-            message="Error while generating news! It may be due to the Ollama URL, the model, or the parameters.",
-        ), False, no_update  # keep manual positions on failure
+            message=f"Error while generating news via {provider_label}! Check your API key, connection, and parameters.",
+        ), False, no_update
 
 
 @callback(

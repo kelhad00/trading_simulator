@@ -184,6 +184,7 @@ translation = {
             },
             "news": {
                 "subtitles": {
+                    "provider": "Fournisseur LLM",
                     "key": "URL Ollama",
                     "parameters": "Paramètres de génération",
                     "mode": "Mode de génération",
@@ -192,9 +193,17 @@ translation = {
                 "button": {
                     "generate": "Générer pour toutes les actions",
                 },
+                "provider": {
+                    "label": "Choisir le mode de génération",
+                    "ollama": "Local (Ollama)",
+                    "groq": "Groq (Cloud — offre gratuite)",
+                    "groq-note": "Groq offre ~14 400 requêtes gratuites/jour. Obtenez votre clé sur console.groq.com",
+                },
                 "input": {
                     "key": "URL de base Ollama",
                     "key-placeholder": "Chargée depuis .env — saisir ici pour remplacer (ex : http://localhost:11434/v1)",
+                    "groq-key": "Clé API Groq",
+                    "groq-key-placeholder": "Chargée depuis .env — saisir ici pour remplacer",
                     "alpha": "Indiquer un pourcentage de variation de marché entre 2 jours",
                     "alpha-day-interval": "Indiquer l'intervalle de jours pour le calcul de l'alpha",
                     "delta": "Indiquer une valeur de décallage",

@@ -79,7 +79,11 @@ def toggle_news_display_type(n, cell_clicked, table):
         # get_news_dataframe() is cached — negligible cost
         news_df = get_news_dataframe()
         article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]
-        return {'display': 'none'}, article_clicked['title'], article_clicked['content'], {'display': 'block'}, no_update
+        if article_clicked.empty:
+            return no_update, no_update, no_update, no_update, no_update
+        title = article_clicked['title'].iloc[0]
+        content = article_clicked['content'].iloc[0]
+        return {'display': 'none'}, title, content, {'display': 'block'}, no_update
     except Exception as e:
         print('Error :', e)
         return no_update, no_update, no_update, no_update, no_update

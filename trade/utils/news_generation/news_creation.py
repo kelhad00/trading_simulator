@@ -1,8 +1,14 @@
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 import pandas as pd
 import os
 import random
+import functools
+import time
 from datetime import datetime
+
+# Force all print() calls in this module to flush immediately so logs appear
+# in the terminal in real time instead of being held in Python's output buffer.
+print = functools.partial(print, flush=True)
 
 from trade.utils.news_generation.modules import load_data, save_data
 from trade.utils.news_generation.modules import percentage_change
@@ -10,12 +16,39 @@ from trade.utils.market import get_market_dataframe
 from trade.utils.news_generation.modules import find_sector_for_company
 from trade.defaults import defaults as dlt
 
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+GROQ_MODEL = "llama-3.1-8b-instant"
+OLLAMA_MODEL = "qwen2.5:3b"
 
-def create_news_for_companies(companies, news_position, lang, base_url="http://localhost:11434/v1"):
-    model = 'llama3.1:8b'
+
+def _build_client(provider, base_url, groq_api_key):
+    """Return (OpenAI client, model name) for the chosen provider."""
+    if provider == "groq":
+        return OpenAI(base_url=GROQ_BASE_URL, api_key=groq_api_key), GROQ_MODEL
+    return OpenAI(base_url=base_url, api_key="ollama"), OLLAMA_MODEL
+
+
+def _chat_with_retry(client, model, messages, max_retries=4):
+    """Call the chat API with exponential back-off on rate-limit errors."""
+    for attempt in range(max_retries):
+        try:
+            return client.chat.completions.create(messages=messages, model=model)
+        except RateLimitError:
+            if attempt < max_retries - 1:
+                wait = 10 * (2 ** attempt)  # 10s → 20s → 40s → 80s
+                print(f"[NEWS] Rate limit hit — waiting {wait}s (attempt {attempt + 1}/{max_retries})...")
+                time.sleep(wait)
+            else:
+                raise
+
+
+def create_news_for_companies(companies, news_position, lang, provider="ollama",
+                               base_url="http://localhost:11434/v1", groq_api_key=""):
+    _, model = _build_client(provider, base_url, groq_api_key)
     news_path = os.path.join(dlt.data_path, 'news.csv')
 
-    print(f"[NEWS] Starting article generation for {len(news_position)} companies using {base_url}")
+    endpoint = GROQ_BASE_URL if provider == "groq" else base_url
+    print(f"[NEWS] Starting article generation for {len(news_position)} companies using {provider} ({endpoint})")
 
     for ticker, company_info in companies.items():
         company_sector = company_info['activity']
@@ -34,7 +67,7 @@ def create_news_for_companies(companies, news_position, lang, base_url="http://l
             continue
 
         print(f"[NEWS] Generating articles for {company_name} — {len(pos[0])} positive, {len(pos[1])} negative")
-        n = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, base_url, company_description)
+        n = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, provider, base_url, groq_api_key, company_description)
 
         # Save immediately after each company so a crash never loses progress.
         # Replace only this company's existing news, keep everyone else's.
@@ -47,7 +80,12 @@ def create_news_for_companies(companies, news_position, lang, base_url="http://l
                 pass  # empty file — nothing to merge, just save the new news
 
         save_data(n, news_path)
-        print(f'[NEWS] News saved for {company_name}')
+        company_articles = n[n['ticker'] == company_name] if 'ticker' in n.columns else n
+        print(f"[NEWS] ----------------------------------------")
+        print(f"[NEWS] All articles for {company_name} written to file.")
+        print(f"[NEWS] File : {news_path}")
+        print(f"[NEWS] Total rows now in file: {len(n)}")
+        print(f"[NEWS] ----------------------------------------")
         
 
 def get_news_position_manual(market_data, positive_dates, negative_dates):
@@ -213,7 +251,9 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta, k=0):
 
     return (positive_positions, negative_positions)
 
-def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position, model, base_url="http://localhost:11434/v1", company_description=""):
+def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position,
+                model, provider="ollama", base_url="http://localhost:11434/v1", groq_api_key="",
+                company_description=""):
     '''
     Create news for a company based on the position in market data given
     '''
@@ -221,8 +261,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     # Paths
     dataset_path = os.path.join(dlt.data_path, 'news_dataset.csv')
 
-    # Create an Ollama client via the OpenAI-compatible API
-    client = OpenAI(base_url=base_url, api_key="ollama")
+    client, _ = _build_client(provider, base_url, groq_api_key)
 
     # Load the dataset & market data
     dataset = load_data(dataset_path)
@@ -240,11 +279,17 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     if len(subset) >= len(news_position[0]):
         news = subset.sample(len(news_position[0]))
 
+        total_pos = len(news_position[0])
+        print(f"[NEWS GEN] {company_name} — {total_pos} POSITIVE article(s) to generate")
         i = 0
         for position in news_position[0]:
+            print(f"[NEWS GEN]   ({i + 1}/{total_pos}) Generating POSITIVE article...")
             # Create the news
+            print(f"[NEWS GEN]     -> Sending content to Ollama for rewriting...")
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+            print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
+            print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
 
             # Create a new row in news_created
 
@@ -255,7 +300,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
             news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
 
-            print("News created for " + company_name)
+            print(f"[NEWS GEN]     [SAVED] POSITIVE article {i + 1}/{total_pos} stored for {company_name} (date: {date})")
             i += 1
 
     else:
@@ -270,24 +315,36 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     if len(subset) >= len(news_position[1]):
         news = subset.sample(len(news_position[1]))
 
+        total_neg = len(news_position[1])
+        print(f"[NEWS GEN] {company_name} — {total_neg} NEGATIVE article(s) to generate")
         i = 0
         for position in news_position[1]:
+            print(f"[NEWS GEN]   ({i + 1}/{total_neg}) Generating NEGATIVE article...")
             # Create the news
+            print(f"[NEWS GEN]     -> Sending content to Ollama for rewriting...")
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+            print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
+            print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
 
             # Create a new row in news_created
             date = market_data.iloc[position]['date']
             date = datetime.fromisoformat(date).strftime('%d/%m/%y %H:%M')
             news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
 
-            print("News created for " + company_name)
+            print(f"[NEWS GEN]     [SAVED] NEGATIVE article {i + 1}/{total_neg} stored for {company_name} (date: {date})")
             i += 1
 
     else:
         # The sector is not in the dataset or there are not enough of them
         raise Exception('There are not enough negative news for the sector of ' + company_name + ' in the dataset')
 
+    print(f"[NEWS GEN] ============================================")
+    print(f"[NEWS GEN] DONE — {company_name} ({company_ticker})")
+    print(f"[NEWS GEN]   Total articles generated : {len(news_created)}")
+    print(f"[NEWS GEN]   Positive : {len(news_created[news_created['sentiment'] == 'positive'])}")
+    print(f"[NEWS GEN]   Negative : {len(news_created[news_created['sentiment'] == 'negative'])}")
+    print(f"[NEWS GEN] ============================================")
     return news_created
 
 
@@ -347,17 +404,7 @@ Rewrite this article so it is directly about {company}, taking into account its 
         language_instruction=language_instruction,
     )
 
-    # Create a news for the company
-    response = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": p,
-            }
-        ],
-        model=model,
-    )
-
+    response = _chat_with_retry(client, model, [{"role": "user", "content": p}])
     return response.choices[0].message.content
 
 
@@ -411,15 +458,5 @@ Write a short, punchy headline for this article. The headline must mention {comp
         language_instruction=language_instruction,
     )
 
-    # Create a news for the company
-    response = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": p,
-            }
-        ],
-        model=model,
-    )
-
+    response = _chat_with_retry(client, model, [{"role": "user", "content": p}])
     return response.choices[0].message.content

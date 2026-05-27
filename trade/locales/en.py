@@ -171,6 +171,7 @@ translation = {
             },
             "news": {
                 "subtitles": {
+                    "provider": "LLM Provider",
                     "key": "Ollama URL",
                     "parameters": "News generation parameters",
                     "mode": "Generation mode",
@@ -179,9 +180,17 @@ translation = {
                 "button": {
                     "generate": "Generate news for all stocks",
                 },
+                "provider": {
+                    "label": "Choose how to generate news",
+                    "ollama": "Local (Ollama)",
+                    "groq": "Groq (Cloud — free tier)",
+                    "groq-note": "Groq offers ~14 400 free requests/day. Get your API key at console.groq.com",
+                },
                 "input": {
                     "key": "Enter the Ollama base URL",
                     "key-placeholder": "Loaded from .env — type here to override (e.g. http://localhost:11434/v1)",
+                    "groq-key": "Groq API Key",
+                    "groq-key-placeholder": "Loaded from .env — type here to override",
                     "alpha": "Indicate the alpha value : The alpha parameter is a percentage of variation between two days.",
                     "alpha-day-interval": "Indicate the alpha day interval : The alpha day interval is the interval between the two days used for the calculation of alpha.",
                     "delta": "Indicate the delta value : The delta value shifts the news days by a certain number of days.",

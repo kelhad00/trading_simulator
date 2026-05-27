@@ -83,5 +83,5 @@ def upload_news(contents):
     prevent_initial_call=True
 )
 def upload_revenues(contents):
-    return upload(contents, 'revenues.csv')
+    return upload(contents, 'revenue.csv')
 

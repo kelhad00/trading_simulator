@@ -22,8 +22,9 @@ class Defaults:
     # Path to the data folder
     data_path = "../data"
 
-    # News settings — loaded from OLLAMA_BASE_URL in .env; UI input is an optional override
-    ollama_base_url = "http://localhost:11434/v1"
+    # News settings — loaded from env; UI inputs are optional overrides
+    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    groq_api_key = os.getenv("GROQ_API_KEY", "")
 
 
     # Stocks and Indexes used in the interface
