@@ -14,6 +14,7 @@ from trade.utils.news_generation.modules import load_data, save_data
 from trade.utils.news_generation.modules import percentage_change
 from trade.utils.market import get_market_dataframe
 from trade.utils.news_generation.modules import find_sector_for_company
+from trade.utils.news_generation.verify import verify_article
 from trade.defaults import defaults as dlt
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
@@ -50,6 +51,10 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
     endpoint = GROQ_BASE_URL if provider == "groq" else base_url
     print(f"[NEWS] Starting article generation for {len(news_position)} companies using {provider} ({endpoint})")
 
+    report_path = os.path.join(dlt.data_path, 'verification_report.csv')
+    total_verified = 0
+    total_passed   = 0
+
     for ticker, company_info in companies.items():
         company_sector = company_info['activity']
         company_name = company_info['label']
@@ -67,25 +72,45 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
             continue
 
         print(f"[NEWS] Generating articles for {company_name} — {len(pos[0])} positive, {len(pos[1])} negative")
-        n = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, provider, base_url, groq_api_key, company_description)
+        n, v_results = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, provider, base_url, groq_api_key, company_description)
 
-        # Save immediately after each company so a crash never loses progress.
-        # Replace only this company's existing news, keep everyone else's.
+        # ── Save news immediately (per company) ───────────────────────────────
         if os.path.exists(news_path):
             try:
                 existing = load_data(news_path)
                 existing = existing[existing['ticker'] != company_name]
                 n = pd.concat([existing, n]).reset_index(drop=True)
             except pd.errors.EmptyDataError:
-                pass  # empty file — nothing to merge, just save the new news
-
+                pass
         save_data(n, news_path)
-        company_articles = n[n['ticker'] == company_name] if 'ticker' in n.columns else n
         print(f"[NEWS] ----------------------------------------")
         print(f"[NEWS] All articles for {company_name} written to file.")
         print(f"[NEWS] File : {news_path}")
         print(f"[NEWS] Total rows now in file: {len(n)}")
         print(f"[NEWS] ----------------------------------------")
+
+        # ── Save verification report immediately (per company) ────────────────
+        if v_results:
+            new_rows = pd.DataFrame(v_results)
+            if os.path.exists(report_path):
+                try:
+                    existing_report = pd.read_csv(report_path)
+                    existing_report = existing_report[existing_report['company'] != company_name]
+                    new_rows = pd.concat([existing_report, new_rows]).reset_index(drop=True)
+                except (pd.errors.EmptyDataError, KeyError):
+                    pass
+            new_rows.to_csv(report_path, index=False)
+            company_passed = sum(1 for r in v_results if r['passed'])
+            total_verified += len(v_results)
+            total_passed   += company_passed
+            print(f"[VERIFY] {company_name} — {company_passed}/{len(v_results)} passed | report updated")
+
+    flagged = total_verified - total_passed
+    if total_verified:
+        print(f"[VERIFY] Report saved → {report_path}  ({total_passed}/{total_verified} passed, {flagged} flagged)")
+        return {'total': total_verified, 'passed': total_passed, 'flagged': flagged}
+
+    return {'total': 0, 'passed': 0, 'flagged': 0}
         
 
 def get_news_position_manual(market_data, positive_dates, negative_dates):
@@ -270,6 +295,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
     # Create a dataframe to store the news we have created
     news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
+    verification_results = []
 
     # Browse the positive positions
     sentiment = 'positive'
@@ -299,6 +325,24 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
 
             news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
+
+            v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
+            tone_sym    = '✓' if v['tone_ok']          else '✗'
+            company_sym = '✓' if v['company_mentioned'] else '✗'
+            curve_sym   = '✓' if v['curve_ok']          else '✗'
+            lang_sym    = '✓' if v['language_ok']        else '✗'
+            print(f"[VERIFY] (+) Article {i + 1}: grade={v['grade']} | tone={tone_sym}({v['tone_confidence']}) | company={company_sym} | curve={curve_sym}({v['curve_score']}) | lang={lang_sym}")
+            if not v['passed']:
+                print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
+                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+                title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
+                v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
+                news_created.at[len(news_created) - 1, 'title']   = title
+                news_created.at[len(news_created) - 1, 'content'] = content
+                print(f"[VERIFY]     Retry grade={v['grade']}")
+            v['company'] = company_name
+            v['sentiment_expected'] = sentiment
+            verification_results.append(v)
 
             print(f"[NEWS GEN]     [SAVED] POSITIVE article {i + 1}/{total_pos} stored for {company_name} (date: {date})")
             i += 1
@@ -332,6 +376,24 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             date = datetime.fromisoformat(date).strftime('%d/%m/%y %H:%M')
             news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
 
+            v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
+            tone_sym    = '✓' if v['tone_ok']          else '✗'
+            company_sym = '✓' if v['company_mentioned'] else '✗'
+            curve_sym   = '✓' if v['curve_ok']          else '✗'
+            lang_sym    = '✓' if v['language_ok']        else '✗'
+            print(f"[VERIFY] (-) Article {i + 1}: grade={v['grade']} | tone={tone_sym}({v['tone_confidence']}) | company={company_sym} | curve={curve_sym}({v['curve_score']}) | lang={lang_sym}")
+            if not v['passed']:
+                print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
+                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+                title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
+                v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
+                news_created.at[len(news_created) - 1, 'title']   = title
+                news_created.at[len(news_created) - 1, 'content'] = content
+                print(f"[VERIFY]     Retry grade={v['grade']}")
+            v['company'] = company_name
+            v['sentiment_expected'] = sentiment
+            verification_results.append(v)
+
             print(f"[NEWS GEN]     [SAVED] NEGATIVE article {i + 1}/{total_neg} stored for {company_name} (date: {date})")
             i += 1
 
@@ -345,7 +407,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     print(f"[NEWS GEN]   Positive : {len(news_created[news_created['sentiment'] == 'positive'])}")
     print(f"[NEWS GEN]   Negative : {len(news_created[news_created['sentiment'] == 'negative'])}")
     print(f"[NEWS GEN] ============================================")
-    return news_created
+    return news_created, verification_results
 
 
 def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment, company_description=""):

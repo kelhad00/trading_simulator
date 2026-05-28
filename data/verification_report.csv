@@ -1,0 +1,29 @@
+tone_ok,tone_confidence,finbert_label,company_mentioned,curve_score,curve_ok,language_ok,grade,passed,flagged,company,sentiment_expected
+False,0.9166,neutral,True,4,True,True,C,False,True,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive
+False,0.8635,neutral,True,0,False,True,F,False,True,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative
+False,0.9209,neutral,True,1,False,True,F,False,True,L'ORÉAL (OR),positive
+False,0.8294,neutral,True,4,True,True,C,False,True,L'ORÉAL (OR),negative
+False,0.83,neutral,True,4,True,True,C,False,True,HERMÈS INTERNATIONAL (RMS),positive
+False,0.7844,neutral,True,0,False,True,F,False,True,HERMÈS INTERNATIONAL (RMS),negative
+False,0.877,neutral,False,4,True,True,F,False,True,TOTALENERGIES SE (TTE),positive
+False,0.8656,neutral,True,1,False,True,F,False,True,TOTALENERGIES SE (TTE),negative
+False,0.7669,neutral,True,3,False,True,F,False,True,SANOFI (SAN),positive
+False,0.8736,neutral,True,3,False,True,F,False,True,SANOFI (SAN),negative
+False,0.6838,neutral,True,3,False,True,F,False,True,AIRBUS SE (AIR),positive
+False,0.8227,neutral,False,3,False,True,F,False,True,AIRBUS SE (AIR),negative
+False,0.8084,neutral,True,0,False,True,F,False,True,SCHNEIDER ELECTRIC SE (SU),positive
+False,0.8036,neutral,True,0,False,True,F,False,True,SCHNEIDER ELECTRIC SE (SU),negative
+False,0.6323,neutral,True,4,True,True,C,False,True,AIR LIQUIDE (AI),positive
+False,0.6913,neutral,True,0,False,True,F,False,True,AIR LIQUIDE (AI),negative
+False,0.907,neutral,True,3,False,True,F,False,True,ESSILORLUXOTTICA (EL),positive
+False,0.897,neutral,True,0,False,True,F,False,True,ESSILORLUXOTTICA (EL),negative
+False,0.7795,neutral,True,1,False,True,F,False,True,BNP PARIBAS (BNP),positive
+False,0.881,neutral,True,3,False,True,F,False,True,BNP PARIBAS (BNP),negative
+False,0.859,neutral,True,0,False,True,F,False,True,KERING (KER),positive
+False,0.8254,neutral,True,4,True,True,C,False,True,KERING (KER),negative
+False,0.7435,neutral,True,4,True,True,C,False,True,VINCI (DG),positive
+False,0.8801,neutral,True,3,False,True,F,False,True,VINCI (DG),negative
+False,0.8791,neutral,True,1,False,True,F,False,True,AXA (CS),positive
+False,0.8695,neutral,True,0,False,True,F,False,True,AXA (CS),negative
+False,0.8722,neutral,True,4,True,True,C,False,True,SAFRAN (SAF),positive
+False,0.8845,neutral,True,0,False,True,F,False,True,SAFRAN (SAF),negative

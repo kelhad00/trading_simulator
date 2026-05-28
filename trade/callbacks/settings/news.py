@@ -106,23 +106,33 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
 
         if provider == "groq":
             effective_groq_key = (groq_key or "").strip() or dlt.groq_api_key
-            create_news_for_companies(
+            stats = create_news_for_companies(
                 companies, news_position, lang,
                 provider="groq", groq_api_key=effective_groq_key,
             )
         else:
             effective_url = (api_key or "").strip() or dlt.ollama_base_url
-            create_news_for_companies(
+            stats = create_news_for_companies(
                 companies, news_position, lang,
                 provider="ollama", base_url=effective_url,
             )
+
+        total   = stats.get('total', 0)
+        passed  = stats.get('passed', 0)
+        flagged = stats.get('flagged', 0)
+        color   = "green" if flagged == 0 else "orange"
+        message = (
+            f"Generation complete — {passed}/{total} passed, {flagged} flagged. "
+            f"See verification_report.csv for details."
+            if total > 0 else "Generation complete!"
+        )
 
         return dmc.Notification(
             id="notification-news-generated",
             title="News",
             action="show",
-            color="green",
-            message="Generation complete!",
+            color=color,
+            message=message,
         ), False, {}
 
     except Exception as e:
