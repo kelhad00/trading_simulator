@@ -19,7 +19,7 @@ from trade.defaults import defaults as dlt
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 GROQ_MODEL = "llama-3.1-8b-instant"
-OLLAMA_MODEL = "qwen2.5:3b"
+OLLAMA_MODEL = "qwen3:14b"
 
 
 def _build_client(provider, base_url, groq_api_key):

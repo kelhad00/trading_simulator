@@ -32,7 +32,7 @@ def _get_finbert():
         return True   # already running
 
     try:
-        print("[VERIFY] Starting FinBERT worker process...")
+        print("[VERIFY] Starting sentiment worker (FinBERT + DistilCamemBERT)...")
         _worker_proc = subprocess.Popen(
             [sys.executable, _WORKER_SCRIPT],
             stdin=subprocess.PIPE,
@@ -44,7 +44,7 @@ def _get_finbert():
         # Block until the worker prints READY (model loaded)
         ready_line = _worker_proc.stdout.readline().strip()
         if ready_line == "READY":
-            print("[VERIFY] FinBERT worker ready.")
+            print("[VERIFY] Sentiment worker ready (FinBERT=EN, DistilCamemBERT=FR).")
             _worker_available = True
             return True
         raise RuntimeError(f"Unexpected worker output: {ready_line!r}")
@@ -60,34 +60,63 @@ def _get_finbert():
 
 CURVE_VOCABULARY = {
     'crash': {
+        # English
         'collapse': 3, 'collaps': 3, 'plunge': 3, 'plummet': 3,
         'decline': 3, 'falls': 3, 'fell': 3, 'falling': 3, 'fallen': 3,
         'crisis': 2, 'slump': 2, 'deteriorat': 2, 'loss': 2,
         'tumble': 2, 'drop': 2, 'shrink': 2, 'shrinking': 2,
         'weak': 1, 'concern': 1, 'cautious': 1, 'warning': 1, 'fear': 1,
+        # French
+        'effondrement': 3, 'effondr': 3, 'chute': 3, 'plongeon': 3,
+        'déclin': 3, 'baisse': 3, 'recul': 3, 'dégringol': 3,
+        'crise': 2, 'perte': 2, 'détérior': 2, 'repli': 2,
+        'faible': 1, 'inquiétude': 1, 'prudence': 1, 'avertissement': 1, 'crainte': 1,
     },
     'exponential': {
+        # English
         'surge': 3, 'surging': 3, 'surged': 3, 'skyrocket': 3,
         'explosive': 3, 'accelerat': 3, 'soar': 3, 'soaring': 3,
         'rapid': 2, 'dramatic': 2, 'momentum': 2, 'record': 2,
         'outperform': 2, 'exceed': 2, 'exceptional': 2,
         'strong': 1, 'remarkable': 1,
+        # French
+        'explosion': 3, 'explosif': 3, 'envolée': 3, 'flambée': 3,
+        'accélérat': 3, 'fulgur': 3, 'spectaculaire': 3,
+        'rapide': 2, 'exceptionnel': 2, 'record': 2, 'dynamisme': 2,
+        'fort': 1, 'remarquable': 1, 'impressionnant': 1,
     },
     'linear': {
+        # English
         'steady': 3, 'stable': 3, 'consistent': 3,
         'gradual': 2, 'sustained': 2, 'regular': 2, 'moderate': 2,
         'reliable': 1, 'predictable': 1, 'solid': 1,
+        # French
+        'régulier': 3, 'régulière': 3, 'stable': 3, 'constant': 3,
+        'progressif': 2, 'progressive': 2, 'soutenu': 2, 'modéré': 2,
+        'linéaire': 3, 'continu': 2, 'continue': 2,
+        'fiable': 1, 'solide': 1, 'prévisible': 1,
     },
     'logarithmic': {
+        # English
         'matur': 3, 'plateau': 3, 'stabiliz': 3,
         'decelerat': 2, 'consolidat': 2, 'slow': 2, 'saturat': 2,
         'modest': 1, 'taper': 2, 'level': 1,
+        # French
+        'maturité': 3, 'plateau': 3, 'stabilisation': 3, 'stabilise': 3,
+        'décélérat': 2, 'consolidat': 2, 'ralentissement': 2, 'saturat': 2,
+        'modeste': 1, 'tassement': 2, 'plafond': 2,
     },
     'volatile': {
+        # English
         'volatil': 3, 'unpredictable': 3, 'erratic': 3,
         'swing': 2, 'fluctuat': 2, 'uncertain': 2,
         'turbulent': 2, 'unstable': 2, 'oscillat': 2,
         'sharp': 1, 'sudden': 1,
+        # French
+        'volatil': 3, 'imprévisible': 3, 'erratique': 3,
+        'fluctuat': 2, 'incertain': 2, 'turbulent': 2,
+        'instable': 2, 'oscillat': 2, 'capricieux': 2,
+        'brusque': 1, 'soudain': 1,
     },
 }
 
@@ -113,17 +142,18 @@ _FR_STOPWORDS = {
 
 # ── Individual checks ─────────────────────────────────────────────────────────
 
-def check_tone(text, expected_sentiment):
+def check_tone(text, expected_sentiment, lang='en'):
     """
-    Use FinBERT to verify the article sentiment matches expected_sentiment.
-    Returns (tone_ok, confidence, finbert_label).
+    Use the sentiment worker to verify the article sentiment matches expected_sentiment.
+    Routes to FinBERT (English) or DistilCamemBERT (French) based on lang.
+    Returns (tone_ok, confidence, model_label).
     Falls back gracefully if the worker is unavailable.
     """
     if not _get_finbert():
         return True, 0.0, 'unavailable'
 
     try:
-        request = json.dumps({"text": text[:1024]}) + "\n"
+        request = json.dumps({"text": text[:1024], "lang": lang}) + "\n"
         _worker_proc.stdin.write(request)
         _worker_proc.stdin.flush()
         response = _worker_proc.stdout.readline()
@@ -132,7 +162,7 @@ def check_tone(text, expected_sentiment):
         score = round(result['score'], 4)
         return label == expected_sentiment, score, label
     except Exception as e:
-        print(f"[VERIFY] FinBERT inference error: {e}")
+        print(f"[VERIFY] Sentiment inference error: {e}")
         return True, 0.0, 'error'
 
 
@@ -188,7 +218,7 @@ def verify_article(title, content, sentiment, company_name, curve_profile, lang)
     """
     full_text = title + ' ' + content
 
-    tone_ok, tone_confidence, finbert_label = check_tone(full_text, sentiment)
+    tone_ok, tone_confidence, finbert_label = check_tone(full_text, sentiment, lang)
     company_mentioned                        = check_company(full_text, company_name)
     curve_score, curve_ok                   = check_curve_fit(full_text, curve_profile)
     language_ok                             = check_language(full_text, lang)
@@ -196,10 +226,15 @@ def verify_article(title, content, sentiment, company_name, curve_profile, lang)
     checks_passed = sum([tone_ok, company_mentioned, curve_ok, language_ok])
     finbert_available = finbert_label not in ('unavailable', 'error')
 
+    # DistilCamemBERT (French, 5 classes) produces lower per-class confidence
+    # than FinBERT (English, 3 classes) — use lower thresholds for French.
+    thresh_a = 0.40 if lang == 'fr' else 0.75
+    thresh_b = 0.30 if lang == 'fr' else 0.60
+
     if finbert_available:
-        if checks_passed == 4 and tone_confidence >= 0.75:
+        if checks_passed == 4 and tone_confidence >= thresh_a:
             grade = 'A'
-        elif checks_passed == 4 and tone_confidence >= 0.60:
+        elif checks_passed == 4 and tone_confidence >= thresh_b:
             grade = 'B'
         elif checks_passed >= 3:
             grade = 'C'
