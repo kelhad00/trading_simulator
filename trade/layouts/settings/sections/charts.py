@@ -75,14 +75,14 @@ def generate_charts_modal(lang="fr"):
                     ),
                 ]),
 
-                section("Event overlay", [
+                section(tl["event"]["title"], [
                     dmc.Select(
                         id="select-event-type",
-                        label="Event type",
+                        label=tl["event"]["type-label"],
                         data=[
-                            {"label": "None",  "value": "none"},
-                            {"label": "Crash", "value": "crash"},
-                            {"label": "Rally", "value": "rally"},
+                            {"label": tl["event"]["none"],  "value": "none"},
+                            {"label": tl["event"]["crash"], "value": "crash"},
+                            {"label": tl["event"]["rally"], "value": "rally"},
                         ],
                         value="none",
                         className="w-full",
@@ -91,8 +91,8 @@ def generate_charts_modal(lang="fr"):
                         id="event-params-container",
                         style={"display": "none"},
                         children=[
-                            slider("Position (%)", "slider-event-position", 0, 100, 50),
-                            slider("Magnitude (%)", "slider-event-magnitude", 5, 80, 40),
+                            slider(tl["event"]["position"], "slider-event-position", 0, 100, 50),
+                            slider(tl["event"]["magnitude"], "slider-event-magnitude", 5, 80, 40),
                         ],
                     ),
                     dmc.Alert(

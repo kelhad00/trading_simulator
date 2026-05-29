@@ -138,6 +138,16 @@ translation = {
                 "input": {
                     "trends": "Nombre de tendances",
                 },
+                "event": {
+                    "title": "Superposition d'événement",
+                    "type-label": "Type d'événement",
+                    "none": "Aucun",
+                    "crash": "Crash",
+                    "rally": "Rallye",
+                    "position": "Position (%)",
+                    "magnitude": "Magnitude (%)",
+                    "overlap-warning": "L'événement %s commence dans le segment %d qui contient un modèle %s. La forme du modèle sera déformée — envisagez de déplacer l'événement vers un segment sans modèle.",
+                },
                 "pattern-select": {
                     "label": "Modèle technique (facultatif)",
                     "none": "Aucun",

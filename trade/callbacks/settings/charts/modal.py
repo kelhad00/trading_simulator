@@ -142,8 +142,9 @@ def toggle_event_params(event_type):
     Input("slider-event-position", "value"),
     Input({"type": "timeline-length", "index": ALL}, "value"),
     Input({"type": "timeline-pattern", "index": ALL}, "value"),
+    State("url", "search"),
 )
-def warn_event_pattern_overlap(event_type, event_position, segment_lengths, pattern_trends):
+def warn_event_pattern_overlap(event_type, event_position, segment_lengths, pattern_trends, search):
     hidden = {"display": "none"}
 
     if not event_type or event_type == "none":
@@ -166,12 +167,10 @@ def warn_event_pattern_overlap(event_type, event_position, segment_lengths, patt
     pattern_at_event = pattern_trends[seg_index] if seg_index < len(pattern_trends) else None
 
     if pattern_at_event and pattern_at_event != "none":
+        lang = "en" if (search and "lang=en" in search) else "fr"
         name = pattern_at_event.replace("_", " ").title()
-        msg  = (
-            "The %s starts inside segment %d which contains a %s pattern. "
-            "The pattern shape will be distorted — consider moving the event "
-            "to a segment without a pattern." % (event_type, seg_index + 1, name)
-        )
+        template = tls[lang]["settings"]["charts"]["event"]["overlap-warning"]
+        msg = template % (event_type, seg_index + 1, name)
         return {"display": "block"}, msg
 
     return hidden, ""

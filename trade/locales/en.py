@@ -125,6 +125,16 @@ translation = {
                 "input": {
                     "trends": "Number of charts trends",
                 },
+                "event": {
+                    "title": "Event overlay",
+                    "type-label": "Event type",
+                    "none": "None",
+                    "crash": "Crash",
+                    "rally": "Rally",
+                    "position": "Position (%)",
+                    "magnitude": "Magnitude (%)",
+                    "overlap-warning": "The %s starts inside segment %d which contains a %s pattern. The pattern shape will be distorted — consider moving the event to a segment without a pattern.",
+                },
                 "pattern-select": {
                     "label": "Technical pattern (optional)",
                     "none": "None",
