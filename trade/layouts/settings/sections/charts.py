@@ -1,6 +1,3 @@
-import json
-import os
-
 from dash import html, dcc, page_registry
 import dash_mantine_components as dmc
 
@@ -10,32 +7,6 @@ from trade.components.sections import section
 from trade.components.slider import slider
 from trade.locales import translations as tls
 from trade.utils.ordinal import ordinal
-from trade.defaults import defaults as dlt
-
-# Load quality scores once at startup; empty dict if file not present yet.
-_quality_scores: dict = {}
-try:
-    _scores_path = os.path.join(dlt.data_path, 'patterns', 'quality_scores.json')
-    with open(_scores_path) as _f:
-        _quality_scores = json.load(_f)
-except Exception:
-    pass
-
-
-def _quality_label(pattern_type: str, base_label: str) -> str:
-    """
-    Append a star rating to the dropdown label based on the average score
-    of valid files for that pattern type.
-    Returns the base label unchanged if no quality data is available.
-    """
-    files = _quality_scores.get(pattern_type, {})
-    valid_scores = [v['score'] for v in files.values() if v.get('valid')]
-    if not valid_scores:
-        return base_label
-    avg = int(sum(valid_scores) / len(valid_scores))
-    filled = avg // 20
-    stars = '★' * filled + '☆' * (5 - filled)
-    return '%s  %s' % (base_label, stars)
 
 
 def generate_charts(lang="fr"):
@@ -158,18 +129,18 @@ def timeline_item(id, index, title, lang=None):
     options = [("bull", option_values[0]), ("bear", option_values[1]), ("flat", option_values[2])]
 
     pattern_options = [
-        {"label": pattern_tl["none"],                                                               "value": "none"},
-        {"label": _quality_label("double_top",                 pattern_tl["double_top"]),           "value": "double_top"},
-        {"label": _quality_label("double_bottom",              pattern_tl["double_bottom"]),        "value": "double_bottom"},
-        {"label": _quality_label("head_and_shoulders",         pattern_tl["head_and_shoulders"]),   "value": "head_and_shoulders"},
-        {"label": _quality_label("inverse_head_and_shoulders", pattern_tl["inverse_head_and_shoulders"]), "value": "inverse_head_and_shoulders"},
-        {"label": _quality_label("ascending_triangle",         pattern_tl["ascending_triangle"]),   "value": "ascending_triangle"},
-        {"label": _quality_label("descending_triangle",        pattern_tl["descending_triangle"]),  "value": "descending_triangle"},
-        {"label": _quality_label("bullish_flag",               pattern_tl["bullish_flag"]),         "value": "bullish_flag"},
-        {"label": _quality_label("bearish_flag",               pattern_tl["bearish_flag"]),         "value": "bearish_flag"},
-        {"label": _quality_label("cup_and_handle",             pattern_tl["cup_and_handle"]),       "value": "cup_and_handle"},
-        {"label": _quality_label("rising_wedge",               pattern_tl["rising_wedge"]),         "value": "rising_wedge"},
-        {"label": _quality_label("falling_wedge",              pattern_tl["falling_wedge"]),        "value": "falling_wedge"},
+        {"label": pattern_tl["none"],                       "value": "none"},
+        {"label": pattern_tl["double_top"],                 "value": "double_top"},
+        {"label": pattern_tl["double_bottom"],              "value": "double_bottom"},
+        {"label": pattern_tl["head_and_shoulders"],         "value": "head_and_shoulders"},
+        {"label": pattern_tl["inverse_head_and_shoulders"], "value": "inverse_head_and_shoulders"},
+        {"label": pattern_tl["ascending_triangle"],         "value": "ascending_triangle"},
+        {"label": pattern_tl["descending_triangle"],        "value": "descending_triangle"},
+        {"label": pattern_tl["bullish_flag"],               "value": "bullish_flag"},
+        {"label": pattern_tl["bearish_flag"],               "value": "bearish_flag"},
+        {"label": pattern_tl["cup_and_handle"],             "value": "cup_and_handle"},
+        {"label": pattern_tl["rising_wedge"],               "value": "rising_wedge"},
+        {"label": pattern_tl["falling_wedge"],              "value": "falling_wedge"},
     ]
 
     return dmc.TimelineItem(
@@ -186,6 +157,12 @@ def timeline_item(id, index, title, lang=None):
                 value="none",
                 size="sm",
                 className="w-full mt-2",
+            ),
+            dmc.Text(
+                id={"type": f"{id}-pattern-quality", "index": index},
+                size="xs",
+                color="dimmed",
+                className="mt-1",
             ),
             html.Div(
                 slider(tl["select"]["segment-length"], {"type": f"{id}-length", "index": index}, 10, 500, 100),

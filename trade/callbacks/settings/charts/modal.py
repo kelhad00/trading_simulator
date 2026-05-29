@@ -19,6 +19,7 @@ from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import (
     scale_market_data, normalize_to_volatility,
     load_data, get_data_size, get_pattern_file_excluding,
+    _load_quality_scores,
 )
 from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
@@ -148,6 +149,52 @@ def select_pattern_files(pattern_trends, base_data, prev_files):
         "company_data":  company_data,
         "pattern_types": list(pattern_trends or []),
     }
+
+
+# ── Step 2b: show per-file quality score below each pattern dropdown ──────────
+
+@callback(
+    Output({"type": "timeline-pattern-quality", "index": ALL}, "children"),
+    Input("pattern-files", "data"),
+    State({"type": "timeline-pattern", "index": ALL}, "value"),
+    prevent_initial_call=True,
+)
+def update_pattern_quality_display(pattern_files, pattern_values):
+    n = len(pattern_values or [])
+    if not n:
+        raise PreventUpdate
+
+    if not pattern_files:
+        return [""] * n
+
+    # Use first company as representative (all companies pick the same pattern type)
+    first_company = (pattern_files.get("company_data") or [{}])[0]
+    seg_files = first_company.get("segment_files", [])
+    pattern_types = pattern_files.get("pattern_types", [])
+    scores = _load_quality_scores()
+
+    result = []
+    for i in range(n):
+        pattern_type = pattern_types[i] if i < len(pattern_types) else None
+        file_path    = seg_files[i]      if i < len(seg_files)     else None
+
+        if not pattern_type or pattern_type == "none" or not file_path:
+            result.append("")
+            continue
+
+        basename = os.path.basename(file_path)
+        entry    = scores.get(pattern_type, {}).get(basename, {})
+        score    = entry.get("score")
+
+        if score is None:
+            result.append("")
+            continue
+
+        filled = score // 20
+        stars  = "★" * filled + "☆" * (5 - filled)
+        result.append(f"{stars}  {score}/100")
+
+    return result
 
 
 # ── Event overlay: show/hide position + magnitude sliders ────────────────────
