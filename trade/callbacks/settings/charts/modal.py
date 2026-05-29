@@ -1,6 +1,7 @@
 import os
 import threading
 
+import numpy as np
 import pandas as pd
 import dash_mantine_components as dmc
 
@@ -16,7 +17,8 @@ from trade.utils.settings.create_market_data import (
 )
 from trade.utils.settings.display import display_chart
 from trade.utils.settings.data_handler import (
-    scale_market_data, load_data, get_data_size, get_pattern_file_excluding,
+    scale_market_data, normalize_to_volatility,
+    load_data, get_data_size, get_pattern_file_excluding,
 )
 from trade.layouts.settings.sections.charts import timeline_item
 from trade.defaults import defaults as dlt
@@ -243,10 +245,22 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
         figures     = []
         bar_count_str = ""
 
+        # Fallback volatility: daily return std of the full CAC40 dataset
+        global_vol = dataset['Close'].pct_change().std()
+
         for company_idx, entry in enumerate(base_data["company_data"]):
             company   = entry["company"]
             indices   = entry["indices"]
             seg_files = file_lookup.get(company, [None] * len(indices))
+
+            # Compute target volatility from this company's CAC40 windows
+            cac_returns = []
+            for seg_i, (t, fp) in enumerate(zip(indices, seg_files)):
+                if fp is None:
+                    length_i = segment_lengths[seg_i] if seg_i < len(segment_lengths) else 100
+                    window = dataset[t: t + length_i]
+                    cac_returns.extend(window['Close'].pct_change().dropna().tolist())
+            target_vol = float(np.std(cac_returns)) if len(cac_returns) >= 5 else global_vol
 
             data_list  = []
             prev_close = start_value
@@ -254,11 +268,14 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
             for seg_i, (t, file_path) in enumerate(zip(indices, seg_files)):
                 length_i = segment_lengths[seg_i] if seg_i < len(segment_lengths) else 100
                 if file_path:
-                    segment = load_data(file_path)
+                    segment = normalize_to_volatility(
+                        load_data(file_path), prev_close, target_vol
+                    )
                 else:
-                    segment = dataset[t: t + length_i].reset_index(drop=True)
+                    segment = scale_market_data(
+                        dataset[t: t + length_i].reset_index(drop=True), prev_close
+                    )
 
-                segment = scale_market_data(segment, prev_close)
                 data_list.append(segment)
                 prev_close = segment.iloc[-1]["Close"]
 
