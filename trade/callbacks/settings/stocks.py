@@ -54,7 +54,7 @@ def add_company_and_activity(n, stock, company, activity, description, companies
         raise PreventUpdate
 
     # add stock to companies
-    companies[stock] = {
+    companies[stock.strip().upper()] = {
         "label": company,
         "activity": activity,
         "got_charts": False,

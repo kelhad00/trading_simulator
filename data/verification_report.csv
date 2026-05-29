@@ -1,49 +1,55 @@
 tone_ok,tone_confidence,finbert_label,company_mentioned,curve_score,curve_ok,language_ok,grade,passed,flagged,company,sentiment_expected
-True,0.6361,positive,True,6,True,True,A,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive
-False,0.521,positive,False,13,True,True,F,False,True,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative
-True,0.5466,positive,True,14,True,True,A,True,False,L'ORÉAL (OR),positive
-False,0.3105,neutral,True,0,False,True,F,False,True,L'ORÉAL (OR),negative
-True,0.5198,positive,True,5,True,True,A,True,False,HERMÈS INTERNATIONAL (RMS),positive
-False,0.3373,neutral,True,6,True,True,C,False,True,HERMÈS INTERNATIONAL (RMS),negative
-True,0.676,positive,True,5,True,True,A,True,False,TOTALENERGIES SE (TTE),positive
-False,0.4415,neutral,True,6,True,True,C,False,True,TOTALENERGIES SE (TTE),negative
-True,0.5342,positive,True,7,True,True,A,True,False,SANOFI (SAN),positive
-False,0.3913,neutral,True,3,False,True,F,False,True,SANOFI (SAN),negative
-True,0.4881,positive,False,9,True,True,C,False,True,AIRBUS SE (AIR),positive
-False,0.4345,positive,True,3,False,True,F,False,True,AIRBUS SE (AIR),negative
-True,0.5776,positive,True,8,True,True,A,True,False,SCHNEIDER ELECTRIC SE (SU),positive
-False,0.3565,neutral,True,0,False,True,F,False,True,SCHNEIDER ELECTRIC SE (SU),negative
-True,0.4989,positive,True,8,True,True,A,True,False,AIR LIQUIDE (AI),positive
-False,0.4511,neutral,True,13,True,True,C,False,True,AIR LIQUIDE (AI),negative
-True,0.3842,positive,True,6,True,True,B,True,False,ESSILORLUXOTTICA (EL),positive
-False,0.4742,positive,True,3,False,True,F,False,True,ESSILORLUXOTTICA (EL),negative
-True,0.5143,positive,True,5,True,True,A,True,False,BNP PARIBAS (BNP),positive
-True,0.4464,negative,True,6,True,True,A,True,False,BNP PARIBAS (BNP),negative
-True,0.3693,positive,True,0,False,True,C,False,True,KERING (KER),positive
-False,0.5208,positive,True,10,True,True,C,False,True,KERING (KER),negative
-True,0.4604,positive,True,7,True,True,A,True,False,VINCI (DG),positive
-False,0.5392,positive,True,3,False,True,F,False,True,VINCI (DG),negative
-True,0.6532,positive,True,7,True,True,A,True,False,AXA (CS),positive
-True,0.4277,negative,True,1,False,True,C,False,True,AXA (CS),negative
-True,0.3572,positive,True,13,True,True,B,True,False,SAFRAN (SAF),positive
-False,0.5595,positive,True,6,True,True,C,False,True,SAFRAN (SAF),negative
-True,0.4783,positive,True,2,False,True,C,False,True,PERNOD RICARD (RI),positive
-False,0.36,neutral,True,4,True,True,C,False,True,PERNOD RICARD (RI),negative
-False,0.4086,neutral,True,3,False,True,F,False,True,DASSAULT SYSTÈMES SE (DSY),positive
-False,0.3788,neutral,True,0,False,True,F,False,True,DASSAULT SYSTÈMES SE (DSY),negative
-True,0.482,positive,True,9,True,True,A,True,False,STELLANTIS N.V. (STLAM),positive
-True,0.3729,negative,True,0,False,True,C,False,True,STELLANTIS N.V. (STLAM),negative
-True,0.4777,positive,True,10,True,True,A,True,False,DANONE (BN),positive
-True,0.3556,negative,True,6,True,True,B,True,False,DANONE (BN),negative
-True,0.4967,positive,True,18,True,True,A,True,False,STMICROELECTRONICS N.V. (STMPA),positive
-True,0.4696,negative,True,7,True,True,A,True,False,STMICROELECTRONICS N.V. (STMPA),negative
-True,0.5699,positive,True,9,True,True,A,True,False,CRÉDIT AGRICOLE S.A. (ACA),positive
-False,0.3952,positive,False,9,True,True,F,False,True,CRÉDIT AGRICOLE S.A. (ACA),negative
-True,0.6534,positive,True,18,True,True,A,True,False,S&P 500,positive
-False,0.3688,neutral,True,5,True,True,C,False,True,S&P 500,negative
-True,0.6674,positive,True,18,True,True,A,True,False,Dow Jones Industrial Average,positive
-False,0.4809,neutral,False,5,True,True,F,False,True,Dow Jones Industrial Average,negative
-True,0.5245,positive,True,13,True,True,A,True,False,CAC 40,positive
-True,0.4078,negative,True,11,True,True,A,True,False,CAC 40,negative
-True,0.4758,positive,True,6,True,True,A,True,False,S&P GSCI Gold Index,positive
-False,0.5777,positive,True,5,True,True,C,False,True,S&P GSCI Gold Index,negative
+True,0.9455,positive,True,8,True,True,A,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive
+True,0.7793,negative,True,7,True,True,A,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative
+True,0.92,positive,True,10,True,True,A,True,False,L'ORÉAL (OR),positive
+False,0.8922,positive,True,14,True,True,C,False,True,L'ORÉAL (OR),negative
+True,0.953,positive,True,4,True,True,A,True,False,HERMÈS INTERNATIONAL (RMS),positive
+True,0.9744,negative,True,7,True,True,A,True,False,HERMÈS INTERNATIONAL (RMS),negative
+True,0.9376,positive,True,11,True,True,A,True,False,TOTALENERGIES SE (TTE),positive
+True,0.9681,negative,True,10,True,True,A,True,False,TOTALENERGIES SE (TTE),negative
+True,0.9577,positive,True,11,True,True,A,True,False,SANOFI (SAN),positive
+True,0.9092,negative,True,15,True,True,A,True,False,SANOFI (SAN),negative
+True,0.9543,positive,True,7,True,True,A,True,False,AIRBUS SE (AIR),positive
+True,0.9722,negative,True,11,True,True,A,True,False,AIRBUS SE (AIR),negative
+True,0.9552,positive,True,12,True,True,A,True,False,SCHNEIDER ELECTRIC SE (SU),positive
+True,0.9676,negative,True,14,True,True,A,True,False,SCHNEIDER ELECTRIC SE (SU),negative
+True,0.9514,positive,True,10,True,True,A,True,False,AIR LIQUIDE (AI),positive
+True,0.9434,negative,True,6,True,True,A,True,False,AIR LIQUIDE (AI),negative
+True,0.9573,positive,True,11,True,True,A,True,False,ESSILORLUXOTTICA (EL),positive
+True,0.5205,negative,True,6,True,True,C,False,True,ESSILORLUXOTTICA (EL),negative
+True,0.9449,positive,True,8,True,True,A,True,False,BNP PARIBAS (BNP),positive
+True,0.9714,negative,True,7,True,True,A,True,False,BNP PARIBAS (BNP),negative
+False,0.918,negative,True,7,True,True,C,False,True,KERING (KER),positive
+True,0.9729,negative,True,10,True,True,A,True,False,KERING (KER),negative
+True,0.9459,positive,True,11,True,True,A,True,False,VINCI (DG),positive
+True,0.9727,negative,True,10,True,True,A,True,False,VINCI (DG),negative
+True,0.9583,positive,True,10,True,True,A,True,False,AXA (CS),positive
+True,0.9275,negative,True,10,True,True,A,True,False,AXA (CS),negative
+True,0.9466,positive,True,8,True,True,A,True,False,SAFRAN (SAF),positive
+True,0.9679,negative,True,8,True,True,A,True,False,SAFRAN (SAF),negative
+True,0.9471,positive,True,17,True,True,A,True,False,PERNOD RICARD (RI),positive
+True,0.8908,negative,True,10,True,True,A,True,False,PERNOD RICARD (RI),negative
+True,0.9404,positive,True,11,True,True,A,True,False,DASSAULT SYSTÈMES SE (DSY),positive
+True,0.9382,negative,True,9,True,True,A,True,False,DASSAULT SYSTÈMES SE (DSY),negative
+True,0.9398,positive,True,8,True,True,A,True,False,STELLANTIS N.V. (STLAM),positive
+True,0.928,negative,True,7,True,True,A,True,False,STELLANTIS N.V. (STLAM),negative
+True,0.9146,positive,True,14,True,True,A,True,False,DANONE (BN),positive
+True,0.9648,negative,True,13,True,True,A,True,False,DANONE (BN),negative
+True,0.6656,positive,True,14,True,True,B,True,False,STMICROELECTRONICS N.V. (STMPA),positive
+True,0.9491,negative,True,6,True,True,A,True,False,STMICROELECTRONICS N.V. (STMPA),negative
+True,0.9046,positive,False,10,True,True,C,False,True,CRÉDIT AGRICOLE S.A. (ACA),positive
+True,0.9679,negative,True,8,True,True,A,True,False,CRÉDIT AGRICOLE S.A. (ACA),negative
+True,0.9487,positive,True,12,True,True,A,True,False,S&P 500,positive
+True,0.9071,negative,True,13,True,True,A,True,False,S&P 500,negative
+True,0.9533,positive,True,14,True,True,A,True,False,Dow Jones Industrial Average,positive
+True,0.9647,negative,True,7,True,True,A,True,False,Dow Jones Industrial Average,negative
+True,0.9451,positive,True,12,True,True,A,True,False,CAC 40,positive
+True,0.9242,negative,True,6,True,True,A,True,False,CAC 40,negative
+True,0.9424,positive,True,10,True,True,A,True,False,S&P GSCI Gold Index,positive
+True,0.9527,negative,True,14,True,True,A,True,False,S&P GSCI Gold Index,negative
+True,0.9482,positive,True,13,True,True,A,True,False,NVIDIA Corporation (NVDA),positive
+True,0.9658,negative,True,9,True,True,A,True,False,NVIDIA Corporation (NVDA),negative
+True,0.9444,positive,True,5,True,True,A,True,False,Apple Inc. (AAPL),positive
+True,0.9745,negative,True,10,True,True,A,True,False,Apple Inc. (AAPL),negative
+False,0.909,negative,True,10,True,True,C,False,True,Snowflake Inc. (SNOW),positive
+True,0.9691,negative,True,7,True,True,A,True,False,Snowflake Inc. (SNOW),negative

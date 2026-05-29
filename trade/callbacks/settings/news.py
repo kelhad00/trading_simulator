@@ -108,13 +108,13 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
             effective_groq_key = (groq_key or "").strip() or dlt.groq_api_key
             stats = create_news_for_companies(
                 companies, news_position, lang,
-                provider="groq", groq_api_key=effective_groq_key,
+                provider="groq", groq_api_key=effective_groq_key, delta=delta or 0,
             )
         else:
             effective_url = (api_key or "").strip() or dlt.ollama_base_url
             stats = create_news_for_companies(
                 companies, news_position, lang,
-                provider="ollama", base_url=effective_url,
+                provider="ollama", base_url=effective_url, delta=delta or 0,
             )
 
         total   = stats.get('total', 0)

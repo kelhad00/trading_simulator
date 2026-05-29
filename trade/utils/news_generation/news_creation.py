@@ -19,7 +19,7 @@ from trade.defaults import defaults as dlt
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 GROQ_MODEL = "llama-3.1-8b-instant"
-OLLAMA_MODEL = "qwen3:14b"
+OLLAMA_MODEL = "qwen3:8b"
 
 
 def _build_client(provider, base_url, groq_api_key):
@@ -44,7 +44,7 @@ def _chat_with_retry(client, model, messages, max_retries=4):
 
 
 def create_news_for_companies(companies, news_position, lang, provider="ollama",
-                               base_url="http://localhost:11434/v1", groq_api_key=""):
+                               base_url="http://localhost:11434/v1", groq_api_key="", delta=0):
     _, model = _build_client(provider, base_url, groq_api_key)
     news_path = os.path.join(dlt.data_path, 'news.csv')
 
@@ -72,7 +72,7 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
             continue
 
         print(f"[NEWS] Generating articles for {company_name} — {len(pos[0])} positive, {len(pos[1])} negative")
-        n, v_results = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, provider, base_url, groq_api_key, company_description)
+        n, v_results = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, provider, base_url, groq_api_key, company_description, delta)
 
         # ── Save news immediately (per company) ───────────────────────────────
         if os.path.exists(news_path):
@@ -276,9 +276,15 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta, k=0):
 
     return (positive_positions, negative_positions)
 
+def _currency_symbol(ticker):
+    """Return $ for US tickers, € for European ones (identified by exchange suffix)."""
+    european_suffixes = ('.PA', '.MI', '.AS', '.BR', '.DE', '.MC', '.LS', '.CO', '.ST', '.HE', '.OL')
+    return '€' if any(ticker.upper().endswith(s) for s in european_suffixes) else '$'
+
+
 def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position,
                 model, provider="ollama", base_url="http://localhost:11434/v1", groq_api_key="",
-                company_description=""):
+                company_description="", delta=0):
     '''
     Create news for a company based on the position in market data given
     '''
@@ -287,6 +293,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     dataset_path = os.path.join(dlt.data_path, 'news_dataset.csv')
 
     client, _ = _build_client(provider, base_url, groq_api_key)
+    currency = _currency_symbol(company_ticker)
 
     # Load the dataset & market data
     dataset = load_data(dataset_path)
@@ -310,15 +317,25 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         i = 0
         for position in news_position[0]:
             print(f"[NEWS GEN]   ({i + 1}/{total_pos}) Generating POSITIVE article...")
+
+            # Extract real price context from simulation data
+            current_price    = float(market_data.iloc[position]['Close'])
+            lookback         = min(10, position)
+            prev_price       = float(market_data.iloc[position - lookback]['Close'])
+            price_change_pct = ((current_price - prev_price) / prev_price * 100) if prev_price != 0 else 0.0
+            article_date_str = str(market_data.iloc[position]['date'])[:10]
+
             # Create the news
-            print(f"[NEWS GEN]     -> Sending content to Ollama for rewriting...")
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+            delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
+            print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | change={price_change_pct:+.1f}% | curve={curve_profile} | delta={delta} ({delta_label})")
+            print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
+            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
+                                             article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
             print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
             print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
 
             # Create a new row in news_created
-
             date = market_data.iloc[position]['date']
             date = datetime.fromisoformat(date)
             date = date.strftime('%d/%m/%y %H:%M')
@@ -334,7 +351,8 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             print(f"[VERIFY] (+) Article {i + 1}: grade={v['grade']} | tone={tone_sym}({v['tone_confidence']}) | company={company_sym} | curve={curve_sym}({v['curve_score']}) | lang={lang_sym}")
             if not v['passed']:
                 print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
-                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
+                                                 article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
                 title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
                 v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
                 news_created.at[len(news_created) - 1, 'title']   = title
@@ -364,9 +382,20 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         i = 0
         for position in news_position[1]:
             print(f"[NEWS GEN]   ({i + 1}/{total_neg}) Generating NEGATIVE article...")
+
+            # Extract real price context from simulation data
+            current_price    = float(market_data.iloc[position]['Close'])
+            lookback         = min(10, position)
+            prev_price       = float(market_data.iloc[position - lookback]['Close'])
+            price_change_pct = ((current_price - prev_price) / prev_price * 100) if prev_price != 0 else 0.0
+            article_date_str = str(market_data.iloc[position]['date'])[:10]
+
             # Create the news
-            print(f"[NEWS GEN]     -> Sending content to Ollama for rewriting...")
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+            delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
+            print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | change={price_change_pct:+.1f}% | curve={curve_profile} | delta={delta} ({delta_label})")
+            print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
+            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
+                                             article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
             print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
             print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
@@ -384,7 +413,8 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             print(f"[VERIFY] (-) Article {i + 1}: grade={v['grade']} | tone={tone_sym}({v['tone_confidence']}) | company={company_sym} | curve={curve_sym}({v['curve_score']}) | lang={lang_sym}")
             if not v['passed']:
                 print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
-                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
+                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
+                                                 article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
                 title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
                 v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
                 news_created.at[len(news_created) - 1, 'title']   = title
@@ -410,7 +440,8 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     return news_created, verification_results
 
 
-def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment, company_description=""):
+def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment,
+                           company_description="", article_date=None, current_price=None, price_change_pct=None, delta=0, currency='€'):
     '''
     Transform the content of a news into a news for the company with a LLM
     '''
@@ -444,8 +475,63 @@ def transform_news_content(content, company, sector, curve_profile, lang, client
         else ""
     )
 
+    # Build market context block from real simulation data
+    if article_date and current_price is not None and price_change_pct is not None:
+        if lang == "en":
+            market_context = (
+                f"\nMarket context at time of article:"
+                f"\n- Date: {article_date}"
+                f"\n- Current stock price: {currency}{current_price:.2f}"
+                f"\n- Price change over past 10 days: {price_change_pct:+.1f}%"
+                f"\nUse these figures naturally in the article where appropriate."
+            )
+        else:
+            market_context = (
+                f"\nContexte du marché au moment de l'article :"
+                f"\n- Date : {article_date}"
+                f"\n- Prix actuel de l'action : {current_price:.2f}{currency}"
+                f"\n- Variation sur 10 jours : {price_change_pct:+.1f}%"
+                f"\nIntégrez ces chiffres naturellement dans l'article si approprié."
+            )
+    else:
+        market_context = ""
+
+    if delta < 0:
+        if lang == "en":
+            temporal_context = (
+                f"\nTemporal context: this article is published {abs(delta)} day(s) BEFORE the price movement occurs."
+                f"\nWrite it as an anticipatory piece — analysts are forecasting, warning, or predicting what is about to happen."
+            )
+        else:
+            temporal_context = (
+                f"\nContexte temporel : cet article est publié {abs(delta)} jour(s) AVANT le mouvement de prix."
+                f"\nRédigez-le comme un article anticipatoire — les analystes prévoient, avertissent ou prédisent ce qui va se passer."
+            )
+    elif delta > 0:
+        if lang == "en":
+            temporal_context = (
+                f"\nTemporal context: this article is published {delta} day(s) AFTER the price movement occurred."
+                f"\nWrite it as a retrospective piece — explaining what happened, why, and its consequences."
+            )
+        else:
+            temporal_context = (
+                f"\nContexte temporel : cet article est publié {delta} jour(s) APRÈS le mouvement de prix."
+                f"\nRédigez-le comme un article rétrospectif — expliquant ce qui s'est passé, pourquoi, et ses conséquences."
+            )
+    else:
+        if lang == "en":
+            temporal_context = (
+                f"\nTemporal context: this article is published at the exact moment of the price movement."
+                f"\nWrite it as a live report — describing what is happening right now."
+            )
+        else:
+            temporal_context = (
+                f"\nContexte temporel : cet article est publié au moment exact du mouvement de prix."
+                f"\nRédigez-le comme un reportage en direct — décrivant ce qui se passe en ce moment."
+            )
+
     p = """Context:
-You receive a reference financial news article. Rewrite it to be specifically about the company {company}, which operates in the sector: {sector}.{description_line}
+You receive a reference financial news article. Rewrite it to be specifically about the company {company}, which operates in the sector: {sector}.{description_line}{market_context}{temporal_context}
 
 Company market profile: {curve_description}
 
@@ -460,6 +546,8 @@ Rewrite this article so it is directly about {company}, taking into account its 
         company=company,
         sector=sector,
         description_line=description_line,
+        market_context=market_context,
+        temporal_context=temporal_context,
         curve_description=curve_description,
         curve_description_short=curve_description_short,
         sentiment_label=sentiment_label,

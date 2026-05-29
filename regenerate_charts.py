@@ -13,6 +13,7 @@ import sys
 import random
 import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta
 
 # ── Path setup ─────────────────────────────────────────────────────────────────
 # Allow imports from the trade package without the full Dash app running
@@ -22,38 +23,16 @@ sys.path.insert(0, script_dir)
 DATA_PATH = os.path.join(script_dir, "Data")
 CAC40_PATH = os.path.join(DATA_PATH, "CAC40.csv")
 OUT_PATH = os.path.join(DATA_PATH, "generated_data.csv")
-START_DATE = "2021-01-01"
+_start_dt = datetime.now() - timedelta(days=300)
+START_DATE = _start_dt.strftime("%Y-%m-%d")
 START_VALUE = 250.0
 ALPHA = 500
 LENGTH = 100
 N_SEGMENTS = 3
 
-COMPANIES = {
-    "MC.PA":    "LVMH MOËT HENNESSY LOUIS VUITTON SE (MC)",
-    "OR.PA":    "L'ORÉAL (OR)",
-    "RMS.PA":   "HERMÈS INTERNATIONAL (RMS)",
-    "TTE.PA":   "TOTALENERGIES SE (TTE)",
-    "SAN.PA":   "SANOFI (SAN)",
-    "AIR.PA":   "AIRBUS SE (AIR)",
-    "SU.PA":    "SCHNEIDER ELECTRIC SE (SU)",
-    "AI.PA":    "AIR LIQUIDE (AI)",
-    "EL.PA":    "ESSILORLUXOTTICA (EL)",
-    "BNP.PA":   "BNP PARIBAS (BNP)",
-    "KER.PA":   "KERING (KER)",
-    "DG.PA":    "VINCI (DG)",
-    "CS.PA":    "AXA (CS)",
-    "SAF.PA":   "SAFRAN (SAF)",
-    "RI.PA":    "PERNOD RICARD (RI)",
-    "DSY.PA":   "DASSAULT SYSTÈMES SE (DSY)",
-    "STLAM.MI": "STELLANTIS N.V. (STLAM)",
-    "BN.PA":    "DANONE (BN)",
-    "STMPA.PA": "STMICROELECTRONICS N.V. (STMPA)",
-    "ACA.PA":   "CRÉDIT AGRICOLE S.A. (ACA)",
-    "^GSPC":    "S&P 500",
-    "^DJI":     "Dow Jones Industrial Average",
-    "^FCHI":    "CAC 40",
-    "^SPGSGC":  "S&P GSCI Gold Index",
-}
+sys.path.insert(0, os.path.join(script_dir, "trade"))
+from trade.defaults import defaults as dlt
+COMPANIES = {ticker: info["label"] for ticker, info in dlt.companies_list.items()}
 
 
 # ── Helpers (mirrors create_market_data.py) ────────────────────────────────────
