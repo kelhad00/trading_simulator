@@ -1,0 +1,324 @@
+{
+  "ascending_triangle": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 79,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 71,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": false,
+      "score": 39,
+      "reason": "resistance not sufficiently flat relative to rising support"
+    },
+    "pattern4.csv": {
+      "valid": false,
+      "score": 39,
+      "reason": "insufficient peaks or troughs"
+    },
+    "pattern5.csv": {
+      "valid": false,
+      "score": 50,
+      "reason": "resistance not sufficiently flat relative to rising support"
+    },
+    "pattern6.csv": {
+      "valid": true,
+      "score": 84,
+      "reason": ""
+    }
+  },
+  "bearish_flag": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 59,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 59,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": false,
+      "score": 50,
+      "reason": "flag consolidation too wide (> 55%% of pole)"
+    },
+    "pattern4.csv": {
+      "valid": true,
+      "score": 91,
+      "reason": ""
+    },
+    "pattern5.csv": {
+      "valid": true,
+      "score": 79,
+      "reason": ""
+    },
+    "pattern6.csv": {
+      "valid": true,
+      "score": 83,
+      "reason": ""
+    }
+  },
+  "bullish_flag": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 71,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 68,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 76,
+      "reason": ""
+    },
+    "pattern4.csv": {
+      "valid": true,
+      "score": 78,
+      "reason": ""
+    },
+    "pattern5.csv": {
+      "valid": true,
+      "score": 65,
+      "reason": ""
+    }
+  },
+  "cup_and_handle": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 70,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 81,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 91,
+      "reason": ""
+    },
+    "pattern4.csv": {
+      "valid": true,
+      "score": 75,
+      "reason": ""
+    },
+    "pattern5.csv": {
+      "valid": true,
+      "score": 63,
+      "reason": ""
+    },
+    "pattern6.csv": {
+      "valid": true,
+      "score": 71,
+      "reason": ""
+    }
+  },
+  "descending_triangle": {
+    "pattern1.csv": {
+      "valid": false,
+      "score": 38,
+      "reason": "support not flat relative to falling resistance"
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 66,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": false,
+      "score": 39,
+      "reason": "support not flat relative to falling resistance"
+    },
+    "pattern4.csv": {
+      "valid": false,
+      "score": 43,
+      "reason": "support not flat relative to falling resistance"
+    },
+    "pattern5.csv": {
+      "valid": true,
+      "score": 68,
+      "reason": ""
+    },
+    "pattern6.csv": {
+      "valid": false,
+      "score": 38,
+      "reason": "support not flat relative to falling resistance"
+    }
+  },
+  "double_bottom": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 99,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 84,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 96,
+      "reason": ""
+    }
+  },
+  "double_top": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 81,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 80,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 68,
+      "reason": ""
+    },
+    "pattern4.csv": {
+      "valid": false,
+      "score": 44,
+      "reason": "no two peaks within 3% with a clear trough (>=3%) between them"
+    }
+  },
+  "falling_wedge": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 61,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": false,
+      "score": 36,
+      "reason": "resistance not falling faster than support (lines not converging)"
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 69,
+      "reason": ""
+    },
+    "pattern4.csv": {
+      "valid": false,
+      "score": 52,
+      "reason": "resistance not falling faster than support (lines not converging)"
+    },
+    "pattern5.csv": {
+      "valid": false,
+      "score": 53,
+      "reason": "resistance not falling faster than support (lines not converging)"
+    },
+    "pattern6.csv": {
+      "valid": true,
+      "score": 91,
+      "reason": ""
+    }
+  },
+  "head_and_shoulders": {
+    "pattern1.csv": {
+      "valid": false,
+      "score": 65,
+      "reason": "neckline trough too shallow (< 1%% below lower shoulder)"
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 85,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 69,
+      "reason": ""
+    },
+    "pattern4.csv": {
+      "valid": true,
+      "score": 62,
+      "reason": ""
+    },
+    "pattern5.csv": {
+      "valid": false,
+      "score": 62,
+      "reason": "neckline trough too shallow (< 1%% below lower shoulder)"
+    },
+    "pattern6.csv": {
+      "valid": true,
+      "score": 57,
+      "reason": ""
+    }
+  },
+  "inverse_head_and_shoulders": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 96,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": true,
+      "score": 65,
+      "reason": ""
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 86,
+      "reason": ""
+    },
+    "pattern4.csv": {
+      "valid": true,
+      "score": 75,
+      "reason": ""
+    },
+    "pattern5.csv": {
+      "valid": true,
+      "score": 70,
+      "reason": ""
+    },
+    "pattern6.csv": {
+      "valid": true,
+      "score": 78,
+      "reason": ""
+    }
+  },
+  "rising_wedge": {
+    "pattern1.csv": {
+      "valid": true,
+      "score": 69,
+      "reason": ""
+    },
+    "pattern2.csv": {
+      "valid": false,
+      "score": 40,
+      "reason": "price range not narrowing (no convergence)"
+    },
+    "pattern3.csv": {
+      "valid": true,
+      "score": 63,
+      "reason": ""
+    },
+    "pattern4.csv": {
+      "valid": true,
+      "score": 87,
+      "reason": ""
+    },
+    "pattern5.csv": {
+      "valid": false,
+      "score": 48,
+      "reason": "support not rising faster than resistance (lines not converging)"
+    },
+    "pattern6.csv": {
+      "valid": true,
+      "score": 69,
+      "reason": ""
+    }
+  }
+}

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import dash_mantine_components as dmc
 
-from dash import callback, Input, Output, State, ALL, no_update, dcc
+from dash import callback, Input, Output, State, ALL, no_update, dcc, ctx
 from dash.exceptions import PreventUpdate
 
 from trade.utils.market import get_first_timestamp
@@ -97,30 +97,57 @@ def generate_base_segments(alpha, segment_lengths, start_value, radio_trends, co
     Output("pattern-files", "data"),
     Input({"type": "timeline-pattern", "index": ALL}, "value"),
     Input("base-figures", "data"),
+    State("pattern-files", "data"),
     prevent_initial_call=True,
 )
-def select_pattern_files(pattern_trends, base_data):
+def select_pattern_files(pattern_trends, base_data, prev_files):
     if not base_data:
         raise PreventUpdate
 
+    # When base-figures triggered, all windows changed → re-pick every file.
+    # When only a pattern dropdown changed, keep existing files for segments
+    # whose pattern type is unchanged so one segment's change doesn't re-roll others.
+    base_changed = ctx.triggered_id == "base-figures"
+
+    prev_types  = (prev_files or {}).get('pattern_types', [])
+    prev_lookup = {}
+    if prev_files and not base_changed:
+        for entry in (prev_files.get('company_data') or []):
+            prev_lookup[entry['company']] = entry['segment_files']
+
     company_data = []
     for entry in base_data["company_data"]:
-        used_paths   = set()
+        company    = entry["company"]
+        prev_segs  = prev_lookup.get(company, [])
+        used_paths = set()
         segment_files = []
-        for pattern_type in (pattern_trends or []):
+
+        for seg_i, pattern_type in enumerate(pattern_trends or []):
             if pattern_type and pattern_type != "none":
-                path = get_pattern_file_excluding(pattern_type, used_paths)
+                prev_type = prev_types[seg_i] if seg_i < len(prev_types) else None
+                prev_path = prev_segs[seg_i]  if seg_i < len(prev_segs)  else None
+
+                if not base_changed and prev_type == pattern_type and prev_path:
+                    # Same type, same base data → keep the already-chosen file
+                    path = prev_path
+                else:
+                    path = get_pattern_file_excluding(pattern_type, used_paths)
+
                 if path:
                     used_paths.add(path)
-                segment_files.append(path)   # None only if folder is missing
+                segment_files.append(path)
             else:
-                segment_files.append(None)   # use CAC40 window for this segment
+                segment_files.append(None)
+
         company_data.append({
-            "company":       entry["company"],
+            "company":       company,
             "segment_files": segment_files,
         })
 
-    return {"company_data": company_data}
+    return {
+        "company_data":  company_data,
+        "pattern_types": list(pattern_trends or []),
+    }
 
 
 # ── Event overlay: show/hide position + magnitude sliders ────────────────────

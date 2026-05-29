@@ -2,9 +2,25 @@ import pandas as pd
 import numpy as np
 import random
 import glob
+import json
 import os
 
 from trade.defaults import defaults as dlt
+
+MIN_QUALITY_SCORE = 40
+_quality_cache = None
+
+
+def _load_quality_scores():
+    global _quality_cache
+    if _quality_cache is None:
+        path = os.path.join(dlt.data_path, 'patterns', 'quality_scores.json')
+        try:
+            with open(path) as f:
+                _quality_cache = json.load(f)
+        except Exception:
+            _quality_cache = {}
+    return _quality_cache
 
 
 def scale_market_data(df, previous_close):
@@ -90,14 +106,25 @@ def normalize_to_volatility(segment, prev_close, target_daily_vol):
 def get_pattern_file_excluding(pattern_type, used_paths):
     """
     Return a random CSV from pattern_type folder that is not in used_paths.
-    Falls back to any available file if all have been used (avoids hard failure).
+    Only considers files marked valid with score >= MIN_QUALITY_SCORE in
+    quality_scores.json; falls back to the unfiltered list if none qualify
+    (e.g. quality file absent) so the app never hard-fails.
     Returns None if the folder is missing or empty.
     """
     folder = os.path.join(dlt.data_path, 'patterns', pattern_type)
     all_files = glob.glob(folder + '/*.csv')
     if not all_files:
         return None
-    available = [f for f in all_files if f not in used_paths]
-    return random.choice(available if available else all_files)
+
+    scores = _load_quality_scores().get(pattern_type, {})
+    qualified = [
+        f for f in all_files
+        if scores.get(os.path.basename(f), {}).get('valid', True)
+        and scores.get(os.path.basename(f), {}).get('score', 100) >= MIN_QUALITY_SCORE
+    ]
+    pool = qualified if qualified else all_files
+
+    available = [f for f in pool if f not in used_paths]
+    return random.choice(available if available else pool)
 
 
