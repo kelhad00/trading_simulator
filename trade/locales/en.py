@@ -104,6 +104,7 @@ translation = {
                     "alpha": "Select alpha value",
                     "length": "Select length of a market movement",
                     "segment-length": "Segment length (bars)",
+                    "bars": "bars",
                     "start": "Select starting price",
                     "curve-profile": "Growth curve profile",
                     "noise": "Noise / volatility level (%)",

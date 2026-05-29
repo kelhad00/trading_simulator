@@ -157,15 +157,19 @@ def select_pattern_files(pattern_trends, base_data, prev_files):
     Output({"type": "timeline-pattern-quality", "index": ALL}, "children"),
     Input("pattern-files", "data"),
     State({"type": "timeline-pattern", "index": ALL}, "value"),
+    State("url", "search"),
     prevent_initial_call=True,
 )
-def update_pattern_quality_display(pattern_files, pattern_values):
+def update_pattern_quality_display(pattern_files, pattern_values, search):
     n = len(pattern_values or [])
     if not n:
         raise PreventUpdate
 
     if not pattern_files:
         return [""] * n
+
+    lang = "en" if (search and "lang=en" in search) else "fr"
+    bars_label = tls[lang]["settings"]["charts"]["select"]["bars"]
 
     # Use first company as representative (all companies pick the same pattern type)
     first_company = (pattern_files.get("company_data") or [{}])[0]
@@ -190,9 +194,15 @@ def update_pattern_quality_display(pattern_files, pattern_values):
             result.append("")
             continue
 
+        try:
+            length = len(load_data(file_path))
+        except Exception:
+            length = None
+
         filled = score // 20
         stars  = "★" * filled + "☆" * (5 - filled)
-        result.append(f"{stars}  {score}/100")
+        length_str = f"  •  {length} {bars_label}" if length is not None else ""
+        result.append(f"{stars}  {score}/100{length_str}")
 
     return result
 

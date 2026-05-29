@@ -117,6 +117,7 @@ translation = {
                     "alpha": "Sélectionner la valeur d'alpha",
                     "length": "Sélectionner la longueur d'un mouvement de marché",
                     "segment-length": "Longueur du segment (barres)",
+                    "bars": "barres",
                     "start": "Sélectionner la valeur de départ",
                     "curve-profile": "Profil de courbe de croissance",
                     "noise": "Niveau de bruit / volatilité (%)",
@@ -253,7 +254,7 @@ translation = {
                 },
                 "select": {
                     "ticker": "Sélectionner une action",
-                    "revenues": "Revenu",
+                    "revenue": "Revenu",
                     "net-income": "Recettes",
                 },
                 "radio": {
