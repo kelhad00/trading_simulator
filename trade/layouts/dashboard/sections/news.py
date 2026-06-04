@@ -24,6 +24,7 @@ def news_description(lang="fr"):
                     className="flex flex-col gap-2 flex-1",
                     children=[
                         dmc.Text(id="description-title", weight=500, className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="md"),
+                        dmc.Text(id="description-date", size="xs", color="dimmed", italic=True),
                         dmc.Text(id='description-text', size="xs"),
                     ]
                 ),

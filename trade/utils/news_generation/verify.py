@@ -4,14 +4,16 @@ import sys
 import json
 import subprocess
 import functools
+import nltk
+from nltk.corpus import stopwords
 
 print = functools.partial(print, flush=True)
 
-# ── FinBERT subprocess worker ─────────────────────────────────────────────────
+# ── Sentiment worker subprocess ───────────────────────────────────────────────
 # PyTorch's c10.dll fails to initialise on some Windows environments when loaded
-# inside an existing process. Running FinBERT in a dedicated child process avoids
-# this completely — the child loads torch on its own main thread with a clean
-# process context.
+# inside an existing process. Running FinBERT-Multilingual in a dedicated child
+# process avoids this completely — the child loads torch on its own main thread
+# with a clean process context.
 
 _worker_proc = None
 _worker_available = None   # True / False / None (not yet tried)
@@ -19,9 +21,9 @@ _worker_available = None   # True / False / None (not yet tried)
 _WORKER_SCRIPT = os.path.join(os.path.dirname(__file__), "_finbert_worker.py")
 
 
-def _get_finbert():
+def _get_sentiment_worker():
     """
-    Start the FinBERT worker subprocess if not already running.
+    Start the FinBERT-Multilingual worker subprocess if not already running.
     Returns True if the worker is ready, False if it could not be started.
     """
     global _worker_proc, _worker_available
@@ -32,19 +34,19 @@ def _get_finbert():
         return True   # already running
 
     try:
-        print("[VERIFY] Starting sentiment worker (FinBERT + DistilCamemBERT)...")
+        print("[VERIFY] Starting sentiment worker (FinBERT-Multilingual)...")
         _worker_proc = subprocess.Popen(
             [sys.executable, _WORKER_SCRIPT],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+            stderr=sys.stderr,
             text=True,
             bufsize=1,
         )
         # Block until the worker prints READY (model loaded)
         ready_line = _worker_proc.stdout.readline().strip()
         if ready_line == "READY":
-            print("[VERIFY] Sentiment worker ready (FinBERT=EN, DistilCamemBERT=FR).")
+            print("[VERIFY] Sentiment worker ready (FinBERT-Multilingual: EN + FR).")
             _worker_available = True
             return True
         raise RuntimeError(f"Unexpected worker output: {ready_line!r}")
@@ -124,32 +126,34 @@ CURVE_PASS_THRESHOLD = 4
 
 
 # ── Stopword sets for language detection ──────────────────────────────────────
+# Loaded from NLTK so the lists are comprehensive and not manually maintained.
 
-_EN_STOPWORDS = {
-    'the', 'is', 'are', 'and', 'in', 'of', 'to', 'a', 'that', 'it',
-    'for', 'on', 'with', 'as', 'at', 'by', 'an', 'be', 'was', 'has',
-    'have', 'had', 'its', 'this', 'from', 'or', 'but', 'not', 'been',
-    'which', 'their', 'will', 'would', 'could', 'should', 'they',
-}
+def _load_stopwords():
+    try:
+        return (
+            set(stopwords.words('english')),
+            set(stopwords.words('french')),
+        )
+    except LookupError:
+        nltk.download('stopwords', quiet=True)
+        return (
+            set(stopwords.words('english')),
+            set(stopwords.words('french')),
+        )
 
-_FR_STOPWORDS = {
-    'le', 'la', 'les', 'est', 'et', 'en', 'de', 'du', 'un', 'une',
-    'dans', 'que', 'qui', 'il', 'elle', 'au', 'aux', 'par', 'sur',
-    'son', 'sa', 'ses', 'des', 'ont', 'avec', 'pour', 'pas', 'plus',
-    'cette', 'ces', 'leur', 'leurs', 'nous', 'vous', 'ils', 'elles',
-}
+_EN_STOPWORDS, _FR_STOPWORDS = _load_stopwords()
 
 
 # ── Individual checks ─────────────────────────────────────────────────────────
 
 def check_tone(text, expected_sentiment, lang='en'):
     """
-    Use the sentiment worker to verify the article sentiment matches expected_sentiment.
-    Routes to FinBERT (English) or DistilCamemBERT (French) based on lang.
+    Use the FinBERT-Multilingual sentiment worker to verify the article sentiment
+    matches expected_sentiment. Works for both English and French with a single model.
     Returns (tone_ok, confidence, model_label).
     Falls back gracefully if the worker is unavailable.
     """
-    if not _get_finbert():
+    if not _get_sentiment_worker():
         return True, 0.0, 'unavailable'
 
     try:
@@ -208,8 +212,8 @@ def verify_article(title, content, sentiment, company_name, curve_profile, lang)
     Run all four checks on a generated article and return a result dict.
 
     Grading:
-        A — all 4 checks pass, FinBERT confidence >= 0.75
-        B — all 4 checks pass, FinBERT confidence >= 0.60
+        A — all 4 checks pass, FinBERT-Multilingual confidence >= 0.75
+        B — all 4 checks pass, FinBERT-Multilingual confidence >= 0.60
         C — 3 checks pass
         F — fewer than 3 checks pass, or tone/company fail
 
@@ -218,20 +222,20 @@ def verify_article(title, content, sentiment, company_name, curve_profile, lang)
     """
     full_text = title + ' ' + content
 
-    tone_ok, tone_confidence, finbert_label = check_tone(full_text, sentiment, lang)
-    company_mentioned                        = check_company(full_text, company_name)
-    curve_score, curve_ok                   = check_curve_fit(full_text, curve_profile)
-    language_ok                             = check_language(full_text, lang)
+    tone_ok, tone_confidence, model_label = check_tone(full_text, sentiment, lang)
+    company_mentioned                      = check_company(full_text, company_name)
+    curve_score, curve_ok                 = check_curve_fit(full_text, curve_profile)
+    language_ok                           = check_language(full_text, lang)
 
-    checks_passed = sum([tone_ok, company_mentioned, curve_ok, language_ok])
-    finbert_available = finbert_label not in ('unavailable', 'error')
+    checks_passed     = sum([tone_ok, company_mentioned, curve_ok, language_ok])
+    model_available   = model_label not in ('unavailable', 'error')
 
-    # DistilCamemBERT (French, 5 classes) produces lower per-class confidence
-    # than FinBERT (English, 3 classes) — use lower thresholds for French.
-    thresh_a = 0.40 if lang == 'fr' else 0.75
-    thresh_b = 0.30 if lang == 'fr' else 0.60
+    # FinBERT-Multilingual produces consistent confidence across all languages
+    # so a single set of thresholds applies for both English and French.
+    thresh_a = 0.75
+    thresh_b = 0.60
 
-    if finbert_available:
+    if model_available:
         if checks_passed == 4 and tone_confidence >= thresh_a:
             grade = 'A'
         elif checks_passed == 4 and tone_confidence >= thresh_b:
@@ -241,7 +245,7 @@ def verify_article(title, content, sentiment, company_name, curve_profile, lang)
         else:
             grade = 'F'
     else:
-        # FinBERT unavailable — grade on the three remaining checks only
+        # Sentiment model unavailable — grade on the three remaining checks only
         other_checks = sum([company_mentioned, curve_ok, language_ok])
         if other_checks == 3:
             grade = 'B'
@@ -255,7 +259,7 @@ def verify_article(title, content, sentiment, company_name, curve_profile, lang)
     return {
         'tone_ok':           tone_ok,
         'tone_confidence':   tone_confidence,
-        'finbert_label':     finbert_label,
+        'model_label':       model_label,
         'company_mentioned': company_mentioned,
         'curve_score':       curve_score,
         'curve_ok':          curve_ok,

@@ -88,7 +88,12 @@ def display_companies(companies, tabs):
         list of companies displayed
     """
     lang = page_registry["lang"]
-    return [stock_list_element(stock, company["label"], lang) for stock, company in companies.items()]
+    return [
+        stock_list_element(stock, company["label"], lang,
+                           activity=company.get("activity", ""),
+                           description=company.get("description", ""))
+        for stock, company in companies.items()
+    ]
 
 
 @callback(
@@ -258,6 +263,10 @@ def update_activities(companies, tabs):
 @callback(
     Output({"type": "company-name-text", "index": MATCH}, "style"),
     Output({"type": "edit-stock-input", "index": MATCH}, "style"),
+    Output({"type": "company-activity-text", "index": MATCH}, "style"),
+    Output({"type": "edit-activity-input", "index": MATCH}, "style"),
+    Output({"type": "company-description-text", "index": MATCH}, "style"),
+    Output({"type": "edit-description-input", "index": MATCH}, "style"),
     Output({"type": "edit-stock", "index": MATCH}, "style"),
     Output({"type": "save-stock", "index": MATCH}, "style"),
     Input({"type": "edit-stock", "index": MATCH}, "n_clicks"),
@@ -267,10 +276,14 @@ def enter_edit_mode(n):
     if not n:
         raise PreventUpdate
     return (
-        {"display": "none"},   # hide the plain-text label
-        {"display": "block"},  # show the text input
-        {"display": "none"},   # hide the Edit button
-        {"display": "flex"},   # show the Save button
+        {"display": "none"},   # hide name text
+        {"display": "block"},  # show name input
+        {"display": "none"},   # hide activity text
+        {"display": "block"},  # show activity input
+        {"display": "none"},   # hide description text
+        {"display": "block"},  # show description input
+        {"display": "none"},   # hide Edit button
+        {"display": "flex"},   # show Save button
     )
 
 
@@ -279,15 +292,15 @@ def enter_edit_mode(n):
     Output("notifications", "children", allow_duplicate=True),
     Input({"type": "save-stock", "index": ALL}, "n_clicks"),
     State({"type": "edit-stock-input", "index": ALL}, "value"),
+    State({"type": "edit-activity-input", "index": ALL}, "value"),
+    State({"type": "edit-description-input", "index": ALL}, "value"),
     State("companies", "data"),
     prevent_initial_call=True,
 )
-def save_company_label(clicks, new_labels, companies):
+def save_company_label(clicks, new_labels, new_activities, new_descriptions, companies):
     """
-    Persist the edited company label to the companies store.
-
-    After this callback updates the store, display_companies re-renders the
-    entire list — every row returns to read-only mode automatically.
+    Persist the edited company label, activity, and description to the companies store.
+    After this callback updates the store, display_companies re-renders the list.
     """
     if not clicks or not any(clicks):
         raise PreventUpdate
@@ -297,7 +310,9 @@ def save_company_label(clicks, new_labels, companies):
         raise PreventUpdate
 
     ticker = list(companies.keys())[index]
-    new_label = new_labels[index] if index < len(new_labels) else None
+    new_label       = new_labels[index]       if index < len(new_labels)       else None
+    new_activity    = new_activities[index]   if index < len(new_activities)   else None
+    new_description = new_descriptions[index] if index < len(new_descriptions) else None
 
     lang = page_registry.get("lang", "fr")
     tl = tls[lang]["settings"]["tickers"]["notification"]
@@ -313,7 +328,9 @@ def save_company_label(clicks, new_labels, companies):
         )
         return no_update, notif
 
-    companies[ticker]["label"] = new_label.strip()
+    companies[ticker]["label"]       = new_label.strip()
+    companies[ticker]["activity"]    = new_activity.strip()    if new_activity    else companies[ticker].get("activity", "")
+    companies[ticker]["description"] = new_description.strip() if new_description else companies[ticker].get("description", "")
 
     notif = dmc.Notification(
         id="notif-label-saved",

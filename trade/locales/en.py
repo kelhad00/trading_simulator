@@ -34,6 +34,7 @@ translation = {
         # News description
         "title-news-description": "Article Description",
         "button-news-description": "Close",
+        "news-published": "Published:",
 
         # Request form
         "request-title": "Make a Request",

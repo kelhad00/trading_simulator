@@ -277,9 +277,11 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta, k=0):
     return (positive_positions, negative_positions)
 
 def _currency_symbol(ticker):
-    """Return $ for US tickers, € for European ones (identified by exchange suffix)."""
+    """Return € for European tickers (exchange suffix or known index), $ otherwise."""
     european_suffixes = ('.PA', '.MI', '.AS', '.BR', '.DE', '.MC', '.LS', '.CO', '.ST', '.HE', '.OL')
-    return '€' if any(ticker.upper().endswith(s) for s in european_suffixes) else '$'
+    european_indices  = ('^FCHI', '^GDAXI', '^AEX', '^BFX', '^IBEX', '^PSI20', '^OSEAX', '^OMXS30', '^OMXHPI', '^OMXC25')
+    t = ticker.upper()
+    return '€' if any(t.endswith(s) for s in european_suffixes) or t in european_indices else '$'
 
 
 def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position,
@@ -320,17 +322,16 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
             # Extract real price context from simulation data
             current_price    = float(market_data.iloc[position]['Close'])
-            lookback         = min(10, position)
-            prev_price       = float(market_data.iloc[position - lookback]['Close'])
-            price_change_pct = ((current_price - prev_price) / prev_price * 100) if prev_price != 0 else 0.0
+            price_high       = float(market_data['Close'].max())
+            price_low        = float(market_data['Close'].min())
             article_date_str = str(market_data.iloc[position]['date'])[:10]
 
             # Create the news
             delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
-            print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | change={price_change_pct:+.1f}% | curve={curve_profile} | delta={delta} ({delta_label})")
+            print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | range={currency}{price_low:.2f}–{currency}{price_high:.2f} | curve={curve_profile} | delta={delta} ({delta_label})")
             print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                             article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
+                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
             print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
             print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
@@ -352,7 +353,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             if not v['passed']:
                 print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
                 content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                                 article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
+                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
                 title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
                 v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
                 news_created.at[len(news_created) - 1, 'title']   = title
@@ -360,6 +361,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
                 print(f"[VERIFY]     Retry grade={v['grade']}")
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
+            v['date'] = article_date_str
             verification_results.append(v)
 
             print(f"[NEWS GEN]     [SAVED] POSITIVE article {i + 1}/{total_pos} stored for {company_name} (date: {date})")
@@ -385,17 +387,16 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
             # Extract real price context from simulation data
             current_price    = float(market_data.iloc[position]['Close'])
-            lookback         = min(10, position)
-            prev_price       = float(market_data.iloc[position - lookback]['Close'])
-            price_change_pct = ((current_price - prev_price) / prev_price * 100) if prev_price != 0 else 0.0
+            price_high       = float(market_data['Close'].max())
+            price_low        = float(market_data['Close'].min())
             article_date_str = str(market_data.iloc[position]['date'])[:10]
 
             # Create the news
             delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
-            print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | change={price_change_pct:+.1f}% | curve={curve_profile} | delta={delta} ({delta_label})")
+            print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | range={currency}{price_low:.2f}–{currency}{price_high:.2f} | curve={curve_profile} | delta={delta} ({delta_label})")
             print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                             article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
+                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
             print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
             print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
@@ -414,7 +415,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             if not v['passed']:
                 print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
                 content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                                 article_date=article_date_str, current_price=current_price, price_change_pct=price_change_pct, delta=delta, currency=currency)
+                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
                 title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
                 v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
                 news_created.at[len(news_created) - 1, 'title']   = title
@@ -422,6 +423,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
                 print(f"[VERIFY]     Retry grade={v['grade']}")
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
+            v['date'] = article_date_str
             verification_results.append(v)
 
             print(f"[NEWS GEN]     [SAVED] NEGATIVE article {i + 1}/{total_neg} stored for {company_name} (date: {date})")
@@ -441,7 +443,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
 
 def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment,
-                           company_description="", article_date=None, current_price=None, price_change_pct=None, delta=0, currency='€'):
+                           company_description="", article_date=None, current_price=None, price_high=None, price_low=None, delta=0, currency='€'):
     '''
     Transform the content of a news into a news for the company with a LLM
     '''
@@ -476,22 +478,24 @@ def transform_news_content(content, company, sector, curve_profile, lang, client
     )
 
     # Build market context block from real simulation data
-    if article_date and current_price is not None and price_change_pct is not None:
+    if article_date and current_price is not None and price_low is not None and price_high is not None:
         if lang == "en":
             market_context = (
                 f"\nMarket context at time of article:"
                 f"\n- Date: {article_date}"
                 f"\n- Current stock price: {currency}{current_price:.2f}"
-                f"\n- Price change over past 10 days: {price_change_pct:+.1f}%"
+                f"\n- Simulation price range: {currency}{price_low:.2f} – {currency}{price_high:.2f}"
                 f"\nUse these figures naturally in the article where appropriate."
+                f"\nDo not compare the current price to any starting or reference price — only use the figures provided above."
             )
         else:
             market_context = (
                 f"\nContexte du marché au moment de l'article :"
                 f"\n- Date : {article_date}"
                 f"\n- Prix actuel de l'action : {current_price:.2f}{currency}"
-                f"\n- Variation sur 10 jours : {price_change_pct:+.1f}%"
+                f"\n- Plage de prix de la simulation : {price_low:.2f}{currency} – {price_high:.2f}{currency}"
                 f"\nIntégrez ces chiffres naturellement dans l'article si approprié."
+                f"\nNe comparez pas le prix actuel à un prix de départ ou de référence — utilisez uniquement les chiffres fournis ci-dessus."
             )
     else:
         market_context = ""
@@ -541,7 +545,7 @@ Reference article:
 {data}
 
 Task:
-Rewrite this article so it is directly about {company}, taking into account its sector and current market profile. The tone must reflect the market profile ({curve_description_short}). Reply ONLY with the rewritten article text, no preamble or notes. {language_instruction}""".format(
+Rewrite this article so it is directly about {company}, taking into account its sector and current market profile. The tone must reflect the market profile ({curve_description_short}). Write the sector name in the article's language — if the sector name is in a different language, translate it naturally before using it. Do not name or quote any real executive, analyst, or person from a different company — only reference {company} and its own sector context. Use only one currency symbol throughout — € for European companies, $ for US companies, do not mix them. Do not use the simulation price range boundaries as analyst price targets or forecasts. Do not reference any year before {article_date} as a current or future event — all dates must be consistent with the article publication date. Use only standard, real-world financial and industry units — do not invent measurement units. Reply ONLY with the rewritten article text, no preamble or notes. {language_instruction}""".format(
         data=content,
         company=company,
         sector=sector,
