@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +12,10 @@ class Defaults:
     # update_time = 60*1000 # in milliseconds
     update_time = 5*1000  # in milliseconds
 
-    start_date = "1/1/2021"
+    # Simulation window: always ends today, starts `simulation_days` ago
+    simulation_days = 300
+    _start = datetime.now() - timedelta(days=simulation_days)
+    start_date = f"{_start.month}/{_start.day}/{_start.year}"
 
     # Maximum number of requests the user can make on the dashboard
     max_requests = 10
@@ -22,8 +26,9 @@ class Defaults:
     # Path to the data folder
     data_path = "../data"
 
-    # News settings — loaded from OLLAMA_BASE_URL in .env; UI input is an optional override
-    ollama_base_url = "http://localhost:11434/v1"
+    # News settings — loaded from env; UI inputs are optional overrides
+    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    groq_api_key = os.getenv("GROQ_API_KEY", "")
 
 
     # Stocks and Indexes used in the interface
@@ -150,7 +155,22 @@ class Defaults:
             "label": "S&P GSCI Gold Index",
             "activity": "Indice",
             "got_charts": True,
-        }
+        },
+        "NVDA": {
+            "label": "NVIDIA Corporation (NVDA)",
+            "activity": "Services informatiques",
+            "got_charts": True,
+        },
+        "AAPL": {
+            "label": "Apple Inc. (AAPL)",
+            "activity": "Services informatiques",
+            "got_charts": True,
+        },
+        "SNOW": {
+            "label": "Snowflake Inc. (SNOW)",
+            "activity": "Services informatiques",
+            "got_charts": True,
+        },
     }
 
 # Provide the default values in global scope

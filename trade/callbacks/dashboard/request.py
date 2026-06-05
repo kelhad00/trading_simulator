@@ -158,7 +158,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         # If the request is completed
         if req['action'] == 'buy' and req['price'] >= stock_price:
             # If the user has enough money
-            if req['shares'] * req['price'] < cashflow:
+            if req['shares'] * req['price'] <= cashflow:
                 # Update only the shares and the cashflow
                 # Because the total price will be updated in the portfolio callback
                 port_shares.loc[req['company']] += req['shares']

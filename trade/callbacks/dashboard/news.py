@@ -54,6 +54,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
 @callback(
     Output('news-container', 'style'),
     Output('description-title', 'children'),
+    Output('description-date', 'children'),
     Output('description-text', 'children'),
     Output('description-container', 'style'),
     Output('back-to-news-list', 'n_clicks'),
@@ -65,11 +66,14 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     prevent_initial_call=True,
 )
 def toggle_news_display_type(n, cell_clicked, table):
+    lang = page_registry['lang']
+    published_label = tls[lang].get('news-published', 'Published:')
+
     if ctx.triggered_id == 'back-to-news-list':
-        return {'display': 'block'}, None, None, {'display': 'none'}, [0] * len(cell_clicked)
+        return {'display': 'block'}, None, None, None, {'display': 'none'}, [0] * len(cell_clicked)
 
     if cell_clicked == [] or 1 not in cell_clicked:
-        return no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update
 
     try:
         index_clicked = cell_clicked.index(1)
@@ -79,7 +83,12 @@ def toggle_news_display_type(n, cell_clicked, table):
         # get_news_dataframe() is cached — negligible cost
         news_df = get_news_dataframe()
         article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]
-        return {'display': 'none'}, article_clicked['title'], article_clicked['content'], {'display': 'block'}, no_update
+        if article_clicked.empty:
+            return no_update, no_update, no_update, no_update, no_update, no_update
+        title   = article_clicked['title'].iloc[0]
+        content = article_clicked['content'].iloc[0]
+        date    = str(article_clicked['date'].iloc[0])[:16]
+        return {'display': 'none'}, title, f"{published_label} {date}", content, {'display': 'block'}, no_update
     except Exception as e:
         print('Error :', e)
-        return no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update

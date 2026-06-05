@@ -1,5 +1,6 @@
 from dash import html, dcc
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 
 from trade.components.sections import section
 from trade.locales import translations as tls
@@ -9,9 +10,21 @@ def news_settings(lang="fr"):
     tl = tls[lang]["settings"]["news"]
     tm = tl["manual"]
     return html.Div([
-        dcc.Store(id="manual-positions-store", data={}),
+        dcc.Store(id="manual-positions-store", data={}, storage_type="session"),
 
-        section(tl["subtitles"]["key"], [
+        section(tl["subtitles"]["provider"], [
+            dmc.RadioGroup(
+                id="input-provider",
+                label=tl["provider"]["label"],
+                value="ollama",
+                children=[
+                    dmc.Radio(value="ollama", label=tl["provider"]["ollama"]),
+                    dmc.Radio(value="groq",   label=tl["provider"]["groq"]),
+                ],
+                className="w-full",
+            ),
+
+            # Shown when provider == "ollama"
             html.Div([
                 dmc.TextInput(
                     id="input-api-key",
@@ -19,7 +32,31 @@ def news_settings(lang="fr"):
                     placeholder=tl["input"]["key-placeholder"],
                     className="flex-1",
                 ),
-            ], className="flex w-full"),
+            ], id="ollama-url-container", className="flex w-full"),
+
+            # Shown when provider == "groq"
+            html.Div([
+                dmc.TextInput(
+                    id="input-groq-key",
+                    type="password",
+                    label=tl["input"]["groq-key"],
+                    placeholder=tl["input"]["groq-key-placeholder"],
+                    className="flex-1",
+                    rightSection=dmc.ActionIcon(
+                        DashIconify(id="groq-eye-icon", icon="mdi:eye-off", width=18),
+                        id="groq-eye-toggle",
+                        variant="subtle",
+                        color="gray",
+                        size="sm",
+                    ),
+                ),
+                dmc.Text(
+                    tl["provider"]["groq-note"],
+                    size="xs",
+                    color="dimmed",
+                    className="mt-1",
+                ),
+            ], id="groq-key-container", className="flex flex-col w-full", style={"display": "none"}),
         ]),
 
         section(tl["subtitles"]["parameters"], [
