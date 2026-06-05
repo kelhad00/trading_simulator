@@ -18,7 +18,7 @@ from trade.utils.news_generation.verify import verify_article
 from trade.defaults import defaults as dlt
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 OLLAMA_MODEL = "qwen3:8b"
 
 
@@ -471,6 +471,13 @@ def transform_news_content(content, company, sector, curve_profile, lang, client
 
     language_instruction = "The response must be written in English." if lang == "en" else "La réponse doit être en français."
 
+    if article_date:
+        article_year      = article_date[:4]
+        article_prev_year = str(int(article_year) - 1)
+        article_old_year  = str(int(article_year) - 2)
+    else:
+        article_year = article_prev_year = article_old_year = ""
+
     description_line = (
         f"\nCompany description: {company_description}" if lang == "en" and company_description.strip()
         else f"\nDescription de l'entreprise : {company_description}" if company_description.strip()
@@ -545,7 +552,7 @@ Reference article:
 {data}
 
 Task:
-Rewrite this article so it is directly about {company}, taking into account its sector and current market profile. The tone must reflect the market profile ({curve_description_short}). Write the sector name in the article's language — if the sector name is in a different language, translate it naturally before using it. Do not name or quote any real executive, analyst, or person from a different company — only reference {company} and its own sector context. Use only one currency symbol throughout — € for European companies, $ for US companies, do not mix them. Do not use the simulation price range boundaries as analyst price targets or forecasts. Do not reference any year before {article_date} as a current or future event — all dates must be consistent with the article publication date. Use only standard, real-world financial and industry units — do not invent measurement units. Reply ONLY with the rewritten article text, no preamble or notes. {language_instruction}""".format(
+Rewrite this article so it is directly about {company}, taking into account its sector and current market profile. The tone must reflect the market profile ({curve_description_short}). Write the sector name in the article's language — if the sector name is in a different language, translate it naturally before using it. Do not name or quote any real executive, analyst, or person from a different company — only reference {company} and its own sector context. Use only one currency symbol throughout — € for European companies, $ for US companies, do not mix them. Do not use the simulation price range boundaries as analyst price targets or forecasts. The article is published on {article_date}. Never use future tense ("will", "is set to", "intends to", "plans to") for any event dated before {article_date} — those are past events and must be written in past tense. When referencing financial results, cite FY{article_year} or FY{article_prev_year} data — do not present FY{article_old_year} or older figures as the current or most recent results. Use only standard, real-world financial and industry units — do not invent measurement units. Reply ONLY with the rewritten article text, no preamble or notes. {language_instruction}""".format(
         data=content,
         company=company,
         sector=sector,
@@ -556,6 +563,10 @@ Rewrite this article so it is directly about {company}, taking into account its 
         curve_description_short=curve_description_short,
         sentiment_label=sentiment_label,
         language_instruction=language_instruction,
+        article_date=article_date or "",
+        article_year=article_year,
+        article_prev_year=article_prev_year,
+        article_old_year=article_old_year,
     )
 
     response = _chat_with_retry(client, model, [{"role": "user", "content": p}])
