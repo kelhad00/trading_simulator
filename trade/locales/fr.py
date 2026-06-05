@@ -105,7 +105,6 @@ translation = {
                     "preview": "Prévisualisation",
                     "parameters": "Paramètres des données de marché",
                     "trends": "Tendances des graphiques",
-                    "curve": "Profil de croissance",
                 },
                 "button": {
                     "modify": "Modifier",
@@ -119,17 +118,6 @@ translation = {
                     "segment-length": "Longueur du segment (barres)",
                     "bars": "barres",
                     "start": "Sélectionner la valeur de départ",
-                    "curve-profile": "Profil de courbe de croissance",
-                    "noise": "Niveau de bruit / volatilité (%)",
-                    "crash-point": "Point de crash (% de la durée)",
-                },
-                "curve-profiles": {
-                    "segments": "Segments de marché",
-                    "linear": "Linéaire",
-                    "exponential": "Exponentiel",
-                    "logarithmic": "Logarithmique",
-                    "volatile": "Volatil",
-                    "crash": "Crash",
                 },
                 "radio": {
                     "title": "mouvemement de marché",

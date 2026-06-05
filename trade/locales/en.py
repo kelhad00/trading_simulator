@@ -92,7 +92,6 @@ translation = {
                     "preview": "Preview",
                     "parameters": "Market movement parameters",
                     "trends": "Charts trends",
-                    "curve": "Growth curve profile",
                 },
                 "button": {
                     "modify": "Modify",
@@ -106,17 +105,6 @@ translation = {
                     "segment-length": "Segment length (bars)",
                     "bars": "bars",
                     "start": "Select starting price",
-                    "curve-profile": "Growth curve profile",
-                    "noise": "Noise / volatility level (%)",
-                    "crash-point": "Crash point (% of duration)",
-                },
-                "curve-profiles": {
-                    "segments": "Market segments",
-                    "linear": "Linear",
-                    "exponential": "Exponential",
-                    "logarithmic": "Logarithmic",
-                    "volatile": "Volatile",
-                    "crash": "Crash",
                 },
                 "radio": {
                     "title": "market movement",

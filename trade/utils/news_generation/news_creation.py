@@ -20,7 +20,6 @@ def create_news_for_companies(companies, news_position, lang, base_url="http://l
     for ticker, company_info in companies.items():
         company_sector = company_info['activity']
         company_name = company_info['label']
-        curve_profile = company_info.get('curve_profile', 'linear')
         company_description = company_info.get('description', '')
 
         if company_info.get('got_charts') is not True:
@@ -34,7 +33,7 @@ def create_news_for_companies(companies, news_position, lang, base_url="http://l
             continue
 
         print(f"[NEWS] Generating articles for {company_name} — {len(pos[0])} positive, {len(pos[1])} negative")
-        n = create_news(ticker, company_name, company_sector, curve_profile, lang, pos, model, base_url, company_description)
+        n = create_news(ticker, company_name, company_sector, lang, pos, model, base_url, company_description)
 
         # Save immediately after each company so a crash never loses progress.
         # Replace only this company's existing news, keep everyone else's.
@@ -213,7 +212,7 @@ def get_news_position_lin(market_data, alpha, alpha_day_interval, delta, k=0):
 
     return (positive_positions, negative_positions)
 
-def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position, model, base_url="http://localhost:11434/v1", company_description=""):
+def create_news(company_ticker, company_name, company_sector, lang, news_position, model, base_url="http://localhost:11434/v1", company_description=""):
     '''
     Create news for a company based on the position in market data given
     '''
@@ -243,8 +242,8 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         i = 0
         for position in news_position[0]:
             # Create the news
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
-            title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
+            content = transform_news_content(news.iloc[i]['content'], company_name, sector, lang, client, model, sentiment, company_description)
+            title = transform_news_title(content, company_name, lang, client, model, sentiment)
 
             # Create a new row in news_created
 
@@ -273,8 +272,8 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
         i = 0
         for position in news_position[1]:
             # Create the news
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description)
-            title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
+            content = transform_news_content(news.iloc[i]['content'], company_name, sector, lang, client, model, sentiment, company_description)
+            title = transform_news_title(content, company_name, lang, client, model, sentiment)
 
             # Create a new row in news_created
             date = market_data.iloc[position]['date']
@@ -291,31 +290,15 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     return news_created
 
 
-def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment, company_description=""):
+def transform_news_content(content, company, sector, lang, client, model, sentiment, company_description=""):
     '''
     Transform the content of a news into a news for the company with a LLM
     '''
 
     if lang == "en":
-        curve_descriptions = {
-            "linear":      ("steady linear growth", "stable growth"),
-            "exponential": ("exponential growth and strong acceleration", "strong growth"),
-            "logarithmic": ("rapid early growth then gradual slowdown", "market maturity"),
-            "volatile":    ("highly volatile and unpredictable movement", "high volatility"),
-            "crash":       ("sharp decline after a growth phase", "crisis and decline"),
-        }
         sentiment_label = "negative" if sentiment == "negative" else "positive"
     else:
-        curve_descriptions = {
-            "linear":      ("croissance linéaire et régulière", "croissance stable"),
-            "exponential": ("croissance exponentielle et forte accélération", "forte croissance"),
-            "logarithmic": ("croissance rapide puis ralentissement progressif", "maturité du marché"),
-            "volatile":    ("évolution très volatile et imprévisible", "forte volatilité"),
-            "crash":       ("déclin brutal après une phase de croissance", "crise et déclin"),
-        }
         sentiment_label = "négatif" if sentiment == "negative" else "positif"
-
-    curve_description, curve_description_short = curve_descriptions.get(curve_profile, list(curve_descriptions.values())[0])
 
     language_instruction = "The response must be written in English." if lang == "en" else "La réponse doit être en français."
 
@@ -328,21 +311,17 @@ def transform_news_content(content, company, sector, curve_profile, lang, client
     p = """Context:
 You receive a reference financial news article. Rewrite it to be specifically about the company {company}, which operates in the sector: {sector}.{description_line}
 
-Company market profile: {curve_description}
-
 News sentiment: {sentiment_label}
 
 Reference article:
 {data}
 
 Task:
-Rewrite this article so it is directly about {company}, taking into account its sector and current market profile. The tone must reflect the market profile ({curve_description_short}). Reply ONLY with the rewritten article text, no preamble or notes. {language_instruction}""".format(
+Rewrite this article so it is directly about {company}, taking into account its sector. Reply ONLY with the rewritten article text, no preamble or notes. {language_instruction}""".format(
         data=content,
         company=company,
         sector=sector,
         description_line=description_line,
-        curve_description=curve_description,
-        curve_description_short=curve_description_short,
         sentiment_label=sentiment_label,
         language_instruction=language_instruction,
     )
@@ -361,43 +340,28 @@ Rewrite this article so it is directly about {company}, taking into account its 
     return response.choices[0].message.content
 
 
-def transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment):
+def transform_news_title(content, company_name, lang, client, model, sentiment):
     '''
     Create a title from a content of a news for the company with a LLM
     '''
 
     if lang == "en":
-        curve_descriptions_short = {
-            "linear":      "stable growth",
-            "exponential": "strong growth",
-            "logarithmic": "market maturity",
-            "volatile":    "high volatility",
-            "crash":       "crisis and decline",
-        }
         sentiment_instruction = (
             "The headline MUST sound clearly and unmistakably NEGATIVE — use words like 'drops', 'falls', 'crisis', 'loss', 'decline', 'slump', 'fears', 'warning', 'cut', 'crash', or similar. A reader must instantly know it is bad news without reading the article."
             if sentiment == "negative" else
             "The headline MUST sound clearly and unmistakably POSITIVE — use words like 'rises', 'surges', 'record', 'growth', 'gain', 'boost', 'strong', 'soars', 'leads', or similar. A reader must instantly know it is good news without reading the article."
         )
     else:
-        curve_descriptions_short = {
-            "linear":      "croissance stable",
-            "exponential": "forte croissance",
-            "logarithmic": "maturité du marché",
-            "volatile":    "forte volatilité",
-            "crash":       "crise et déclin",
-        }
         sentiment_instruction = (
             "Le titre DOIT sonner clairement et sans ambiguïté NÉGATIF — utilisez des mots comme 'chute', 'baisse', 'crise', 'perte', 'déclin', 'avertissement', 'effondrement' ou similaires. Le lecteur doit immédiatement savoir que c'est une mauvaise nouvelle sans lire l'article."
             if sentiment == "negative" else
             "Le titre DOIT sonner clairement et sans ambiguïté POSITIF — utilisez des mots comme 'hausse', 'bond', 'record', 'croissance', 'gain', 'solide', 's'envole' ou similaires. Le lecteur doit immédiatement savoir que c'est une bonne nouvelle sans lire l'article."
         )
 
-    curve_description_short = curve_descriptions_short.get(curve_profile, list(curve_descriptions_short.values())[0])
     language_instruction = "The response must be written in English." if lang == "en" else "La réponse doit être en français."
 
     p = """Context:
-You receive a financial news article about the company {company}. Its market profile is: {curve_description_short}.
+You receive a financial news article about the company {company}.
 
 Article:
 {data}
@@ -406,7 +370,6 @@ Task:
 Write a short, punchy headline for this article. The headline must mention {company}. {sentiment_instruction} Reply ONLY with the headline, no preamble or trailing punctuation. {language_instruction}""".format(
         data=content,
         company=company_name,
-        curve_description_short=curve_description_short,
         sentiment_instruction=sentiment_instruction,
         language_instruction=language_instruction,
     )
