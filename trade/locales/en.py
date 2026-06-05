@@ -206,6 +206,8 @@ translation = {
                     "counter": "{positive} positive, {negative} negative placed for this company",
                     "counter-empty": "No positions placed yet for this company",
                     "clear": "Clear this company",
+                    "clear-notif-title": "Manual positions cleared",
+                    "clear-notif-msg": "Manual positions for {company} have been cleared.",
                     "date-label": "Or pick a date manually",
                     "date-add": "Add",
                     "flagged-notice": "{count} company has manual positions — it will override auto-generation when generating.",

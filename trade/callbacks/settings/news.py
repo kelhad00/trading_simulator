@@ -305,17 +305,35 @@ def update_manual_counter_and_notice(store, company, mode, search):
 
 @callback(
     Output("manual-positions-store", "data", allow_duplicate=True),
+    Output("notifications", "children", allow_duplicate=True),
+    Output("clear-manual-company", "n_clicks"),
     Input("clear-manual-company", "n_clicks"),
     State("news-select-company", "value"),
     State("manual-positions-store", "data"),
+    State("companies", "data"),
+    State("url", "search"),
     prevent_initial_call=True
 )
-def clear_company_manual_positions(n, company, store):
+def clear_company_manual_positions(n, company, store, companies, search):
+    # n=0 means we just reset it below — do nothing to avoid re-triggering
     if not n or not company:
         raise PreventUpdate
     store = dict(store or {})
     store.pop(company, None)
-    return store
+
+    tm = tls[_lang(search)]["settings"]["news"]["manual"]
+    company_name = (companies or {}).get(company, {}).get("label", company)
+    notif = dmc.Notification(
+        id="notif-manual-cleared",
+        title=tm["clear-notif-title"],
+        action="show",
+        color="yellow",
+        message=tm["clear-notif-msg"].format(company=company_name),
+        autoClose=3000,
+    )
+    # Reset n_clicks to 0 so the callback cannot fire again until the
+    # user explicitly clicks the button — prevents double-firing on store updates
+    return store, notif, 0
 
 
 # ── Date picker range (min/max) from market data ──────────────────────────────
