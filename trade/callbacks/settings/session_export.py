@@ -1,0 +1,31 @@
+import base64
+
+from dash import Input, Output, State, callback
+
+from trade.defaults import defaults as dlt
+from trade.utils.session import build_session_zip
+
+
+@callback(
+    Output("download-session", "data"),
+    Input("export-session-btn", "n_clicks"),
+    State("companies", "data"),
+    State("initial-cashflow", "data"),
+    State("max-requests", "data"),
+    State("update-time", "data"),
+    prevent_initial_call=True,
+)
+def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time):
+    zip_bytes = build_session_zip(
+        companies=companies,
+        initial_cashflow=initial_cashflow,
+        max_requests=max_requests,
+        update_time=update_time,
+        data_path=dlt.data_path,
+    )
+    return {
+        "content": base64.b64encode(zip_bytes).decode(),
+        "filename": "session.zip",
+        "base64": True,
+        "type": "application/zip",
+    }

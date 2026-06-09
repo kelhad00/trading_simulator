@@ -1,0 +1,58 @@
+import io
+import json
+import os
+import zipfile
+from datetime import datetime
+
+
+def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path):
+    """Package stores + CSV files into an in-memory ZIP and return the bytes."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        payload = {
+            "version": 1,
+            "exported_at": datetime.utcnow().isoformat(),
+            "stores": {
+                "companies": companies,
+                "initial-cashflow": initial_cashflow,
+                "max-requests": max_requests,
+                "update-time": update_time,
+            }
+        }
+        zf.writestr("session.json", json.dumps(payload, ensure_ascii=False, indent=2))
+
+        for filename in ("generated_data.csv", "news.csv", "revenues.csv"):
+            path = os.path.join(data_path, filename)
+            if os.path.exists(path):
+                zf.write(path, filename)
+
+    return buf.getvalue()
+
+
+def extract_session_zip(zip_bytes, data_path):
+    """Extract a session ZIP, write CSVs to data_path, return store values dict."""
+    buf = io.BytesIO(zip_bytes)
+    with zipfile.ZipFile(buf, "r") as zf:
+        names = zf.namelist()
+
+        if "session.json" not in names:
+            raise ValueError("Invalid session file: missing session.json")
+
+        payload = json.loads(zf.read("session.json"))
+        if payload.get("version") != 1:
+            raise ValueError("Unsupported session version")
+
+        stores = payload["stores"]
+
+        for filename in ("generated_data.csv", "news.csv", "revenues.csv"):
+            if filename in names:
+                dest = os.path.join(data_path, filename)
+                with open(dest, "wb") as f:
+                    f.write(zf.read(filename))
+
+    return {
+        "companies": stores["companies"],
+        "initial-cashflow": stores["initial-cashflow"],
+        "max-requests": stores["max-requests"],
+        "update-time": stores["update-time"],
+    }

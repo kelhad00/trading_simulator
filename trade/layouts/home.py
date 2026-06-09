@@ -1,4 +1,4 @@
-from dash import html
+from dash import html, dcc
 from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 import os
@@ -7,6 +7,8 @@ from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 
 from trade.components.header import header
+
+APP_MODE = os.getenv('APP_MODE', 'config')
 
 
 def main_layout(lang="fr"):
@@ -44,11 +46,38 @@ def options(lang="fr"):
             }
         )
 
+    tl_session = tls[lang]["session"]
+
+    if APP_MODE == 'runtime':
+        return html.Div([
+            option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled, id="start-simulation-btn"),
+            dcc.Upload(
+                id="upload-session",
+                children=html.Div([
+                    DashIconify(icon="carbon:upload", width=20),
+                    html.Span(tl_session["import-hint"], style={"marginLeft": "8px"}),
+                ], style={"display": "flex", "alignItems": "center"}),
+                accept=".zip",
+                style={
+                    "width": "100%",
+                    "padding": "10px 16px",
+                    "borderWidth": "1px",
+                    "borderStyle": "dashed",
+                    "borderRadius": "6px",
+                    "borderColor": "#495057",
+                    "cursor": "pointer",
+                    "backgroundColor": "white",
+                    "fontSize": "14px",
+                    "color": "#495057",
+                },
+            ),
+            dmc.Button(tls[lang]["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"), id="reset-button", color="dark", size="lg"),
+        ], className="flex gap-4 flex-col max-w-xs")
+
     return html.Div([
         option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled, id="start-simulation-btn"),
         option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings", id="settings-button"),
-        dmc.Button(tls[lang]["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"), id="reset-button", color="dark", size="lg")
-
+        dmc.Button(tls[lang]["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"), id="reset-button", color="dark", size="lg"),
     ], className="flex gap-4 flex-col max-w-xs")
 
 

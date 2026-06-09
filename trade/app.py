@@ -6,6 +6,8 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
 
+APP_MODE = os.getenv('APP_MODE', 'config')
+
 from trade.defaults import defaults as dlt
 from trade.utils.market import get_first_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
@@ -34,6 +36,15 @@ theme = {
     },
 }
 
+def _ensure_data_dirs():
+    path = dlt.data_path
+    for subdir in ("", "export", "exports"):
+        d = os.path.join(path, subdir) if subdir else path
+        if not os.path.exists(d):
+            os.makedirs(d, exist_ok=True)
+
+_ensure_data_dirs()
+
 market_df = get_market_dataframe()
 
 portfolio_value = {ticker: 0 for ticker in dlt.companies_list.keys()}
@@ -59,33 +70,19 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="session"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="session"),
 
+        dcc.Download(id="download-session"),
 
         dash.page_container
     ])
 ], theme=theme)
 
-if __name__ == '__main__':
+def run():
     path = dlt.data_path
 
-    if not os.path.exists(path):
-        print('Creating directory ' + path + ' at root of the project')
-        os.mkdir(path)
-
-    if not os.path.exists(os.path.join(path, "export")):
-        print('Creating directory ' + os.path.join(path, "export") + ' at root of the project')
-        os.mkdir(os.path.join(path, "export"))
-
-    if not os.path.exists(os.path.join(path, "exports")):
-        print('Creating directory ' + os.path.join(path, "exports") + ' at root of the project')
-        os.mkdir(os.path.join(path, "exports"))
-
-    if not os.path.exists(os.path.join(path, "generated_data.csv")) \
-            or not os.path.exists(os.path.join(path, "revenue.csv")):
-        print('\nDownloading market data...\n')
-        download_market_data()
-
-    """if not os.path.exists(os.path.join(path, "news.csv")):
-        print('\nYou need to add the `news.csv` file into the ' + path + ' folder\n')
-        quit()"""
+    if APP_MODE == 'config':
+        if not os.path.exists(os.path.join(path, "generated_data.csv")) \
+                or not os.path.exists(os.path.join(path, "revenue.csv")):
+            print('\nDownloading market data...\n')
+            download_market_data()
 
     app.run_server(debug=False, threaded=True)
