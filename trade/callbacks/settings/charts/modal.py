@@ -428,11 +428,12 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
     State("input-nbr-negative-news", "value"),
     State("input-top-k", "value"),
     State("url", "search"),
+    State("select-event-type", "value"),
     prevent_initial_call=True,
 )
 def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
                              api_key, alpha, alpha_day_interval, delta, generation_mode,
-                             nbr_positive_news, nbr_negative_news, top_k, search):
+                             nbr_positive_news, nbr_negative_news, top_k, search, event_type):
     """
     Export the generated charts to generated_data.csv when the generate button is clicked,
     then automatically regenerate news for those companies in a background thread.
@@ -445,6 +446,7 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
         df = pd.DataFrame.from_dict(data)
         export_generated_data(df, company)
         companies[company]["got_charts"] = True
+        companies[company]["curve_profile"] = event_type if event_type and event_type != "none" else "linear"
 
     stocks_callbacks._cached_df_companies = None  # invalidate cache — CSV has changed
 

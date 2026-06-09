@@ -120,6 +120,18 @@ CURVE_VOCABULARY = {
         'instable': 2, 'oscillat': 2, 'capricieux': 2,
         'brusque': 1, 'soudain': 1,
     },
+    'rally': {
+        # English
+        'rally': 3, 'rallied': 3, 'surge': 3, 'surging': 3, 'surged': 3,
+        'soar': 3, 'soaring': 3, 'rebound': 3, 'rebounded': 3,
+        'jump': 2, 'jumped': 2, 'gain': 2, 'gains': 2,
+        'rise': 2, 'rose': 2, 'climb': 2, 'climbed': 2, 'recover': 2,
+        'strong': 1, 'boost': 1, 'momentum': 1, 'upward': 1,
+        # French
+        'rallye': 3, 'rebond': 3, 'envolée': 3, 'hausse': 3, 'bond': 3,
+        'remontée': 2, 'progression': 2, 'reprise': 2, 'montée': 2,
+        'haussier': 2, 'fort': 1, 'dynamique': 1, 'élan': 1,
+    },
 }
 
 CURVE_PASS_THRESHOLD = 4
