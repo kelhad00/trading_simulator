@@ -86,4 +86,5 @@ def run():
             print('\nDownloading market data...\n')
             download_market_data()
 
-    app.run_server(debug=False, threaded=True)
+    port = int(os.getenv('APP_PORT', 8050))
+    app.run_server(debug=False, threaded=True, port=port)
