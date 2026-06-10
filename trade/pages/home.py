@@ -1,9 +1,14 @@
+import os
+
 import dash
 from trade.layouts import home
 
 # Don't delete these imports — they register callbacks as side-effects
 from trade.callbacks import reset
 from trade.callbacks import home as home_callbacks  # noqa: F401
+
+if os.getenv('APP_MODE') == 'runtime':
+    from trade.callbacks import home_import  # noqa: F401
 
 dash.register_page(__name__, path="/")
 

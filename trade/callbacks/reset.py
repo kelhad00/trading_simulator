@@ -11,6 +11,8 @@ from trade.utils.settings.create_market_data import get_generated_data
 
 market_df = get_market_dataframe()
 
+APP_MODE = os.getenv('APP_MODE', 'config')
+
 
 def _archive_exports(nb_export):
     """Move export files to a numbered session folder in the background."""
@@ -29,17 +31,18 @@ def _archive_exports(nb_export):
 
 _LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
 
-@callback(
-    Output("settings-button", "disabled"),
-    Output("settings-button-link", "style"),
-    Input("_pages_location", "pathname"),
-    Input("timestamp", "data"),
-)
-def disable_button(pathname, timestamp):
-    if pathname != "/":
-        raise PreventUpdate
-    is_disabled = timestamp != get_first_timestamp(market_df, 100)
-    return is_disabled, {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
+if APP_MODE != 'runtime':
+    @callback(
+        Output("settings-button", "disabled"),
+        Output("settings-button-link", "style"),
+        Input("_pages_location", "pathname"),
+        Input("timestamp", "data"),
+    )
+    def disable_button(pathname, timestamp):
+        if pathname != "/":
+            raise PreventUpdate
+        is_disabled = timestamp != get_first_timestamp(market_df, 100)
+        return is_disabled, {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
 
 
 @callback(

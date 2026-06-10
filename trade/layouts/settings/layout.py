@@ -1,5 +1,6 @@
 from dash import html
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 
 from trade.layouts.settings.sections.advanced import advanced_settings
 from trade.layouts.settings.sections.charts import generate_charts
@@ -19,7 +20,17 @@ def main_layout(lang="fr"):
 
     return html.Div([
         header(lang, url="/settings"),
-        dmc.Title(tl["title"], order=1, className="font-bold leading-none w-full max-w-2xl"),
+        html.Div([
+            dmc.Title(tl["title"], order=1, className="font-bold leading-none"),
+            dmc.Button(
+                tls[lang]["session"]["export-button"],
+                id="export-session-btn",
+                leftIcon=DashIconify(icon="carbon:export"),
+                variant="outline",
+                color="dark",
+                radius="md",
+            ),
+        ], className="flex items-center justify-between w-full max-w-2xl"),
         dmc.Tabs(
             [
                 dmc.TabsList([
