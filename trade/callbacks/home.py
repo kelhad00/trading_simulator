@@ -6,6 +6,8 @@ import dash_mantine_components as dmc
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 
+APP_MODE = os.getenv('APP_MODE', 'config')
+
 
 def _files_ok():
     return (
@@ -27,22 +29,18 @@ def _missing_labels(companies):
 
 _LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
 
-@callback(
-    Output("start-simulation-btn", "disabled"),
-    Output("start-simulation-btn-link", "style"),
-    Input("companies", "data"),
-    Input("url", "pathname"),
-    prevent_initial_call=False,
-)
-def update_start_button(companies, pathname):
-    """
-    Disable the start-simulation button when required files are missing OR
-    when any active company has an empty label.  Fires on page navigation so
-    state is always current when the user lands on the home page.
-    """
-    is_disabled = not _files_ok() or bool(_missing_labels(companies))
-    link_style = {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
-    return is_disabled, link_style
+if APP_MODE == 'runtime':
+    @callback(
+        Output("start-simulation-btn", "disabled"),
+        Output("start-simulation-btn-link", "style"),
+        Input("companies", "data"),
+        Input("url", "pathname"),
+        prevent_initial_call=False,
+    )
+    def update_start_button(companies, pathname):
+        is_disabled = not _files_ok() or bool(_missing_labels(companies))
+        link_style = {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
+        return is_disabled, link_style
 
 
 @callback(

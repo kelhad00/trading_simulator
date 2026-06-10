@@ -16,6 +16,9 @@ from trade.utils.session import build_session_zip
     prevent_initial_call=True,
 )
 def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time):
+    from dash import no_update
+    if not n_clicks:
+        return no_update
     zip_bytes = build_session_zip(
         companies=companies,
         initial_cashflow=initial_cashflow,
