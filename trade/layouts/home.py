@@ -10,12 +10,40 @@ from trade.components.header import header
 
 APP_MODE = os.getenv('APP_MODE', 'config')
 
+_UPLOAD_STYLE = {
+    "width": "100%",
+    "padding": "10px 16px",
+    "borderWidth": "1px",
+    "borderStyle": "dashed",
+    "borderRadius": "6px",
+    "borderColor": "#495057",
+    "cursor": "pointer",
+    "backgroundColor": "white",
+    "fontSize": "14px",
+    "color": "#495057",
+}
+
+_LOADED_STYLE = {
+    "width": "100%",
+    "padding": "10px 16px",
+    "borderWidth": "1px",
+    "borderStyle": "solid",
+    "borderRadius": "6px",
+    "borderColor": "#2f9e44",
+    "backgroundColor": "#ebfbee",
+    "fontSize": "14px",
+    "color": "#2f9e44",
+    "display": "none",
+    "alignItems": "center",
+    "justifyContent": "space-between",
+    "gap": "8px",
+}
+
 
 def main_layout(lang="fr"):
     return html.Div([
         html.Div([
-            # Application url for routing when the user clicks on the start button
-            header(lang),
+            header(lang, mode=APP_MODE),
             html.Div([
                 welcome(lang),
                 description(lang)
@@ -26,9 +54,10 @@ def main_layout(lang="fr"):
 
 
 def options(lang="fr"):
-    disabled = disable_button()
+    tl = tls[lang]
+    tl_session = tl["session"]
 
-    def option(label, href, icon, disabled=False, id=""):
+    def nav_button(label, href, icon, disabled=False, id=""):
         return html.A(
             dmc.Button(
                 label,
@@ -46,38 +75,59 @@ def options(lang="fr"):
             }
         )
 
-    tl_session = tls[lang]["session"]
-
     if APP_MODE == 'runtime':
+        start_disabled = _files_missing()
         return html.Div([
-            option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled, id="start-simulation-btn"),
-            dcc.Upload(
-                id="upload-session",
-                children=html.Div([
-                    DashIconify(icon="carbon:upload", width=20),
-                    html.Span(tl_session["import-hint"], style={"marginLeft": "8px"}),
-                ], style={"display": "flex", "alignItems": "center"}),
-                accept=".zip",
-                style={
-                    "width": "100%",
-                    "padding": "10px 16px",
-                    "borderWidth": "1px",
-                    "borderStyle": "dashed",
-                    "borderRadius": "6px",
-                    "borderColor": "#495057",
-                    "cursor": "pointer",
-                    "backgroundColor": "white",
-                    "fontSize": "14px",
-                    "color": "#495057",
-                },
+            nav_button(tl["button-start"], "/dashboard?lang=" + lang,
+                       "carbon:play-filled-alt", start_disabled, id="start-simulation-btn"),
+
+            # Upload area — visible before import
+            html.Div(
+                id="session-upload-area",
+                children=dcc.Upload(
+                    id="upload-session",
+                    children=html.Div([
+                        DashIconify(icon="carbon:upload", width=20),
+                        html.Span(tl_session["import-hint"], style={"marginLeft": "8px"}),
+                    ], style={"display": "flex", "alignItems": "center"}),
+                    accept=".zip",
+                    style=_UPLOAD_STYLE,
+                ),
             ),
-            dmc.Button(tls[lang]["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"), id="reset-button", color="dark", size="lg"),
+
+            # Loaded indicator — hidden until import succeeds
+            html.Div(
+                id="session-loaded-area",
+                style=_LOADED_STYLE,
+                children=[
+                    html.Div([
+                        DashIconify(icon="carbon:checkmark-filled", width=18, color="#2f9e44"),
+                        html.Span(tl_session["session-loaded-prefix"], style={"marginLeft": "6px", "fontWeight": "600"}),
+                        html.Span(id="imported-filename", style={"marginLeft": "4px"}),
+                    ], style={"display": "flex", "alignItems": "center"}),
+                    dmc.ActionIcon(
+                        DashIconify(icon="carbon:close", width=16),
+                        id="clear-session-btn",
+                        variant="transparent",
+                        color="red",
+                        size="sm",
+                        title=tl_session["session-remove"],
+                    ),
+                ],
+            ),
+
+            dmc.Button(tl["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"),
+                       id="reset-button", color="dark", size="lg"),
+
+            # Hidden div used as dummy output for the file-input reset clientside callback
+            html.Div(id="_upload-reset", style={"display": "none"}),
         ], className="flex gap-4 flex-col max-w-xs")
 
+    # Config mode — Settings + Reset only, no Start button
     return html.Div([
-        option(tls[lang]["button-start"], "/dashboard?lang=" + lang, "carbon:play-filled-alt", disabled, id="start-simulation-btn"),
-        option(tls[lang]["button-settings"], "/settings?lang=" + lang, "carbon:settings", id="settings-button"),
-        dmc.Button(tls[lang]["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"), id="reset-button", color="dark", size="lg"),
+        nav_button(tl["button-settings"], "/settings?lang=" + lang, "carbon:settings", id="settings-button"),
+        dmc.Button(tl["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"),
+                   id="reset-button", color="dark", size="lg"),
     ], className="flex gap-4 flex-col max-w-xs")
 
 
@@ -104,8 +154,8 @@ def welcome(lang="fr"):
     ])
 
 
-def disable_button():
-    if os.path.exists(os.path.join(dlt.data_path, 'generated_data.csv')) and os.path.exists(os.path.join(dlt.data_path, 'news.csv')):
-        return False
-    else:
-        return True
+def _files_missing():
+    return not (
+        os.path.exists(os.path.join(dlt.data_path, 'generated_data.csv'))
+        and os.path.exists(os.path.join(dlt.data_path, 'news.csv'))
+    )

@@ -1,3 +1,4 @@
+import os
 from dash import html
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -12,14 +13,14 @@ from trade.components.header import header
 
 from trade.locales import translations as tls
 
-
+APP_MODE = os.getenv('APP_MODE', 'config')
 
 
 def main_layout(lang="fr"):
     tl = tls[lang]["settings"]
 
     return html.Div([
-        header(lang, url="/settings"),
+        header(lang, url="/settings", mode=APP_MODE),
         html.Div([
             dmc.Title(tl["title"], order=1, className="font-bold leading-none"),
             dmc.Button(

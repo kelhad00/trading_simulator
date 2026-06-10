@@ -79,12 +79,17 @@ translation = {
         # "button-start-info": "Veuillez patienter quelques instants...",
         "welcome": ["Bienvenue sur", "TradeSim"],
 
+        "mode-config": "Configurateur",
+        "mode-runtime": "Simulation",
+
         "session": {
             "export-button": "Exporter la session",
             "import-label": "Importer une session",
             "import-hint": "Déposez session.zip ici ou cliquez pour importer",
             "import-success": "Session chargée — vous pouvez démarrer la simulation.",
             "import-error": "Fichier de session invalide. Utilisez un fichier exporté depuis le configurateur.",
+            "session-loaded-prefix": "Chargée :",
+            "session-remove": "Supprimer",
         },
         "description": ["Cliquer sur ", "'Démarrer la simulation'", ", pour commencer la session. L\'interface est disponible en ", "anglais ", "et ", "français", "."],
 

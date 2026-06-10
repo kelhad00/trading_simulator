@@ -70,6 +70,7 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="session"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="session"),
 
+        dcc.Store(id='imported-session-name', storage_type='session', data=None),
         dcc.Download(id="download-session"),
 
         dash.page_container
