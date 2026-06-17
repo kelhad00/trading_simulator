@@ -57,6 +57,28 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
 
 
 @callback(
+    Output('price-input', 'value'),
+    Input('company-graph', 'clickData'),
+    State('company-selector', 'value'),
+    prevent_initial_call=True,
+)
+def fill_price_from_candle_click(click_data, company):
+    if not click_data or not company:
+        raise PreventUpdate
+    try:
+        date_str = str(click_data['points'][0]['x'])[:10]
+        price_df = get_price_dataframe()
+        date_index = next(
+            (idx for idx in price_df.index if str(idx)[:10] == date_str), None
+        )
+        if date_index is None:
+            raise PreventUpdate
+        return price_df.loc[date_index, company]
+    except (KeyError, IndexError):
+        raise PreventUpdate
+
+
+@callback(
     Output("requests", "data", allow_duplicate=True),
     Output('notifications', 'children', allow_duplicate=True),
 
