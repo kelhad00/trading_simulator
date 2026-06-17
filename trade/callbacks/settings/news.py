@@ -137,13 +137,21 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
 
     except Exception as e:
         print("Error while generating news:", e)
-        provider_label = "Groq" if (provider or "ollama") == "groq" else "Ollama"
+        import pandas as pd
+        from openai import APIConnectionError, AuthenticationError
+        if isinstance(e, (APIConnectionError, AuthenticationError)):
+            provider_label = "Groq" if (provider or "ollama") == "groq" else "Ollama"
+            message = f"Could not connect to {provider_label}. Check your API key, URL, and that the service is running."
+        elif isinstance(e, (pd.errors.EmptyDataError, pd.errors.ParserError)):
+            message = "A data file is empty or corrupted (news.csv or news_dataset.csv). Check your Data folder."
+        else:
+            message = f"News generation failed: {e}"
         return dmc.Notification(
             id="notification-news-generated",
             title="Error",
             action="show",
             color="red",
-            message=f"Error while generating news via {provider_label}! Check your API key, connection, and parameters.",
+            message=message,
         ), False, no_update
 
 

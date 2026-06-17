@@ -48,8 +48,13 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
     _, model = _build_client(provider, base_url, groq_api_key)
     news_path = os.path.join(dlt.data_path, 'news.csv')
 
+    start_time = datetime.now()
     endpoint = GROQ_BASE_URL if provider == "groq" else base_url
-    print(f"[NEWS] Starting article generation for {len(news_position)} companies using {provider} ({endpoint})")
+    print(f"[NEWS] ============================================")
+    print(f"[NEWS] Generation started at {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[NEWS] Provider : {provider} ({endpoint})")
+    print(f"[NEWS] Companies: {len(news_position)}")
+    print(f"[NEWS] ============================================")
 
     report_path = os.path.join(dlt.data_path, 'verification_report.csv')
     total_verified = 0
@@ -80,7 +85,7 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
                 existing = load_data(news_path)
                 existing = existing[existing['ticker'] != company_name]
                 n = pd.concat([existing, n]).reset_index(drop=True)
-            except pd.errors.EmptyDataError:
+            except (pd.errors.EmptyDataError, pd.errors.ParserError):
                 pass
         save_data(n, news_path)
         print(f"[NEWS] ----------------------------------------")
@@ -108,6 +113,20 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
     flagged = total_verified - total_passed
     if total_verified:
         print(f"[VERIFY] Report saved → {report_path}  ({total_passed}/{total_verified} passed, {flagged} flagged)")
+
+    end_time = datetime.now()
+    duration = end_time - start_time
+    total_seconds = int(duration.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    duration_str = f"{hours}h {minutes}m {seconds}s" if hours else f"{minutes}m {seconds}s"
+    print(f"[NEWS] ============================================")
+    print(f"[NEWS] Generation started : {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[NEWS] Generation ended   : {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[NEWS] Total duration     : {duration_str}")
+    print(f"[NEWS] ============================================")
+
+    if total_verified:
         return {'total': total_verified, 'passed': total_passed, 'flagged': flagged}
 
     return {'total': 0, 'passed': 0, 'flagged': 0}
@@ -284,6 +303,347 @@ def _currency_symbol(ticker):
     return '€' if any(t.endswith(s) for s in european_suffixes) or t in european_indices else '$'
 
 
+_COMPANY_TYPE_CATEGORIES = {
+    "index":  ["global", "macroeconomy", "index_markets"],
+    "energy": ["global", "macroeconomy", "microeconomy", "commodities", "hiring", "layoffs", "c_suite"],
+    "stock":  ["global", "macroeconomy", "microeconomy", "hiring", "layoffs", "c_suite"],
+}
+
+
+def _get_company_type(sector):
+    if sector == "Indice":
+        return "index"
+    if sector == "Energie et Produits de base":
+        return "energy"
+    return "stock"
+
+
+def _pick_category(sector):
+    return random.choice(_COMPANY_TYPE_CATEGORIES[_get_company_type(sector)])
+
+
+_CATEGORY_PROMPTS = {
+
+    "global": """Context:
+You are writing a GLOBAL financial news article. Global news covers international
+events — central bank decisions, trade policy shifts, currency movements, geopolitical
+tensions — and explains their direct impact on a specific company.
+
+Company: {company}
+Sector: {sector}{description_line}
+{market_context}
+{temporal_context}
+Company market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content or company):
+{reference_article}
+
+Task:
+Write a global news article that follows this structure:
+- Paragraph 1: Open with a major international event relevant to {company}'s
+  industry. Name a realistic institution (a central bank, a trade body, a government
+  ministry) and include a specific figure (an interest rate, a trade surplus value,
+  a currency level). The event must directly concern the world region where {company}
+  operates.
+- Paragraph 2: Explain precisely why this event impacts {company} — reference its
+  geographic exposure, its export markets, its import costs, or its financing
+  conditions. Be specific to {company}'s sector.
+- Paragraph 3: Close with a market or analyst reaction that is unambiguously
+  {sentiment_label} for {company}. Use strong directional language.
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol, never mix currencies
+- The article is published on {article_date} — write all events before this date
+  in past tense, the current situation in present tense
+- The tone must reflect the company's market profile: {curve_description_short}
+- Do not name or quote any real executive or analyst from another company
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+
+    "macroeconomy": """Context:
+You are writing a MACROECONOMY financial news article. These articles cover economic
+indicators — inflation rates, employment figures, GDP readings, PMI surveys, central
+bank minutes — and connect them to a company's sector outlook.
+
+Company: {company}
+Sector: {sector}{description_line}
+{market_context}
+{temporal_context}
+Company market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content or company):
+{reference_article}
+
+Task:
+Write a macroeconomy news article that follows this structure:
+- Paragraph 1: Open with a specific economic indicator release or central bank signal.
+  Name the publishing body (Statistics office, Federal Reserve, ECB, INSEE, Eurostat)
+  and include a concrete figure with its direction (e.g. "fell to 218,000", "rose to
+  2.4%", "contracted for the 18th consecutive month"). The indicator must be relevant
+  to {company}'s operating environment.
+- Paragraph 2: Explain how this macroeconomic environment directly affects {company}'s
+  sector — consumer demand, input costs, borrowing conditions, export competitiveness.
+  Be specific.
+- Paragraph 3: State the implication for {company} with clear {sentiment_label} language
+  — are margins expanding or contracting? Is demand accelerating or softening?
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol
+- The article is published on {article_date} — use past tense for events before
+  this date
+- The tone must reflect: {curve_description_short}
+- Do not name or quote any real executive or analyst from another company
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+
+    "microeconomy": """Context:
+You are writing a MICROECONOMY / COMPANY NEWS financial article. These articles focus
+on company-specific business developments: quarterly earnings, same-store sales,
+pricing decisions, market share shifts, product performance, or strategic guidance.
+
+Company: {company}
+Sector: {sector}{description_line}
+{market_context}
+{temporal_context}
+Company market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content or company):
+{reference_article}
+
+Task:
+Write a company-specific financial news article that follows this structure:
+- Paragraph 1: Open with a concrete business result or announcement from {company}.
+  Choose one: a quarterly earnings figure, a same-store sales reading, a revenue
+  guidance update, a pricing change, or a market share announcement. Include a
+  specific number consistent with the price context provided above. The result must
+  be unambiguously {sentiment_label}.
+- Paragraph 2: Provide context — year-over-year comparison, how the result compares
+  to analyst expectations, and what competitive or market forces explain it.
+- Paragraph 3: Close with the company's outlook or the market reaction, using
+  clear {sentiment_label} language.
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol
+- Do not use the simulation price range boundaries as analyst price targets
+- The article is published on {article_date} — use past tense for events before
+  this date. When citing financial results, reference FY{article_year} or
+  FY{article_prev_year} — not FY{article_old_year} or older
+- The tone must reflect: {curve_description_short}
+- Do not name or quote any real executive or analyst from another company
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+
+    "index_markets": """Context:
+You are writing an INDEX / MARKETS financial news article. These articles report on
+stock market index movements — what the index did, what sectors drove it, and what
+macro or earnings story sits behind the move.
+
+Index: {company}
+{market_context}
+{temporal_context}
+Market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content):
+{reference_article}
+
+Task:
+Write a market report article that follows this structure:
+- Paragraph 1: Open with the index movement — state a specific percentage gain or
+  loss and the direction (record high, multi-month low, recovery, sharp retreat).
+  Name the key sector that led the move (technology, financials, energy, healthcare).
+  The direction must be clearly {sentiment_label}.
+- Paragraph 2: Name the macro or corporate catalyst that drove the session — an
+  earnings surprise, a rate signal, an economic data release, a geopolitical event.
+  Keep all company names generic (do not name real companies other than {company}).
+- Paragraph 3: Close with the investor or analyst takeaway — what does this session
+  signal about the broader market direction?
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol
+- The article is published on {article_date}
+- The tone must reflect: {curve_description_short}
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+
+    "commodities": """Context:
+You are writing a COMMODITIES financial news article. These articles cover raw
+material price movements — oil, natural gas, metals, chemicals, agricultural
+inputs — and their direct impact on companies that produce or consume them.
+
+Company: {company}
+Sector: {sector}{description_line}
+{market_context}
+{temporal_context}
+Company market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content or company):
+{reference_article}
+
+Task:
+Write a commodities news article that follows this structure:
+- Paragraph 1: Open with a commodity price movement directly relevant to {company}'s
+  sector. State the commodity name, a specific price, and the percentage move
+  (e.g. "Brent crude fell 1.4% to {currency}78.20 a barrel", "copper futures rose
+  2.3%"). The direction must create a {sentiment_label} impact for {company}.
+- Paragraph 2: Explain the supply or demand driver behind the move — an inventory
+  build, a production disruption, a strike, an OPEC decision, a demand forecast
+  revision. Be specific about the cause.
+- Paragraph 3: Connect the commodity move directly to {company} — how does it affect
+  the company's input costs, energy bills, raw material sourcing, or product margins?
+  Use clear {sentiment_label} language.
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol
+- The article is published on {article_date} — use past tense for events before
+  this date
+- The tone must reflect: {curve_description_short}
+- Do not name or quote any real executive or analyst from another company
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+
+    "hiring": """Context:
+You are writing a HIRING / WORKFORCE EXPANSION financial news article. These articles
+announce significant new hiring plans — scale, field, location, and the business
+rationale behind the expansion.
+
+Company: {company}
+Sector: {sector}{description_line}
+{market_context}
+{temporal_context}
+Company market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content or company):
+{reference_article}
+
+Task:
+Write a hiring announcement article that follows this structure:
+- Paragraph 1: Open with the announcement — how many roles, in what field or
+  division, and over what timeframe. The scale and framing must feel {sentiment_label}
+  — a confident expansion during growth feels different from a desperate attempt to
+  recover capacity.
+- Paragraph 2: Explain the business rationale — a new product line, a geographic
+  expansion, a technology investment, a surge in demand. Connect it clearly to
+  {company}'s current market profile ({curve_description_short}).
+- Paragraph 3: Mention specific locations, role types, or hiring incentives (signing
+  bonuses, remote options, training programs). Close with the strategic implication
+  for {company}.
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol
+- Do not name any real person
+- The article is published on {article_date} — use past tense for events before
+  this date
+- The tone must reflect: {curve_description_short}
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+
+    "layoffs": """Context:
+You are writing a LAYOFFS / RESTRUCTURING financial news article. These articles
+announce job cuts — the number of roles, the affected divisions, the stated reason,
+and what the cuts signal about the company's direction.
+
+Company: {company}
+Sector: {sector}{description_line}
+{market_context}
+{temporal_context}
+Company market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content or company):
+{reference_article}
+
+Task:
+Write a restructuring news article that follows this structure:
+- Paragraph 1: Open with the announcement — the number of roles eliminated, the
+  percentage of the total workforce, and the timeframe. The framing must feel
+  {sentiment_label} — layoffs in a declining company feel like distress, while
+  efficiency-driven cuts in a growing company can be framed as disciplined.
+- Paragraph 2: State the official rationale — cost reduction target, automation
+  investment, strategic pivot, response to market conditions. Connect it to
+  {company}'s current market profile ({curve_description_short}) and mention
+  which divisions or regions are most affected.
+- Paragraph 3: Close with the expected financial impact — restructuring charges,
+  annual savings target, or timeline for completion. Include the market or analyst
+  reaction.
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol
+- Do not name any real person
+- The article is published on {article_date} — use past tense for events before
+  this date
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+
+    "c_suite": """Context:
+You are writing a C-SUITE / LEADERSHIP financial news article. These articles cover
+executive changes, board composition shifts, activist investor disclosures, and
+succession plans — the human decisions that shape a company's strategic direction.
+
+Company: {company}
+Sector: {sector}{description_line}
+{market_context}
+{temporal_context}
+Company market profile: {curve_description}
+News sentiment: {sentiment_label}
+
+Style reference (real financial journalism — use this only for tone and vocabulary,
+do not copy its content or company):
+{reference_article}
+
+Task:
+Write a leadership or governance news article that follows this structure:
+- Paragraph 1: Open with a concrete governance event at {company} — a CEO departure
+  and successor appointment, a CFO resignation, a new board member addition, an
+  activist investor disclosing a stake, or a succession plan announcement. Keep all
+  individual names fictional or generic (e.g. "a 20-year veteran of the sector",
+  "a former executive from a rival group").
+- Paragraph 2: Explain what this change means for {company}'s strategy — a shift
+  toward cost discipline, a growth acceleration, a turnaround agenda, a push for
+  M&A. Connect it to the company's current market profile ({curve_description_short}).
+- Paragraph 3: Close with the market or shareholder reaction, framed as clearly
+  {sentiment_label}. If activist-related, state what changes the investor is pushing for.
+
+Rules:
+- Mention {company} by name at least twice
+- Use only {currency} as the currency symbol
+- Do not name or quote any real person from another company
+- All individual names in the article must be fictional or kept generic
+- The article is published on {article_date} — use past tense for events before
+  this date
+- The tone must reflect: {curve_description_short}
+- Do not copy content from the style reference — use it only for journalistic tone
+- Reply ONLY with the article body, no title, no preamble, no notes
+{language_instruction}""",
+}
+
+
 def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position,
                 model, provider="ollama", base_url="http://localhost:11434/v1", groq_api_key="",
                 company_description="", delta=0):
@@ -309,8 +669,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     # Browse the positive positions
     sentiment = 'positive'
     sector = company_sector
-    subset = dataset.query('sector == @sector & sentiment == @sentiment')
-    # Check if the subset is well represented in the dataset
+    subset = dataset[dataset['sentiment'] == sentiment]
     if len(subset) >= len(news_position[0]):
         news = subset.sample(len(news_position[0]))
 
@@ -327,11 +686,13 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             article_date_str = str(market_data.iloc[position]['date'])[:10]
 
             # Create the news
+            category = _pick_category(company_sector)
             delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
+            print(f"[NEWS GEN]     -> Article category : {category.replace('_', ' ').upper()}")
             print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | range={currency}{price_low:.2f}–{currency}{price_high:.2f} | curve={curve_profile} | delta={delta} ({delta_label})")
             print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
+                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
             print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
             print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
@@ -353,7 +714,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             if not v['passed']:
                 print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
                 content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
+                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
                 title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
                 v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
                 news_created.at[len(news_created) - 1, 'title']   = title
@@ -368,14 +729,12 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             i += 1
 
     else:
-        # The sector is not in the dataset or there are not enough of them
-        raise Exception('There are not enough positive news for the sector of ' + company_name + ' in the dataset')
+        raise Exception('There are not enough positive news in the dataset')
 
     # Browse the negative positions
     sentiment = 'negative'
     sector = company_sector
-    subset = dataset.query('sector == @sector & sentiment == @sentiment')
-    # Check if the subset is well represented in the dataset
+    subset = dataset[dataset['sentiment'] == sentiment]
     if len(subset) >= len(news_position[1]):
         news = subset.sample(len(news_position[1]))
 
@@ -392,11 +751,13 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             article_date_str = str(market_data.iloc[position]['date'])[:10]
 
             # Create the news
+            category = _pick_category(company_sector)
             delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
+            print(f"[NEWS GEN]     -> Article category : {category.replace('_', ' ').upper()}")
             print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | range={currency}{price_low:.2f}–{currency}{price_high:.2f} | curve={curve_profile} | delta={delta} ({delta_label})")
             print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
             content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
+                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
             print(f"[NEWS GEN]     -> Content received. Generating title...")
             title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
             print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
@@ -415,7 +776,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             if not v['passed']:
                 print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
                 content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency)
+                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
                 title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
                 v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
                 news_created.at[len(news_created) - 1, 'title']   = title
@@ -430,8 +791,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             i += 1
 
     else:
-        # The sector is not in the dataset or there are not enough of them
-        raise Exception('There are not enough negative news for the sector of ' + company_name + ' in the dataset')
+        raise Exception('There are not enough negative news in the dataset')
 
     print(f"[NEWS GEN] ============================================")
     print(f"[NEWS GEN] DONE — {company_name} ({company_ticker})")
@@ -443,7 +803,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
 
 
 def transform_news_content(content, company, sector, curve_profile, lang, client, model, sentiment,
-                           company_description="", article_date=None, current_price=None, price_high=None, price_low=None, delta=0, currency='€'):
+                           company_description="", article_date=None, current_price=None, price_high=None, price_low=None, delta=0, currency='€', category="microeconomy"):
     '''
     Transform the content of a news into a news for the company with a LLM
     '''
@@ -541,19 +901,8 @@ def transform_news_content(content, company, sector, curve_profile, lang, client
                 f"\nRédigez-le comme un reportage en direct — décrivant ce qui se passe en ce moment."
             )
 
-    p = """Context:
-You receive a reference financial news article. Rewrite it to be specifically about the company {company}, which operates in the sector: {sector}.{description_line}{market_context}{temporal_context}
-
-Company market profile: {curve_description}
-
-News sentiment: {sentiment_label}
-
-Reference article:
-{data}
-
-Task:
-Rewrite this article so it is directly about {company}, taking into account its sector and current market profile. The tone must reflect the market profile ({curve_description_short}). Write the sector name in the article's language — if the sector name is in a different language, translate it naturally before using it. Do not name or quote any real executive, analyst, or person from a different company — only reference {company} and its own sector context. Use only one currency symbol throughout — € for European companies, $ for US companies, do not mix them. Do not use the simulation price range boundaries as analyst price targets or forecasts. The article is published on {article_date}. Never use future tense ("will", "is set to", "intends to", "plans to") for any event dated before {article_date} — those are past events and must be written in past tense. When referencing financial results, cite FY{article_year} or FY{article_prev_year} data — do not present FY{article_old_year} or older figures as the current or most recent results. Use only standard, real-world financial and industry units — do not invent measurement units. Reply ONLY with the rewritten article text, no preamble or notes. {language_instruction}""".format(
-        data=content,
+    p = _CATEGORY_PROMPTS[category].format(
+        reference_article=content,
         company=company,
         sector=sector,
         description_line=description_line,
@@ -567,6 +916,7 @@ Rewrite this article so it is directly about {company}, taking into account its 
         article_year=article_year,
         article_prev_year=article_prev_year,
         article_old_year=article_old_year,
+        currency=currency,
     )
 
     response = _chat_with_retry(client, model, [{"role": "user", "content": p}])
