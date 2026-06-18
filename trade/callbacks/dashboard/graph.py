@@ -1,3 +1,5 @@
+import time
+
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
 import plotly.graph_objects as go
 import pandas as pd
@@ -26,23 +28,12 @@ def update_select_companies_options(companies, select_options):
 
 
 @callback(
-    Output("modal", "opened", allow_duplicate=True),
-    Input("timestamp", "data"),
-    prevent_initial_call=True
-)
-def update_modal(timestamp):
-    # get_market_dataframe() is now cached — negligible cost
-    if timestamp == get_last_timestamp(get_market_dataframe()):
-        return True
-    return False
-
-
-@callback(
     Output("periodic-updater", "interval"),
-    Output("periodic-updater", "disabled"),
+    Output("periodic-updater", "disabled", allow_duplicate=True),
     Input("update-time", "data"),
     Input("pause-button", "n_clicks"),
     State("periodic-updater", "disabled"),
+    prevent_initial_call='initial_duplicate',
 )
 def update_interval(update_time, pause_clicks, currently_disabled):
     if ctx.triggered_id == "pause-button":
@@ -62,18 +53,36 @@ def cb_update_timestamp(timestamp):
 @callback(
     Output('timestamp', 'data'),
     Output('company-graph', 'figure'),
+    Output('periodic-updater', 'disabled', allow_duplicate=True),
+    Output('modal', 'opened', allow_duplicate=True),
+    Output('session-start-time', 'data'),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
-    State('timestamp', 'data')
+    State('timestamp', 'data'),
+    State('session-start-time', 'data'),
+    State('simulation-duration', 'data'),
+    prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, range=100):
-    try:
-        next_graph = ctx.triggered_id == 'periodic-updater'
+def update_graph(n, company, timestamp, session_start_time, simulation_duration):
+    next_graph = ctx.triggered_id == 'periodic-updater'
 
+    if next_graph:
+        if session_start_time is None:
+            # First tick of a new session — start the clock, skip end-condition check
+            session_start_time = time.time()
+        else:
+            duration_secs = (simulation_duration or dlt.simulation_duration) * 60
+            elapsed = time.time() - session_start_time
+            data_done = (timestamp == get_last_timestamp(get_market_dataframe()))
+
+            if elapsed >= duration_secs or data_done:
+                return no_update, no_update, True, True, session_start_time
+
+    try:
         # get_market_dataframe() is cached — only reads disk when file changes
         dftmp = get_market_dataframe()[company]
 
-        fig, timestamp = create_graph(dftmp, timestamp, next_graph, range)
+        fig, new_ts = create_graph(dftmp, timestamp, next_graph, 100)
 
         fig.update_layout(
             xaxis_title=tls[page_registry['lang']]["market-graph"]['x'],
@@ -91,11 +100,11 @@ def update_graph(n, company, timestamp, range=100):
             lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]['legend'][t.name])
         )
 
-        return timestamp, fig
+        return new_ts, fig, no_update, no_update, session_start_time
 
     except Exception as e:
         print("Error", e)
-        return no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update
 
 
 @callback(

@@ -23,6 +23,9 @@ class Defaults:
     # Initial money the user has
     initial_money = 100000
 
+    # Default real-world session length in minutes
+    simulation_duration = 15
+
     # Path to the data folder
     data_path = "../data"
 
