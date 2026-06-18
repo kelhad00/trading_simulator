@@ -29,16 +29,24 @@ def _missing_labels(companies):
 
 _LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
 
+if APP_MODE == 'config':
+    @callback(
+        Output("export-session-btn", "disabled"),
+        Input("url", "pathname"),
+    )
+    def update_export_button(pathname):
+        return not _files_ok()
+
+
 if APP_MODE == 'runtime':
     @callback(
         Output("start-simulation-btn", "disabled"),
         Output("start-simulation-btn-link", "style"),
-        Input("companies", "data"),
-        Input("url", "pathname"),
+        Input("imported-session-name", "data"),
         prevent_initial_call=False,
     )
-    def update_start_button(companies, pathname):
-        is_disabled = not _files_ok() or bool(_missing_labels(companies))
+    def update_start_button(imported_session_name):
+        is_disabled = not imported_session_name
         link_style = {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
         return is_disabled, link_style
 

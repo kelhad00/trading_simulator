@@ -30,6 +30,7 @@ def main_layout(lang="fr"):
                 variant="outline",
                 color="dark",
                 radius="md",
+                disabled=True,
             ),
         ], className="flex items-center justify-between w-full max-w-2xl"),
         dmc.Tabs(

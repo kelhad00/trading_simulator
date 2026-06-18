@@ -76,10 +76,9 @@ def options(lang="fr"):
         )
 
     if APP_MODE == 'runtime':
-        start_disabled = _files_missing()
         return html.Div([
             nav_button(tl["button-start"], "/dashboard?lang=" + lang,
-                       "carbon:play-filled-alt", start_disabled, id="start-simulation-btn"),
+                       "carbon:play-filled-alt", True, id="start-simulation-btn"),
 
             # Upload area — visible before import
             html.Div(
