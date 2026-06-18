@@ -111,7 +111,7 @@ def display_pnl_summary(opened, cashflow, totals, shares, initial, companies, la
     shares = shares or {}
     initial = initial or dlt.initial_money
 
-    stocks_value = sum(totals.values())
+    stocks_value = sum(v for v in totals.values() if v is not None)
     final_value  = cashflow + stocks_value
     pnl          = final_value - initial
     pnl_pct      = (pnl / initial * 100) if initial else 0
