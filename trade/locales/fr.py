@@ -302,7 +302,8 @@ translation = {
                 "input": {
                     "update-time": "Temps pour une journée (ms)",
                     "requests": "Requêtes max",
-                    "cashflow": "Trésorie initiale"
+                    "cashflow": "Trésorie initiale",
+                    "simulation-duration": "Durée de la session (minutes)",
                 },
             },
         },

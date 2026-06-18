@@ -80,13 +80,17 @@ def reset_data(btn, initial_cashflow, nb_export):
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
     Output('nb_export', 'data', allow_duplicate=True),
+    Output('url', 'href'),
+    Output('session-start-time', 'data', allow_duplicate=True),
+    Output('periodic-updater', 'disabled', allow_duplicate=True),
     Input('reset-button-1', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
     prevent_initial_call=True,
 )
 def reset_modal(btn, initial_cashflow, nb_export):
-    return reset_data(btn, initial_cashflow, nb_export)
+    ts, cf, req, shares, totals, nb = reset_data(btn, initial_cashflow, nb_export)
+    return ts, cf, req, shares, totals, nb, "/", None, False
 
 
 @callback(

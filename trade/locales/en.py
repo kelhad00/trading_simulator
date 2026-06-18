@@ -290,6 +290,7 @@ translation = {
                     "update-time": "Time between updates (ms)",
                     "requests": "Max requests",
                     "cashflow": "Initial cashflow",
+                    "simulation-duration": "Session duration (minutes)",
                 },
             },
         },

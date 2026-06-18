@@ -69,6 +69,10 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="session"),
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="session"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="session"),
+        dcc.Store(id="simulation-duration", data=dlt.simulation_duration, storage_type="local"),
+
+        # Session timer — records time.time() on first periodic-updater tick
+        dcc.Store(id="session-start-time", data=None, storage_type="session"),
 
         dcc.Store(id='imported-session-name', storage_type='session', data=None),
         dcc.Download(id="download-session"),
