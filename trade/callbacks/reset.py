@@ -95,7 +95,13 @@ def reset_modal(btn, initial_cashflow, nb_export):
 
 
 clientside_callback(
-    "function(doRedirect) { if (doRedirect) { window.location.href = '/'; } return false; }",
+    """function(doRedirect) {
+        if (doRedirect) {
+            window.history.pushState({}, '', '/');
+            window.location.reload();
+        }
+        return false;
+    }""",
     Output("do-redirect", "data", allow_duplicate=True),
     Input("do-redirect", "data"),
     prevent_initial_call=True,
