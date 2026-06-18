@@ -74,6 +74,9 @@ app.layout = dmc.MantineProvider([
         # Session timer — records time.time() on first periodic-updater tick
         dcc.Store(id="session-start-time", data=None, storage_type="session"),
 
+        # Trigger for hard browser redirect after session ends
+        dcc.Store(id="do-redirect", data=False, storage_type="memory"),
+
         dcc.Store(id='imported-session-name', storage_type='session', data=None),
         dcc.Download(id="download-session"),
 

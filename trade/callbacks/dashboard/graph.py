@@ -67,16 +67,16 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration)
     next_graph = ctx.triggered_id == 'periodic-updater'
 
     if next_graph:
-        # Initialise timer on first tick of a new session
         if session_start_time is None:
+            # First tick of a new session — start the clock, skip end-condition check
             session_start_time = time.time()
+        else:
+            duration_secs = (simulation_duration or dlt.simulation_duration) * 60
+            elapsed = time.time() - session_start_time
+            data_done = (timestamp == get_last_timestamp(get_market_dataframe()))
 
-        duration_secs = (simulation_duration or dlt.simulation_duration) * 60
-        elapsed = time.time() - session_start_time
-        data_done = (timestamp == get_last_timestamp(get_market_dataframe()))
-
-        if elapsed >= duration_secs or data_done:
-            return no_update, no_update, True, True, session_start_time
+            if elapsed >= duration_secs or data_done:
+                return no_update, no_update, True, True, session_start_time
 
     try:
         # get_market_dataframe() is cached — only reads disk when file changes
