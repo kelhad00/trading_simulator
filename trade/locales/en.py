@@ -1,5 +1,22 @@
 translation = {
     'en': {
+        # Simulation end modal
+        "simulation-end": {
+            "title":           "Simulation ended!",
+            "validate":        "Validate",
+            "initial-capital": "Initial capital",
+            "final-value":     "Final value",
+            "pnl":             "PNL",
+            "cash":            "Remaining cash",
+            "stocks-value":    "Stocks value",
+            "breakdown-title": "Portfolio breakdown",
+            "col-company":     "Company",
+            "col-quantity":    "Quantity",
+            "col-value":       "Value",
+            "no-position":     "No position held",
+            "shares":          "share(s)",
+        },
+
         # Portfolio
         "portfolio": "Portfolio",
         'portfolio-columns': {'Stock': 'Stocks', 'Shares': 'Shares', 'Total': 'Price'},

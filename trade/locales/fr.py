@@ -102,6 +102,23 @@ translation = {
 
 
 
+        # Simulation end modal
+        "simulation-end": {
+            "title":           "Simulation terminée !",
+            "validate":        "Valider",
+            "initial-capital": "Capital initial",
+            "final-value":     "Valeur finale",
+            "pnl":             "PNL",
+            "cash":            "Liquidités restantes",
+            "stocks-value":    "Valeur des actions",
+            "breakdown-title": "Détail du portefeuille",
+            "col-company":     "Société",
+            "col-quantity":    "Quantité",
+            "col-value":       "Valeur",
+            "no-position":     "Aucune position",
+            "shares":          "action(s)",
+        },
+
         "settings": {
             "title": "Paramètres",
             "tabs": {

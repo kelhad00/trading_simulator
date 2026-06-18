@@ -1,10 +1,12 @@
 import os
 import threading
 
-from dash import Output, Input, State, callback, page_registry, ctx, no_update
+import dash_mantine_components as dmc
+from dash import Output, Input, State, callback, html, page_registry, ctx, no_update
 from dash.exceptions import PreventUpdate
 
 from trade.defaults import defaults as dlt
+from trade.locales import translations as tls
 from trade.utils.market import get_first_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
 from trade.utils.settings.create_market_data import get_generated_data
@@ -85,3 +87,102 @@ def reset_data(btn, initial_cashflow, nb_export):
 )
 def reset_modal(btn, initial_cashflow, nb_export):
     return reset_data(btn, initial_cashflow, nb_export)
+
+
+@callback(
+    Output("modal-pnl-content", "children"),
+    Input("modal", "opened"),
+    State("cashflow", "data"),
+    State("portfolio-totals", "data"),
+    State("portfolio-shares", "data"),
+    State("initial-cashflow", "data"),
+    State("companies", "data"),
+    State("lang", "data"),
+    prevent_initial_call=True,
+)
+def display_pnl_summary(opened, cashflow, totals, shares, initial, companies, lang):
+    if not opened:
+        raise PreventUpdate
+
+    t = tls[lang or "fr"]["simulation-end"]
+
+    cashflow = cashflow or 0
+    totals = totals or {}
+    shares = shares or {}
+    initial = initial or dlt.initial_money
+
+    stocks_value = sum(totals.values())
+    final_value  = cashflow + stocks_value
+    pnl          = final_value - initial
+    pnl_pct      = (pnl / initial * 100) if initial else 0
+
+    sign  = "+" if pnl >= 0 else ""
+    color = "green" if pnl >= 0 else "red"
+
+    def fmt(v):
+        return f"{v:,.2f} €".replace(",", " ")
+
+    # Per-stock rows — only companies with shares held
+    rows = []
+    for ticker, nb in shares.items():
+        if nb <= 0:
+            continue
+        label = (companies or {}).get(ticker, {}).get("label", ticker)
+        value = totals.get(ticker, 0)
+        rows.append(
+            html.Tr([
+                html.Td(label, style={"paddingRight": "24px"}),
+                html.Td(f"{nb} {t['shares']}", style={"paddingRight": "24px"}),
+                html.Td(fmt(value), style={"textAlign": "right"}),
+            ])
+        )
+
+    stock_table = dmc.Table(
+        striped=True,
+        children=[
+            html.Thead(html.Tr([
+                html.Th(t["col-company"]),
+                html.Th(t["col-quantity"]),
+                html.Th(t["col-value"], style={"textAlign": "right"}),
+            ])),
+            html.Tbody(rows if rows else [html.Tr([html.Td(t["no-position"], colSpan=3)])]),
+        ]
+    ) if rows or True else None
+
+    return html.Div([
+        # ── Summary cards ──────────────────────────────────────────
+        html.Div([
+            dmc.Paper([
+                dmc.Text(t["initial-capital"], size="xs", color="dimmed"),
+                dmc.Text(fmt(initial), weight=700, size="lg"),
+            ], p="sm", radius="md", withBorder=True),
+
+            dmc.Paper([
+                dmc.Text(t["final-value"], size="xs", color="dimmed"),
+                dmc.Text(fmt(final_value), weight=700, size="lg"),
+            ], p="sm", radius="md", withBorder=True),
+
+            dmc.Paper([
+                dmc.Text(t["pnl"], size="xs", color="dimmed"),
+                dmc.Text(f"{sign}{fmt(pnl)}", weight=700, size="lg", color=color),
+                dmc.Text(f"{sign}{pnl_pct:.2f} %", size="xs", color=color),
+            ], p="sm", radius="md", withBorder=True),
+        ], style={"display": "grid", "gridTemplateColumns": "1fr 1fr 1fr", "gap": "12px", "marginBottom": "16px"}),
+
+        # ── Cash vs stocks breakdown ───────────────────────────────
+        html.Div([
+            dmc.Paper([
+                dmc.Text(t["cash"], size="xs", color="dimmed"),
+                dmc.Text(fmt(cashflow), weight=700),
+            ], p="sm", radius="md", withBorder=True),
+
+            dmc.Paper([
+                dmc.Text(t["stocks-value"], size="xs", color="dimmed"),
+                dmc.Text(fmt(stocks_value), weight=700),
+            ], p="sm", radius="md", withBorder=True),
+        ], style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "12px", "marginBottom": "16px"}),
+
+        # ── Per-stock table ────────────────────────────────────────
+        dmc.Text(t["breakdown-title"], weight=700, size="sm", style={"marginBottom": "8px"}),
+        stock_table,
+    ], style={"marginBottom": "16px"})
