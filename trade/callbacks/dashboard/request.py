@@ -143,8 +143,8 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     Output('portfolio-totals', 'data'),
 
     Input("requests", "data"),
+    Input('timestamp', 'data'),
 
-    State('timestamp', 'data'),
     State('portfolio-shares', 'data'),
     State('cashflow', 'data'),
     State("portfolio-totals", "data"),
