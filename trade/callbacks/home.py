@@ -32,23 +32,27 @@ _LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
 if APP_MODE == 'config':
     @callback(
         Output("export-session-btn", "disabled"),
+        Output("export-tooltip", "disabled"),
         Input("url", "pathname"),
+        Input("companies", "data"),
     )
-    def update_export_button(pathname):
-        return not _files_ok()
+    def update_export_button(pathname, companies):
+        files_ok = _files_ok()
+        return not files_ok, files_ok  # tooltip hidden once data exists
 
 
 if APP_MODE == 'runtime':
     @callback(
         Output("start-simulation-btn", "disabled"),
         Output("start-simulation-btn-link", "style"),
+        Output("start-tooltip", "disabled"),
         Input("imported-session-name", "data"),
         prevent_initial_call=False,
     )
     def update_start_button(imported_session_name):
         is_disabled = not imported_session_name
         link_style = {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
-        return is_disabled, link_style
+        return is_disabled, link_style, not is_disabled  # tooltip hidden once session imported
 
 
 @callback(

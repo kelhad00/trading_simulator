@@ -37,7 +37,7 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("session-start-time", "data", allow_duplicate=True),
     Output("timestamp", "data", allow_duplicate=True),
     Output("notifications", "children", allow_duplicate=True),
-    Output("imported-session-name", "data"),
+    Output("imported-session-name", "data", allow_duplicate=True),
     Output("upload-session", "contents"),
     Input("upload-session", "contents"),
     State("upload-session", "filename"),
@@ -133,3 +133,39 @@ clientside_callback(
     Input("clear-session-btn", "n_clicks"),
     prevent_initial_call=True,
 )
+
+
+# Persist the imported session name in a custom localStorage key so it
+# survives full page reloads (language switches use href → full reload).
+clientside_callback(
+    """
+    function(name) {
+        if (name) {
+            localStorage.setItem('_tradesim_sname', name);
+        } else {
+            localStorage.removeItem('_tradesim_sname');
+        }
+        return '';
+    }
+    """,
+    Output("_sname-sink", "children"),
+    Input("imported-session-name", "data"),
+    prevent_initial_call=True,
+)
+
+# Restore session name from our custom key on every page load / navigation.
+# This is the PRIMARY output for imported-session-name.
+clientside_callback(
+    """
+    function(pathname) {
+        var stored = localStorage.getItem('_tradesim_sname');
+        if (stored) return stored;
+        return window.dash_clientside.no_update;
+    }
+    """,
+    Output("imported-session-name", "data"),
+    Input("url", "pathname"),
+    prevent_initial_call=False,
+)
+
+

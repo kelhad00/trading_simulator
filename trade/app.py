@@ -77,7 +77,8 @@ app.layout = dmc.MantineProvider([
         # Trigger for hard browser redirect after session ends
         dcc.Store(id="do-redirect", data=False, storage_type="memory"),
 
-        dcc.Store(id='imported-session-name', storage_type='session', data=None),
+        dcc.Store(id='imported-session-name', storage_type='memory'),
+        html.Div(id="_sname-sink", style={"display": "none"}),
         dcc.Download(id="download-session"),
 
         dash.page_container

@@ -45,7 +45,7 @@ def display_portfolio_table_updated(n, totals, shares):
 
     lang = page_registry['lang']
 
-    totals = pd.Series(totals)
+    totals = pd.Series(totals).fillna(0)
     shares = pd.Series(shares)
     df = pd.concat([shares, totals], axis=1)  # Concatenate the shares and totals
 
