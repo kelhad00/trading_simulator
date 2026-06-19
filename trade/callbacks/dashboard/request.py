@@ -73,7 +73,7 @@ def fill_price_from_candle_click(click_data, company):
         )
         if date_index is None:
             raise PreventUpdate
-        return price_df.loc[date_index, company]
+        return round(float(price_df.loc[date_index, company]), 4)
     except (KeyError, IndexError):
         raise PreventUpdate
 
