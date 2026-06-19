@@ -77,18 +77,8 @@ def options(lang="fr"):
 
     if APP_MODE == 'runtime':
         return html.Div([
-            dmc.Tooltip(
-                id="start-tooltip",
-                label=tl_session["start-tooltip"],
-                withArrow=True,
-                position="right",
-                disabled=False,
-                children=html.Span(
-                    nav_button(tl["button-start"], "/dashboard?lang=" + lang,
-                               "carbon:play-filled-alt", True, id="start-simulation-btn"),
-                    style={"display": "block"},
-                ),
-            ),
+            nav_button(tl["button-start"], "/dashboard?lang=" + lang,
+                       "carbon:play-filled-alt", True, id="start-simulation-btn"),
 
             # Upload area — visible before import
             html.Div(

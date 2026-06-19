@@ -90,8 +90,6 @@ translation = {
             "import-error": "Fichier de session invalide. Utilisez un fichier exporté depuis le configurateur.",
             "session-loaded-prefix": "Chargée :",
             "session-remove": "Supprimer",
-            "export-tooltip": "Veuillez d'abord générer les données dans les paramètres avant d'exporter.",
-            "start-tooltip": "Veuillez importer une session exportée depuis le configurateur avant de démarrer.",
         },
         "description": ["Cliquer sur ", "'Démarrer la simulation'", ", pour commencer la session. L\'interface est disponible en ", "anglais ", "et ", "français", "."],
 
@@ -304,7 +302,8 @@ translation = {
                 "input": {
                     "update-time": "Temps pour une journée (ms)",
                     "requests": "Requêtes max",
-                    "cashflow": "Trésorie initiale"
+                    "cashflow": "Trésorie initiale",
+                    "simulation-duration": "Durée de la session (minutes)",
                 },
             },
         },

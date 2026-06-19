@@ -103,8 +103,6 @@ translation = {
             "import-error": "Invalid session file. Please use a file exported from the configurator.",
             "session-loaded-prefix": "Loaded:",
             "session-remove": "Remove",
-            "export-tooltip": "Please generate the data in settings before exporting.",
-            "start-tooltip": "Please import a session exported from the configurator before starting.",
         },
         "description": ["Click on ", "'Start Session'", ", to start the session. The interface is available in ", "english ", "and ", "french", "."],
 
@@ -292,6 +290,7 @@ translation = {
                     "update-time": "Time between updates (ms)",
                     "requests": "Max requests",
                     "cashflow": "Initial cashflow",
+                    "simulation-duration": "Session duration (minutes)",
                 },
             },
         },

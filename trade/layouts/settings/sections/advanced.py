@@ -29,6 +29,13 @@ def advanced_settings(lang="fr"):
                     required=True,
                     min=1,
                 ),
+                dmc.NumberInput(
+                    id="input-simulation-duration",
+                    label=tl["input"]["simulation-duration"],
+                    required=True,
+                    min=1,
+                    max=120,
+                ),
             ], className="flex flex-col gap-2"),
 
             dmc.Button(tl["button"]["update"], id="update-advanced-settings", color="dark", size="md"),

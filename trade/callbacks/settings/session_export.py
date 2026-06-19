@@ -13,9 +13,10 @@ from trade.utils.session import build_session_zip
     State("initial-cashflow", "data"),
     State("max-requests", "data"),
     State("update-time", "data"),
+    State("simulation-duration", "data"),
     prevent_initial_call=True,
 )
-def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time):
+def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration):
     from dash import no_update
     if not n_clicks:
         return no_update
@@ -24,6 +25,7 @@ def export_session(n_clicks, companies, initial_cashflow, max_requests, update_t
         initial_cashflow=initial_cashflow,
         max_requests=max_requests,
         update_time=update_time,
+        simulation_duration=simulation_duration,
         data_path=dlt.data_path,
     )
     return {

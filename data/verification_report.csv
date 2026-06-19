@@ -1,35 +1,37 @@
 tone_ok,tone_confidence,model_label,company_mentioned,curve_score,curve_ok,language_ok,grade,passed,flagged,company,sentiment_expected,date
-False,0.5308,neutral,True,10,True,True,C,False,True,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive,2025-08-04
-False,0.7149,neutral,True,6,True,True,C,False,True,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative,2026-03-11
-False,0.4972,neutral,True,6,True,True,C,False,True,L'ORÉAL (OR),positive,2025-12-07
-True,0.9471,negative,True,7,True,True,A,True,False,L'ORÉAL (OR),negative,2026-04-25
-True,0.9308,positive,True,6,True,True,A,True,False,HERMÈS INTERNATIONAL (RMS),positive,2025-10-04
-False,0.7273,neutral,True,6,True,True,C,False,True,HERMÈS INTERNATIONAL (RMS),negative,2025-11-24
-True,0.8616,positive,True,3,False,True,C,False,True,TOTALENERGIES SE (TTE),positive,2026-03-29
-True,0.9422,negative,True,3,False,True,C,False,True,TOTALENERGIES SE (TTE),negative,2025-09-30
-False,0.9341,negative,True,3,False,True,F,False,True,SANOFI (SAN),positive,2026-02-11
-True,0.6553,negative,True,9,True,True,B,True,False,SANOFI (SAN),negative,2025-08-27
-True,0.9353,positive,True,8,True,True,A,True,False,AIRBUS SE (AIR),positive,2025-11-18
-True,0.9507,negative,True,0,False,True,C,False,True,AIRBUS SE (AIR),negative,2026-02-20
-True,0.5799,positive,True,3,False,True,C,False,True,SCHNEIDER ELECTRIC SE (SU),positive,2026-03-29
-True,0.9262,negative,True,6,True,True,A,True,False,SCHNEIDER ELECTRIC SE (SU),negative,2026-05-18
-True,0.8199,positive,True,3,False,True,C,False,True,AIR LIQUIDE (AI),positive,2026-03-17
-True,0.7076,negative,True,6,True,True,B,True,False,AIR LIQUIDE (AI),negative,2026-01-15
-False,0.9087,negative,True,8,True,True,C,False,True,ESSILORLUXOTTICA (EL),positive,2026-02-01
-True,0.949,negative,True,6,True,True,A,True,False,ESSILORLUXOTTICA (EL),negative,2026-01-12
-True,0.9264,positive,True,10,True,True,A,True,False,BNP PARIBAS (BNP),positive,2025-09-25
-True,0.9489,negative,True,3,False,True,C,False,True,BNP PARIBAS (BNP),negative,2025-12-30
-True,0.9388,positive,True,7,True,True,A,True,False,KERING (KER),positive,2026-05-16
-False,0.7711,positive,True,4,True,True,C,False,True,KERING (KER),negative,2025-08-08
-True,0.9384,positive,True,10,True,True,A,True,False,VINCI (DG),positive,2026-03-13
-False,0.7466,positive,True,8,True,True,C,False,True,VINCI (DG),negative,2025-11-04
-True,0.939,positive,True,12,True,True,A,True,False,AXA (CS),positive,2025-12-13
-True,0.9126,negative,True,3,False,True,C,False,True,AXA (CS),negative,2026-04-10
-True,0.8844,positive,True,6,True,True,A,True,False,SAFRAN (SAF),positive,2026-02-21
-True,0.9441,negative,True,6,True,True,A,True,False,SAFRAN (SAF),negative,2025-08-21
-True,0.9375,positive,True,4,True,True,A,True,False,PERNOD RICARD (RI),positive,2026-03-19
-True,0.9173,negative,True,6,True,True,A,True,False,PERNOD RICARD (RI),negative,2026-03-18
-True,0.9377,positive,True,10,True,True,A,True,False,DASSAULT SYSTÈMES SE (DSY),positive,2026-04-26
-True,0.9479,negative,True,3,False,True,C,False,True,DASSAULT SYSTÈMES SE (DSY),negative,2026-05-10
-True,0.8965,positive,True,7,True,True,A,True,False,STELLANTIS N.V. (STLAM),positive,2025-12-31
-True,0.9331,negative,True,3,False,True,C,False,True,STELLANTIS N.V. (STLAM),negative,2026-04-21
+True,0.0,unavailable,True,11,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive,2021-05-03
+True,0.0,unavailable,True,10,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive,2021-03-08
+True,0.0,unavailable,True,7,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive,2021-05-29
+True,0.0,unavailable,True,10,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative,2021-04-09
+True,0.0,unavailable,True,7,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative,2021-02-08
+True,0.0,unavailable,True,10,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative,2021-02-10
+True,0.0,unavailable,True,13,True,True,B,True,False,L'ORÉAL (OR),positive,2021-05-01
+True,0.0,unavailable,True,12,True,True,B,True,False,L'ORÉAL (OR),positive,2021-04-18
+True,0.0,unavailable,True,10,True,True,B,True,False,L'ORÉAL (OR),positive,2021-01-23
+True,0.0,unavailable,True,6,True,True,B,True,False,L'ORÉAL (OR),negative,2021-04-22
+True,0.0,unavailable,True,10,True,True,B,True,False,L'ORÉAL (OR),negative,2021-05-08
+True,0.0,unavailable,True,6,True,True,B,True,False,L'ORÉAL (OR),negative,2021-05-22
+True,0.0,unavailable,True,11,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),positive,2021-06-24
+True,0.0,unavailable,True,8,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),positive,2021-06-17
+True,0.0,unavailable,True,10,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),positive,2021-04-22
+True,0.0,unavailable,True,10,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),negative,2021-04-27
+True,0.0,unavailable,True,9,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),negative,2021-04-18
+True,0.0,unavailable,True,9,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),negative,2021-05-14
+True,0.0,unavailable,True,7,True,True,B,True,False,TOTALENERGIES SE (TTE),positive,2021-04-08
+True,0.0,unavailable,True,10,True,True,B,True,False,TOTALENERGIES SE (TTE),positive,2021-08-28
+True,0.0,unavailable,True,11,True,True,B,True,False,TOTALENERGIES SE (TTE),positive,2021-03-06
+True,0.0,unavailable,True,6,True,True,B,True,False,TOTALENERGIES SE (TTE),negative,2021-01-30
+True,0.0,unavailable,True,7,True,True,B,True,False,TOTALENERGIES SE (TTE),negative,2021-07-15
+True,0.0,unavailable,True,10,True,True,B,True,False,TOTALENERGIES SE (TTE),negative,2021-07-11
+True,0.0,unavailable,True,14,True,True,B,True,False,SANOFI (SAN),positive,2021-05-12
+True,0.0,unavailable,True,14,True,True,B,True,False,SANOFI (SAN),positive,2021-10-04
+True,0.0,unavailable,True,10,True,True,B,True,False,SANOFI (SAN),positive,2021-06-03
+True,0.0,unavailable,True,3,False,True,C,False,True,SANOFI (SAN),negative,2021-07-13
+True,0.0,unavailable,True,6,True,True,B,True,False,SANOFI (SAN),negative,2021-02-04
+True,0.0,unavailable,True,11,True,True,B,True,False,SANOFI (SAN),negative,2021-08-05
+True,0.0,unavailable,True,11,True,True,B,True,False,AIRBUS SE (AIR),positive,2021-09-17
+True,0.0,unavailable,True,6,True,True,B,True,False,AIRBUS SE (AIR),positive,2021-08-22
+True,0.0,unavailable,True,10,True,True,B,True,False,AIRBUS SE (AIR),positive,2021-02-24
+True,0.0,unavailable,True,7,True,True,B,True,False,AIRBUS SE (AIR),negative,2021-03-27
+True,0.0,unavailable,True,7,True,True,B,True,False,AIRBUS SE (AIR),negative,2021-06-13
+True,0.0,unavailable,True,6,True,True,B,True,False,AIRBUS SE (AIR),negative,2021-08-19
