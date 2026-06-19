@@ -95,8 +95,9 @@ def import_session(contents, filename, search):
     Output("session-loaded-area", "style"),
     Output("imported-filename", "children"),
     Input("imported-session-name", "data"),
+    Input("url", "search"),
 )
-def update_session_import_area(filename):
+def update_session_import_area(filename, _search):
     if filename:
         return _UPLOAD_HIDDEN, _LOADED_VISIBLE, filename
     return _UPLOAD_VISIBLE, _LOADED_HIDDEN, ""
