@@ -31,16 +31,20 @@ def _archive_exports(nb_export):
         print("Error archiving exports:", e)
 
 
+_LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
+
 if APP_MODE != 'runtime':
     @callback(
         Output("settings-button", "disabled"),
+        Output("settings-button-link", "style"),
         Input("_pages_location", "pathname"),
         Input("timestamp", "data"),
     )
     def disable_button(pathname, timestamp):
         if pathname != "/":
             raise PreventUpdate
-        return timestamp != get_first_timestamp(market_df, 100)
+        is_disabled = timestamp != get_first_timestamp(market_df, 100)
+        return is_disabled, {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
 
 
 @callback(

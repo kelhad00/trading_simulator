@@ -1,7 +1,6 @@
 import os
 
 from dash import callback, Input, Output, State, no_update
-from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
 from trade.defaults import defaults as dlt
@@ -28,6 +27,8 @@ def _missing_labels(companies):
     ]
 
 
+_LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}
+
 if APP_MODE == 'config':
     @callback(
         Output("export-session-btn", "disabled"),
@@ -39,41 +40,19 @@ if APP_MODE == 'config':
         files_ok = _files_ok()
         return not files_ok, files_ok  # tooltip hidden once data exists
 
-    @callback(
-        Output("url", "pathname", allow_duplicate=True),
-        Output("url", "search", allow_duplicate=True),
-        Input("settings-button", "n_clicks"),
-        State("url", "search"),
-        prevent_initial_call=True,
-    )
-    def navigate_to_settings(n_clicks, search):
-        if not n_clicks:
-            raise PreventUpdate
-        lang = "en" if (search and "lang=en" in search) else "fr"
-        return "/settings", f"?lang={lang}"
-
 
 if APP_MODE == 'runtime':
     @callback(
         Output("start-simulation-btn", "disabled"),
+        Output("start-simulation-btn-link", "style"),
+        Output("start-tooltip", "disabled"),
         Input("imported-session-name", "data"),
         prevent_initial_call=False,
     )
     def update_start_button(imported_session_name):
-        return not imported_session_name
-
-    @callback(
-        Output("url", "pathname", allow_duplicate=True),
-        Output("url", "search", allow_duplicate=True),
-        Input("start-simulation-btn", "n_clicks"),
-        State("url", "search"),
-        prevent_initial_call=True,
-    )
-    def navigate_to_dashboard(n_clicks, search):
-        if not n_clicks:
-            raise PreventUpdate
-        lang = "en" if (search and "lang=en" in search) else "fr"
-        return "/dashboard", f"?lang={lang}"
+        is_disabled = not imported_session_name
+        link_style = {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
+        return is_disabled, link_style, not is_disabled  # tooltip hidden once session imported
 
 
 @callback(
