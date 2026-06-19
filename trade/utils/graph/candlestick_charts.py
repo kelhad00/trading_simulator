@@ -63,34 +63,45 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
                 dftmp = dataframe.iloc[idx - range: idx]
 
 
+    # Strip rows where OHLC data is absent (tickers with fewer data points than
+    # the shared index length produce NaN-padded trailing rows; rendering those
+    # causes 0-height phantom candles and frozen MA lines).
+    plot_df = dftmp.dropna(subset=['Open', 'High', 'Low', 'Close'])
+
+    if plot_df.empty:
+        # Window has moved entirely past this ticker's data — return a blank
+        # figure but still advance the timestamp so the simulation clock keeps
+        # running and other tickers remain unaffected.
+        return go.Figure(), dftmp.index[-1]
+
     # creating the plot the long moving average
     long_mov_av = go.Scatter(
-        x=dftmp.index,
-        y=dftmp['long_MA'],
+        x=plot_df.index,
+        y=plot_df['long_MA'],
         name='longMA'
     )
 
     # creating the plot the short moving average
     short_mov_av = go.Scatter(
-        x=dftmp.index,
-        y=dftmp['short_MA'],
+        x=plot_df.index,
+        y=plot_df['short_MA'],
         name='shortMA'
     )
 
     # creating the plot the 200 moving average
     twohun_mov_av = go.Scatter(
-        x=dftmp.index,
-        y=dftmp['200_MA'],
+        x=plot_df.index,
+        y=plot_df['200_MA'],
         name='twohunMA'
     )
 
     # creating the plot the candlestick plot
     candelstick = go.Candlestick(
-        x=dftmp.index,
-        open=dftmp['Open'],
-        high=dftmp['High'],
-        low=dftmp['Low'],
-        close=dftmp['Close'],
+        x=plot_df.index,
+        open=plot_df['Open'],
+        high=plot_df['High'],
+        low=plot_df['Low'],
+        close=plot_df['Close'],
         name='price',
         showlegend=False
     )

@@ -100,10 +100,15 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration)
             lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]['legend'][t.name])
         )
 
+        # Data exhaustion: create_graph couldn't advance (idx past end of dataframe).
+        # Render the last frame and end immediately — no frozen-tick gap before the modal.
+        if next_graph and new_ts == timestamp:
+            return new_ts, fig, True, True, session_start_time
+
         return new_ts, fig, no_update, no_update, session_start_time
 
     except Exception as e:
-        print("Error", e)
+        print("Error in update_graph:", e)
         return no_update, no_update, no_update, no_update, no_update
 
 
