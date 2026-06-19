@@ -23,14 +23,24 @@ def main_layout(lang="fr"):
         header(lang, url="/settings", mode=APP_MODE),
         html.Div([
             dmc.Title(tl["title"], order=1, className="font-bold leading-none"),
-            dmc.Button(
-                tls[lang]["session"]["export-button"],
-                id="export-session-btn",
-                leftIcon=DashIconify(icon="carbon:export"),
-                variant="outline",
-                color="dark",
-                radius="md",
-                disabled=True,
+            dmc.Tooltip(
+                id="export-tooltip",
+                label=tls[lang]["session"]["export-tooltip"],
+                withArrow=True,
+                position="bottom",
+                disabled=False,
+                children=html.Span(
+                    dmc.Button(
+                        tls[lang]["session"]["export-button"],
+                        id="export-session-btn",
+                        leftIcon=DashIconify(icon="carbon:export"),
+                        variant="outline",
+                        color="dark",
+                        radius="md",
+                        disabled=True,
+                    ),
+                    style={"display": "inline-block"},
+                ),
             ),
         ], className="flex items-center justify-between w-full max-w-2xl"),
         dmc.Tabs(
