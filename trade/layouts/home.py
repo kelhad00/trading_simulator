@@ -57,37 +57,14 @@ def options(lang="fr"):
     tl = tls[lang]
     tl_session = tl["session"]
 
-    def nav_button(label, href, icon, disabled=False, id=""):
-        return html.A(
-            dmc.Button(
-                label,
-                id=id,
-                leftIcon=DashIconify(icon=icon),
-                variant="solid", color="dark", radius="md", size="lg",
-                disabled=disabled, fullWidth=True
-            ),
-            href=href,
-            id=f"{id}-link" if id else None,
-            style={
-                "textDecoration": "none",
-                "display": "block",
-                "pointerEvents": "none" if disabled else "auto",
-            }
-        )
-
     if APP_MODE == 'runtime':
         return html.Div([
-            dmc.Tooltip(
-                id="start-tooltip",
-                label=tl_session["start-tooltip"],
-                withArrow=True,
-                position="right",
-                disabled=False,
-                children=html.Span(
-                    nav_button(tl["button-start"], "/dashboard?lang=" + lang,
-                               "carbon:play-filled-alt", True, id="start-simulation-btn"),
-                    style={"display": "block"},
-                ),
+            dmc.Button(
+                tl["button-start"],
+                id="start-simulation-btn",
+                leftIcon=DashIconify(icon="carbon:play-filled-alt"),
+                color="dark", size="lg",
+                disabled=True, fullWidth=True,
             ),
 
             # Upload area — visible before import
@@ -126,7 +103,7 @@ def options(lang="fr"):
             ),
 
             dmc.Button(tl["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"),
-                       id="reset-button", color="dark", size="lg"),
+                       id="reset-button", color="dark", size="lg", fullWidth=True),
 
             # Hidden div used as dummy output for the file-input reset clientside callback
             html.Div(id="_upload-reset", style={"display": "none"}),
@@ -134,10 +111,15 @@ def options(lang="fr"):
 
     # Config mode — Settings + Reset only, no Start button
     return html.Div([
-        nav_button(tl["button-settings"], "/settings?lang=" + lang, "carbon:settings", id="settings-button"),
+        dmc.Button(
+            tl["button-settings"],
+            id="settings-button",
+            leftIcon=DashIconify(icon="carbon:settings"),
+            color="dark", size="lg", fullWidth=True,
+        ),
         dmc.Button(tl["button-restart-sim"], leftIcon=DashIconify(icon="carbon:reset"),
-                   id="reset-button", color="dark", size="lg"),
-    ], className="flex gap-4 flex-col max-w-xs")
+                   id="reset-button", color="dark", size="lg", fullWidth=True),
+    ], className="grid grid-cols-1 gap-4 max-w-xs")
 
 
 def description(lang="fr"):
