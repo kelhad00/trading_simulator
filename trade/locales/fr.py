@@ -42,12 +42,11 @@ translation = {
             "label": "Action",
             # "choices": {'sell': 'Vendre', 'buy': 'Acheter'}
             "choices": [{
-                "label": "Vendre",
-                "value": "sell"
-            }, {
                 "label": "Acheter",
                 "value": "buy"
-
+            }, {
+                "label": "Vendre",
+                "value": "sell"
             }]
         },
         "request-price": "Prix",
