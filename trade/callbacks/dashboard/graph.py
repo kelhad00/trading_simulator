@@ -30,15 +30,25 @@ def update_select_companies_options(companies, select_options):
 @callback(
     Output("periodic-updater", "interval"),
     Output("periodic-updater", "disabled", allow_duplicate=True),
+    Output("pause-start-time", "data"),
+    Output("total-paused-seconds", "data"),
     Input("update-time", "data"),
     Input("pause-button", "n_clicks"),
     State("periodic-updater", "disabled"),
+    State("pause-start-time", "data"),
+    State("total-paused-seconds", "data"),
     prevent_initial_call='initial_duplicate',
 )
-def update_interval(update_time, pause_clicks, currently_disabled):
+def update_interval(update_time, pause_clicks, currently_disabled, pause_start, total_paused):
     if ctx.triggered_id == "pause-button":
-        return no_update, not currently_disabled
-    return int(update_time), False
+        if not currently_disabled:
+            # Pausing — record when the pause started
+            return no_update, True, time.time(), no_update
+        else:
+            # Unpausing — accumulate the pause duration and clear the start time
+            paused_for = time.time() - (pause_start or time.time())
+            return no_update, False, None, (total_paused or 0) + paused_for
+    return int(update_time), False, no_update, no_update
 
 
 @callback(
@@ -61,9 +71,10 @@ def cb_update_timestamp(timestamp):
     State('timestamp', 'data'),
     State('session-start-time', 'data'),
     State('simulation-duration', 'data'),
+    State('total-paused-seconds', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds):
     next_graph = ctx.triggered_id == 'periodic-updater'
 
     if next_graph:
@@ -72,7 +83,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration)
             session_start_time = time.time()
         else:
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
-            elapsed = time.time() - session_start_time
+            elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
             data_done = (timestamp == get_last_timestamp(get_market_dataframe()))
 
             if elapsed >= duration_secs or data_done:
