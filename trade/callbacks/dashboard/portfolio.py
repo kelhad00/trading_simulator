@@ -1,7 +1,7 @@
-from dash import Output, Input, callback, page_registry
+from dash import Output, Input, State, callback, page_registry, ctx, html, ALL, no_update
 import dash_mantine_components as dmc
+from dash.exceptions import PreventUpdate
 
-from trade.components.table import create_table
 from trade.locales import translations as tls
 
 import pandas as pd
@@ -59,8 +59,31 @@ def display_portfolio_table_updated(n, totals, shares):
     # Round totals to 2 decimal places
     df[tls[lang]['portfolio-columns']['Total']] = df[tls[lang]['portfolio-columns']['Total']].round(2)
 
+    header = html.Thead(html.Tr([html.Th(col) for col in df.columns]))
+    rows = [
+        html.Tr(
+            children=[html.Td(cell) for cell in row],
+            id={"type": "portfolio-row", "index": row[0]},
+            n_clicks=0,
+            style={"cursor": "pointer"},
+        )
+        for row in df.values
+    ]
+
     return dmc.Table(
-        children=create_table(df),
+        highlightOnHover=True,
+        children=[header, html.Tbody(rows)],
     )
+
+
+@callback(
+    Output('company-selector', 'value', allow_duplicate=True),
+    Input({"type": "portfolio-row", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def select_company_from_portfolio(clicks):
+    if not any(clicks):
+        raise PreventUpdate
+    return ctx.triggered_id['index']
 
 
