@@ -296,6 +296,7 @@ translation = {
             "advanced": {
                 "subtitles": {
                     "init": "Initialisation",
+                    "active": "Entreprises actives",
                 },
                 "button": {
                     "update": "Mettre à jour",
@@ -305,6 +306,14 @@ translation = {
                     "requests": "Requêtes max",
                     "cashflow": "Trésorie initiale",
                     "simulation-duration": "Durée de la session (minutes)",
+                },
+                "active": {
+                    "dropdown-label": "Ajouter une entreprise",
+                    "dropdown-placeholder": "Sélectionner une entreprise à ajouter...",
+                    "box-placeholder": "Aucune entreprise sélectionnée.",
+                    "count": "{n} / {total} actives",
+                    "error-title": "Impossible de retirer",
+                    "error-msg": "Au moins une entreprise doit rester active.",
                 },
             },
         },

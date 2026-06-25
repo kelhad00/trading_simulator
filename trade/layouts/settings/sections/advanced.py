@@ -9,6 +9,22 @@ from trade.components.sections import section
 def advanced_settings(lang="fr"):
     tl = tls[lang]["settings"]["advanced"]
     return html.Div([
+        section(tl["subtitles"]["active"], [
+            dmc.Select(
+                id="active-company-dropdown",
+                label=tl["active"]["dropdown-label"],
+                placeholder=tl["active"]["dropdown-placeholder"],
+                searchable=True,
+                data=[],
+                value=None,
+                className="w-full",
+            ),
+            html.Div(
+                id="active-companies-box",
+                className="min-h-[80px] border border-gray-300 rounded-md p-3 bg-white flex flex-wrap gap-2 items-start content-start",
+            ),
+            html.Div(id="active-companies-count", className="text-sm text-gray-400"),
+        ]),
         section(tl["subtitles"]["init"], [
             html.Div([
                 dmc.TextInput(
