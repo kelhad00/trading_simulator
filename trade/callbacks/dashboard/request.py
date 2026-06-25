@@ -1,7 +1,7 @@
 import pandas as pd
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx
+from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx, html
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
@@ -222,33 +222,97 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     prevent_initial_call=True
 )
 def cb_display_requests(req):
-    """
-       Create the table of the requests.
-       Args:
-           req: the list of requests
-       Returns:
-           dmc.Table: the table of the requests
-       """
+    lang = page_registry['lang']
+    t = tls[lang]
+    choices = t['request-action']['choices']
 
-    df = pd.DataFrame(req)
-    sell = tls[page_registry['lang']]['request-action']['choices'][0]['label']
-    buy = tls[page_registry['lang']]['request-action']['choices'][1]['label']
+    header = html.Thead(html.Tr([
+        html.Th(t['requests-table']['company']),
+        html.Th(t['requests-table']['actions']),
+        html.Th(t['requests-table']['price']),
+        html.Th(t['requests-table']['shares']),
+        html.Th(''),
+    ]))
 
-    if not df.empty:
-        # Replace all the 'buy' and 'sell' by their translated version
-        df['action'] = df['action'].apply(lambda x: buy if x == 'buy' else sell)
-        df.rename(columns={
-            'action': tls[page_registry['lang']]['requests-table']['actions'],
-            'shares': tls[page_registry['lang']]['requests-table']['shares'],
-            'company': tls[page_registry['lang']]['requests-table']['company'],
-            'price': tls[page_registry['lang']]['requests-table']['price']
-        }, inplace=True)
-
+    if not req:
+        rows = [html.Tr([html.Td('—', colSpan=5, style={"textAlign": "center", "color": "#aaa"})])]
+    else:
+        rows = []
+        for i, r in enumerate(req):
+            rows.append(html.Tr([
+                html.Td(r['company'], style={"verticalAlign": "middle", "fontSize": "13px"}),
+                html.Td(
+                    dmc.SegmentedControl(
+                        id={"type": "req-action-input", "index": i},
+                        value=r['action'],
+                        data=choices,
+                        size="xs",
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+                html.Td(
+                    dmc.NumberInput(
+                        id={"type": "req-price-input", "index": i},
+                        value=r['price'],
+                        min=0, step=0.001, precision=4,
+                        size="xs",
+                        style={"width": "90px"},
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+                html.Td(
+                    dmc.NumberInput(
+                        id={"type": "req-shares-input", "index": i},
+                        value=r['shares'],
+                        min=1, step=1,
+                        size="xs",
+                        style={"width": "70px"},
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+                html.Td(
+                    dmc.ActionIcon(
+                        DashIconify(icon="material-symbols:delete-outline", width=20),
+                        size="md", radius="md", color="dark", variant="outline",
+                        id={"type": "requests-selectable-table", "index": i},
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+            ]))
 
     return dmc.Table(
         highlightOnHover=True,
-        children=create_table_delete(df, "requests-selectable-table"),
+        children=[header, html.Tbody(rows)],
     )
+
+
+@callback(
+    Output('requests', 'data', allow_duplicate=True),
+    Input({'type': 'req-price-input', 'index': ALL}, 'value'),
+    Input({'type': 'req-shares-input', 'index': ALL}, 'value'),
+    Input({'type': 'req-action-input', 'index': ALL}, 'value'),
+    State('requests', 'data'),
+    prevent_initial_call=True,
+)
+def edit_request_values(prices, shares, actions, requests):
+    if not requests:
+        raise PreventUpdate
+
+    changed = False
+    for i, (price, share, action) in enumerate(zip(prices, shares, actions)):
+        if i >= len(requests):
+            break
+        if price is not None and requests[i]['price'] != price:
+            requests[i]['price'] = price
+            changed = True
+        if share is not None and requests[i]['shares'] != share:
+            requests[i]['shares'] = share
+            changed = True
+        if action is not None and requests[i]['action'] != action:
+            requests[i]['action'] = action
+            changed = True
+
+    return requests if changed else no_update
 
 @callback(
     Output("requests", "data", allow_duplicate=True),
