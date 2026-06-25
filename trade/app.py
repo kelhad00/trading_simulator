@@ -82,6 +82,10 @@ app.layout = dmc.MantineProvider([
         # Trigger for hard browser redirect after session ends
         dcc.Store(id="do-redirect", data=False, storage_type="memory"),
 
+        # Right-click context menu on chart
+        dcc.Store(id="ctx-right-click", data=None, storage_type="memory"),
+        dcc.Store(id="ctx-setup-done", data=False, storage_type="memory"),
+
         dcc.Store(id='imported-session-name', storage_type='memory'),
         html.Div(id="_sname-sink", style={"display": "none"}),
         dcc.Download(id="download-session"),

@@ -1,7 +1,7 @@
 import pandas as pd
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx, html
+from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx, html, clientside_callback
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
@@ -342,4 +342,90 @@ def remove_request(n, values_to_remove, req):
             return req
         else:
             return no_update
+
+
+# ── Right-click context menu on chart ─────────────────────────────────────────
+
+# 1. Set up the contextmenu listener each time the figure renders
+clientside_callback(
+    """function(figure) {
+        window._ctxPrice = window._ctxPrice || 0;
+
+        function attach() {
+            var outer = document.getElementById('company-graph');
+            if (!outer) { setTimeout(attach, 300); return; }
+            if (outer._ctxAttached) return;
+            outer._ctxAttached = true;
+
+            outer.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+
+                // The Plotly graph element (has _fullLayout) is the inner .js-plotly-plot div
+                var plotlyDiv = outer.querySelector('.js-plotly-plot') || outer;
+                if (plotlyDiv._fullLayout) {
+                    var yaxis     = plotlyDiv._fullLayout.yaxis;
+                    var rect      = plotlyDiv.getBoundingClientRect();
+                    var plotTop   = rect.top + plotlyDiv._fullLayout.margin.t;
+                    var yFraction = (e.clientY - plotTop) / (yaxis._length || 1);
+                    var yRange    = yaxis.range;
+                    var yData     = yRange[1] - yFraction * (yRange[1] - yRange[0]);
+                    window._ctxPrice = Math.round(Math.max(0, yData) * 10000) / 10000;
+                }
+
+                var menu = document.getElementById('chart-context-menu');
+                if (menu) {
+                    menu.style.display = 'flex';
+                    menu.style.left = (e.clientX + 4) + 'px';
+                    menu.style.top  = (e.clientY + 4) + 'px';
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                var menu = document.getElementById('chart-context-menu');
+                if (menu && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            }, {once: false});
+        }
+        setTimeout(attach, 200);
+        return window.dash_clientside.no_update;
+    }""",
+    Output('ctx-setup-done', 'data'),
+    Input('company-graph', 'figure'),
+)
+
+# 2. Buy here button → store price + action
+clientside_callback(
+    """function(n) {
+        if (!n) return window.dash_clientside.no_update;
+        document.getElementById('chart-context-menu').style.display = 'none';
+        return {price: window._ctxPrice || 0, action: 'buy'};
+    }""",
+    Output('ctx-right-click', 'data'),
+    Input('ctx-buy-btn', 'n_clicks'),
+)
+
+# 3. Sell here button → store price + action
+clientside_callback(
+    """function(n) {
+        if (!n) return window.dash_clientside.no_update;
+        document.getElementById('chart-context-menu').style.display = 'none';
+        return {price: window._ctxPrice || 0, action: 'sell'};
+    }""",
+    Output('ctx-right-click', 'data', allow_duplicate=True),
+    Input('ctx-sell-btn', 'n_clicks'),
+    prevent_initial_call=True,
+)
+
+# 4. Apply right-click selection to the request form
+@callback(
+    Output('price-input', 'value', allow_duplicate=True),
+    Output('action-input', 'value'),
+    Input('ctx-right-click', 'data'),
+    prevent_initial_call=True,
+)
+def apply_context_price(data):
+    if not data or data.get('price') is None:
+        raise PreventUpdate
+    return data['price'], data['action']
 

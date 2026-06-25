@@ -1,5 +1,11 @@
 translation = {
     'en': {
+        # Chart right-click context menu
+        "ctx-menu": {
+            "buy":  "Buy here",
+            "sell": "Sell here",
+        },
+
         # Simulation end modal
         "simulation-end": {
             "title":           "Simulation ended!",
