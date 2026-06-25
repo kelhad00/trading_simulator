@@ -1,6 +1,7 @@
 import time
 
 from dash import Output, Input, State, callback, page_registry, ctx, no_update
+from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import pandas as pd
 
@@ -190,3 +191,24 @@ def toggle_graph_type(value):
         return {'display': 'none'}, {'display': 'block'}
     else:
         return {'display': 'block'}, {'display': 'none'}
+
+
+@callback(
+    Output('nav-away-time', 'data'),
+    Output('total-paused-seconds', 'data', allow_duplicate=True),
+    Input('url', 'pathname'),
+    State('session-start-time', 'data'),
+    State('nav-away-time', 'data'),
+    State('total-paused-seconds', 'data'),
+    prevent_initial_call=True,
+)
+def handle_navigation_timer(pathname, session_start_time, nav_away, total_paused):
+    if session_start_time is None:
+        raise PreventUpdate
+    on_dashboard = pathname and pathname.startswith('/dashboard')
+    if not on_dashboard and nav_away is None:
+        return time.time(), no_update
+    elif on_dashboard and nav_away is not None:
+        paused_for = time.time() - nav_away
+        return None, (total_paused or 0) + paused_for
+    raise PreventUpdate
