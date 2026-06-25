@@ -109,6 +109,12 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
     # Create chart for the selected stock
     figure = go.Figure(data=[long_mov_av, short_mov_av, twohun_mov_av, candelstick])
 
+    # Add right-side padding so the last candle isn't flush against the edge
+    first_date = pd.to_datetime(plot_df.index[0]).strftime('%Y-%m-%d')
+    last_date = pd.to_datetime(plot_df.index[-1])
+    padding_date = (last_date + pd.Timedelta(days=20)).strftime('%Y-%m-%d')
+    figure.update_layout(xaxis_range=[first_date, padding_date])
+
     return figure, dftmp.index[-1]
 
 

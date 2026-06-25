@@ -202,10 +202,9 @@ def toggle_graph_type(value):
     State('nav-away-time', 'data'),
     State('total-paused-seconds', 'data'),
     State('pause-start-time', 'data'),
-    State('periodic-updater', 'disabled'),
     prevent_initial_call=True,
 )
-def handle_navigation_timer(pathname, session_start_time, nav_away, total_paused, pause_start, is_paused):
+def handle_navigation_timer(pathname, session_start_time, nav_away, total_paused, pause_start):
     if session_start_time is None:
         raise PreventUpdate
     now = time.time()
@@ -215,7 +214,7 @@ def handle_navigation_timer(pathname, session_start_time, nav_away, total_paused
         accumulated = (now - pause_start) if pause_start is not None else 0
         return now, (total_paused or 0) + accumulated, None
     elif on_dashboard and nav_away is not None:
-        # Returning — accumulate away time, restart pause clock if still paused
+        # Returning — accumulate away time
         paused_for = now - nav_away
-        return None, (total_paused or 0) + paused_for, now if is_paused else None
+        return None, (total_paused or 0) + paused_for, None
     raise PreventUpdate
