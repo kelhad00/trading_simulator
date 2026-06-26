@@ -115,7 +115,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         )
 
         fig.for_each_trace(
-            lambda t: t.update(name=tls[page_registry["lang"]]["market-graph"]['legend'][t.name])
+            lambda t: t.update(name=tls[page_registry.get("lang", "fr")]["market-graph"]['legend'][t.name])
         )
 
         # Data exhaustion: create_graph couldn't advance (idx past end of dataframe).
@@ -166,11 +166,11 @@ def update_revenue(n, company, timestamp, companies):
 
         fig = go.Figure(data=[
             go.Bar(
-                name=tls[page_registry["lang"]]["revenue-graph"]['totalRevenue'],
+                name=tls[page_registry.get("lang", "fr")]["revenue-graph"]['totalRevenue'],
                 x=df['asOfDate'], y=df['TotalRevenue']
             ),
             go.Bar(
-                name=tls[page_registry["lang"]]["revenue-graph"]['netIncome'],
+                name=tls[page_registry.get("lang", "fr")]["revenue-graph"]['netIncome'],
                 x=df['asOfDate'], y=df['NetIncome']
             )
         ])
