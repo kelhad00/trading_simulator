@@ -37,6 +37,8 @@ def main_layout(lang="fr"):
             ]
         ),
 
+        html.Button(id="ctx-left-click-trigger", n_clicks=0, style={"display":"none"}),
+
         dmc.Modal(
             id="modal",
             title=dmc.Title(t["title"], order=2, className="font-bold w-full max-w-2xl"),

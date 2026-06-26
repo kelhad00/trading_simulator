@@ -380,6 +380,21 @@ clientside_callback(
                 }
             });
 
+            outer.addEventListener('click', function(e) {
+                var plotlyDiv = outer.querySelector('.js-plotly-plot') || outer;
+                if (plotlyDiv._fullLayout) {
+                    var yaxis     = plotlyDiv._fullLayout.yaxis;
+                    var rect      = plotlyDiv.getBoundingClientRect();
+                    var plotTop   = rect.top + plotlyDiv._fullLayout.margin.t;
+                    var yFraction = (e.clientY - plotTop) / (yaxis._length || 1);
+                    var yRange    = yaxis.range;
+                    var yData     = yRange[1] - yFraction * (yRange[1] - yRange[0]);
+                    window._leftClickPrice = Math.round(Math.max(0, yData) * 10000) / 10000;
+                    var trigger = document.getElementById('ctx-left-click-trigger');
+                    if (trigger) trigger.click();
+                }
+            });
+
             document.addEventListener('click', function(e) {
                 var menu = document.getElementById('chart-context-menu');
                 if (menu && !menu.contains(e.target)) {
@@ -416,6 +431,25 @@ clientside_callback(
     Input('ctx-sell-btn', 'n_clicks'),
     prevent_initial_call=True,
 )
+
+clientside_callback(
+    """function(n) {
+        if (!n) return window.dash_clientside.no_update;
+        return {price: window._leftClickPrice || 0};
+    }""",
+    Output('ctx-left-click', 'data'),
+    Input('ctx-left-click-trigger', 'n_clicks'),
+  )
+
+clientside_callback(
+    """function(data) {
+        if (!data || !data.price) return window.dash_clientside.no_update;
+        return data.price;
+    }""",
+    Output('price-input', 'value', allow_duplicate=True),
+    Input('ctx-left-click', 'data'),
+    prevent_initial_call=True,
+  )
 
 # 4. Apply right-click selection to the request form
 @callback(

@@ -85,6 +85,7 @@ app.layout = dmc.MantineProvider([
         # Right-click context menu on chart
         dcc.Store(id="ctx-right-click", data=None, storage_type="memory"),
         dcc.Store(id="ctx-setup-done", data=False, storage_type="memory"),
+        dcc.Store(id="ctx-left-click", data=None, storage_type="memory"),
 
         dcc.Store(id='imported-session-name', storage_type='memory'),
         html.Div(id="_sname-sink", style={"display": "none"}),
