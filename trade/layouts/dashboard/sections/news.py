@@ -29,7 +29,13 @@ def news_description(lang="fr"):
                     ]
                 ),
 
-                dmc.Button(tls[lang]['button-news-description'], id='back-to-news-list', n_clicks=0, variant="outline", color="gray", fullWidth=True),
+                html.Div(
+                    className="flex gap-2",
+                    children=[
+                        dmc.Button(tls[lang]['button-news-description'], id='back-to-news-list', n_clicks=0, variant="outline", color="gray", fullWidth=True),
+                        dmc.Button(tls[lang].get('news-notif-view', 'View'), id='description-view-btn', n_clicks=0, variant="filled", color="blue", fullWidth=True),
+                    ]
+                ),
             ]
         ),
         id='description-container',

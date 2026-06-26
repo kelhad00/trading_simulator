@@ -14,6 +14,7 @@ def main_layout(lang="fr"):
     return html.Div([
         dcc.Interval(id='periodic-updater', interval=5000, n_intervals=0, disabled=False),
         dcc.Store(id='lang', data=lang),
+        dcc.Store(id='description-ticker', data=None),
 
         # Right-click context menu — position:fixed so it floats above everything
         html.Div(

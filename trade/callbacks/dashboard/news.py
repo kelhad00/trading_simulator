@@ -59,22 +59,24 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     Output('description-text', 'children'),
     Output('description-container', 'style'),
     Output('back-to-news-list', 'n_clicks'),
+    Output('description-ticker', 'data'),
 
     Input('back-to-news-list', 'n_clicks'),
     Input({"type": "news-lines", "index": ALL}, 'n_clicks'),
 
     State('news-table', 'children'),
+    State('companies', 'data'),
     prevent_initial_call=True,
 )
-def toggle_news_display_type(n, cell_clicked, table):
+def toggle_news_display_type(n, cell_clicked, table, companies):
     lang = page_registry.get('lang', 'fr')
     published_label = tls[lang].get('news-published', 'Published:')
 
     if ctx.triggered_id == 'back-to-news-list':
-        return {'display': 'block'}, None, None, None, {'display': 'none'}, [0] * len(cell_clicked)
+        return {'display': 'block'}, None, None, None, {'display': 'none'}, [0] * len(cell_clicked), no_update
 
     if cell_clicked == [] or 1 not in cell_clicked:
-        return no_update, no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
     try:
         index_clicked = cell_clicked.index(1)
@@ -85,14 +87,39 @@ def toggle_news_display_type(n, cell_clicked, table):
         news_df = get_news_dataframe()
         article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]
         if article_clicked.empty:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return no_update, no_update, no_update, no_update, no_update, no_update, no_update
         title   = article_clicked['title'].iloc[0]
         content = article_clicked['content'].iloc[0]
         date    = str(article_clicked['date'].iloc[0])[:16]
-        return {'display': 'none'}, title, f"{published_label} {date}", content, {'display': 'block'}, no_update
+
+        # Resolve company key from ticker so the View button can navigate to the chart
+        company_key = None
+        ticker = str(article_clicked['ticker'].iloc[0]) if 'ticker' in article_clicked.columns else ''
+        if ticker and companies:
+            if ticker in companies:
+                company_key = ticker
+            else:
+                for key, val in companies.items():
+                    if val.get('label', '').lower() == ticker.lower():
+                        company_key = key
+                        break
+
+        return {'display': 'none'}, title, f"{published_label} {date}", content, {'display': 'block'}, no_update, company_key
     except Exception as e:
         print('Error :', e)
-        return no_update, no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update
+
+
+@callback(
+    Output('company-selector', 'value', allow_duplicate=True),
+    Input('description-view-btn', 'n_clicks'),
+    State('description-ticker', 'data'),
+    prevent_initial_call=True,
+)
+def view_company_from_description(n_clicks, company_key):
+    if not n_clicks or not company_key:
+        raise PreventUpdate
+    return company_key
 
 
 @callback(
