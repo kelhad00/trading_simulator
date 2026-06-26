@@ -231,8 +231,8 @@ def cb_display_requests(req):
        """
 
     df = pd.DataFrame(req)
-    sell = tls[page_registry['lang']]['request-action']['choices'][0]['label']
-    buy = tls[page_registry['lang']]['request-action']['choices'][1]['label']
+    buy = tls[page_registry['lang']]['request-action']['choices'][0]['label']
+    sell = tls[page_registry['lang']]['request-action']['choices'][1]['label']
 
     if not df.empty:
         # Replace all the 'buy' and 'sell' by their translated version
