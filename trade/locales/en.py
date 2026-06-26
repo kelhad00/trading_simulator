@@ -57,13 +57,13 @@ translation = {
         "request-title": "Make a Request",
         "request-action": {
             "label": "Action",
-            # "choices": {'sell': 'Sell', 'buy': 'Buy'}
+            # "choices": {'buy': 'Buy','sell': 'Sell'}
             "choices": [{
-                "label": "Sell",
-                "value": "sell"
-            }, {
                 "label": "Buy",
                 "value": "buy"
+            }, {
+                "label": "Sell",
+                "value": "sell"
 
             }]
         },

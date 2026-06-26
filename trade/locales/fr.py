@@ -40,13 +40,13 @@ translation = {
         "request-title": "Requêtes",
         "request-action": {
             "label": "Action",
-            # "choices": {'sell': 'Vendre', 'buy': 'Acheter'}
+            # "choices": {'buy': 'Acheter','sell': 'Vendre'}
             "choices": [{
-                "label": "Vendre",
-                "value": "sell"
-            }, {
                 "label": "Acheter",
                 "value": "buy"
+            }, {
+                "label": "Vendre",
+                "value": "sell"
 
             }]
         },
