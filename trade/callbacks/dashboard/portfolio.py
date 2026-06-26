@@ -43,7 +43,7 @@ def display_portfolio_table_updated(n, totals, shares):
         The updated portfolio table
     """
 
-    lang = page_registry['lang']
+    lang = page_registry.get('lang', 'fr')
 
     totals = pd.Series(totals).fillna(0)
     shares = pd.Series(shares)

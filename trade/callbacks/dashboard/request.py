@@ -30,21 +30,21 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
 
     # If the user has too many requests
     if len(req) == max_requests:
-        return True, tls[page_registry['lang']]["err-too-many-requests"]
+        return True, tls[page_registry.get('lang', 'fr')]["err-too-many-requests"]
 
     # If the form isn't filled correctly
     if price == 0:
-        return True, tls[page_registry['lang']]["err-wrong-form"]
+        return True, tls[page_registry.get('lang', 'fr')]["err-wrong-form"]
 
     # If the request is to buy and the user doesn't have enough money
     stock_price = get_price_dataframe().loc[timestamp, company]
     if action == 'buy' and cash < share * stock_price:
-        return True, tls[page_registry['lang']]["err-enough-money"]
+        return True, tls[page_registry.get('lang', 'fr')]["err-enough-money"]
 
     # If the request is to sell and the user doesn't have enough shares
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     if action == 'sell' and share > port_shares['Shares'].loc[company]:
-        return True, tls[page_registry['lang']]["err-enough-shares"].format(company)
+        return True, tls[page_registry.get('lang', 'fr')]["err-enough-shares"].format(company)
 
     # Add the request to the list if no error
     req.append({
@@ -222,7 +222,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     prevent_initial_call=True
 )
 def cb_display_requests(req):
-    lang = page_registry['lang']
+    lang = page_registry.get('lang', 'fr')
     t = tls[lang]
     choices = t['request-action']['choices']
 

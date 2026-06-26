@@ -42,6 +42,9 @@ def update_select_companies_options(companies, select_options):
 )
 def update_interval(update_time, pause_clicks, currently_disabled, pause_start, total_paused):
     if ctx.triggered_id == "pause-button":
+        if not pause_clicks:
+            # n_clicks reset to 0 on page remount — ignore to avoid spurious pause
+            raise PreventUpdate
         if not currently_disabled:
             # Pausing — record when the pause started
             return no_update, True, time.time(), no_update
@@ -77,6 +80,7 @@ def cb_update_timestamp(timestamp):
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds):
     next_graph = ctx.triggered_id == 'periodic-updater'
+    print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp}")
 
     if next_graph:
         if session_start_time is None:
@@ -86,8 +90,10 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
             elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
             data_done = (timestamp == get_last_timestamp(get_market_dataframe()))
+            print(f"[GRAPH] elapsed={elapsed:.1f}s duration={duration_secs}s data_done={data_done}")
 
             if elapsed >= duration_secs or data_done:
+                print("[GRAPH] simulation ended")
                 return no_update, no_update, True, True, session_start_time
 
     try:
@@ -97,8 +103,8 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         fig, new_ts = create_graph(dftmp, timestamp, next_graph, 100)
 
         fig.update_layout(
-            xaxis_title=tls[page_registry['lang']]["market-graph"]['x'],
-            yaxis_title=tls[page_registry['lang']]["market-graph"]['y'],
+            xaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['x'],
+            yaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['y'],
             yaxis_tickprefix='€',
             margin=dict(l=0, r=0, t=0, b=0),
             legend=dict(x=0, y=1.0),
@@ -115,8 +121,10 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # Data exhaustion: create_graph couldn't advance (idx past end of dataframe).
         # Render the last frame and end immediately — no frozen-tick gap before the modal.
         if next_graph and new_ts == timestamp:
+            print("[GRAPH] data exhausted at", new_ts)
             return new_ts, fig, True, True, session_start_time
 
+        print(f"[GRAPH] ok new_ts={new_ts}")
         return new_ts, fig, no_update, no_update, session_start_time
 
     except Exception as e:
@@ -186,7 +194,7 @@ def update_revenue(n, company, timestamp, companies):
     Input('segmented', "value")
 )
 def toggle_graph_type(value):
-    lang = page_registry['lang']
+    lang = page_registry.get('lang', 'fr')
     if value == tls[lang]['tab-market']:
         return {'display': 'none'}, {'display': 'block'}
     else:
