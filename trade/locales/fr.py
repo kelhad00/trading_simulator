@@ -34,7 +34,7 @@ translation = {
         # News description
         "title-news-description": "Description de l\'article",
         "button-news-description": "Fermer",
-        "news-notif-view": "Voir",
+        "news-notif-view": "Voir le graphique",
         "news-published": "Publié le :",
 
         # Request form

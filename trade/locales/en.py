@@ -57,7 +57,7 @@ translation = {
         # News description
         "title-news-description": "Article Description",
         "button-news-description": "Close",
-        "news-notif-view": "View",
+        "news-notif-view": "View chart",
         "news-published": "Published:",
 
         # Request form
