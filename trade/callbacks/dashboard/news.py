@@ -179,7 +179,7 @@ def notify_new_news(timestamp, last_ts, companies):
                     message=msg,
                     color=color,
                     action="show",
-                    autoClose=False,
+                    autoClose=5000,
                     icon=DashIconify(icon="material-symbols:newspaper", width=20),
                 )
             )
