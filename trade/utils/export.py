@@ -37,7 +37,7 @@ def format_requests_dataframe(request_list, max_requests):
 
 
 def format_charts_type(chart_type):
-    lang = page_registry['lang']
+    lang = page_registry.get('lang', 'fr')
     if chart_type == tls[lang]['tab-market']:
         return "market"
     else:
