@@ -103,6 +103,9 @@ translation = {
 
 
 
+        # News notifications
+        "news-notif-view": "Voir",
+
         # Chart right-click context menu
         "ctx-menu": {
             "buy":  "Acheter ici",

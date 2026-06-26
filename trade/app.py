@@ -86,6 +86,9 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="ctx-right-click", data=None, storage_type="memory"),
         dcc.Store(id="ctx-setup-done", data=False, storage_type="memory"),
 
+        # News notifications — tracks last timestamp checked
+        dcc.Store(id="last-notified-ts", data=None, storage_type="session"),
+
         dcc.Store(id='imported-session-name', storage_type='memory'),
         html.Div(id="_sname-sink", style={"display": "none"}),
         dcc.Download(id="download-session"),

@@ -87,6 +87,7 @@ def reset_data(btn, initial_cashflow, nb_export):
     Output('pause-start-time', 'data', allow_duplicate=True),
     Output('total-paused-seconds', 'data', allow_duplicate=True),
     Output('nav-away-time', 'data', allow_duplicate=True),
+    Output('last-notified-ts', 'data', allow_duplicate=True),
     Input('reset-button-1', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
@@ -94,7 +95,7 @@ def reset_data(btn, initial_cashflow, nb_export):
 )
 def reset_modal(btn, initial_cashflow, nb_export):
     ts, cf, req, shares, totals, nb = reset_data(btn, initial_cashflow, nb_export)
-    return ts, cf, req, shares, totals, nb, True, None, False, False, None, 0, None
+    return ts, cf, req, shares, totals, nb, True, None, False, False, None, 0, None, None
 
 
 clientside_callback(

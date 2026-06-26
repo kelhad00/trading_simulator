@@ -1,5 +1,8 @@
 translation = {
     'en': {
+        # News notifications
+        "news-notif-view": "View",
+
         # Chart right-click context menu
         "ctx-menu": {
             "buy":  "Buy here",
