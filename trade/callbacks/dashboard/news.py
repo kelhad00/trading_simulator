@@ -145,9 +145,10 @@ def notify_new_news(timestamp, last_ts, companies):
 
         last_ts_dt = pd.to_datetime(last_ts)
 
-        # Normalise title column
-        if 'title' in news_df.columns and 'article' not in news_df.columns:
-            news_df = news_df.rename(columns={'title': 'article'})
+        # If last_ts is ahead of the current simulation (stale from a previous run),
+        # treat it as None so notifications restart from the beginning
+        if last_ts_dt > current_ts:
+            return no_update, current_ts_str
 
         new_articles = news_df[
             (news_df['date'] > last_ts_dt) &
@@ -164,9 +165,9 @@ def notify_new_news(timestamp, last_ts, companies):
         for i, (_, row) in enumerate(new_articles.iterrows()):
             ticker    = str(row.get('ticker', ''))
             sentiment = str(row.get('sentiment', '')).lower()
-            headline  = str(row.get('article', row.get('title', '')))
+            title_col = 'article' if 'article' in row.index else 'title'
+            headline  = str(row.get(title_col, ''))
 
-            # Resolve company label and key from the companies store
             company_label = ticker
             company_key   = None
             if companies:
@@ -183,6 +184,7 @@ def notify_new_news(timestamp, last_ts, companies):
             color = "green" if "positive" in sentiment else "red" if "negative" in sentiment else "blue"
             short_headline = headline[:110] + "…" if len(headline) > 110 else headline
 
+            safe_ts = current_ts_str.replace(":", "-").replace(" ", "-")
             if company_key:
                 msg = dmc.Stack([
                     dmc.Text(short_headline, size="xs"),
@@ -190,18 +192,17 @@ def notify_new_news(timestamp, last_ts, companies):
                         view_label,
                         id={"type": "news-view-btn", "index": company_key},
                         size="xs",
-                        compact=True,
                         variant="outline",
                         color=color,
                         style={"marginTop": "4px"},
                     ),
-                ], spacing=2)
+                ], spacing="xs")
             else:
                 msg = short_headline
 
             notifications.append(
                 dmc.Notification(
-                    id=f"news-notif-{i}-{current_ts_str}",
+                    id=f"news-notif-{i}-{safe_ts}",
                     title=company_label,
                     message=msg,
                     color=color,

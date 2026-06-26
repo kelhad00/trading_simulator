@@ -74,6 +74,9 @@ app.layout = dmc.MantineProvider([
         # Session timer — records time.time() on first periodic-updater tick
         dcc.Store(id="session-start-time", data=None, storage_type="session"),
 
+        # News notification tracking — last timestamp that was notified
+        dcc.Store(id="last-notified-ts", data=None, storage_type="session"),
+
         # Pause time tracking — freeze the simulation timer while paused
         dcc.Store(id="pause-start-time", data=None, storage_type="session"),
         dcc.Store(id="total-paused-seconds", data=0, storage_type="session"),
