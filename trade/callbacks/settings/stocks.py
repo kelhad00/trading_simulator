@@ -87,7 +87,7 @@ def display_companies(companies, tabs):
     Returns:
         list of companies displayed
     """
-    lang = page_registry["lang"]
+    lang = page_registry.get("lang", "fr")
     return [
         stock_list_element(stock, company["label"], lang,
                            activity=company.get("activity", ""),
@@ -130,9 +130,10 @@ def update_companies(tabs, companies):
     df_companies = get_cached_df_companies()
     updated = False
     for company in companies:
-        should_have_charts = company in df_companies
-        if companies[company]['got_charts'] != should_have_charts:
-            companies[company]['got_charts'] = should_have_charts
+        # Only deactivate companies that have no data — never force-activate
+        # ones the user has manually deselected via the active companies picker
+        if company not in df_companies and companies[company]['got_charts']:
+            companies[company]['got_charts'] = False
             updated = True
     if not updated:
         raise PreventUpdate
@@ -236,6 +237,98 @@ def delete_companies(clicks, companies, children, portfolio_shares, portfolio_to
     clicks = [0] * len(clicks)  # reset all the clicks
 
     return children, companies, clicks, portfolio_shares, portfolio_totals
+
+
+def _make_company_chip(ticker, label):
+    return html.Div([
+        html.Span(label, style={"fontSize": "13px"}),
+        html.Span(
+            "×",
+            id={"type": "remove-active-company", "index": ticker},
+            n_clicks=0,
+            style={
+                "marginLeft": "8px", "cursor": "pointer", "fontWeight": "bold",
+                "fontSize": "16px", "lineHeight": "1", "opacity": "0.8",
+            }
+        ),
+    ], style={
+        "display": "inline-flex", "alignItems": "center",
+        "backgroundColor": "#1c1c1c", "color": "white",
+        "padding": "5px 12px", "borderRadius": "6px",
+    })
+
+
+@callback(
+    Output("active-company-dropdown", "data"),
+    Output("active-companies-box", "children"),
+    Output("active-companies-count", "children"),
+    Input("companies", "data"),
+    Input("settings-tabs", "value"),
+)
+def update_active_companies_ui(companies, tabs):
+    lang = page_registry.get("lang", "fr")
+    tl = tls[lang]["settings"]["advanced"]["active"]
+
+    active = {k: v for k, v in companies.items() if v.get("got_charts")}
+    inactive = {k: v for k, v in companies.items() if not v.get("got_charts")}
+
+    dropdown_options = [{"label": v["label"], "value": k} for k, v in inactive.items()]
+
+    if active:
+        chips = [_make_company_chip(k, v["label"]) for k, v in active.items()]
+    else:
+        chips = [html.Span(tl["box-placeholder"], style={"color": "#9ca3af", "fontSize": "13px"})]
+
+    count = tl["count"].format(n=len(active), total=len(companies))
+    return dropdown_options, chips, count
+
+
+@callback(
+    Output("companies", "data", allow_duplicate=True),
+    Output("active-company-dropdown", "value"),
+    Input("active-company-dropdown", "value"),
+    State("companies", "data"),
+    prevent_initial_call=True,
+)
+def add_active_company(ticker, companies):
+    if not ticker:
+        raise PreventUpdate
+    companies[ticker]["got_charts"] = True
+    return companies, None
+
+
+@callback(
+    Output("companies", "data", allow_duplicate=True),
+    Output("notifications", "children", allow_duplicate=True),
+    Input({"type": "remove-active-company", "index": ALL}, "n_clicks"),
+    State("companies", "data"),
+    prevent_initial_call=True,
+)
+def remove_active_company(clicks, companies):
+    if not clicks or not any(clicks):
+        raise PreventUpdate
+
+    lang = page_registry.get("lang", "fr")
+    tl = tls[lang]["settings"]["advanced"]["active"]
+
+    active = [k for k, v in companies.items() if v.get("got_charts")]
+    if len(active) <= 1:
+        notif = dmc.Notification(
+            id="notif-active-error",
+            title=tl["error-title"],
+            message=tl["error-msg"],
+            color="red",
+            action="show",
+            autoClose=4000,
+        )
+        return no_update, notif
+
+    active_tickers = [k for k in companies if companies[k].get("got_charts")]
+    idx = next((i for i, c in enumerate(clicks) if c), None)
+    if idx is not None and idx < len(active_tickers):
+        companies[active_tickers[idx]]["got_charts"] = False
+
+    return companies, no_update
 
 
 @callback(

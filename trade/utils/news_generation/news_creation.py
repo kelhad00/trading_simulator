@@ -341,17 +341,9 @@ do not copy its content or company):
 {reference_article}
 
 Task:
-Write a global news article that follows this structure:
-- Paragraph 1: Open with a major international event relevant to {company}'s
-  industry. Name a realistic institution (a central bank, a trade body, a government
-  ministry) and include a specific figure (an interest rate, a trade surplus value,
-  a currency level). The event must directly concern the world region where {company}
-  operates.
-- Paragraph 2: Explain precisely why this event impacts {company} — reference its
-  geographic exposure, its export markets, its import costs, or its financing
-  conditions. Be specific to {company}'s sector.
-- Paragraph 3: Close with a market or analyst reaction that is unambiguously
-  {sentiment_label} for {company}. Use strong directional language.
+Write a 2-sentence global news flash:
+- Sentence 1: Name a realistic institution (central bank, trade body, government ministry) and state one specific figure (rate, index, currency level) — the event must directly affect {company}'s region or sector.
+- Sentence 2: Name {company} and state the {sentiment_label} impact in concrete terms (costs, margins, demand, financing).
 
 Rules:
 - Mention {company} by name at least twice
@@ -381,17 +373,9 @@ do not copy its content or company):
 {reference_article}
 
 Task:
-Write a macroeconomy news article that follows this structure:
-- Paragraph 1: Open with a specific economic indicator release or central bank signal.
-  Name the publishing body (Statistics office, Federal Reserve, ECB, INSEE, Eurostat)
-  and include a concrete figure with its direction (e.g. "fell to 218,000", "rose to
-  2.4%", "contracted for the 18th consecutive month"). The indicator must be relevant
-  to {company}'s operating environment.
-- Paragraph 2: Explain how this macroeconomic environment directly affects {company}'s
-  sector — consumer demand, input costs, borrowing conditions, export competitiveness.
-  Be specific.
-- Paragraph 3: State the implication for {company} with clear {sentiment_label} language
-  — are margins expanding or contracting? Is demand accelerating or softening?
+Write a 2-sentence macroeconomy news flash:
+- Sentence 1: Name the publishing body (ECB, INSEE, Federal Reserve, Eurostat) and state one concrete figure with its direction (e.g. "rose to 2.4%", "fell to 218,000").
+- Sentence 2: Name {company} and state the {sentiment_label} consequence — margins, demand, borrowing costs, or export competitiveness — in one direct sentence.
 
 Rules:
 - Mention {company} by name at least twice
@@ -421,16 +405,9 @@ do not copy its content or company):
 {reference_article}
 
 Task:
-Write a company-specific financial news article that follows this structure:
-- Paragraph 1: Open with a concrete business result or announcement from {company}.
-  Choose one: a quarterly earnings figure, a same-store sales reading, a revenue
-  guidance update, a pricing change, or a market share announcement. Include a
-  specific number consistent with the price context provided above. The result must
-  be unambiguously {sentiment_label}.
-- Paragraph 2: Provide context — year-over-year comparison, how the result compares
-  to analyst expectations, and what competitive or market forces explain it.
-- Paragraph 3: Close with the company's outlook or the market reaction, using
-  clear {sentiment_label} language.
+Write a 2-sentence company news flash:
+- Sentence 1: State one specific business result from {company} — a quarterly figure, revenue guidance, or market share number — that is unambiguously {sentiment_label}. Include a concrete number consistent with the price context above.
+- Sentence 2: Give the key context (vs. analyst expectations or prior year) and close with the {sentiment_label} market or outlook implication.
 
 Rules:
 - Mention {company} by name at least twice
@@ -461,16 +438,9 @@ do not copy its content):
 {reference_article}
 
 Task:
-Write a market report article that follows this structure:
-- Paragraph 1: Open with the index movement — state a specific percentage gain or
-  loss and the direction (record high, multi-month low, recovery, sharp retreat).
-  Name the key sector that led the move (technology, financials, energy, healthcare).
-  The direction must be clearly {sentiment_label}.
-- Paragraph 2: Name the macro or corporate catalyst that drove the session — an
-  earnings surprise, a rate signal, an economic data release, a geopolitical event.
-  Keep all company names generic (do not name real companies other than {company}).
-- Paragraph 3: Close with the investor or analyst takeaway — what does this session
-  signal about the broader market direction?
+Write a 2-sentence market flash:
+- Sentence 1: State the index movement with a specific percentage and direction (record high, multi-month low, sharp retreat) and the key sector that led it — clearly {sentiment_label}.
+- Sentence 2: Name the catalyst (earnings, rate signal, data release) and the investor takeaway for {company} in one direct sentence.
 
 Rules:
 - Mention {company} by name at least twice
@@ -498,17 +468,9 @@ do not copy its content or company):
 {reference_article}
 
 Task:
-Write a commodities news article that follows this structure:
-- Paragraph 1: Open with a commodity price movement directly relevant to {company}'s
-  sector. State the commodity name, a specific price, and the percentage move
-  (e.g. "Brent crude fell 1.4% to {currency}78.20 a barrel", "copper futures rose
-  2.3%"). The direction must create a {sentiment_label} impact for {company}.
-- Paragraph 2: Explain the supply or demand driver behind the move — an inventory
-  build, a production disruption, a strike, an OPEC decision, a demand forecast
-  revision. Be specific about the cause.
-- Paragraph 3: Connect the commodity move directly to {company} — how does it affect
-  the company's input costs, energy bills, raw material sourcing, or product margins?
-  Use clear {sentiment_label} language.
+Write a 2-sentence commodities news flash:
+- Sentence 1: Name the commodity, state a specific price and percentage move (e.g. "Brent crude fell 1.4% to {currency}78.20"), and name the supply or demand driver behind it.
+- Sentence 2: Name {company} and state the {sentiment_label} effect on its input costs, energy bills, or product margins in one direct sentence.
 
 Rules:
 - Mention {company} by name at least twice
@@ -538,17 +500,9 @@ do not copy its content or company):
 {reference_article}
 
 Task:
-Write a hiring announcement article that follows this structure:
-- Paragraph 1: Open with the announcement — how many roles, in what field or
-  division, and over what timeframe. The scale and framing must feel {sentiment_label}
-  — a confident expansion during growth feels different from a desperate attempt to
-  recover capacity.
-- Paragraph 2: Explain the business rationale — a new product line, a geographic
-  expansion, a technology investment, a surge in demand. Connect it clearly to
-  {company}'s current market profile ({curve_description_short}).
-- Paragraph 3: Mention specific locations, role types, or hiring incentives (signing
-  bonuses, remote options, training programs). Close with the strategic implication
-  for {company}.
+Write a 2-sentence hiring news flash:
+- Sentence 1: State the announcement — number of roles, field or division, and timeframe — framed as clearly {sentiment_label} for {company}.
+- Sentence 2: Give the business rationale (new product, geographic expansion, demand surge) and the strategic implication for {company} in one direct sentence.
 
 Rules:
 - Mention {company} by name at least twice
@@ -578,18 +532,9 @@ do not copy its content or company):
 {reference_article}
 
 Task:
-Write a restructuring news article that follows this structure:
-- Paragraph 1: Open with the announcement — the number of roles eliminated, the
-  percentage of the total workforce, and the timeframe. The framing must feel
-  {sentiment_label} — layoffs in a declining company feel like distress, while
-  efficiency-driven cuts in a growing company can be framed as disciplined.
-- Paragraph 2: State the official rationale — cost reduction target, automation
-  investment, strategic pivot, response to market conditions. Connect it to
-  {company}'s current market profile ({curve_description_short}) and mention
-  which divisions or regions are most affected.
-- Paragraph 3: Close with the expected financial impact — restructuring charges,
-  annual savings target, or timeline for completion. Include the market or analyst
-  reaction.
+Write a 2-sentence layoffs news flash:
+- Sentence 1: State the number of roles cut, the percentage of workforce, and the timeframe — framed as {sentiment_label} for {company} (distress vs. disciplined efficiency depending on the profile).
+- Sentence 2: Give the official rationale and the expected financial impact (savings target or restructuring charge) in one direct sentence.
 
 Rules:
 - Mention {company} by name at least twice
@@ -618,17 +563,9 @@ do not copy its content or company):
 {reference_article}
 
 Task:
-Write a leadership or governance news article that follows this structure:
-- Paragraph 1: Open with a concrete governance event at {company} — a CEO departure
-  and successor appointment, a CFO resignation, a new board member addition, an
-  activist investor disclosing a stake, or a succession plan announcement. Keep all
-  individual names fictional or generic (e.g. "a 20-year veteran of the sector",
-  "a former executive from a rival group").
-- Paragraph 2: Explain what this change means for {company}'s strategy — a shift
-  toward cost discipline, a growth acceleration, a turnaround agenda, a push for
-  M&A. Connect it to the company's current market profile ({curve_description_short}).
-- Paragraph 3: Close with the market or shareholder reaction, framed as clearly
-  {sentiment_label}. If activist-related, state what changes the investor is pushing for.
+Write a 2-sentence leadership news flash:
+- Sentence 1: State the governance event at {company} (CEO departure, CFO change, activist stake, board addition) — keep all individual names fictional or generic (e.g. "a 20-year sector veteran").
+- Sentence 2: State what this means for {company}'s strategy and close with the {sentiment_label} market or shareholder reaction in one direct sentence.
 
 Rules:
 - Mention {company} by name at least twice

@@ -10,9 +10,35 @@ from trade.locales import translations as tls
 
 def main_layout(lang="fr"):
     t = tls[lang]["simulation-end"]
+    ctx_t = tls[lang]["ctx-menu"]
     return html.Div([
         dcc.Interval(id='periodic-updater', interval=5000, n_intervals=0, disabled=False),
         dcc.Store(id='lang', data=lang),
+
+        # Right-click context menu — position:fixed so it floats above everything
+        html.Div(
+            id="chart-context-menu",
+            style={
+                "display": "none",
+                "position": "fixed",
+                "zIndex": 9999,
+                "backgroundColor": "white",
+                "border": "1px solid #dee2e6",
+                "borderRadius": "6px",
+                "padding": "4px",
+                "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
+                "flexDirection": "column",
+                "gap": "2px",
+                "minWidth": "140px",
+            },
+            children=[
+                dmc.Button(ctx_t["buy"], id="ctx-buy-btn", color="green", size="xs", variant="subtle", fullWidth=True),
+                dmc.Button(ctx_t["sell"], id="ctx-sell-btn", color="red", size="xs", variant="subtle", fullWidth=True),
+            ]
+        ),
+
+        html.Button(id="ctx-left-click-trigger", n_clicks=0, style={"display":"none"}),
+
         dmc.Modal(
             id="modal",
             title=dmc.Title(t["title"], order=2, className="font-bold w-full max-w-2xl"),

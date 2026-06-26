@@ -26,7 +26,6 @@ def stocks_settings(lang="fr"):
                     dmc.Select(
                         id="input-activity",
                         label=tl["input"]["activity"],
-                        # creatable=True,
                         searchable=True,
                         className="flex-1"
                     ),
@@ -46,6 +45,5 @@ def stocks_settings(lang="fr"):
         section(tl["subtitles"]["list"], [
             html.Div(id="list-companies", className="flex flex-col gap-4"),
         ], action_id="reset-stocks", action="Reset"),
-
 
     ], className="flex flex-col gap-8 w-full")

@@ -1,7 +1,7 @@
 import pandas as pd
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx
+from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx, html, clientside_callback
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
@@ -222,33 +222,97 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     prevent_initial_call=True
 )
 def cb_display_requests(req):
-    """
-       Create the table of the requests.
-       Args:
-           req: the list of requests
-       Returns:
-           dmc.Table: the table of the requests
-       """
+    lang = page_registry['lang']
+    t = tls[lang]
+    choices = t['request-action']['choices']
 
-    df = pd.DataFrame(req)
-    buy = tls[page_registry['lang']]['request-action']['choices'][0]['label']
-    sell = tls[page_registry['lang']]['request-action']['choices'][1]['label']
+    header = html.Thead(html.Tr([
+        html.Th(t['requests-table']['company']),
+        html.Th(t['requests-table']['actions']),
+        html.Th(t['requests-table']['price']),
+        html.Th(t['requests-table']['shares']),
+        html.Th(''),
+    ]))
 
-    if not df.empty:
-        # Replace all the 'buy' and 'sell' by their translated version
-        df['action'] = df['action'].apply(lambda x: buy if x == 'buy' else sell)
-        df.rename(columns={
-            'action': tls[page_registry['lang']]['requests-table']['actions'],
-            'shares': tls[page_registry['lang']]['requests-table']['shares'],
-            'company': tls[page_registry['lang']]['requests-table']['company'],
-            'price': tls[page_registry['lang']]['requests-table']['price']
-        }, inplace=True)
-
+    if not req:
+        rows = [html.Tr([html.Td('—', colSpan=5, style={"textAlign": "center", "color": "#aaa"})])]
+    else:
+        rows = []
+        for i, r in enumerate(req):
+            rows.append(html.Tr([
+                html.Td(r['company'], style={"verticalAlign": "middle", "fontSize": "13px"}),
+                html.Td(
+                    dmc.SegmentedControl(
+                        id={"type": "req-action-input", "index": i},
+                        value=r['action'],
+                        data=choices,
+                        size="xs",
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+                html.Td(
+                    dmc.NumberInput(
+                        id={"type": "req-price-input", "index": i},
+                        value=r['price'],
+                        min=0, step=0.001, precision=4,
+                        size="xs",
+                        style={"width": "90px"},
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+                html.Td(
+                    dmc.NumberInput(
+                        id={"type": "req-shares-input", "index": i},
+                        value=r['shares'],
+                        min=1, step=1,
+                        size="xs",
+                        style={"width": "70px"},
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+                html.Td(
+                    dmc.ActionIcon(
+                        DashIconify(icon="material-symbols:delete-outline", width=20),
+                        size="md", radius="md", color="dark", variant="outline",
+                        id={"type": "requests-selectable-table", "index": i},
+                    ),
+                    style={"verticalAlign": "middle"},
+                ),
+            ]))
 
     return dmc.Table(
         highlightOnHover=True,
-        children=create_table_delete(df, "requests-selectable-table"),
+        children=[header, html.Tbody(rows)],
     )
+
+
+@callback(
+    Output('requests', 'data', allow_duplicate=True),
+    Input({'type': 'req-price-input', 'index': ALL}, 'value'),
+    Input({'type': 'req-shares-input', 'index': ALL}, 'value'),
+    Input({'type': 'req-action-input', 'index': ALL}, 'value'),
+    State('requests', 'data'),
+    prevent_initial_call=True,
+)
+def edit_request_values(prices, shares, actions, requests):
+    if not requests:
+        raise PreventUpdate
+
+    changed = False
+    for i, (price, share, action) in enumerate(zip(prices, shares, actions)):
+        if i >= len(requests):
+            break
+        if price is not None and requests[i]['price'] != price:
+            requests[i]['price'] = price
+            changed = True
+        if share is not None and requests[i]['shares'] != share:
+            requests[i]['shares'] = share
+            changed = True
+        if action is not None and requests[i]['action'] != action:
+            requests[i]['action'] = action
+            changed = True
+
+    return requests if changed else no_update
 
 @callback(
     Output("requests", "data", allow_duplicate=True),
@@ -278,4 +342,124 @@ def remove_request(n, values_to_remove, req):
             return req
         else:
             return no_update
+
+
+# ── Right-click context menu on chart ─────────────────────────────────────────
+
+# 1. Set up the contextmenu listener each time the figure renders
+clientside_callback(
+    """function(figure) {
+        window._ctxPrice = window._ctxPrice || 0;
+
+        function attach() {
+            var outer = document.getElementById('company-graph');
+            if (!outer) { setTimeout(attach, 300); return; }
+            if (outer._ctxAttached) return;
+            outer._ctxAttached = true;
+
+            outer.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+
+                // The Plotly graph element (has _fullLayout) is the inner .js-plotly-plot div
+                var plotlyDiv = outer.querySelector('.js-plotly-plot') || outer;
+                if (plotlyDiv._fullLayout) {
+                    var yaxis     = plotlyDiv._fullLayout.yaxis;
+                    var rect      = plotlyDiv.getBoundingClientRect();
+                    var plotTop   = rect.top + plotlyDiv._fullLayout.margin.t;
+                    var yFraction = (e.clientY - plotTop) / (yaxis._length || 1);
+                    var yRange    = yaxis.range;
+                    var yData     = yRange[1] - yFraction * (yRange[1] - yRange[0]);
+                    window._ctxPrice = Math.round(Math.max(0, yData) * 10000) / 10000;
+                }
+
+                var menu = document.getElementById('chart-context-menu');
+                if (menu) {
+                    menu.style.display = 'flex';
+                    menu.style.left = (e.clientX + 4) + 'px';
+                    menu.style.top  = (e.clientY + 4) + 'px';
+                }
+            });
+
+            outer.addEventListener('click', function(e) {
+                var plotlyDiv = outer.querySelector('.js-plotly-plot') || outer;
+                if (plotlyDiv._fullLayout) {
+                    var yaxis     = plotlyDiv._fullLayout.yaxis;
+                    var rect      = plotlyDiv.getBoundingClientRect();
+                    var plotTop   = rect.top + plotlyDiv._fullLayout.margin.t;
+                    var yFraction = (e.clientY - plotTop) / (yaxis._length || 1);
+                    var yRange    = yaxis.range;
+                    var yData     = yRange[1] - yFraction * (yRange[1] - yRange[0]);
+                    window._leftClickPrice = Math.round(Math.max(0, yData) * 10000) / 10000;
+                    var trigger = document.getElementById('ctx-left-click-trigger');
+                    if (trigger) trigger.click();
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                var menu = document.getElementById('chart-context-menu');
+                if (menu && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            }, {once: false});
+        }
+        setTimeout(attach, 200);
+        return window.dash_clientside.no_update;
+    }""",
+    Output('ctx-setup-done', 'data'),
+    Input('company-graph', 'figure'),
+)
+
+# 2. Buy here button → store price + action
+clientside_callback(
+    """function(n) {
+        if (!n) return window.dash_clientside.no_update;
+        document.getElementById('chart-context-menu').style.display = 'none';
+        return {price: window._ctxPrice || 0, action: 'buy'};
+    }""",
+    Output('ctx-right-click', 'data'),
+    Input('ctx-buy-btn', 'n_clicks'),
+)
+
+# 3. Sell here button → store price + action
+clientside_callback(
+    """function(n) {
+        if (!n) return window.dash_clientside.no_update;
+        document.getElementById('chart-context-menu').style.display = 'none';
+        return {price: window._ctxPrice || 0, action: 'sell'};
+    }""",
+    Output('ctx-right-click', 'data', allow_duplicate=True),
+    Input('ctx-sell-btn', 'n_clicks'),
+    prevent_initial_call=True,
+)
+
+clientside_callback(
+    """function(n) {
+        if (!n) return window.dash_clientside.no_update;
+        return {price: window._leftClickPrice || 0};
+    }""",
+    Output('ctx-left-click', 'data'),
+    Input('ctx-left-click-trigger', 'n_clicks'),
+  )
+
+clientside_callback(
+    """function(data) {
+        if (!data || !data.price) return window.dash_clientside.no_update;
+        return data.price;
+    }""",
+    Output('price-input', 'value', allow_duplicate=True),
+    Input('ctx-left-click', 'data'),
+    prevent_initial_call=True,
+  )
+
+# 4. Apply right-click selection to the request form
+@callback(
+    Output('price-input', 'value', allow_duplicate=True),
+    Output('action-input', 'value'),
+    Input('ctx-right-click', 'data'),
+    prevent_initial_call=True,
+)
+def apply_context_price(data):
+    if not data or data.get('price') is None:
+        raise PreventUpdate
+    return data['price'], data['action']
 

@@ -74,8 +74,18 @@ app.layout = dmc.MantineProvider([
         # Session timer — records time.time() on first periodic-updater tick
         dcc.Store(id="session-start-time", data=None, storage_type="session"),
 
+        # Pause time tracking — freeze the simulation timer while paused
+        dcc.Store(id="pause-start-time", data=None, storage_type="session"),
+        dcc.Store(id="total-paused-seconds", data=0, storage_type="session"),
+        dcc.Store(id="nav-away-time", data=None, storage_type="session"),
+
         # Trigger for hard browser redirect after session ends
         dcc.Store(id="do-redirect", data=False, storage_type="memory"),
+
+        # Right-click context menu on chart
+        dcc.Store(id="ctx-right-click", data=None, storage_type="memory"),
+        dcc.Store(id="ctx-setup-done", data=False, storage_type="memory"),
+        dcc.Store(id="ctx-left-click", data=None, storage_type="memory"),
 
         dcc.Store(id='imported-session-name', storage_type='memory'),
         html.Div(id="_sname-sink", style={"display": "none"}),

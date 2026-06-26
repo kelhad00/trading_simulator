@@ -17,7 +17,7 @@ def request_form(lang="fr"):
                 dmc.Text(tls[lang]['request-title'], weight=700, className="text-[rgb(73,80,87)]", size="xl"),
                 dmc.SegmentedControl(
                     id="action-input",
-                    value=tls[lang]['request-action']['choices'][0]["value"],
+                    value="buy",
                     data=tls[lang]['request-action']['choices'],
                     size="xs",
                     className="w-full"

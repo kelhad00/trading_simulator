@@ -1,5 +1,11 @@
 translation = {
     'en': {
+        # Chart right-click context menu
+        "ctx-menu": {
+            "buy":  "Buy here",
+            "sell": "Sell here",
+        },
+
         # Simulation end modal
         "simulation-end": {
             "title":           "Simulation ended!",
@@ -64,7 +70,6 @@ translation = {
             }, {
                 "label": "Sell",
                 "value": "sell"
-
             }]
         },
         "request-price": "Price",
@@ -284,6 +289,7 @@ translation = {
             "advanced": {
                 "subtitles": {
                     "init": "Initialization",
+                    "active": "Active companies",
                 },
                 "button": {
                     "update": "Update",
@@ -293,6 +299,14 @@ translation = {
                     "requests": "Max requests",
                     "cashflow": "Initial cashflow",
                     "simulation-duration": "Session duration (minutes)",
+                },
+                "active": {
+                    "dropdown-label": "Add a company",
+                    "dropdown-placeholder": "Select a company to add...",
+                    "box-placeholder": "No companies selected.",
+                    "count": "{n} / {total} active",
+                    "error-title": "Cannot remove",
+                    "error-msg": "At least one company must remain active.",
                 },
             },
         },
