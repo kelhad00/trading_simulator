@@ -219,10 +219,11 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
 @callback(
     Output('request-table', 'children', allow_duplicate=True),
     Input("requests", "data"),
-    prevent_initial_call=True
+    Input('lang', 'data'),
+    prevent_initial_call='initial_duplicate'
 )
-def cb_display_requests(req):
-    lang = page_registry.get('lang', 'fr')
+def cb_display_requests(req, lang):
+    lang = lang or page_registry.get('lang', 'fr')
     t = tls[lang]
     choices = t['request-action']['choices']
 
@@ -334,6 +335,8 @@ def remove_request(n, values_to_remove, req):
     """
 
     if ctx.triggered_id == 'clear-done-btn':
+        if not n:
+            raise PreventUpdate
         return []
     else:
         if 1 in values_to_remove:
