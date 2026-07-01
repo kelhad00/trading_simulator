@@ -23,7 +23,7 @@ def update_select_companies_options(companies, select_options):
     if select_options == options:
         value = no_update
     else:
-        value = list(companies.keys())[0]
+        value = options[0]['value'] if options else no_update
 
     return options, value
 
