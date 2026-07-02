@@ -112,6 +112,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             # uirevision keyed to company: preserves zoom/pan on periodic updates,
             # resets only when the user switches company
             uirevision=company,
+            dragmode='pan',
         )
 
         fig.for_each_trace(
