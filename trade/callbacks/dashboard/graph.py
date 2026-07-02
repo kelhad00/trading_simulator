@@ -76,9 +76,10 @@ def cb_update_timestamp(timestamp):
     State('session-start-time', 'data'),
     State('simulation-duration', 'data'),
     State('total-paused-seconds', 'data'),
+    State('requests', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests):
     next_graph = ctx.triggered_id == 'periodic-updater'
     print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp}")
 
@@ -118,6 +119,22 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         fig.for_each_trace(
             lambda t: t.update(name=tls[page_registry.get("lang", "fr")]["market-graph"]['legend'][t.name])
         )
+
+        for req in (requests or []):
+            if req.get('company') != company:
+                continue
+            color = "green" if req['action'] == 'buy' else "red"
+            label = f"{'Buy' if req['action'] == 'buy' else 'Sell'} {req['shares']}x @ €{req['price']}"
+            fig.add_hline(
+                y=req['price'],
+                line_dash="dash",
+                line_color=color,
+                line_width=1,
+                annotation_text=label,
+                annotation_position="right",
+                annotation_font_color=color,
+                annotation_font_size=11,
+            )
 
         # Data exhaustion: create_graph couldn't advance (idx past end of dataframe).
         # Render the last frame and end immediately — no frozen-tick gap before the modal.
