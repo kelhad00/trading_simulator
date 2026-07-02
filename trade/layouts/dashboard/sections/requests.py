@@ -22,11 +22,22 @@ def request_form(lang="fr"):
                     size="xs",
                     className="w-full"
                 ),
-                dmc.NumberInput(
-                    id='price-input',
-                    label=dmc.Text(tls[lang]['request-price'], weight=700, className="text-[rgb(73,80,87)]", size="sm"),
-                    value=0, min=0, step=0.001, precision=4,
-                ),
+                html.Div([
+                    dmc.NumberInput(
+                        id='price-input',
+                        label=dmc.Text(tls[lang]['request-price'], weight=700, className="text-[rgb(73,80,87)]", size="sm"),
+                        value=0, min=0, step=0.001, precision=4,
+                    ),
+                    dmc.Button(
+                        tls[lang]['market-price-btn'],
+                        id='market-price-btn',
+                        n_clicks=0,
+                        variant="outline",
+                        color="blue",
+                        size="xs",
+                        fullWidth=True,
+                    ),
+                ], className="flex flex-col gap-1"),
                 dmc.NumberInput(
                     id='nbr-share-input',
                     label=dmc.Text(tls[lang]['request-shares'], weight=700, className="text-[rgb(73,80,87)]", size="sm"),

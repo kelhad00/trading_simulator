@@ -75,6 +75,7 @@ translation = {
             }]
         },
         "request-price": "Price",
+        "market-price-btn": "Market Price",
         "request-shares": "Number of Shares",
         "submit-request": "Submit",
         "err-too-many-requests": "You have too many requests !",

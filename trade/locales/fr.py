@@ -52,6 +52,7 @@ translation = {
             }]
         },
         "request-price": "Prix",
+        "market-price-btn": "Prix du marché",
         "request-shares": "Nombre d'actions",
         "submit-request": "Soumettre",
         "err-too-many-requests": "Vous avez trop de requêtes en attente !",

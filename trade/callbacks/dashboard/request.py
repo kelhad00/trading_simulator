@@ -79,6 +79,20 @@ def fill_price_from_candle_click(click_data, company):
 
 
 @callback(
+    Output('price-input', 'value', allow_duplicate=True),
+    Input('market-price-btn', 'n_clicks'),
+    State('company-selector', 'value'),
+    State('timestamp', 'data'),
+    prevent_initial_call=True,
+)
+def fill_market_price(n_clicks, company, timestamp):
+    if not n_clicks or not company or not timestamp:
+        raise PreventUpdate
+    price = get_price_dataframe().loc[timestamp, company]
+    return round(float(price), 4)
+
+
+@callback(
     Output("requests", "data", allow_duplicate=True),
     Output('notifications', 'children', allow_duplicate=True),
 
