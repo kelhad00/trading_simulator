@@ -53,13 +53,13 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
 
 
 @callback(
-    Output('news-container', 'style'),
-    Output('description-title', 'children'),
-    Output('description-date', 'children'),
-    Output('description-text', 'children'),
-    Output('description-container', 'style'),
+    Output('news-container', 'style', allow_duplicate=True),
+    Output('description-title', 'children', allow_duplicate=True),
+    Output('description-date', 'children', allow_duplicate=True),
+    Output('description-text', 'children', allow_duplicate=True),
+    Output('description-container', 'style', allow_duplicate=True),
     Output('back-to-news-list', 'n_clicks'),
-    Output('description-ticker', 'data'),
+        Output('description-ticker', 'data', allow_duplicate=True),
 
     Input('back-to-news-list', 'n_clicks'),
     Input({"type": "news-lines", "index": ALL}, 'n_clicks'),
@@ -190,7 +190,7 @@ def notify_new_news(timestamp, last_ts, companies):
                     dmc.Text(short_headline, size="xs"),
                     dmc.Button(
                         view_label,
-                        id={"type": "news-view-btn", "index": company_key},
+                        id={"type": "news-view-btn", "index": headline},
                         size="xs",
                         variant="outline",
                         color=color,
@@ -220,11 +220,43 @@ def notify_new_news(timestamp, last_ts, companies):
 
 
 @callback(
-    Output('company-selector', 'value', allow_duplicate=True),
+    Output('news-container', 'style', allow_duplicate=True),
+    Output('description-title', 'children', allow_duplicate=True),
+    Output('description-date', 'children', allow_duplicate=True),
+    Output('description-text', 'children', allow_duplicate=True),
+    Output('description-container', 'style', allow_duplicate=True),
+    Output('description-ticker', 'data', allow_duplicate=True),
     Input({"type": "news-view-btn", "index": ALL}, "n_clicks"),
+    State('companies', 'data'),
     prevent_initial_call=True,
 )
-def view_company_from_news_notif(clicks):
+def view_article_from_news_notif(clicks, companies):
     if not any(clicks):
         raise PreventUpdate
-    return ctx.triggered_id['index']
+    article_title = ctx.triggered_id['index']
+    try:
+        news_df = get_news_dataframe()
+        lang = page_registry.get('lang', 'fr')
+        published_label = tls[lang].get('news-published', 'Published:')
+        article = news_df.loc[news_df['title'] == article_title]
+        if article.empty:
+            raise PreventUpdate
+        title   = article['title'].iloc[0]
+        content = article['content'].iloc[0]
+        date    = str(article['date'].iloc[0])[:16]
+        ticker  = str(article['ticker'].iloc[0]) if 'ticker' in article.columns else ''
+        company_key = None
+        if ticker and companies:
+            if ticker in companies:
+                company_key = ticker
+            else:
+                for key, val in companies.items():
+                    if val.get('label', '').lower() == ticker.lower():
+                        company_key = key
+                        break
+        return {'display': 'none'}, title, f"{published_label} {date}", content, {'display': 'block'}, company_key
+    except PreventUpdate:
+        raise
+    except Exception as e:
+        print(f"[NOTIF VIEW] Error: {e}")
+        raise PreventUpdate
