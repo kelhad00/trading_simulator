@@ -57,18 +57,17 @@ if APP_MODE != 'runtime':
     Input('reset-button', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
+    State('companies', 'data'),
     prevent_initial_call=True,
 )
-def reset_data(btn, initial_cashflow, nb_export):
+def reset_data(btn, initial_cashflow, nb_export, companies_data):
     if btn is None or btn == 0:
         raise PreventUpdate
 
     threading.Thread(target=_archive_exports, args=(nb_export,), daemon=True).start()
 
     timestamp = get_first_timestamp(market_df, 100)
-    df = get_generated_data()
-    companies = df.columns.get_level_values('symbol').unique() if df is not None else []
-    portfolio_value = {c: 0 for c in companies}
+    portfolio_value = {c: 0 for c, info in (companies_data or {}).items() if info.get('got_charts')}
 
     return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, nb_export + 1
 
@@ -90,10 +89,11 @@ def reset_data(btn, initial_cashflow, nb_export):
     Input('reset-button-1', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
+    State('companies', 'data'),
     prevent_initial_call=True,
 )
-def reset_modal(btn, initial_cashflow, nb_export):
-    ts, cf, req, shares, totals, nb = reset_data(btn, initial_cashflow, nb_export)
+def reset_modal(btn, initial_cashflow, nb_export, companies_data):
+    ts, cf, req, shares, totals, nb = reset_data(btn, initial_cashflow, nb_export, companies_data)
     return ts, cf, req, shares, totals, nb, True, None, False, False, None, 0, None
 
 
