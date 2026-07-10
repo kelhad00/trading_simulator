@@ -110,6 +110,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             xaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['x'],
             yaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['y'],
             yaxis_tickprefix='€',
+            yaxis_tickformat=',.2f',
             margin=dict(l=0, r=90, t=0, b=0),
             legend=dict(x=0, y=1.0),
             xaxis_rangeslider_visible=False,
@@ -127,7 +128,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             if req.get('company') != company:
                 continue
             color = "green" if req['action'] == 'buy' else "red"
-            label = f"{'Buy' if req['action'] == 'buy' else 'Sell'} {req['shares']}x @ €{req['price']}"
+            label = f"{'Buy' if req['action'] == 'buy' else 'Sell'} {req['shares']}x @ €{req['price']:.2f}"
             fig.add_hline(
                 y=req['price'],
                 line_dash="dash",

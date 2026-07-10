@@ -26,7 +26,7 @@ def request_form(lang="fr"):
                     dmc.NumberInput(
                         id='price-input',
                         label=dmc.Text(tls[lang]['request-price'], weight=700, className="text-[rgb(73,80,87)]", size="sm"),
-                        value=0, min=0, step=0.001, precision=4,
+                        value=0, min=0, step=0.01, precision=2,
                     ),
                     dmc.Button(
                         tls[lang]['market-price-btn'],

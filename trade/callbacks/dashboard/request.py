@@ -73,7 +73,7 @@ def fill_price_from_candle_click(click_data, company):
         )
         if date_index is None:
             raise PreventUpdate
-        return round(float(price_df.loc[date_index, company]), 4)
+        return round(float(price_df.loc[date_index, company]), 2)
     except (KeyError, IndexError):
         raise PreventUpdate
 
@@ -89,7 +89,7 @@ def fill_market_price(n_clicks, company, timestamp):
     if not n_clicks or not company or not timestamp:
         raise PreventUpdate
     price = get_price_dataframe().loc[timestamp, company]
-    return round(float(price), 4)
+    return round(float(price), 2)
 
 
 @callback(
@@ -272,7 +272,7 @@ def cb_display_requests(req, lang):
                     dmc.NumberInput(
                         id={"type": "req-price-input", "index": i},
                         value=r['price'],
-                        min=0, step=0.001, precision=4,
+                        min=0, step=0.01, precision=2,
                         size="xs",
                         style={"width": "90px"},
                     ),
@@ -389,7 +389,7 @@ clientside_callback(
                     var yFraction = (e.clientY - plotTop) / (yaxis._length || 1);
                     var yRange    = yaxis.range;
                     var yData     = yRange[1] - yFraction * (yRange[1] - yRange[0]);
-                    window._ctxPrice = Math.round(Math.max(0, yData) * 10000) / 10000;
+                    window._ctxPrice = Math.round(Math.max(0, yData) * 100) / 100;
                 }
 
                 var menu = document.getElementById('chart-context-menu');
@@ -409,7 +409,7 @@ clientside_callback(
                     var yFraction = (e.clientY - plotTop) / (yaxis._length || 1);
                     var yRange    = yaxis.range;
                     var yData     = yRange[1] - yFraction * (yRange[1] - yRange[0]);
-                    window._leftClickPrice = Math.round(Math.max(0, yData) * 10000) / 10000;
+                    window._leftClickPrice = Math.round(Math.max(0, yData) * 100) / 100;
                     var trigger = document.getElementById('ctx-left-click-trigger');
                     if (trigger) trigger.click();
                 }
