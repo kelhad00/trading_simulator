@@ -8,7 +8,7 @@ from dash_iconify import DashIconify
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 from trade.components.table import create_table_delete
-from trade.utils.market import get_price_dataframe
+from trade.utils.market import get_price_dataframe, get_low_dataframe, get_high_dataframe
 
 
 def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests):
@@ -183,16 +183,19 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     old_req = request_list.copy()
 
     price_list = get_price_dataframe()
+    low_list   = get_low_dataframe()
+    high_list  = get_high_dataframe()
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     port_totals = pd.DataFrame.from_dict(port_totals, orient='index', columns=['Totals'])
 
     i = 0
     while i < len(request_list):
         req = request_list[i]
-        stock_price = price_list.loc[timestamp, req['company']]
+        low_price  = low_list.loc[timestamp, req['company']]
+        high_price = high_list.loc[timestamp, req['company']]
 
         # If the request is completed
-        if req['action'] == 'buy' and req['price'] >= stock_price:
+        if req['action'] == 'buy' and low_price <= req['price']:
             # If the user has enough money
             if req['shares'] * req['price'] <= cashflow:
                 # Update only the shares and the cashflow
@@ -204,7 +207,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
             request_list.remove(req)
 
         # Same as above for the sell request
-        elif req['action'] == 'sell' and req['price'] <= stock_price:
+        elif req['action'] == 'sell' and high_price >= req['price']:
             # If the user has enough shares
             if port_shares.at[req['company'], 'Shares'] >= req["shares"]:
                 # Update only the shares and the cashflow

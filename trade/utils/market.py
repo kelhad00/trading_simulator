@@ -44,6 +44,16 @@ def get_price_dataframe():
     return price_list
 
 
+def get_low_dataframe():
+    df = get_market_dataframe()
+    return df.xs('Low', axis=1, level=1)
+
+
+def get_high_dataframe():
+    df = get_market_dataframe()
+    return df.xs('High', axis=1, level=1)
+
+
 def get_first_timestamp(market_df, range=0):
     try:
         timestamp = market_df.index[range]
