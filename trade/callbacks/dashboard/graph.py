@@ -76,7 +76,7 @@ def cb_update_timestamp(timestamp):
     State('session-start-time', 'data'),
     State('simulation-duration', 'data'),
     State('total-paused-seconds', 'data'),
-    State('requests', 'data'),
+    Input('requests', 'data'),
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests):
@@ -107,7 +107,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             xaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['x'],
             yaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['y'],
             yaxis_tickprefix='€',
-            margin=dict(l=0, r=0, t=0, b=0),
+            margin=dict(l=0, r=90, t=0, b=0),
             legend=dict(x=0, y=1.0),
             xaxis_rangeslider_visible=False,
             # uirevision keyed to company: preserves zoom/pan on periodic updates,
