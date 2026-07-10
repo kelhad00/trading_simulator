@@ -4,6 +4,7 @@ from dash import Output, Input, State, callback, page_registry, ctx, no_update
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import pandas as pd
+from dash_iconify import DashIconify
 
 from trade.utils.graph.candlestick_charts import create_graph
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
@@ -34,6 +35,7 @@ def update_select_companies_options(companies, select_options):
     Output("pause-start-time", "data"),
     Output("total-paused-seconds", "data"),
     Output("pause-button", "children"),
+    Output("pause-button", "icon"),
     Input("update-time", "data"),
     Input("pause-button", "n_clicks"),
     State("periodic-updater", "disabled"),
@@ -48,12 +50,12 @@ def update_interval(update_time, pause_clicks, currently_disabled, pause_start, 
             raise PreventUpdate
         if not currently_disabled:
             # Pausing — record when the pause started
-            return no_update, True, time.time(), no_update, "Resume"
+            return no_update, True, time.time(), no_update, "Resume", DashIconify(icon="carbon:play")
         else:
             # Unpausing — accumulate the pause duration and clear the start time
             paused_for = time.time() - (pause_start or time.time())
-            return no_update, False, None, (total_paused or 0) + paused_for, "Pause"
-    return int(update_time), False, no_update, no_update, no_update
+            return no_update, False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
+    return int(update_time), False, no_update, no_update, no_update, no_update
 
 
 @callback(
