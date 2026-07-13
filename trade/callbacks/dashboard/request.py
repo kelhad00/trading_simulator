@@ -237,12 +237,16 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     Output('request-table', 'children', allow_duplicate=True),
     Input("requests", "data"),
     Input('lang', 'data'),
+    State('portfolio-shares', 'data'),
+    State('cashflow', 'data'),
     prevent_initial_call='initial_duplicate'
 )
-def cb_display_requests(req, lang):
+def cb_display_requests(req, lang, port_shares, cashflow):
     lang = lang or page_registry.get('lang', 'fr')
     t = tls[lang]
     choices = t['request-action']['choices']
+    port_shares = port_shares or {}
+    cashflow = cashflow or 0
 
     header = html.Thead(html.Tr([
         html.Th(t['requests-table']['company']),
@@ -257,6 +261,12 @@ def cb_display_requests(req, lang):
     else:
         rows = []
         for i, r in enumerate(req):
+            if r['action'] == 'sell':
+                max_shares = int(port_shares.get(r['company'], 0)) or None
+            else:
+                price = r.get('price', 0)
+                max_shares = int(cashflow // price) if price > 0 else None
+
             rows.append(html.Tr([
                 html.Td(r['company'], style={"verticalAlign": "middle", "fontSize": "13px"}),
                 html.Td(
@@ -282,7 +292,7 @@ def cb_display_requests(req, lang):
                     dmc.NumberInput(
                         id={"type": "req-shares-input", "index": i},
                         value=r['shares'],
-                        min=1, step=1,
+                        min=1, max=max_shares, step=1,
                         size="xs",
                         style={"width": "70px"},
                     ),
@@ -310,25 +320,42 @@ def cb_display_requests(req, lang):
     Input({'type': 'req-shares-input', 'index': ALL}, 'value'),
     Input({'type': 'req-action-input', 'index': ALL}, 'value'),
     State('requests', 'data'),
+    State('portfolio-shares', 'data'),
+    State('cashflow', 'data'),
     prevent_initial_call=True,
 )
-def edit_request_values(prices, shares, actions, requests):
+def edit_request_values(prices, shares, actions, requests, port_shares, cashflow):
     if not requests:
         raise PreventUpdate
+
+    port_shares = port_shares or {}
+    cashflow = cashflow or 0
 
     changed = False
     for i, (price, share, action) in enumerate(zip(prices, shares, actions)):
         if i >= len(requests):
             break
+
+        # Use the updated values where available, otherwise fall back to stored values
+        eff_action = action if action is not None else requests[i]['action']
+        eff_price = price if price is not None else requests[i]['price']
+        company = requests[i]['company']
+
         if price is not None and requests[i]['price'] != price:
             requests[i]['price'] = price
-            changed = True
-        if share is not None and requests[i]['shares'] != share:
-            requests[i]['shares'] = share
             changed = True
         if action is not None and requests[i]['action'] != action:
             requests[i]['action'] = action
             changed = True
+        if share is not None:
+            if eff_action == 'sell':
+                max_shares = int(port_shares.get(company, 0)) or None
+            else:
+                max_shares = int(cashflow // eff_price) if eff_price > 0 else None
+            clamped = max(1, min(share, max_shares)) if max_shares else max(1, share)
+            if requests[i]['shares'] != clamped:
+                requests[i]['shares'] = clamped
+                changed = True
 
     return requests if changed else no_update
 
