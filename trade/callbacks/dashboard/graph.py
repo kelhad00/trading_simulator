@@ -31,31 +31,35 @@ def update_select_companies_options(companies, select_options):
 
 @callback(
     Output("periodic-updater", "interval"),
+    Input("update-time", "data"),
+)
+def sync_interval(update_time):
+    return int(update_time)
+
+
+@callback(
     Output("periodic-updater", "disabled", allow_duplicate=True),
     Output("pause-start-time", "data"),
     Output("total-paused-seconds", "data"),
     Output("pause-button", "children"),
     Output("pause-button", "icon"),
-    Input("update-time", "data"),
     Input("pause-button", "n_clicks"),
     State("periodic-updater", "disabled"),
     State("pause-start-time", "data"),
     State("total-paused-seconds", "data"),
-    prevent_initial_call='initial_duplicate',
+    prevent_initial_call=True,
 )
-def update_interval(update_time, pause_clicks, currently_disabled, pause_start, total_paused):
-    if ctx.triggered_id == "pause-button":
-        if not pause_clicks:
-            # n_clicks reset to 0 on page remount — ignore to avoid spurious pause
-            raise PreventUpdate
-        if not currently_disabled:
-            # Pausing — record when the pause started
-            return no_update, True, time.time(), no_update, "Resume", DashIconify(icon="carbon:play")
-        else:
-            # Unpausing — accumulate the pause duration and clear the start time
-            paused_for = time.time() - (pause_start or time.time())
-            return no_update, False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
-    return int(update_time), False, no_update, no_update, no_update, no_update
+def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused):
+    if not pause_clicks:
+        # n_clicks reset to 0 on page remount — ignore to avoid spurious pause
+        raise PreventUpdate
+    if not currently_disabled:
+        # Pausing — record when the pause started
+        return True, time.time(), no_update, "Resume", DashIconify(icon="carbon:play")
+    else:
+        # Unpausing — accumulate the pause duration and clear the start time
+        paused_for = time.time() - (pause_start or time.time())
+        return False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
 
 
 @callback(

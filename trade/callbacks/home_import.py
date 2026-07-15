@@ -31,6 +31,7 @@ _LOADED_HIDDEN = {"display": "none"}
 @callback(
     Output("companies", "data", allow_duplicate=True),
     Output("initial-cashflow", "data", allow_duplicate=True),
+    Output("cashflow", "data", allow_duplicate=True),
     Output("max-requests", "data", allow_duplicate=True),
     Output("update-time", "data", allow_duplicate=True),
     Output("simulation-duration", "data", allow_duplicate=True),
@@ -46,7 +47,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -65,7 +66,7 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
@@ -83,6 +84,7 @@ def import_session(contents, filename, search):
     return (
         stores["companies"],
         stores["initial-cashflow"],
+        stores["initial-cashflow"],  # sync live cashflow to the imported starting amount
         stores["max-requests"],
         stores["update-time"],
         stores["simulation-duration"],
