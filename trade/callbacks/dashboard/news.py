@@ -1,11 +1,12 @@
-from dash import callback, Output, Input, State, page_registry, ALL, no_update, ctx
+from dash import callback, Output, Input, State, page_registry, ALL, no_update, ctx, html
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import pandas as pd
 
+_SENTIMENT_COLORS = {"positive": "green", "negative": "red", "neutral": "gray"}
+
 from trade.locales import translations as tls
-from trade.components.table import create_table
 from trade.utils.news import get_news_dataframe
 
 
@@ -43,13 +44,43 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         ts = pd.Timestamp.now()
 
     nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
-    nl = nl[['article', 'date']].head(range).astype(str)
-    nl = nl.rename(columns={
-        'date': tls[lang]['news-table']['date'],
-        'article': tls[lang]['news-table']['article'],
-    })
+    has_sentiment = 'sentiment' in nl.columns
+    nl = nl.head(range)
 
-    return dmc.Table(children=create_table(nl, id="news-lines"))
+    date_label = tls[lang]['news-table']['date']
+    article_label = tls[lang]['news-table']['article']
+
+    header = html.Thead(html.Tr([
+        html.Th(article_label),
+        html.Th(date_label, style={"whiteSpace": "nowrap"}),
+    ]))
+
+    rows = []
+    for idx, row in enumerate(nl.itertuples(index=False)):
+        article_text = str(getattr(row, 'article', ''))
+        date_text = str(row.date)[:10]
+
+        text_color = None
+        if has_sentiment:
+            raw = getattr(row, 'sentiment', None)
+            sentiment = str(raw).lower().strip() if raw and str(raw) != 'nan' else 'neutral'
+            color = _SENTIMENT_COLORS.get(sentiment, "gray")
+            if sentiment in ("positive", "negative"):
+                text_color = color
+
+        cells = [
+            html.Td(article_text, style={"color": text_color} if text_color else {}),
+            html.Td(date_text, style={"whiteSpace": "nowrap", "color": "gray", "fontSize": "0.75rem"}),
+        ]
+
+        rows.append(html.Tr(
+            children=cells,
+            id={"type": "news-lines", "index": idx},
+            n_clicks=0,
+            style={"cursor": "pointer"},
+        ))
+
+    return dmc.Table(children=[header, html.Tbody(rows)])
 
 
 @callback(
@@ -184,10 +215,16 @@ def notify_new_news(timestamp, last_ts, companies):
             color = "green" if "positive" in sentiment else "red" if "negative" in sentiment else "blue"
             short_headline = headline[:110] + "…" if len(headline) > 110 else headline
 
+            text_color = color if color in ("green", "red") else None
+            styled_headline = (
+                html.Span(short_headline, style={"color": text_color})
+                if text_color else short_headline
+            )
+
             safe_ts = current_ts_str.replace(":", "-").replace(" ", "-")
             if company_key:
                 msg = dmc.Stack([
-                    dmc.Text(short_headline, size="xs"),
+                    dmc.Text(styled_headline, size="xs"),
                     dmc.Button(
                         view_label,
                         id={"type": "news-view-btn", "index": headline},
@@ -198,7 +235,7 @@ def notify_new_news(timestamp, last_ts, companies):
                     ),
                 ], spacing="xs")
             else:
-                msg = short_headline
+                msg = styled_headline
 
             notifications.append(
                 dmc.Notification(
