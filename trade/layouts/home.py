@@ -64,7 +64,8 @@ def options(lang="fr"):
                 id=id,
                 leftIcon=DashIconify(icon=icon),
                 variant="solid", color="dark", radius="md", size="lg",
-                disabled=disabled, fullWidth=True
+                disabled=disabled, fullWidth=True,
+                style={"width": "20rem"},
             ),
             href=href,
             id=f"{id}-link" if id else None,
