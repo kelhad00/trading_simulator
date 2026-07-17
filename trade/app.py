@@ -25,6 +25,7 @@ app = Dash(
 )
 
 theme = {
+    "colorScheme": "light",
     "defaultRadius": "md",
     "components": {
         "Paper": {
@@ -51,6 +52,7 @@ portfolio_value = {ticker: 0 for ticker in dlt.companies_list.keys()}
 
 app.layout = dmc.MantineProvider([
     dmc.NotificationsProvider([
+        dcc.Store(id="color-scheme-store", data="light", storage_type="local"),
         html.Div(id="notifications"),
 
         # Global location tracker — lets navigation-triggered callbacks re-fire
@@ -96,7 +98,7 @@ app.layout = dmc.MantineProvider([
 
         dash.page_container
     ])
-], theme=theme)
+], theme=theme, id="mantine-provider")
 
 def run():
     path = dlt.data_path
