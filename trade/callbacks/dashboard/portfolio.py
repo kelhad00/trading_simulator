@@ -7,24 +7,25 @@ from trade.locales import translations as tls
 import pandas as pd
 
 
+def _colored_amount(value, reference):
+    color = "green" if value > reference else "red" if value < reference else None
+    text = f"{round(value, 2)}€"
+    return html.Span(text, style={"color": color, "fontWeight": "bold"}) if color else text
+
+
 @callback(
     Output('portfolio-cashflow', 'children'),
     Output('portfolio-investment', 'children'),
     Input('periodic-updater', 'n_intervals'),
     Input('portfolio-totals', 'data'),
     Input('cashflow', 'data'),
+    State('initial-cashflow', 'data'),
 )
-def display_portfolio_updated(n, totals, cashflow):
-    """
-    Display the portfolio cashflow and investment updated
-    Args:
-        totals: The portfolio totals
-        cashflow: The portfolio cashflow
-    Returns:
-        The updated portfolio cashflow and investment
-    """
+def display_portfolio_updated(n, totals, cashflow, initial_cashflow):
     totals = pd.Series(totals)
-    return f"{round(cashflow, 2)}€", f"{round(cashflow + totals.sum(), 2)}€"
+    investment = cashflow + totals.sum()
+    ref = initial_cashflow or 0
+    return _colored_amount(cashflow, ref), _colored_amount(investment, ref)
 
 
 @callback(
@@ -32,8 +33,9 @@ def display_portfolio_updated(n, totals, cashflow):
     Input('periodic-updater', 'n_intervals'),
     Input('portfolio-totals', 'data'),
     Input('portfolio-shares', 'data'),
+    State('cost-basis', 'data'),
 )
-def display_portfolio_table_updated(n, totals, shares):
+def display_portfolio_table_updated(n, totals, shares, cost_basis):
     """
     Display the updated portfolio table
     Args:
@@ -44,6 +46,7 @@ def display_portfolio_table_updated(n, totals, shares):
     """
 
     lang = page_registry.get('lang', 'fr')
+    cost_basis = dict(cost_basis or {})
 
     totals = pd.Series(totals).fillna(0)
     shares = pd.Series(shares)
@@ -60,15 +63,22 @@ def display_portfolio_table_updated(n, totals, shares):
     df[tls[lang]['portfolio-columns']['Total']] = df[tls[lang]['portfolio-columns']['Total']].round(2)
 
     header = html.Thead(html.Tr([html.Th(col) for col in df.columns]))
-    rows = [
-        html.Tr(
+    rows = []
+    for row in df.values:
+        ticker = row[0]
+        shares_held = shares.get(ticker, 0)
+        basis = cost_basis.get(ticker, 0)
+        total_val = totals.get(ticker, 0)
+        if shares_held > 0 and basis > 0:
+            row_color = "green" if total_val >= basis else "red"
+        else:
+            row_color = None
+        rows.append(html.Tr(
             children=[html.Td(cell) for cell in row],
-            id={"type": "portfolio-row", "index": row[0]},
+            id={"type": "portfolio-row", "index": ticker},
             n_clicks=0,
-            style={"cursor": "pointer"},
-        )
-        for row in df.values
-    ]
+            style={"cursor": "pointer", "color": row_color} if row_color else {"cursor": "pointer"},
+        ))
 
     return dmc.Table(
         highlightOnHover=True,

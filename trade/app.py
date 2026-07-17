@@ -62,6 +62,7 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id='requests', data=[], storage_type="session"),
         dcc.Store(id='portfolio-shares', data=portfolio_value, storage_type="session"),
         dcc.Store(id='portfolio-totals', data=portfolio_value, storage_type="session"),
+        dcc.Store(id='cost-basis', data={}, storage_type="session"),
         dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
 
         dcc.Store(id="companies", data=dlt.companies_list, storage_type="local"),
