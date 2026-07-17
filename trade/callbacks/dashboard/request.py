@@ -155,6 +155,7 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     Output('portfolio-shares', 'data'),
     Output('cashflow', 'data'),
     Output('portfolio-totals', 'data'),
+    Output('cost-basis', 'data', allow_duplicate=True),
 
     Input("requests", "data"),
     Input('timestamp', 'data'),
@@ -162,9 +163,10 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     State('portfolio-shares', 'data'),
     State('cashflow', 'data'),
     State("portfolio-totals", "data"),
+    State('cost-basis', 'data'),
     prevent_initial_call=True,
 )
-def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals):
+def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals, cost_basis):
     """
     Try to execute the requests of the user.
     Update the portfolio, the cashflow and requests list.
@@ -181,6 +183,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         port_totals: the updated dictionary of the total price of the user
     """
     old_req = request_list.copy()
+    cost_basis = dict(cost_basis or {})
 
     price_list = get_price_dataframe()
     low_list   = get_low_dataframe()
@@ -202,6 +205,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
                 # Because the total price will be updated in the portfolio callback
                 port_shares.loc[req['company']] += req['shares']
                 cashflow -= req["shares"] * req["price"]
+                cost_basis[req['company']] = cost_basis.get(req['company'], 0) + req['shares'] * req['price']
 
             # the request is removed, with or without the user having enough money
             request_list.remove(req)
@@ -212,8 +216,12 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
             if port_shares.at[req['company'], 'Shares'] >= req["shares"]:
                 # Update only the shares and the cashflow
                 # Because the total price will be updated in the portfolio callback
+                held_before = port_shares.at[req['company'], 'Shares']
                 port_shares.loc[req['company']] -= req["shares"]
                 cashflow += req['shares'] * req['price']
+                if held_before > 0:
+                    avg = cost_basis.get(req['company'], 0) / held_before
+                    cost_basis[req['company']] = cost_basis.get(req['company'], 0) - req['shares'] * avg
 
             # the request is removed, with or without the user having enough shares
             request_list.remove(req)
@@ -228,9 +236,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         # Update the total price of each stock
         port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
 
-
-
-    return request_list if old_req != request_list else no_update, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict()
+    return request_list if old_req != request_list else no_update, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict(), cost_basis
 
 
 @callback(

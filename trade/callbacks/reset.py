@@ -53,6 +53,7 @@ if APP_MODE != 'runtime':
     Output('requests', 'data', allow_duplicate=True),
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
+    Output('cost-basis', 'data', allow_duplicate=True),
     Output('nb_export', 'data'),
     Input('reset-button', 'n_clicks'),
     State('initial-cashflow', 'data'),
@@ -69,7 +70,7 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data):
     timestamp = get_first_timestamp(market_df, 100)
     portfolio_value = {c: 0 for c, info in (companies_data or {}).items() if info.get('got_charts')}
 
-    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, nb_export + 1
+    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, {}, nb_export + 1
 
 
 @callback(
@@ -78,6 +79,7 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data):
     Output('requests', 'data', allow_duplicate=True),
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
+    Output('cost-basis', 'data', allow_duplicate=True),
     Output('nb_export', 'data', allow_duplicate=True),
     Output('do-redirect', 'data'),
     Output('session-start-time', 'data', allow_duplicate=True),
@@ -93,8 +95,8 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data):
     prevent_initial_call=True,
 )
 def reset_modal(btn, initial_cashflow, nb_export, companies_data):
-    ts, cf, req, shares, totals, nb = reset_data(btn, initial_cashflow, nb_export, companies_data)
-    return ts, cf, req, shares, totals, nb, True, None, False, False, None, 0, None
+    ts, cf, req, shares, totals, basis, nb = reset_data(btn, initial_cashflow, nb_export, companies_data)
+    return ts, cf, req, shares, totals, basis, nb, True, None, False, False, None, 0, None
 
 
 clientside_callback(
