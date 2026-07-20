@@ -33,9 +33,10 @@ def display_portfolio_updated(n, totals, cashflow, initial_cashflow):
     Input('periodic-updater', 'n_intervals'),
     Input('portfolio-totals', 'data'),
     Input('portfolio-shares', 'data'),
+    Input('company-selector', 'value'),
     State('cost-basis', 'data'),
 )
-def display_portfolio_table_updated(n, totals, shares, cost_basis):
+def display_portfolio_table_updated(n, totals, shares, selected_company, cost_basis):
     """
     Display the updated portfolio table
     Args:
@@ -73,11 +74,16 @@ def display_portfolio_table_updated(n, totals, shares, cost_basis):
             row_color = "green" if total_val >= basis else "red"
         else:
             row_color = None
+        style = {"cursor": "pointer"}
+        if row_color:
+            style["color"] = row_color
+        if ticker == selected_company:
+            style["backgroundColor"] = "#e7f5ff"
         rows.append(html.Tr(
             children=[html.Td(cell) for cell in row],
             id={"type": "portfolio-row", "index": ticker},
             n_clicks=0,
-            style={"cursor": "pointer", "color": row_color} if row_color else {"cursor": "pointer"},
+            style=style,
         ))
 
     return dmc.Table(
