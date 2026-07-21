@@ -144,14 +144,23 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
                 annotation_font_size=11,
             )
 
+        # Always keep the view on the last 100 bars so the graph scrolls forward,
+        # but all historical data is in the figure so panning left still shows old candles
+        mdf = get_market_dataframe()[company]
+        idx = mdf.index.get_loc(new_ts)
+        start = mdf.index[max(0, idx - 99)]
+        fig.update_layout(xaxis_range=[start, new_ts])
+
         # Data exhaustion: create_graph couldn't advance (idx past end of dataframe).
         # Render the last frame and end immediately — no frozen-tick gap before the modal.
         if next_graph and new_ts == timestamp:
             print("[GRAPH] data exhausted at", new_ts)
             return new_ts, fig, True, True, session_start_time
 
+        # Only advance the timestamp on periodic-updater ticks — not on requests/company changes
+        out_ts = new_ts if next_graph else no_update
         print(f"[GRAPH] ok new_ts={new_ts}")
-        return new_ts, fig, no_update, no_update, session_start_time
+        return out_ts, fig, no_update, no_update, session_start_time
 
     except Exception as e:
         print("Error in update_graph:", e)

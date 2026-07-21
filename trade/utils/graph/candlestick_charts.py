@@ -51,16 +51,9 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
             else:
                 dftmp = dataframe[:range]
         elif next_graph:  # You want to see the graph with new data
-            if range == 0 or idx < range:
-                dftmp = dataframe.iloc[:idx + 1]
-            else:
-                dftmp = dataframe.iloc[idx - (range - 1): idx + 1]
+            dftmp = dataframe.iloc[:idx + 1]
         else:  # You want to see the graph of another company
-            # And so with the same timestamp as the previous graph
-            if range == 0 or idx < range:
-                dftmp = dataframe.iloc[: idx]
-            else:
-                dftmp = dataframe.iloc[idx - range: idx]
+            dftmp = dataframe.iloc[:idx]
 
 
     # Strip rows where OHLC data is absent (tickers with fewer data points than
