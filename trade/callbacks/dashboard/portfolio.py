@@ -35,8 +35,9 @@ def display_portfolio_updated(n, totals, cashflow, initial_cashflow):
     Input('portfolio-shares', 'data'),
     Input('company-selector', 'value'),
     State('cost-basis', 'data'),
+    State('sold-data', 'data'),
 )
-def display_portfolio_table_updated(n, totals, shares, selected_company, cost_basis):
+def display_portfolio_table_updated(n, totals, shares, selected_company, cost_basis, sold_data):
     """
     Display the updated portfolio table
     Args:
@@ -48,28 +49,38 @@ def display_portfolio_table_updated(n, totals, shares, selected_company, cost_ba
 
     lang = page_registry.get('lang', 'fr')
     cost_basis = dict(cost_basis or {})
+    sold_data = dict(sold_data or {})
+    cols = tls[lang]['portfolio-columns']
 
     totals = pd.Series(totals).fillna(0)
     shares = pd.Series(shares)
-    df = pd.concat([shares, totals], axis=1)  # Concatenate the shares and totals
 
-    # Rename the columns for the display in the table
-    df.columns = [tls[lang]['portfolio-columns']['Shares'], tls[lang]['portfolio-columns']['Total']]
+    def fmt(value):
+        return f"{value:.2f}€"
 
-    # Reset the index to put each Stock as an index and rename the column to 'Stock'
-    df.reset_index(inplace=True)
-    df.rename(columns={'index': tls[lang]['portfolio-columns']['Stock']}, inplace=True)
-
-    # Round totals to 2 decimal places
-    df[tls[lang]['portfolio-columns']['Total']] = df[tls[lang]['portfolio-columns']['Total']].round(2)
-
-    header = html.Thead(html.Tr([html.Th(col) for col in df.columns]))
+    header = html.Thead(html.Tr([
+        html.Th(cols['Stock']),
+        html.Th(cols['Shares']),
+        html.Th(cols['Total']),
+        html.Th(cols['CurPrice']),
+        html.Th(cols['BoughtAt']),
+        html.Th(cols['SoldAt']),
+        html.Th(cols['PnL']),
+    ]))
     rows = []
-    for row in df.values:
-        ticker = row[0]
+    for ticker in shares.index:
         shares_held = shares.get(ticker, 0)
         basis = cost_basis.get(ticker, 0)
         total_val = totals.get(ticker, 0)
+
+        cur_price = fmt(total_val / shares_held) if shares_held > 0 else "-"
+        avg_buy = fmt(basis / shares_held) if shares_held > 0 else "-"
+        sd = sold_data.get(ticker, {})
+        avg_sell = fmt(sd["revenue"] / sd["shares"]) if sd.get("shares", 0) > 0 else "-"
+        pnl_val = total_val - basis
+        pnl_color = "green" if pnl_val > 0 else "red" if pnl_val < 0 else None
+        pnl_cell = html.Span(fmt(pnl_val), style={"color": pnl_color, "fontWeight": "bold"}) if pnl_color else fmt(pnl_val)
+
         if shares_held > 0 and basis > 0:
             row_color = "green" if total_val >= basis else "red"
         else:
@@ -80,7 +91,15 @@ def display_portfolio_table_updated(n, totals, shares, selected_company, cost_ba
         if ticker == selected_company:
             style["backgroundColor"] = "#e7f5ff"
         rows.append(html.Tr(
-            children=[html.Td(cell) for cell in row],
+            children=[
+                html.Td(ticker),
+                html.Td(shares_held),
+                html.Td(fmt(total_val)),
+                html.Td(cur_price),
+                html.Td(avg_buy),
+                html.Td(avg_sell),
+                html.Td(pnl_cell),
+            ],
             id={"type": "portfolio-row", "index": ticker},
             n_clicks=0,
             style=style,

@@ -156,6 +156,7 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     Output('cashflow', 'data'),
     Output('portfolio-totals', 'data'),
     Output('cost-basis', 'data', allow_duplicate=True),
+    Output('sold-data', 'data', allow_duplicate=True),
 
     Input("requests", "data"),
     Input('timestamp', 'data'),
@@ -164,9 +165,10 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
     State('cashflow', 'data'),
     State("portfolio-totals", "data"),
     State('cost-basis', 'data'),
+    State('sold-data', 'data'),
     prevent_initial_call=True,
 )
-def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals, cost_basis):
+def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals, cost_basis, sold_data):
     """
     Try to execute the requests of the user.
     Update the portfolio, the cashflow and requests list.
@@ -184,6 +186,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     """
     old_req = request_list.copy()
     cost_basis = dict(cost_basis or {})
+    sold_data = dict(sold_data or {})
 
     price_list = get_price_dataframe()
     low_list   = get_low_dataframe()
@@ -222,6 +225,9 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
                 if held_before > 0:
                     avg = cost_basis.get(req['company'], 0) / held_before
                     cost_basis[req['company']] = cost_basis.get(req['company'], 0) - req['shares'] * avg
+                sold_data.setdefault(req['company'], {"revenue": 0, "shares": 0})
+                sold_data[req['company']]["revenue"] += req['shares'] * req['price']
+                sold_data[req['company']]["shares"] += req['shares']
 
             # the request is removed, with or without the user having enough shares
             request_list.remove(req)
@@ -236,7 +242,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         # Update the total price of each stock
         port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
 
-    return request_list if old_req != request_list else no_update, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict(), cost_basis
+    return request_list if old_req != request_list else no_update, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict(), cost_basis, sold_data
 
 
 @callback(

@@ -25,7 +25,7 @@ translation = {
 
         # Portfolio
         "portfolio": "Portfolio",
-        'portfolio-columns': {'Stock': 'Stocks', 'Shares': 'Shares', 'Total': 'Price'},
+        'portfolio-columns': {'Stock': 'Stocks', 'Shares': 'Shares', 'Total': 'Total', 'CurPrice': 'Cur. Price', 'BoughtAt': 'Bought At', 'SoldAt': 'Sold At', 'PnL': 'PnL'},
         "portfolio-cashflow": "Cashflow: ",
         "portfolio-investment": "Total investment: ",
 
