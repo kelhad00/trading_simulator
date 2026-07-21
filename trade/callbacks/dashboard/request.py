@@ -37,8 +37,7 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
         return True, tls[page_registry.get('lang', 'fr')]["err-wrong-form"]
 
     # If the request is to buy and the user doesn't have enough money
-    stock_price = get_price_dataframe().loc[timestamp, company]
-    if action == 'buy' and cash < share * stock_price:
+    if action == 'buy' and cash < share * price:
         return True, tls[page_registry.get('lang', 'fr')]["err-enough-money"]
 
     # If the request is to sell and the user doesn't have enough shares
@@ -95,6 +94,7 @@ def fill_market_price(n_clicks, company, timestamp):
 @callback(
     Output("requests", "data", allow_duplicate=True),
     Output('notifications', 'children', allow_duplicate=True),
+    Output('cashflow', 'data', allow_duplicate=True),
 
     Input("submit-button", "n_clicks"),
 
@@ -142,12 +142,15 @@ def process_submit_button(btn, company, action, price, share, cash, timestamp, p
             color="red",
             icon=DashIconify(icon="material-symbols:error"),
             message=message,
-        )
+        ), no_update
     else:
         # the request list has been returned
         req = message
 
-    return req, no_update
+    if action == 'buy':
+        cash -= share * price
+
+    return req, no_update, cash
 
 
 @callback(
@@ -202,15 +205,9 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
 
         # If the request is completed
         if req['action'] == 'buy' and low_price <= req['price']:
-            # If the user has enough money
-            if req['shares'] * req['price'] <= cashflow:
-                # Update only the shares and the cashflow
-                # Because the total price will be updated in the portfolio callback
-                port_shares.loc[req['company']] += req['shares']
-                cashflow -= req["shares"] * req["price"]
-                cost_basis[req['company']] = cost_basis.get(req['company'], 0) + req['shares'] * req['price']
-
-            # the request is removed, with or without the user having enough money
+            # Funds were already reserved at submission — just update shares and cost basis
+            port_shares.loc[req['company']] += req['shares']
+            cost_basis[req['company']] = cost_basis.get(req['company'], 0) + req['shares'] * req['price']
             request_list.remove(req)
 
         # Same as above for the sell request
@@ -373,12 +370,14 @@ def edit_request_values(prices, shares, actions, requests, port_shares, cashflow
 
 @callback(
     Output("requests", "data", allow_duplicate=True),
+    Output('cashflow', 'data', allow_duplicate=True),
     Input('clear-done-btn', 'n_clicks'),
     Input({'type': 'requests-selectable-table', 'index': ALL}, "n_clicks"),
     State("requests", "data"),
+    State('cashflow', 'data'),
     prevent_initial_call=True
 )
-def remove_request(n, values_to_remove, req):
+def remove_request(n, values_to_remove, req, cashflow):
     """
     Remove the selected requests.
     Args:
@@ -393,14 +392,17 @@ def remove_request(n, values_to_remove, req):
     if ctx.triggered_id == 'clear-done-btn':
         if not n:
             raise PreventUpdate
-        return []
+        refund = sum(r['shares'] * r['price'] for r in req if r['action'] == 'buy')
+        return [], cashflow + refund
     else:
         if 1 in values_to_remove:
             index = values_to_remove.index(1)
+            cancelled = req[index]
+            refund = cancelled['shares'] * cancelled['price'] if cancelled['action'] == 'buy' else 0
             del req[index]
-            return req
+            return req, cashflow + refund
         else:
-            return no_update
+            return no_update, no_update
 
 
 # ── Right-click context menu on chart ─────────────────────────────────────────
