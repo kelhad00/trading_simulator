@@ -188,6 +188,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         port_totals: the updated dictionary of the total price of the user
     """
     old_req = request_list.copy()
+    old_cashflow = cashflow
     cost_basis = dict(cost_basis or {})
     sold_data = dict(sold_data or {})
 
@@ -239,7 +240,19 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
         # Update the total price of each stock
         port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
 
-    return request_list if old_req != request_list else no_update, port_shares['Shares'].to_dict(), cashflow, port_totals['Totals'].to_dict(), cost_basis, sold_data
+    # cashflow is only ever mutated by the sell branch above — passing it through
+    # unconditionally on every trigger (including the periodic timestamp tick, which
+    # fires independently of the user) races against other callbacks (edit/submit/
+    # delete) that also write 'cashflow': a stale passthrough here can land after a
+    # more recent edit and silently overwrite it. Only emit it when it truly changed.
+    return (
+        request_list if old_req != request_list else no_update,
+        port_shares['Shares'].to_dict(),
+        cashflow if cashflow != old_cashflow else no_update,
+        port_totals['Totals'].to_dict(),
+        cost_basis,
+        sold_data,
+    )
 
 
 @callback(
@@ -297,6 +310,12 @@ def cb_display_requests(req, lang, port_shares, cashflow):
                         min=0, step=0.01, precision=2,
                         size="xs",
                         style={"width": "90px"},
+                        # Without this, every keystroke fires its own server round-trip;
+                        # rapid typing can then let an overlapping request from an earlier
+                        # (stale) keystroke land after a later one and silently overwrite
+                        # the wallet's reserved-cash bookkeeping. Debouncing collapses a
+                        # typing burst into a single request.
+                        debounce=400,
                     ),
                     style={"verticalAlign": "middle"},
                 ),
@@ -307,6 +326,7 @@ def cb_display_requests(req, lang, port_shares, cashflow):
                         min=1, max=max_shares, step=1,
                         size="xs",
                         style={"width": "70px"},
+                        debounce=400,
                     ),
                     style={"verticalAlign": "middle"},
                 ),
