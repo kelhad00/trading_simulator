@@ -19,11 +19,15 @@ def _colored_amount(value, reference):
     Input('periodic-updater', 'n_intervals'),
     Input('portfolio-totals', 'data'),
     Input('cashflow', 'data'),
+    Input('requests', 'data'),
     State('initial-cashflow', 'data'),
 )
-def display_portfolio_updated(n, totals, cashflow, initial_cashflow):
+def display_portfolio_updated(n, totals, cashflow, requests, initial_cashflow):
     totals = pd.Series(totals)
-    investment = cashflow + totals.sum()
+    # Funds reserved for pending buy requests are still the user's money — they haven't
+    # bought anything yet — so they must be added back or investment looks like a loss.
+    reserved = sum(r['shares'] * r['price'] for r in (requests or []) if r['action'] == 'buy')
+    investment = cashflow + reserved + totals.sum()
     ref = initial_cashflow or 0
     return _colored_amount(cashflow, ref), _colored_amount(investment, ref)
 

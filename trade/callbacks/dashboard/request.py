@@ -274,7 +274,10 @@ def cb_display_requests(req, lang, port_shares, cashflow):
                 max_shares = int(port_shares.get(r['company'], 0)) or None
             else:
                 price = r.get('price', 0)
-                max_shares = int(cashflow // price) if price > 0 else None
+                # This row's own funds are already reserved out of cashflow — add them
+                # back to see what's really available for it.
+                available = cashflow + r.get('shares', 0) * price
+                max_shares = int(available // price) if price > 0 else None
 
             rows.append(html.Tr([
                 html.Td(r['company'], style={"verticalAlign": "middle", "fontSize": "13px"}),
@@ -325,6 +328,7 @@ def cb_display_requests(req, lang, port_shares, cashflow):
 
 @callback(
     Output('requests', 'data', allow_duplicate=True),
+    Output('cashflow', 'data', allow_duplicate=True),
     Input({'type': 'req-price-input', 'index': ALL}, 'value'),
     Input({'type': 'req-shares-input', 'index': ALL}, 'value'),
     Input({'type': 'req-action-input', 'index': ALL}, 'value'),
@@ -339,34 +343,47 @@ def edit_request_values(prices, shares, actions, requests, port_shares, cashflow
 
     port_shares = port_shares or {}
     cashflow = cashflow or 0
+    initial_cashflow = cashflow
 
     changed = False
     for i, (price, share, action) in enumerate(zip(prices, shares, actions)):
         if i >= len(requests):
             break
 
+        old_price = requests[i]['price']
+        old_shares = requests[i]['shares']
+        old_action = requests[i]['action']
+        old_reserved = old_shares * old_price if old_action == 'buy' else 0
+
         # Use the updated values where available, otherwise fall back to stored values
-        eff_action = action if action is not None else requests[i]['action']
-        eff_price = price if price is not None else requests[i]['price']
         company = requests[i]['company']
+        eff_action = action if action is not None else old_action
+        eff_price = price if price is not None else old_price
+        eff_shares = share if share is not None else old_shares
 
-        if price is not None and requests[i]['price'] != price:
-            requests[i]['price'] = price
-            changed = True
-        if action is not None and requests[i]['action'] != action:
-            requests[i]['action'] = action
-            changed = True
-        if share is not None:
-            if eff_action == 'sell':
-                max_shares = int(port_shares.get(company, 0)) or None
-            else:
-                max_shares = int(cashflow // eff_price) if eff_price > 0 else None
-            clamped = max(1, min(share, max_shares)) if max_shares else max(1, share)
-            if requests[i]['shares'] != clamped:
-                requests[i]['shares'] = clamped
-                changed = True
+        # Release this request's own reserved funds first so we clamp against what's
+        # really available for it (its own reservation shouldn't count against itself).
+        available_pool = cashflow + old_reserved
 
-    return requests if changed else no_update
+        if eff_action == 'sell':
+            max_shares = int(port_shares.get(company, 0)) or None
+        else:
+            max_shares = int(available_pool // eff_price) if eff_price > 0 else None
+        eff_shares = max(1, min(eff_shares, max_shares)) if max_shares else max(1, eff_shares)
+
+        new_reserved = eff_shares * eff_price if eff_action == 'buy' else 0
+        cashflow = available_pool - new_reserved
+
+        if old_price != eff_price or old_shares != eff_shares or old_action != eff_action:
+            requests[i]['price'] = eff_price
+            requests[i]['shares'] = eff_shares
+            requests[i]['action'] = eff_action
+            changed = True
+
+    return (
+        requests if changed else no_update,
+        cashflow if cashflow != initial_cashflow else no_update,
+    )
 
 @callback(
     Output("requests", "data", allow_duplicate=True),
