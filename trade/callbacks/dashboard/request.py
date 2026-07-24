@@ -206,25 +206,33 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
 
         # If the request is completed
         if req['action'] == 'buy' and low_price <= req['price']:
-            # Funds were already reserved at submission — just update shares and cost basis
+            # A limit buy never pays more than the limit — if the market is actually
+            # trading below it, fill at the (lower) market price and refund the
+            # difference between what was reserved (at the limit price) and what was
+            # really spent.
+            fill_price = min(req['price'], price_list.loc[timestamp, req['company']])
             port_shares.loc[req['company']] += req['shares']
-            cost_basis[req['company']] = cost_basis.get(req['company'], 0) + req['shares'] * req['price']
+            cost_basis[req['company']] = cost_basis.get(req['company'], 0) + req['shares'] * fill_price
+            cashflow += req['shares'] * (req['price'] - fill_price)
             request_list.remove(req)
 
         # Same as above for the sell request
         elif req['action'] == 'sell' and high_price >= req['price']:
             # If the user has enough shares
             if port_shares.at[req['company'], 'Shares'] >= req["shares"]:
+                # A limit sell never settles for less than the limit — if the market is
+                # actually trading above it, fill at the (higher) market price.
+                fill_price = max(req['price'], price_list.loc[timestamp, req['company']])
                 # Update only the shares and the cashflow
                 # Because the total price will be updated in the portfolio callback
                 held_before = port_shares.at[req['company'], 'Shares']
                 port_shares.loc[req['company']] -= req["shares"]
-                cashflow += req['shares'] * req['price']
+                cashflow += req['shares'] * fill_price
                 if held_before > 0:
                     avg = cost_basis.get(req['company'], 0) / held_before
                     cost_basis[req['company']] = cost_basis.get(req['company'], 0) - req['shares'] * avg
                 sold_data.setdefault(req['company'], {"revenue": 0, "shares": 0})
-                sold_data[req['company']]["revenue"] += req['shares'] * req['price']
+                sold_data[req['company']]["revenue"] += req['shares'] * fill_price
                 sold_data[req['company']]["shares"] += req['shares']
 
             # the request is removed, with or without the user having enough shares
