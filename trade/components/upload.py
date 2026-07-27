@@ -7,5 +7,6 @@ def upload_button(id, accept):
             'Drag and Drop or ',
             html.A('Select Files')
         ]),
-        className="flex items-center justify-center w-full h-64 bg-gray-100 border-2 border-dashed border-gray-300 rounded-md cursor-pointer",
+        className="flex items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-md cursor-pointer",
+        style={"backgroundColor": "transparent"},
     )

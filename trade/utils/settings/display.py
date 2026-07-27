@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 
 
-def display_chart(data, index, length, data_name):
+def display_chart(data, index, length, data_name, template='plotly_white'):
     '''
     Display a candlestick chart using Plotly
     '''
@@ -33,6 +33,7 @@ def display_chart(data, index, length, data_name):
         xaxis_title="Date",
         yaxis_title="Price",
         xaxis_rangeslider_visible=False,
+        template=template,
     )
 
     return fig

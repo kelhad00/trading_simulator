@@ -18,7 +18,7 @@ _UPLOAD_STYLE = {
     "borderRadius": "6px",
     "borderColor": "#495057",
     "cursor": "pointer",
-    "backgroundColor": "white",
+    "backgroundColor": "var(--mantine-color-body)",
     "fontSize": "14px",
     "color": "#495057",
 }

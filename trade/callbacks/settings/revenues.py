@@ -38,9 +38,10 @@ def select_all_companies(n, companies):
     Output("revenues-container", "children"),
     Input("settings-tabs", "value"),
     Input("modal-revenues", "opened"),
-    Input("select-companies-revenues", "value")
+    Input("select-companies-revenues", "value"),
+    State("color-scheme-store", "data"),
 )
-def display_revenues(tabs, modal, companies):
+def display_revenues(tabs, modal, companies, color_scheme):
     """
     Display the revenues
     Args:
@@ -76,6 +77,7 @@ def display_revenues(tabs, modal, companies):
             ])
             fig.update_layout(
                 title=f"Revenues for {company}",
+                template='plotly_dark' if color_scheme == 'dark' else 'plotly_white',
             )
             children.append(
                 dcc.Graph(

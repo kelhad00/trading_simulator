@@ -10,10 +10,10 @@ def lang_menu(lang="fr", url="/" ):
 
     if lang == "fr" :
         icon = "twemoji:flag-france"
-        fr_bg = "bg-gray-100"
+        fr_bg = ""
     else:
         icon = "twemoji:flag-united-states"
-        en_bg = "bg-gray-100"
+        en_bg = ""
 
     return html.Div([
         dmc.ActionIcon(
@@ -52,9 +52,9 @@ def dashboard_menu(lang="fr"):
     fr_bg = ""
 
     if lang == "fr":
-        fr_bg = "bg-gray-100"
+        fr_bg = ""
     else:
-        en_bg = "bg-gray-100"
+        en_bg = ""
 
     return dmc.Menu(
         [

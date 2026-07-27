@@ -12,9 +12,10 @@ import trade.callbacks.settings.stocks as stocks_callbacks
     Output("chart", "figure"),
     Input("select-company", "value"),
     Input("figures", "data"),
+    State("color-scheme-store", "data"),
     prevent_initial_call=True
 )
-def update_graph(company, data):
+def update_graph(company, data, color_scheme):
     """
     Update the graph with the selected company
     Args:
@@ -24,8 +25,9 @@ def update_graph(company, data):
         The updated graph
     """
     try:
-        df = get_generated_data()[company]  # Get the data of the selected company
-        return display_chart(df, 0, df.shape[0], company)  # Display the chart
+        df = get_generated_data()[company]
+        tmpl = 'plotly_dark' if color_scheme == 'dark' else 'plotly_white'
+        return display_chart(df, 0, df.shape[0], company, template=tmpl)
 
     except Exception as e:
         print('Error while rendering chart :', e)

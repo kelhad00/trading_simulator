@@ -25,7 +25,7 @@ def revenues_layout(lang="fr"):
 
         section(tl["subtitles"]["preview"],
                 [dmc.Paper(
-                    html.Div(dcc.Graph(), id="revenues-container")
+                    html.Div(id="revenues-container")
                 )],
             action_id="button-modify-revenues",
             action=tl["button"]["modify"]

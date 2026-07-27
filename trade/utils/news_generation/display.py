@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 
-def display_chart(data, data_name, news_position):
+def display_chart(data, data_name, news_position, template='plotly_white'):
     '''
     Display a candlestick chart using Plotly
     '''
@@ -39,8 +39,8 @@ def display_chart(data, data_name, news_position):
         xaxis_title="Date",
         yaxis_title="Price",
         xaxis_rangeslider_visible=False,
-        # Preserves zoom/pan when news markers are added or removed
         uirevision=data_name,
+        template=template,
     )
 
     return fig

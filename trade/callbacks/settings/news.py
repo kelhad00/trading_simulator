@@ -194,10 +194,11 @@ def update_options_news_companies(tabs, companies):
     Input('input-nbr-negative-news', 'value'),
     Input('input-top-k', 'value'),
     Input('manual-positions-store', 'data'),
+    State('color-scheme-store', 'data'),
     prevent_initial_call=True
 )
 def update_graph_news(company, alpha, alpha_day_interval, delta, mode,
-                      nbr_positive_news, nbr_negative_news, top_k, manual_store):
+                      nbr_positive_news, nbr_negative_news, top_k, manual_store, color_scheme):
     if not company:
         raise PreventUpdate
     try:
@@ -219,7 +220,8 @@ def update_graph_news(company, alpha, alpha_day_interval, delta, mode,
                 raise PreventUpdate
             news_position = get_news_position_rand(df, nbr_positive_news, nbr_negative_news, alpha, alpha_day_interval, delta)
 
-        return display_chart(df, company, news_position)
+        tmpl = 'plotly_dark' if color_scheme == 'dark' else 'plotly_white'
+        return display_chart(df, company, news_position, template=tmpl)
 
     except PreventUpdate:
         raise

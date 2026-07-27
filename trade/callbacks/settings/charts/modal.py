@@ -305,10 +305,11 @@ def _format_bar_count(n):
     Input("slider-event-position", "value"),
     Input("slider-event-magnitude", "value"),
     State("base-figures", "data"),
+    State("color-scheme-store", "data"),
     prevent_initial_call=True,
 )
 def apply_patterns_and_display(pattern_files, event_type, event_position, event_magnitude,
-                                base_data):
+                                base_data, color_scheme):
     if not base_data:
         raise PreventUpdate
 
@@ -381,7 +382,8 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
                 start=first_timestamp, periods=final_chart.shape[0], freq="D"
             )
 
-            fig = display_chart(final_chart, 0, final_chart.shape[0], company)
+            tmpl = 'plotly_dark' if color_scheme == 'dark' else 'plotly_white'
+            fig = display_chart(final_chart, 0, final_chart.shape[0], company, template=tmpl)
             figures.append(fig)
             dataframes.append(final_chart.to_dict())
 

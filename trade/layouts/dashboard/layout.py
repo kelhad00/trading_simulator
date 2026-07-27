@@ -23,7 +23,7 @@ def main_layout(lang="fr"):
                 "display": "none",
                 "position": "fixed",
                 "zIndex": 9999,
-                "backgroundColor": "white",
+                "backgroundColor": "var(--mantine-color-body)",
                 "border": "1px solid #dee2e6",
                 "borderRadius": "6px",
                 "padding": "4px",

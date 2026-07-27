@@ -17,11 +17,43 @@ external_scripts = [
     {'src': 'https://cdn.tailwindcss.com'}
 ]
 
+_anti_flash_script = """
+<script>
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('color-scheme-store'));
+    if (s === 'dark') {
+      document.documentElement.style.backgroundColor = '#1a1b1e';
+      document.body.style.backgroundColor = '#1a1b1e';
+    }
+  } catch(e) {}
+})();
+</script>
+"""
+
 app = Dash(
     __name__,
     use_pages=True,
     suppress_callback_exceptions=True,
-    external_scripts=external_scripts
+    external_scripts=external_scripts,
+    index_string="""<!DOCTYPE html>
+<html>
+  <head>
+    {%metas%}
+    <title>{%title%}</title>
+    """ + _anti_flash_script + """
+    {%favicon%}
+    {%css%}
+  </head>
+  <body>
+    {%app_entry%}
+    <footer>
+      {%config%}
+      {%scripts%}
+      {%renderer%}
+    </footer>
+  </body>
+</html>"""
 )
 
 theme = {
@@ -185,6 +217,39 @@ clientside_callback(
     Output("revenue-graph", "figure", allow_duplicate=True),
     Input("color-scheme-store", "data"),
     State("revenue-graph", "figure"),
+    prevent_initial_call=True,
+)
+
+_graph_patch_js = """function(scheme, fig) {
+    if (!fig || !fig.layout) return window.dash_clientside.no_update;
+    var dark = scheme === 'dark';
+    var bg = dark ? '#1a1b1e' : 'white';
+    var fc = dark ? '#c1c2c5' : '#333333';
+    var gc = dark ? '#373A40' : '#eeeeee';
+    return Object.assign({}, fig, {
+        layout: Object.assign({}, fig.layout, {
+            paper_bgcolor: bg,
+            plot_bgcolor: bg,
+            font: Object.assign({}, fig.layout.font || {}, { color: fc }),
+            xaxis: Object.assign({}, fig.layout.xaxis || {}, { gridcolor: gc }),
+            yaxis: Object.assign({}, fig.layout.yaxis || {}, { gridcolor: gc }),
+        })
+    });
+}"""
+
+clientside_callback(
+    _graph_patch_js,
+    Output("chart", "figure", allow_duplicate=True),
+    Input("color-scheme-store", "data"),
+    State("chart", "figure"),
+    prevent_initial_call=True,
+)
+
+clientside_callback(
+    _graph_patch_js,
+    Output("news-chart", "figure", allow_duplicate=True),
+    Input("color-scheme-store", "data"),
+    State("news-chart", "figure"),
     prevent_initial_call=True,
 )
 

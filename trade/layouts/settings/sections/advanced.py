@@ -21,7 +21,7 @@ def advanced_settings(lang="fr"):
             ),
             html.Div(
                 id="active-companies-box",
-                className="min-h-[80px] border border-gray-300 rounded-md p-3 bg-white flex flex-wrap gap-2 items-start content-start",
+                className="min-h-[80px] border border-gray-300 rounded-md p-3 flex flex-wrap gap-2 items-start content-start",
             ),
             html.Div(id="active-companies-count", className="text-sm text-gray-400"),
         ]),
