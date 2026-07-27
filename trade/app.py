@@ -1,4 +1,4 @@
-from dash import Dash, html, dcc
+from dash import Dash, html, dcc, clientside_callback, Input, Output, State
 import dash
 import dash_mantine_components as dmc
 
@@ -101,6 +101,93 @@ app.layout = dmc.MantineProvider([
         dash.page_container
     ])
 ], theme=theme, id="mantine-provider")
+
+clientside_callback(
+    """function(n, scheme) {
+        if (!n) return scheme || 'light';
+        return scheme === 'dark' ? 'light' : 'dark';
+    }""",
+    Output("color-scheme-store", "data", allow_duplicate=True),
+    Input("theme-toggle-home", "n_clicks"),
+    State("color-scheme-store", "data"),
+    prevent_initial_call=True,
+)
+
+clientside_callback(
+    """function(n, scheme) {
+        if (!n) return scheme || 'light';
+        return scheme === 'dark' ? 'light' : 'dark';
+    }""",
+    Output("color-scheme-store", "data", allow_duplicate=True),
+    Input("theme-toggle-dashboard", "n_clicks"),
+    State("color-scheme-store", "data"),
+    prevent_initial_call=True,
+)
+
+clientside_callback(
+    """function(scheme) {
+        var s = scheme || 'light';
+        var bg = s === 'dark' ? '#1a1b1e' : '#f3f4f6';
+        document.body.style.backgroundColor = bg;
+        document.documentElement.style.backgroundColor = bg;
+        return {
+            colorScheme: s,
+            defaultRadius: 'md',
+            components: {
+                Paper: { defaultProps: { p: 'xs', withBorder: true } }
+            }
+        };
+    }""",
+    Output("mantine-provider", "theme"),
+    Input("color-scheme-store", "data"),
+)
+
+clientside_callback(
+    """function(scheme, fig) {
+        if (!fig || !fig.layout) return window.dash_clientside.no_update;
+        var dark = scheme === 'dark';
+        var bg = dark ? '#1a1b1e' : 'white';
+        var fc = dark ? '#c1c2c5' : '#333333';
+        var gc = dark ? '#373A40' : '#eeeeee';
+        return Object.assign({}, fig, {
+            layout: Object.assign({}, fig.layout, {
+                paper_bgcolor: bg,
+                plot_bgcolor: bg,
+                font: Object.assign({}, fig.layout.font || {}, { color: fc }),
+                xaxis: Object.assign({}, fig.layout.xaxis || {}, { gridcolor: gc }),
+                yaxis: Object.assign({}, fig.layout.yaxis || {}, { gridcolor: gc }),
+            })
+        });
+    }""",
+    Output("company-graph", "figure", allow_duplicate=True),
+    Input("color-scheme-store", "data"),
+    State("company-graph", "figure"),
+    prevent_initial_call=True,
+)
+
+clientside_callback(
+    """function(scheme, fig) {
+        if (!fig || !fig.layout) return window.dash_clientside.no_update;
+        var dark = scheme === 'dark';
+        var bg = dark ? '#1a1b1e' : 'white';
+        var fc = dark ? '#c1c2c5' : '#333333';
+        var gc = dark ? '#373A40' : '#eeeeee';
+        return Object.assign({}, fig, {
+            layout: Object.assign({}, fig.layout, {
+                paper_bgcolor: bg,
+                plot_bgcolor: bg,
+                font: Object.assign({}, fig.layout.font || {}, { color: fc }),
+                xaxis: Object.assign({}, fig.layout.xaxis || {}, { gridcolor: gc }),
+                yaxis: Object.assign({}, fig.layout.yaxis || {}, { gridcolor: gc }),
+            })
+        });
+    }""",
+    Output("revenue-graph", "figure", allow_duplicate=True),
+    Input("color-scheme-store", "data"),
+    State("revenue-graph", "figure"),
+    prevent_initial_call=True,
+)
+
 
 def run():
     path = dlt.data_path

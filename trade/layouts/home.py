@@ -50,7 +50,7 @@ def main_layout(lang="fr"):
             ], className="flex flex-col gap-8"),
         ], className="flex flex-col gap-8"),
         options(lang)
-    ], className="pt-8 pb-20 px-12 bg-gray-100 h-screen w-screen flex flex-col gap-8 justify-between")
+    ], className="pt-8 pb-20 px-12 h-screen w-screen flex flex-col gap-8 justify-between")
 
 
 def options(lang="fr"):
@@ -143,7 +143,7 @@ def options(lang="fr"):
 
 def description(lang="fr"):
     def variant(content):
-        return html.Span(content, className="text-3xl font-semibold text-[rgb(73,80,87)]")
+        return dmc.Text(content, span=True, className="text-3xl font-semibold", color="dimmed")
 
     return dmc.Text([
         tls[lang]["description"][0],
@@ -159,7 +159,7 @@ def description(lang="fr"):
 def welcome(lang="fr"):
     className = "text-8xl font-bold leading-none"
     return html.Div([
-        dmc.Title(tls[lang]["welcome"][0], order=1, className=f"{className} text-[rgb(73,80,87)]"),
+        dmc.Title(tls[lang]["welcome"][0], order=1, className=className, color="dimmed"),
         dmc.Title(tls[lang]["welcome"][1], order=1, className=className),
     ])
 

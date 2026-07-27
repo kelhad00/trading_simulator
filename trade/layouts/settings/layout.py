@@ -67,7 +67,7 @@ def main_layout(lang="fr"):
             radius="md",
             className="w-full max-w-2xl flex flex-col gap-8"
         )
-    ], className="px-12 p-8 bg-gray-100 flex flex-col items-center h-screen gap-8 overflow-auto"),
+    ], className="px-12 p-8 flex flex-col items-center h-screen gap-8 overflow-auto"),
 
 
 

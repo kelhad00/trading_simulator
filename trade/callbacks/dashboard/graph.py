@@ -84,9 +84,10 @@ def cb_update_timestamp(timestamp):
     State('simulation-duration', 'data'),
     State('total-paused-seconds', 'data'),
     Input('requests', 'data'),
+    Input('color-scheme-store', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme):
     next_graph = ctx.triggered_id == 'periodic-updater'
     print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp}")
 
@@ -122,6 +123,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             # resets only when the user switches company
             uirevision=company,
             dragmode='pan',
+            template='plotly_dark' if color_scheme == 'dark' else 'plotly_white',
         )
 
         fig.for_each_trace(
@@ -163,9 +165,10 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
     State('timestamp', 'data'),
-    State("companies", "data")
+    State("companies", "data"),
+    Input('color-scheme-store', 'data'),
 )
-def update_revenue(n, company, timestamp, companies):
+def update_revenue(n, company, timestamp, companies, color_scheme):
     try:
         if companies[company]['activity'] == "Indice":
             return no_update
@@ -205,6 +208,7 @@ def update_revenue(n, company, timestamp, companies):
             margin=dict(l=0, r=0, t=0, b=0),
             legend=dict(x=0, y=1.0),
             uirevision=company,
+            template='plotly_dark' if color_scheme == 'dark' else 'plotly_white',
         )
 
         return fig

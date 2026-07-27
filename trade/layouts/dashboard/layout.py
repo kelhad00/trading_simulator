@@ -59,7 +59,7 @@ def main_layout(lang="fr"):
             news(lang),
             news_description(lang),
             request(lang)
-        ], className="grid grid-cols-7 grid-rows-5 gap-4 h-screen w-screen bg-gray-100 p-4")
+        ], className="grid grid-cols-7 grid-rows-5 gap-4 h-screen w-screen p-4")
     ])
 
 
