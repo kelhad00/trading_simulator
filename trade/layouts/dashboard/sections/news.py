@@ -6,7 +6,7 @@ from trade.locales import translations as tls
 def news(lang="fr"):
     return dmc.Paper(
         [
-            dmc.Text(tls[lang]['news'], weight=700, className="text-[rgb(73,80,87)]", size="xl"),
+            dmc.Text(tls[lang]['news'], weight=700, size="xl"),
             html.Div(id="news-table", className="w-full h-full overflow-y-scroll"),
         ],
         id='news-container',
@@ -18,12 +18,12 @@ def news_description(lang="fr"):
         html.Div(
             className="flex flex-col gap-4",
             children=[
-                dmc.Text(tls[lang]['title-news-description'], weight=700, className="text-[rgb(73,80,87)]", size="xl"),
+                dmc.Text(tls[lang]['title-news-description'], weight=700, size="xl"),
 
                 html.Div(
                     className="flex flex-col gap-2 flex-1",
                     children=[
-                        dmc.Text(id="description-title", weight=500, className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="md"),
+                        dmc.Text(id="description-title", weight=500, className="text-ellipsis leading-none", size="md"),
                         dmc.Text(id="description-date", size="xs", color="dimmed", italic=True),
                         dmc.Text(id='description-text', size="xs"),
                     ]

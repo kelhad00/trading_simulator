@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 def slider(title, id, min, max, value):
     return html.Div([
         dmc.Text(title, weight=500,
-                 className="text-[rgb(73,80,87)] text-ellipsis leading-none", size="sm"),
+                 className="text-ellipsis leading-none", size="sm"),
         dmc.Slider(
             id=id,
             value=value,

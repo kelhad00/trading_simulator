@@ -14,7 +14,7 @@ def request_form(lang="fr"):
     return dmc.Paper(
         [
             html.Div(className="flex flex-col gap-2", children=[
-                dmc.Text(tls[lang]['request-title'], weight=700, className="text-[rgb(73,80,87)]", size="xl"),
+                dmc.Text(tls[lang]['request-title'], weight=700, size="xl"),
                 dmc.SegmentedControl(
                     id="action-input",
                     value="buy",
@@ -25,7 +25,7 @@ def request_form(lang="fr"):
                 html.Div([
                     dmc.NumberInput(
                         id='price-input',
-                        label=dmc.Text(tls[lang]['request-price'], weight=700, className="text-[rgb(73,80,87)]", size="sm"),
+                        label=dmc.Text(tls[lang]['request-price'], weight=700, size="sm"),
                         value=0, min=0, step=0.01, precision=2,
                     ),
                     dmc.Button(
@@ -40,7 +40,7 @@ def request_form(lang="fr"):
                 ], className="flex flex-col gap-1"),
                 dmc.NumberInput(
                     id='nbr-share-input',
-                    label=dmc.Text(tls[lang]['request-shares'], weight=700, className="text-[rgb(73,80,87)]", size="sm"),
+                    label=dmc.Text(tls[lang]['request-shares'], weight=700, size="sm"),
                     value=1, min=1, step=1,
                 ),
             ]),
@@ -53,7 +53,7 @@ def request_form(lang="fr"):
 
 def request_list(lang="fr"):
     return dmc.Paper([
-        dmc.Text(tls[lang]['requests-list-title'], weight=700, className="text-[rgb(73,80,87)]", size="xl"),
+        dmc.Text(tls[lang]['requests-list-title'], weight=700, size="xl"),
         dmc.Button(tls[lang]['clear-all-requests-button'], id="clear-done-btn", variant="outline", color="gray"),
         html.Div(id="request-table", className="overflow-y-scroll"),
     ], className="flex flex-col gap-2 flex-[2] overflow-hidden")

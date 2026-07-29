@@ -16,11 +16,11 @@ _UPLOAD_STYLE = {
     "borderWidth": "1px",
     "borderStyle": "dashed",
     "borderRadius": "6px",
-    "borderColor": "#495057",
+    "borderColor": "var(--mantine-color-dimmed)",
     "cursor": "pointer",
     "backgroundColor": "var(--mantine-color-body)",
     "fontSize": "14px",
-    "color": "#495057",
+    "color": "var(--mantine-color-dimmed)",
 }
 
 _LOADED_STYLE = {

@@ -22,7 +22,7 @@ def graph(lang="fr"):
                 ),
                 html.Div([
                     dmc.Text("Date", weight=700,
-                             className="text-[rgb(73,80,87)] text-ellipsis", size="sm"),
+                             className="text-ellipsis", size="sm"),
                     dmc.Text(id="timer", className="whitespace-nowrap", size="sm"),
 
                 ], className="flex flex-col"),
