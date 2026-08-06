@@ -38,11 +38,17 @@ def request_form(lang="fr"):
                         fullWidth=True,
                     ),
                 ], className="flex flex-col gap-1"),
-                dmc.NumberInput(
-                    id='nbr-share-input',
-                    label=dmc.Text(tls[lang]['request-shares'], weight=700, size="sm"),
-                    value=1, min=1, step=1,
-                ),
+                html.Div([
+                    dmc.Text(tls[lang]['request-shares'], weight=700, size="sm"),
+                    dmc.Slider(
+                        id='nbr-share-input',
+                        value=1, min=1, max=100, step=1,
+                        labelAlwaysOn=True,
+                        marks=[{"value": 1, "label": "1"}, {"value": 100, "label": "100"}],
+                        color="dark",
+                        className="mb-4",
+                    ),
+                ], className="flex flex-col gap-2"),
             ]),
             dmc.Button(tls[lang]['submit-request'], id='submit-button', n_clicks=0, variant="outline", color="gray"),
             dmc.Text(id='request-err', size="xs")
