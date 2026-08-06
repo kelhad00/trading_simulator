@@ -118,6 +118,9 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="total-paused-seconds", data=0, storage_type="session"),
         dcc.Store(id="nav-away-time", data=None, storage_type="session"),
 
+        # Time reminder tracking — keys of reminders already shown this session
+        dcc.Store(id="shown-reminders", data=[], storage_type="session"),
+
         # Trigger for hard browser redirect after session ends
         dcc.Store(id="do-redirect", data=False, storage_type="memory"),
 
