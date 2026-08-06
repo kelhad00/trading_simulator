@@ -1,10 +1,23 @@
-from dash import callback, Output, Input, State, page_registry, ALL, no_update, ctx, html
+from dash import callback, clientside_callback, Output, Input, State, page_registry, ALL, no_update, ctx, html
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import pandas as pd
 
 _SENTIMENT_COLORS = {"positive": "green", "negative": "red", "neutral": "gray"}
+
+_FONT_SIZES = {'S': '0.75rem', 'M': '0.9375rem', 'L': '1.125rem'}
+
+clientside_callback(
+    """function(size) {
+        var fs = {'S': '0.75rem', 'M': '0.9375rem', 'L': '1.125rem'}[size] || '0.75rem';
+        return [{'fontSize': fs}, {'fontSize': fs}];
+    }""",
+    Output('news-table', 'style'),
+    Output('description-text', 'style'),
+    Input('news-font-control', 'value'),
+    prevent_initial_call=False,
+)
 
 from trade.locales import translations as tls
 from trade.utils.news import get_news_dataframe
