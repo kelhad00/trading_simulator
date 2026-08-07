@@ -51,10 +51,9 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
             else:
                 dftmp = dataframe[:range]
         elif next_graph:  # You want to see the graph with new data
-            if range == 0 or idx < range:
-                dftmp = dataframe.iloc[:idx + 1]
-            else:
-                dftmp = dataframe.iloc[idx - (range - 1): idx + 1]
+            # Always keep the full history from the start so previously
+            # rendered candles never disappear as new ones are added.
+            dftmp = dataframe.iloc[:idx + 1]
         else:  # You want to see the graph of another company
             # And so with the same timestamp as the previous graph
             if range == 0 or idx < range:
@@ -108,6 +107,14 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
 
     # Create chart for the selected stock
     figure = go.Figure(data=[long_mov_av, short_mov_av, twohun_mov_av, candelstick])
+
+    # The full history is always in the data now, but by default only show the
+    # last `range` candles so the view keeps scrolling forward like before —
+    # older candles shift out of view instead of being removed, and the user
+    # can still pan/zoom back to see them.
+    if range and 0 < range < len(plot_df):
+        visible = plot_df.iloc[-range:]
+        figure.update_xaxes(range=[visible.index[0], visible.index[-1]])
 
     return figure, dftmp.index[-1]
 
