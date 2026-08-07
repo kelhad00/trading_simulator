@@ -92,6 +92,41 @@ def fill_market_price(n_clicks, company, timestamp):
 
 
 @callback(
+    Output('slider-pct-badge', 'children'),
+    Output('share-preview', 'children'),
+    Input('nbr-share-input', 'value'),
+    Input('price-input', 'value'),
+    Input('action-input', 'value'),
+    State('cashflow', 'data'),
+    State('portfolio-shares', 'data'),
+    State('company-selector', 'value'),
+    prevent_initial_call=False,
+)
+def update_share_preview(pct, price, action, cash, port_shares, company):
+    pct = pct or 10
+    price = float(price or 0)
+    cash = float(cash or 0)
+
+    if action == 'sell':
+        held = int((port_shares or {}).get(company, 0)) if company else 0
+        shares = int(held * pct / 100)
+        amount = shares * price
+        badge = f"{pct}% — {shares} share(s)"
+        preview = f"{shares} share(s) · ≈€{amount:,.0f}"
+    else:
+        if price > 0:
+            amount = cash * pct / 100
+            shares = int(amount // price)
+            badge = f"{pct}% — {shares} share(s)"
+            preview = f"≈€{amount:,.0f} · {shares} share(s)"
+        else:
+            badge = f"{pct}%"
+            preview = ""
+
+    return badge, preview
+
+
+@callback(
     Output("requests", "data", allow_duplicate=True),
     Output('notifications', 'children', allow_duplicate=True),
     Output('cashflow', 'data', allow_duplicate=True),
@@ -109,28 +144,20 @@ def fill_market_price(n_clicks, company, timestamp):
     State("max-requests", "data"),
     prevent_initial_call=True,
 )
-def process_submit_button(btn, company, action, price, share, cash, timestamp, port_shares, req, max_requests):
-    """
-    Process the submit button.
-    Add the request to the list of requests.
-    Or return an error notification.
-    Args:
-        btn: the button nb click
-        company: the company of the request
-        action: the action of the request
-        price: the price of the request
-        share: the number of shares of the request
-        cash: the money of the user
-        timestamp: the current timestamp
-        port_shares: the shares of the user
-        req: the list of requests
-    Returns:
-        req: the updated list of requests
-        dmc.Notification: the notification to display
-    """
-
+def process_submit_button(btn, company, action, price, pct, cash, timestamp, port_shares, req, max_requests):
     if btn is None or btn == 0:
         raise PreventUpdate
+
+    pct = pct or 10
+    price = float(price or 0)
+    cash = float(cash or 0)
+
+    if action == 'sell':
+        _port = pd.DataFrame.from_dict(port_shares or {}, orient='index', columns=['Shares'])
+        held = int(_port.at[company, 'Shares']) if company in _port.index else 0
+        share = max(1, int(held * pct / 100))
+    else:
+        share = max(1, int((cash * pct / 100) // price)) if price > 0 else 1
 
     error, message = add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests)
 
