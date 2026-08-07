@@ -39,15 +39,18 @@ def request_form(lang="fr"):
                     ),
                 ], className="flex flex-col gap-1"),
                 html.Div([
-                    dmc.Text(tls[lang]['request-shares'], weight=700, size="sm"),
+                    html.Div([
+                        dmc.Text(tls[lang]['request-shares'], weight=700, size="sm"),
+                        dmc.Text(id='slider-pct-badge', size="sm", weight=700, color="dark"),
+                    ], className="flex justify-between items-center"),
                     dmc.Slider(
                         id='nbr-share-input',
-                        value=1, min=1, max=100, step=1,
-                        labelAlwaysOn=True,
-                        marks=[{"value": 1, "label": "1"}, {"value": 100, "label": "100"}],
+                        value=10, min=1, max=100, step=1,
+                        labelAlwaysOn=False,
                         color="dark",
                         className="mb-4",
                     ),
+                    dmc.Text(id='share-preview', size="xs", color="dimmed"),
                 ], className="flex flex-col gap-2"),
             ]),
             dmc.Button(tls[lang]['submit-request'], id='submit-button', n_clicks=0, variant="outline", color="gray"),
