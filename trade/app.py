@@ -92,6 +92,13 @@ app.layout = dmc.MantineProvider([
 
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
+        # Whether the market graph should auto-scroll to the live edge on each
+        # update. Set to False when the user manually pans/zooms away, and
+        # back to True when they switch company or click "Reset axes".
+        dcc.Store(id='graph-auto-follow', data=True, storage_type="memory"),
+        # The x-axis window the user manually panned/zoomed to, re-applied on
+        # every update while graph-auto-follow is False so the view stays put.
+        dcc.Store(id='graph-manual-range', data=None, storage_type="memory"),
         dcc.Store(id='portfolio-shares', data=portfolio_value, storage_type="session"),
         dcc.Store(id='portfolio-totals', data=portfolio_value, storage_type="session"),
         dcc.Store(id='cost-basis', data={}, storage_type="session"),

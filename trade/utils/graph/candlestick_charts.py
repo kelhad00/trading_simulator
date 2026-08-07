@@ -11,7 +11,7 @@ PLOTLY_CONFIG = {
 }
 
 
-def create_graph(dataframe, timestamp='', next_graph=True, range=10):
+def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True):
     """
     Create a candlestick chart for the selected stock or update an existing one
 
@@ -26,6 +26,12 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
 
     range : int
         number of data points to display (default: 10)
+
+    follow : bool
+        whether the visible window should auto-scroll to keep showing the
+        latest `range` candles (default: True). Set to False once the user
+        has manually panned/zoomed away, so their view isn't pushed back to
+        the live edge on the next update.
 
     Returns
     -------
@@ -111,10 +117,19 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
     # The full history is always in the data now, but by default only show the
     # last `range` candles so the view keeps scrolling forward like before —
     # older candles shift out of view instead of being removed, and the user
-    # can still pan/zoom back to see them.
-    if range and 0 < range < len(plot_df):
-        visible = plot_df.iloc[-range:]
-        figure.update_xaxes(range=[visible.index[0], visible.index[-1]])
+    # can still pan/zoom back to see them. Skip this while `follow` is False
+    # (user has manually panned away) so the update doesn't yank their view
+    # back to the live edge.
+    if follow and range:
+        visible = plot_df.iloc[-range:] if 0 < range < len(plot_df) else plot_df
+        # The index may be plain date strings (unparsed CSV column) rather than
+        # a DatetimeIndex, so parse the endpoints before doing date arithmetic.
+        start = pd.Timestamp(visible.index[0])
+        end = pd.Timestamp(visible.index[-1])
+        step = (end - start) / (len(visible) - 1) if len(visible) >= 2 else pd.Timedelta(days=1)
+        # Leave a little breathing room (a few candle-widths) to the right of
+        # the latest candle so it isn't flush against the edge of the plot.
+        figure.update_xaxes(range=[start, end + step * 3])
 
     return figure, dftmp.index[-1]
 

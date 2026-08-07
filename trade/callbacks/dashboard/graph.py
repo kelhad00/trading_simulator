@@ -83,6 +83,35 @@ def cb_update_timestamp(timestamp):
 
 
 @callback(
+    Output('graph-auto-follow', 'data'),
+    Output('graph-manual-range', 'data'),
+    Input('company-graph', 'relayoutData'),
+    Input('company-selector', 'value'),
+    prevent_initial_call=True,
+)
+def track_graph_auto_follow(relayout_data, company):
+    # Switching company always resumes auto-follow for the new chart.
+    if ctx.triggered_id == 'company-selector':
+        return True, None
+
+    if not relayout_data:
+        raise PreventUpdate
+
+    # "Reset axes" (modebar button or double-click) re-enables auto-follow.
+    if relayout_data.get('xaxis.autorange') or relayout_data.get('autosize'):
+        return True, None
+
+    # A manual pan or zoom disables auto-follow until the user resets it.
+    # Remember exactly where they left the view so every subsequent update
+    # can be pinned back to that same window instead of re-autoranging.
+    if 'xaxis.range[0]' in relayout_data and 'xaxis.range[1]' in relayout_data:
+        manual_range = [relayout_data['xaxis.range[0]'], relayout_data['xaxis.range[1]']]
+        return False, manual_range
+
+    raise PreventUpdate
+
+
+@callback(
     Output('timestamp', 'data'),
     Output('company-graph', 'figure'),
     Output('periodic-updater', 'disabled', allow_duplicate=True),
@@ -96,9 +125,12 @@ def cb_update_timestamp(timestamp):
     State('total-paused-seconds', 'data'),
     Input('requests', 'data'),
     Input('color-scheme-store', 'data'),
+    State('graph-auto-follow', 'data'),
+    State('graph-manual-range', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range):
+    following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp}")
 
@@ -120,7 +152,14 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # get_market_dataframe() is cached — only reads disk when file changes
         dftmp = get_market_dataframe()[company]
 
-        fig, new_ts = create_graph(dftmp, timestamp, next_graph, 100)
+        fig, new_ts = create_graph(dftmp, timestamp, next_graph, 100, follow=following)
+
+        if not following and manual_range:
+            # Pin the view to exactly where the user left it — sending no
+            # range at all lets Plotly re-autorange over the full (now much
+            # bigger) history and squeeze every candle into view, which is
+            # not what we want while the user is browsing the past.
+            fig.update_xaxes(range=manual_range)
 
         fig.update_layout(
             xaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['x'],
