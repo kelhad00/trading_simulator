@@ -18,6 +18,19 @@ def _lang(search):
     return "en" if (search and "lang=en" in search) else "fr"
 
 
+# ── Notification settings → stores ───────────────────────────────────────────
+
+@callback(
+    Output("notif-filter", "data"),
+    Output("notif-offset", "data"),
+    Input("notif-filter-input", "value"),
+    Input("notif-offset-input", "value"),
+    prevent_initial_call=True,
+)
+def sync_notif_settings(filter_val, offset_val):
+    return filter_val or [], int(offset_val or 0)
+
+
 # ── Provider visibility ───────────────────────────────────────────────────────
 
 @callback(

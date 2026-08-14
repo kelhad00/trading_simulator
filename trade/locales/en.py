@@ -217,6 +217,14 @@ translation = {
                     "parameters": "News generation parameters",
                     "mode": "Generation mode",
                     "preview": "Preview",
+                    "notifications": "Notifications",
+                },
+                "notifications": {
+                    "filter-label": "Show notifications for",
+                    "filter-positive": "Positive news",
+                    "filter-negative": "Negative news",
+                    "filter-neutral": "Neutral news",
+                    "offset-label": "Days before news appears (0 = same time)",
                 },
                 "button": {
                     "generate": "Generate news for all stocks",

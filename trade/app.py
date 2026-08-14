@@ -113,6 +113,10 @@ app.layout = dmc.MantineProvider([
         # News notification tracking — last timestamp that was notified
         dcc.Store(id="last-notified-ts", data=None, storage_type="session"),
 
+        # Notification settings — filter by sentiment and optional early-warning offset
+        dcc.Store(id="notif-filter", data=["positive", "negative", "neutral"], storage_type="local"),
+        dcc.Store(id="notif-offset", data=0, storage_type="local"),
+
         # Pause time tracking — freeze the simulation timer while paused
         dcc.Store(id="pause-start-time", data=None, storage_type="session"),
         dcc.Store(id="total-paused-seconds", data=0, storage_type="session"),

@@ -196,6 +196,32 @@ def news_settings(lang="fr"):
             ),
         ]),
 
+        section(tl["subtitles"]["notifications"], [
+            dmc.CheckboxGroup(
+                id="notif-filter-input",
+                label=tl["notifications"]["filter-label"],
+                value=["positive", "negative", "neutral"],
+                children=[
+                    dmc.Checkbox(value="positive", label=tl["notifications"]["filter-positive"]),
+                    dmc.Checkbox(value="negative", label=tl["notifications"]["filter-negative"]),
+                    dmc.Checkbox(value="neutral",  label=tl["notifications"]["filter-neutral"]),
+                ],
+                persistence=True,
+                persistence_type="local",
+            ),
+            dmc.NumberInput(
+                id="notif-offset-input",
+                label=tl["notifications"]["offset-label"],
+                value=0,
+                min=0,
+                max=30,
+                step=1,
+                className="w-full",
+                persistence=True,
+                persistence_type="local",
+            ),
+        ]),
+
         dmc.Button(tl["button"]["generate"], id="generate-news", color="dark", size="md"),
         html.Div([], id="news-notification-container"),
 

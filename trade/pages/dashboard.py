@@ -6,7 +6,7 @@ from dash import Input, Output, callback
 from trade.layouts.dashboard.layout import main_layout
 
 # Don't delete this import
-from trade.callbacks.dashboard import news, portfolio, graph, request, export
+from trade.callbacks.dashboard import news, portfolio, graph, request, export, reminders
 
 dash.register_page(__name__, path="/dashboard")
 

@@ -169,38 +169,50 @@ def view_company_from_description(n_clicks, company_key):
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
     Output('last-notified-ts', 'data'),
-    Input('timestamp', 'data'),
+    Input('periodic-updater', 'n_intervals'),
+    State('timestamp', 'data'),
     State('last-notified-ts', 'data'),
     State('companies', 'data'),
+    State('notif-filter', 'data'),
+    State('notif-offset', 'data'),
     prevent_initial_call=True,
 )
-def notify_new_news(timestamp, last_ts, companies):
+def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset):
     if timestamp is None:
         raise PreventUpdate
 
     try:
         news_df = get_news_dataframe()
         current_ts = pd.to_datetime(timestamp).replace(tzinfo=None) + pd.Timedelta(days=1)
-        current_ts_str = str(current_ts)
+        offset_days = int(notif_offset or 0)
+        notify_ts = current_ts + pd.Timedelta(days=offset_days)
+        notify_ts_str = str(notify_ts)
 
-        # First tick — just record the timestamp, don't flood with past articles
+        # First tick — just record the position, don't flood with past articles
         if last_ts is None:
-            return no_update, current_ts_str
+            return no_update, notify_ts_str
 
         last_ts_dt = pd.to_datetime(last_ts)
 
-        # If last_ts is ahead of the current simulation (stale from a previous run),
+        # If last_ts is ahead of the current notify window (stale from a previous run),
         # treat it as None so notifications restart from the beginning
-        if last_ts_dt > current_ts:
-            return no_update, current_ts_str
+        if last_ts_dt > notify_ts:
+            return no_update, notify_ts_str
 
         new_articles = news_df[
             (news_df['date'] > last_ts_dt) &
-            (news_df['date'] <= current_ts)
+            (news_df['date'] <= notify_ts)
         ]
 
+        # Apply sentiment filter
+        allowed = set(notif_filter) if notif_filter else set()
+        if allowed and 'sentiment' in new_articles.columns:
+            new_articles = new_articles[
+                new_articles['sentiment'].str.lower().str.strip().isin(allowed)
+            ]
+
         if new_articles.empty:
-            return no_update, current_ts_str
+            return no_update, notify_ts_str
 
         lang = page_registry.get('lang', 'en')
         view_label = tls[lang].get('news-notif-view', 'View')
@@ -234,7 +246,7 @@ def notify_new_news(timestamp, last_ts, companies):
                 if text_color else short_headline
             )
 
-            safe_ts = current_ts_str.replace(":", "-").replace(" ", "-")
+            safe_ts = notify_ts_str.replace(":", "-").replace(" ", "-")
             if company_key:
                 msg = dmc.Stack([
                     dmc.Text(styled_headline, size="xs"),
@@ -262,7 +274,7 @@ def notify_new_news(timestamp, last_ts, companies):
                 )
             )
 
-        return notifications, current_ts_str
+        return notifications, notify_ts_str
 
     except Exception as e:
         print(f"[NEWS NOTIF] Error: {e}")

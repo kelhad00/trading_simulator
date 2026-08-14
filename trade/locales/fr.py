@@ -230,6 +230,14 @@ translation = {
                     "parameters": "Paramètres de génération",
                     "mode": "Mode de génération",
                     "preview": "Prévisualisation",
+                    "notifications": "Notifications",
+                },
+                "notifications": {
+                    "filter-label": "Afficher les notifications pour",
+                    "filter-positive": "Actualités positives",
+                    "filter-negative": "Actualités négatives",
+                    "filter-neutral": "Actualités neutres",
+                    "offset-label": "Jours avant l'apparition de l'actualité (0 = en même temps)",
                 },
                 "button": {
                     "generate": "Générer pour toutes les actions",
