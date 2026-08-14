@@ -118,6 +118,7 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="local"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="local"),
         dcc.Store(id="simulation-duration", data=dlt.simulation_duration, storage_type="local"),
+        dcc.Store(id="news-font-size", data=dlt.news_font_size, storage_type="local"),
 
         # Session timer — records time.time() on first periodic-updater tick
         dcc.Store(id="session-start-time", data=None, storage_type="session"),

@@ -14,9 +14,10 @@ from trade.utils.session import build_session_zip
     State("max-requests", "data"),
     State("update-time", "data"),
     State("simulation-duration", "data"),
+    State("news-font-size", "data"),
     prevent_initial_call=True,
 )
-def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration):
+def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size):
     from dash import no_update
     if not n_clicks:
         return no_update
@@ -26,6 +27,7 @@ def export_session(n_clicks, companies, initial_cashflow, max_requests, update_t
         max_requests=max_requests,
         update_time=update_time,
         simulation_duration=simulation_duration,
+        news_font_size=news_font_size,
         data_path=dlt.data_path,
     )
     return {

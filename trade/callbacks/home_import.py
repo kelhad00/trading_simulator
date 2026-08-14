@@ -35,6 +35,7 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("max-requests", "data", allow_duplicate=True),
     Output("update-time", "data", allow_duplicate=True),
     Output("simulation-duration", "data", allow_duplicate=True),
+    Output("news-font-size", "data", allow_duplicate=True),
     Output("session-start-time", "data", allow_duplicate=True),
     Output("timestamp", "data", allow_duplicate=True),
     Output("notifications", "children", allow_duplicate=True),
@@ -47,7 +48,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -66,7 +67,7 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
@@ -88,6 +89,7 @@ def import_session(contents, filename, search):
         stores["max-requests"],
         stores["update-time"],
         stores["simulation-duration"],
+        stores["news-font-size"],
         None,           # reset session-start-time so timer is always fresh
         timestamp,
         notif,

@@ -303,6 +303,12 @@ translation = {
                     "cashflow": "Initial cashflow",
                     "simulation-duration": "Session duration (minutes)",
                 },
+                "news-font": {
+                    "label": "News article font size",
+                    "small": "Small",
+                    "medium": "Medium",
+                    "large": "Large",
+                },
                 "active": {
                     "dropdown-label": "Add a company",
                     "dropdown-placeholder": "Select a company to add...",

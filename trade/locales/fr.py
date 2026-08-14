@@ -316,6 +316,12 @@ translation = {
                     "cashflow": "Trésorie initiale",
                     "simulation-duration": "Durée de la session (minutes)",
                 },
+                "news-font": {
+                    "label": "Taille de police des articles",
+                    "small": "Petite",
+                    "medium": "Moyenne",
+                    "large": "Grande",
+                },
                 "active": {
                     "dropdown-label": "Ajouter une entreprise",
                     "dropdown-placeholder": "Sélectionner une entreprise à ajouter...",

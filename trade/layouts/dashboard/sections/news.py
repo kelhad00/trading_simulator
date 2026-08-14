@@ -8,14 +8,6 @@ def news(lang="fr"):
         [
             html.Div([
                 dmc.Text(tls[lang]['news'], weight=700, size="xl"),
-                dmc.SegmentedControl(
-                    id='news-font-control',
-                    value='S',
-                    data=['S', 'M', 'L'],
-                    size='xs',
-                    persistence=True,
-                    persistence_type='local',
-                ),
             ], className="flex justify-between items-center"),
             html.Div(id="news-table", className="w-full h-full overflow-y-scroll"),
         ],

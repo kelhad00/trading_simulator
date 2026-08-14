@@ -15,7 +15,7 @@ clientside_callback(
     }""",
     Output('news-table', 'style'),
     Output('description-text', 'style'),
-    Input('news-font-control', 'value'),
+    Input('news-font-size', 'data'),
     prevent_initial_call=False,
 )
 

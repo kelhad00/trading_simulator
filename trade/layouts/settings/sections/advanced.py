@@ -52,6 +52,17 @@ def advanced_settings(lang="fr"):
                     min=1,
                     max=120,
                 ),
+                html.Div([
+                    dmc.Text(tl["news-font"]["label"], size="sm", weight=500),
+                    dmc.SegmentedControl(
+                        id="input-news-font-size",
+                        data=[
+                            {"value": "S", "label": tl["news-font"]["small"]},
+                            {"value": "M", "label": tl["news-font"]["medium"]},
+                            {"value": "L", "label": tl["news-font"]["large"]},
+                        ],
+                    ),
+                ], className="flex flex-col gap-1"),
             ], className="flex flex-col gap-2"),
 
             dmc.Button(tl["button"]["update"], id="update-advanced-settings", color="dark", size="md"),
