@@ -107,6 +107,26 @@ def export_data(
     save_df(request_df, request_path)
 
 
+def log_session_event(event, timestamp=None, cashflow=None, company_id=None):
+    """ Log a session lifecycle event (start/pause/resume/finish) into interface-logs.csv """
+    uuid = str(uuid4())
+
+    df = pd.DataFrame({
+        "uuid": [uuid],
+        "market-timestamp": [timestamp],
+        "host-timestamp": [datetime.now().timestamp()],
+        "cashflow": [cashflow],
+        "selected-company": [company_id],
+        "form-action": [event],
+        "chart-type": [None],
+        "is_news_description_displayed": [False],
+        "news_title": [None],
+    })
+
+    file_path = os.path.join(dlt.data_path, 'export', 'interface-logs.csv')
+    save_df(df, file_path)
+
+
 def save_df(df, file_path):
     if os.path.isfile(file_path):
         df.to_csv(file_path, mode='a', index=False, header=False)

@@ -8,6 +8,7 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
 from trade.utils.graph.candlestick_charts import create_graph
+from trade.utils.export import log_session_event
 
 # (condition(elapsed, duration_secs), unique_key, title, message, color)
 _REMINDERS = [
@@ -58,18 +59,23 @@ def sync_interval(update_time):
     State("periodic-updater", "disabled"),
     State("pause-start-time", "data"),
     State("total-paused-seconds", "data"),
+    State("timestamp", "data"),
+    State("cashflow", "data"),
+    State("company-selector", "value"),
     prevent_initial_call=True,
 )
-def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused):
+def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused, timestamp, cashflow, company):
     if not pause_clicks:
         # n_clicks reset to 0 on page remount — ignore to avoid spurious pause
         raise PreventUpdate
     if not currently_disabled:
         # Pausing — record when the pause started
+        log_session_event("session-pause", timestamp, cashflow, company)
         return True, time.time(), no_update, "Resume", DashIconify(icon="carbon:play")
     else:
         # Unpausing — accumulate the pause duration and clear the start time
         paused_for = time.time() - (pause_start or time.time())
+        log_session_event("session-resume", timestamp, cashflow, company)
         return False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
 
 
@@ -127,9 +133,10 @@ def track_graph_auto_follow(relayout_data, company):
     Input('color-scheme-store', 'data'),
     State('graph-auto-follow', 'data'),
     State('graph-manual-range', 'data'),
+    State('cashflow', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp}")
@@ -138,6 +145,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         if session_start_time is None:
             # First tick of a new session — start the clock, skip end-condition check
             session_start_time = time.time()
+            log_session_event("session-start", timestamp, cashflow, company)
         else:
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
             elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
@@ -146,6 +154,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
 
             if elapsed >= duration_secs or data_done:
                 print("[GRAPH] simulation ended")
+                log_session_event("session-finish", timestamp, cashflow, company)
                 return no_update, no_update, True, True, session_start_time
 
     try:
@@ -200,6 +209,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # Render the last frame and end immediately — no frozen-tick gap before the modal.
         if next_graph and new_ts == timestamp:
             print("[GRAPH] data exhausted at", new_ts)
+            log_session_event("session-finish", new_ts, cashflow, company)
             return new_ts, fig, True, True, session_start_time
 
         print(f"[GRAPH] ok new_ts={new_ts}")
