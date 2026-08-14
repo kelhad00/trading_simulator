@@ -26,6 +26,11 @@ class Defaults:
     # Default real-world session length in minutes
     simulation_duration = 15
 
+    # Number of bars revealed all at once on the first frame of a live
+    # session (dashboard/graph.py, app.py) — used by the config-page preview
+    # to estimate where the "live" window starts.
+    initial_reveal_bars = 100
+
     # Default font size for news articles in the runtime dashboard ('S', 'M', or 'L')
     news_font_size = "S"
 

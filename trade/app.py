@@ -90,7 +90,7 @@ app.layout = dmc.MantineProvider([
         # Global location tracker — lets navigation-triggered callbacks re-fire
         dcc.Location(id="url", refresh=False),
 
-        dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
+        dcc.Store(id='timestamp', data=get_first_timestamp(market_df, dlt.initial_reveal_bars), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
         # Whether the market graph should auto-scroll to the live edge on each
         # update. Set to False when the user manually pans/zooms away, and

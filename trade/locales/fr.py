@@ -193,6 +193,20 @@ translation = {
                     "rising_wedge": "Biseau ascendant",
                     "falling_wedge": "Biseau descendant",
                 },
+                "sim-window": {
+                    "start": "Début de la simulation",
+                    "end": "Fin de la simulation",
+                    "legend": "🟢 début · 🔴 fin — ~%d/%d barres seront affichées durant la session de %d minutes",
+                    "legend-all": "🟢 début · 🔴 fin — les %d barres tiennent dans la session de %d minutes",
+                    "legend-short": "⚠️ seulement %d barres générées — la session manquera de données après ~%d des %d minutes configurées",
+                },
+                "bar-count": {
+                    "year": "an",
+                    "years": "ans",
+                    "month": "mois",
+                    "with-duration": "%d barres  (~%s de données)",
+                    "under-month": "%d barres  (< 1 mois de données)",
+                },
             },
             "tickers": {
                 "subtitles": {

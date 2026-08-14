@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import dash_mantine_components as dmc
 
-from dash import callback, Input, Output, State, ALL, no_update, dcc, ctx
+from dash import callback, Input, Output, State, ALL, no_update, dcc, html, ctx
 from dash.exceptions import PreventUpdate
 
 from trade.utils.market import get_first_timestamp
@@ -284,16 +284,34 @@ def toggle_radio_on_pattern(pattern_values):
 # base-figures is a State (not Input) so only pattern-files or event control
 # changes trigger a re-render — no double-fire when base-figures updates.
 
-def _format_bar_count(n):
+def _format_bar_count(n, lang):
     """Convert a bar count to a human-readable duration string."""
+    tl = tls[lang]["settings"]["charts"]["bar-count"]
     years  = n // 252
     months = (n % 252) // 21
     parts  = []
-    if years:  parts.append('%d yr%s'  % (years,  's' if years  > 1 else ''))
-    if months: parts.append('%d mo'    % months)
+    if years:  parts.append('%d %s' % (years, tl["years"] if years > 1 else tl["year"]))
+    if months: parts.append('%d %s' % (months, tl["month"]))
     if parts:
-        return '%d bars  (~%s of trading data)' % (n, ' '.join(parts))
-    return '%d bars  (< 1 mo of trading data)' % n
+        return tl["with-duration"] % (n, ' '.join(parts))
+    return tl["under-month"] % n
+
+
+def _compute_reveal_bounds(update_time, simulation_duration):
+    """Estimate the bar range a live session will actually walk through.
+
+    A live session reveals `dlt.initial_reveal_bars` bars at once on the
+    first tick, then one more bar per periodic-updater tick until either the
+    session timer (simulation_duration minutes) or the data runs out — see
+    callbacks/dashboard/graph.py::update_graph. This mirrors that math so the
+    config preview can show where "live" candles start and how far the
+    session can reach; it is an estimate, not a frame-accurate replay.
+    """
+    interval_secs = max(float(update_time or dlt.update_time) / 1000.0, 0.1)
+    duration_secs = float(simulation_duration or dlt.simulation_duration) * 60.0
+    extra_ticks = int(duration_secs // interval_secs)
+    start_bars = dlt.initial_reveal_bars
+    return start_bars, start_bars + extra_ticks, interval_secs
 
 
 @callback(
@@ -306,12 +324,19 @@ def _format_bar_count(n):
     Input("slider-event-magnitude", "value"),
     State("base-figures", "data"),
     State("color-scheme-store", "data"),
+    State("update-time", "data"),
+    State("simulation-duration", "data"),
+    State("url", "search"),
     prevent_initial_call=True,
 )
 def apply_patterns_and_display(pattern_files, event_type, event_position, event_magnitude,
-                                base_data, color_scheme):
+                                base_data, color_scheme, update_time, simulation_duration, search):
     if not base_data:
         raise PreventUpdate
+
+    lang = "en" if (search and "lang=en" in search) else "fr"
+    sim_labels = tls[lang]["settings"]["charts"]["sim-window"]
+    live_start_bars, live_reach_bars, interval_secs = _compute_reveal_bounds(update_time, simulation_duration)
 
     try:
         dataset = load_data(os.path.join(dlt.data_path, "CAC40.csv"))
@@ -328,7 +353,9 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
 
         dataframes  = []
         figures     = []
-        bar_count_str = ""
+        bar_count_str    = ""
+        sim_legend_str   = ""
+        sim_legend_is_warning = False
 
         # Fallback volatility: daily return std of the full CAC40 dataset
         global_vol = dataset['Close'].pct_change().std()
@@ -364,9 +391,31 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
                 data_list.append(segment)
                 prev_close = segment.iloc[-1]["Close"]
 
-            # Compute bar count from the first company (representative)
+            n_bars = sum(len(s) for s in data_list)
+            green_idx = max(0, min(live_start_bars, n_bars) - 1)
+            red_idx   = max(0, min(live_reach_bars, n_bars) - 1)
+
+            # Compute bar count / reveal legend from the first company (representative)
             if company_idx == 0:
-                bar_count_str = _format_bar_count(sum(len(s) for s in data_list))
+                bar_count_str = _format_bar_count(n_bars, lang)
+                duration_min = int(simulation_duration or dlt.simulation_duration)
+
+                if n_bars > live_reach_bars:
+                    # Time is the bottleneck: the session runs the full
+                    # duration and ends via the timer, with bars left over.
+                    sim_legend_str = sim_labels["legend"] % (red_idx + 1, n_bars, duration_min)
+                elif n_bars == live_reach_bars:
+                    # Knife-edge: data runs out exactly as the timer would.
+                    sim_legend_str = sim_labels["legend-all"] % (n_bars, duration_min)
+                else:
+                    # Data is the bottleneck: every bar gets shown, but the
+                    # session ends early — before the timer — because it
+                    # runs out of candlesticks. Surface how much of the
+                    # configured duration actually gets used.
+                    used_ticks = max(0, n_bars - live_start_bars)
+                    used_min = int(used_ticks * interval_secs // 60)
+                    sim_legend_str = sim_labels["legend-short"] % (n_bars, used_min, duration_min)
+                    sim_legend_is_warning = True
 
             final_chart = pd.concat(data_list).reset_index(drop=True)
 
@@ -384,11 +433,35 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
 
             tmpl = 'plotly_dark' if color_scheme == 'dark' else 'plotly_white'
             fig = display_chart(final_chart, 0, final_chart.shape[0], company, template=tmpl)
+
+            # Mark where the live session's first-frame reveal ends (green)
+            # and how far it can get before the timer/data runs out (red) —
+            # bars to the right of the red line are never shown live.
+            # Annotations are staggered top/bottom so the labels stay legible
+            # even when the two lines land close together (short sessions).
+            fig.add_vline(
+                x=green_idx, line_width=2, line_dash="dash", line_color="green",
+                annotation_text=sim_labels["start"], annotation_position="top left",
+                annotation_font_color="green", annotation_font_size=10,
+            )
+            fig.add_vline(
+                x=red_idx, line_width=2, line_dash="dash", line_color="red",
+                annotation_text=sim_labels["end"], annotation_position="bottom right",
+                annotation_font_color="red", annotation_font_size=10,
+            )
+
             figures.append(fig)
             dataframes.append(final_chart.to_dict())
 
         children = [dcc.Graph(figure=fig) for fig in figures]
-        return children, dataframes, bar_count_str
+        legend_style = {"marginTop": "2px"}
+        if sim_legend_is_warning:
+            legend_style.update({"color": "#e03131", "fontWeight": 600})
+        bar_count_children = [
+            html.Div(bar_count_str),
+            html.Div(sim_legend_str, style=legend_style),
+        ]
+        return children, dataframes, bar_count_children
 
     except Exception as e:
         print("Error applying patterns:", e)
