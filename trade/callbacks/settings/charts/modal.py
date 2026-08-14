@@ -42,9 +42,10 @@ import trade.callbacks.settings.stocks as stocks_callbacks
     Input("slider-start", "value"),
     Input({"type": "timeline-radio", "index": ALL}, "value"),
     Input("modal-select-companies", "value"),
+    State("base-figures", "data"),
     prevent_initial_call=True,
 )
-def generate_base_segments(alpha, segment_lengths, start_value, radio_trends, companies,
+def generate_base_segments(alpha, segment_lengths, start_value, radio_trends, companies, prev_base,
                             start_date=dlt.start_date):
     if not companies:
         raise PreventUpdate
@@ -55,15 +56,38 @@ def generate_base_segments(alpha, segment_lengths, start_value, radio_trends, co
     except Exception:
         first_timestamp = str(start_date)
 
+    # A per-segment control (length slider / trend radio) should only
+    # regenerate that one segment. Any other trigger (alpha, start value,
+    # company selection, or no previous data to carry forward) regenerates
+    # every segment, same as before.
+    dirty_index = None
+    triggered = ctx.triggered_id
+    if prev_base and isinstance(triggered, dict) and triggered.get("type") in ("timeline-length", "timeline-radio"):
+        # timeline_item() ids are 1-based (index=1..nb); radio_trends/indices
+        # lists below are 0-based, so convert before comparing.
+        dirty_index = triggered.get("index") - 1
+
+    prev_company_lookup = {}
+    if prev_base:
+        for entry in (prev_base.get("company_data") or []):
+            prev_company_lookup[entry["company"]] = entry["indices"]
+
     try:
         dataset   = load_data(os.path.join(dlt.data_path, "CAC40.csv"))
         data_size = get_data_size(dataset)
 
         company_data = []
         for company in companies:
+            prev_indices = prev_company_lookup.get(company, [])
             indices = []
             for i, trend_val in enumerate(radio_trends):
                 length_i = int(segment_lengths[i]) if i < len(segment_lengths) and segment_lengths[i] else 100
+
+                # Not the segment that changed → keep its previous window.
+                if dirty_index is not None and i != dirty_index and i < len(prev_indices):
+                    indices.append(prev_indices[i])
+                    continue
+
                 tv = trend_val or "flat"
                 if tv == "bull":
                     indices.append(bull_trend(dataset, data_size, alpha, length_i))
@@ -79,8 +103,10 @@ def generate_base_segments(alpha, segment_lengths, start_value, radio_trends, co
         return {
             "company_data":    company_data,
             "segment_lengths": lengths,
+            "radio_trends":    list(radio_trends),
             "start_value":     float(start_value) if start_value else 250.0,
             "first_timestamp": first_timestamp,
+            "dirty_indices":   None if dirty_index is None else [dirty_index],
         }
 
     except Exception as e:
@@ -105,14 +131,16 @@ def select_pattern_files(pattern_trends, base_data, prev_files):
     if not base_data:
         raise PreventUpdate
 
-    # When base-figures triggered, all windows changed → re-pick every file.
-    # When only a pattern dropdown changed, keep existing files for segments
-    # whose pattern type is unchanged so one segment's change doesn't re-roll others.
-    base_changed = ctx.triggered_id == "base-figures"
+    # dirty_indices is None when Step 1 regenerated every segment (alpha,
+    # start value, or company-selection change) → re-pick every file.
+    # When Step 1 only touched one segment, keep existing files for every
+    # other segment whose pattern type is unchanged, so that segment's
+    # change doesn't re-roll a sibling's already-chosen pattern.
+    dirty_indices = base_data.get("dirty_indices")
 
     prev_types  = (prev_files or {}).get('pattern_types', [])
     prev_lookup = {}
-    if prev_files and not base_changed:
+    if prev_files:
         for entry in (prev_files.get('company_data') or []):
             prev_lookup[entry['company']] = entry['segment_files']
 
@@ -127,8 +155,9 @@ def select_pattern_files(pattern_trends, base_data, prev_files):
             if pattern_type and pattern_type != "none":
                 prev_type = prev_types[seg_i] if seg_i < len(prev_types) else None
                 prev_path = prev_segs[seg_i]  if seg_i < len(prev_segs)  else None
+                segment_changed = dirty_indices is None or seg_i in dirty_indices
 
-                if not base_changed and prev_type == pattern_type and prev_path:
+                if not segment_changed and prev_type == pattern_type and prev_path:
                     # Same type, same base data → keep the already-chosen file
                     path = prev_path
                 else:
