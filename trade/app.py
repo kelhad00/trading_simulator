@@ -103,15 +103,20 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id='portfolio-totals', data=portfolio_value, storage_type="session"),
         dcc.Store(id='cost-basis', data={}, storage_type="session"),
         dcc.Store(id='sold-data', data={}, storage_type="session"),
-        dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
+        # Same persistence tier as "companies"/"simulation-duration" below: it's set
+        # from the imported session and must survive a closed/reopened tab exactly
+        # like they do, otherwise a re-run silently falls back to the hardcoded default.
+        dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="local"),
 
         dcc.Store(id="companies", data=dlt.companies_list, storage_type="local"),
         dcc.Store(id="nb_export", data=len(os.listdir(os.path.join(dlt.data_path, "exports"))), storage_type="session"),
 
-        # Advanced settings
-        dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="session"),
-        dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="session"),
-        dcc.Store(id="update-time", data=dlt.update_time, storage_type="session"),
+        # Advanced settings — imported together with companies/simulation-duration as
+        # part of the same session.zip, so they need the same "local" persistence to
+        # survive a closed/reopened browser tab (sessionStorage does not).
+        dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="local"),
+        dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="local"),
+        dcc.Store(id="update-time", data=dlt.update_time, storage_type="local"),
         dcc.Store(id="simulation-duration", data=dlt.simulation_duration, storage_type="local"),
 
         # Session timer — records time.time() on first periodic-updater tick
