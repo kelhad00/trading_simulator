@@ -92,20 +92,33 @@ app.layout = dmc.MantineProvider([
 
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, 100), storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
+        # Whether the market graph should auto-scroll to the live edge on each
+        # update. Set to False when the user manually pans/zooms away, and
+        # back to True when they switch company or click "Reset axes".
+        dcc.Store(id='graph-auto-follow', data=True, storage_type="memory"),
+        # The x-axis window the user manually panned/zoomed to, re-applied on
+        # every update while graph-auto-follow is False so the view stays put.
+        dcc.Store(id='graph-manual-range', data=None, storage_type="memory"),
         dcc.Store(id='portfolio-shares', data=portfolio_value, storage_type="session"),
         dcc.Store(id='portfolio-totals', data=portfolio_value, storage_type="session"),
         dcc.Store(id='cost-basis', data={}, storage_type="session"),
         dcc.Store(id='sold-data', data={}, storage_type="session"),
-        dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
+        # Same persistence tier as "companies"/"simulation-duration" below: it's set
+        # from the imported session and must survive a closed/reopened tab exactly
+        # like they do, otherwise a re-run silently falls back to the hardcoded default.
+        dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="local"),
 
         dcc.Store(id="companies", data=dlt.companies_list, storage_type="local"),
         dcc.Store(id="nb_export", data=len(os.listdir(os.path.join(dlt.data_path, "exports"))), storage_type="session"),
 
-        # Advanced settings
-        dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="session"),
-        dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="session"),
-        dcc.Store(id="update-time", data=dlt.update_time, storage_type="session"),
+        # Advanced settings — imported together with companies/simulation-duration as
+        # part of the same session.zip, so they need the same "local" persistence to
+        # survive a closed/reopened browser tab (sessionStorage does not).
+        dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="local"),
+        dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="local"),
+        dcc.Store(id="update-time", data=dlt.update_time, storage_type="local"),
         dcc.Store(id="simulation-duration", data=dlt.simulation_duration, storage_type="local"),
+        dcc.Store(id="news-font-size", data=dlt.news_font_size, storage_type="local"),
 
         # Session timer — records time.time() on first periodic-updater tick
         dcc.Store(id="session-start-time", data=None, storage_type="session"),

@@ -13,8 +13,8 @@ translation = {
             'x': 'Date',
             'y': 'Prix',
             'legend': {
-                'longMA': 'Moyenne mobile simple (20)',
-                'shortMA': 'Moyenne mobile simple (50)',
+                'longMA': 'Moyenne mobile simple (50)',
+                'shortMA': 'Moyenne mobile simple (20)',
                 'twohunMA': 'Moyenne mobile simple (200)',
                 'price': 'Prix'
             },
@@ -323,6 +323,12 @@ translation = {
                     "requests": "Requêtes max",
                     "cashflow": "Trésorie initiale",
                     "simulation-duration": "Durée de la session (minutes)",
+                },
+                "news-font": {
+                    "label": "Taille de police des articles",
+                    "small": "Petite",
+                    "medium": "Moyenne",
+                    "large": "Grande",
                 },
                 "active": {
                     "dropdown-label": "Ajouter une entreprise",

@@ -11,7 +11,7 @@ PLOTLY_CONFIG = {
 }
 
 
-def create_graph(dataframe, timestamp='', next_graph=True, range=10):
+def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True):
     """
     Create a candlestick chart for the selected stock or update an existing one
 
@@ -26,6 +26,12 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
 
     range : int
         number of data points to display (default: 10)
+
+    follow : bool
+        whether the visible window should auto-scroll to keep showing the
+        latest `range` candles (default: True). Set to False once the user
+        has manually panned/zoomed away, so their view isn't pushed back to
+        the live edge on the next update.
 
     Returns
     -------
@@ -51,10 +57,9 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
             else:
                 dftmp = dataframe[:range]
         elif next_graph:  # You want to see the graph with new data
-            if range == 0 or idx < range:
-                dftmp = dataframe.iloc[:idx + 1]
-            else:
-                dftmp = dataframe.iloc[idx - (range - 1): idx + 1]
+            # Always keep the full history from the start so previously
+            # rendered candles never disappear as new ones are added.
+            dftmp = dataframe.iloc[:idx + 1]
         else:  # You want to see the graph of another company
             # And so with the same timestamp as the previous graph
             if range == 0 or idx < range:
@@ -74,18 +79,18 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
         # running and other tickers remain unaffected.
         return go.Figure(), dftmp.index[-1]
 
-    # creating the plot the long moving average
-    long_mov_av = go.Scatter(
-        x=plot_df.index,
-        y=plot_df['long_MA'],
-        name='longMA'
-    )
-
     # creating the plot the short moving average
     short_mov_av = go.Scatter(
         x=plot_df.index,
         y=plot_df['short_MA'],
         name='shortMA'
+    )
+
+    # creating the plot the long moving average
+    long_mov_av = go.Scatter(
+        x=plot_df.index,
+        y=plot_df['long_MA'],
+        name='longMA'
     )
 
     # creating the plot the 200 moving average
@@ -108,6 +113,23 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10):
 
     # Create chart for the selected stock
     figure = go.Figure(data=[long_mov_av, short_mov_av, twohun_mov_av, candelstick])
+
+    # The full history is always in the data now, but by default only show the
+    # last `range` candles so the view keeps scrolling forward like before —
+    # older candles shift out of view instead of being removed, and the user
+    # can still pan/zoom back to see them. Skip this while `follow` is False
+    # (user has manually panned away) so the update doesn't yank their view
+    # back to the live edge.
+    if follow and range:
+        visible = plot_df.iloc[-range:] if 0 < range < len(plot_df) else plot_df
+        # The index may be plain date strings (unparsed CSV column) rather than
+        # a DatetimeIndex, so parse the endpoints before doing date arithmetic.
+        start = pd.Timestamp(visible.index[0])
+        end = pd.Timestamp(visible.index[-1])
+        step = (end - start) / (len(visible) - 1) if len(visible) >= 2 else pd.Timedelta(days=1)
+        # Leave a little breathing room (a few candle-widths) to the right of
+        # the latest candle so it isn't flush against the edge of the plot.
+        figure.update_xaxes(range=[start, end + step * 3])
 
     return figure, dftmp.index[-1]
 

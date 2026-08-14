@@ -7,6 +7,7 @@ import pandas as pd
 from dash_iconify import DashIconify
 
 from trade.utils.graph.candlestick_charts import create_graph
+from trade.utils.export import log_session_event
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
@@ -47,18 +48,23 @@ def sync_interval(update_time):
     State("periodic-updater", "disabled"),
     State("pause-start-time", "data"),
     State("total-paused-seconds", "data"),
+    State("timestamp", "data"),
+    State("cashflow", "data"),
+    State("company-selector", "value"),
     prevent_initial_call=True,
 )
-def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused):
+def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused, timestamp, cashflow, company):
     if not pause_clicks:
         # n_clicks reset to 0 on page remount — ignore to avoid spurious pause
         raise PreventUpdate
     if not currently_disabled:
         # Pausing — record when the pause started
+        log_session_event("session-pause", timestamp, cashflow, company)
         return True, time.time(), no_update, "Resume", DashIconify(icon="carbon:play")
     else:
         # Unpausing — accumulate the pause duration and clear the start time
         paused_for = time.time() - (pause_start or time.time())
+        log_session_event("session-resume", timestamp, cashflow, company)
         return False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
 
 
@@ -69,6 +75,35 @@ def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused):
 def cb_update_timestamp(timestamp):
     timestamp = pd.to_datetime(timestamp)
     return timestamp.strftime("%Y-%m-%d")
+
+
+@callback(
+    Output('graph-auto-follow', 'data'),
+    Output('graph-manual-range', 'data'),
+    Input('company-graph', 'relayoutData'),
+    Input('company-selector', 'value'),
+    prevent_initial_call=True,
+)
+def track_graph_auto_follow(relayout_data, company):
+    # Switching company always resumes auto-follow for the new chart.
+    if ctx.triggered_id == 'company-selector':
+        return True, None
+
+    if not relayout_data:
+        raise PreventUpdate
+
+    # "Reset axes" (modebar button or double-click) re-enables auto-follow.
+    if relayout_data.get('xaxis.autorange') or relayout_data.get('autosize'):
+        return True, None
+
+    # A manual pan or zoom disables auto-follow until the user resets it.
+    # Remember exactly where they left the view so every subsequent update
+    # can be pinned back to that same window instead of re-autoranging.
+    if 'xaxis.range[0]' in relayout_data and 'xaxis.range[1]' in relayout_data:
+        manual_range = [relayout_data['xaxis.range[0]'], relayout_data['xaxis.range[1]']]
+        return False, manual_range
+
+    raise PreventUpdate
 
 
 @callback(
@@ -85,9 +120,13 @@ def cb_update_timestamp(timestamp):
     State('total-paused-seconds', 'data'),
     Input('requests', 'data'),
     Input('color-scheme-store', 'data'),
+    State('graph-auto-follow', 'data'),
+    State('graph-manual-range', 'data'),
+    State('cashflow', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow):
+    following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp}")
 
@@ -95,6 +134,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         if session_start_time is None:
             # First tick of a new session — start the clock, skip end-condition check
             session_start_time = time.time()
+            log_session_event("session-start", timestamp, cashflow, company)
         else:
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
             elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
@@ -103,13 +143,21 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
 
             if elapsed >= duration_secs or data_done:
                 print("[GRAPH] simulation ended")
+                log_session_event("session-finish", timestamp, cashflow, company)
                 return no_update, no_update, True, True, session_start_time
 
     try:
         # get_market_dataframe() is cached — only reads disk when file changes
         dftmp = get_market_dataframe()[company]
 
-        fig, new_ts = create_graph(dftmp, timestamp, next_graph, 100)
+        fig, new_ts = create_graph(dftmp, timestamp, next_graph, 100, follow=following)
+
+        if not following and manual_range:
+            # Pin the view to exactly where the user left it — sending no
+            # range at all lets Plotly re-autorange over the full (now much
+            # bigger) history and squeeze every candle into view, which is
+            # not what we want while the user is browsing the past.
+            fig.update_xaxes(range=manual_range)
 
         fig.update_layout(
             xaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['x'],
@@ -150,6 +198,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # Render the last frame and end immediately — no frozen-tick gap before the modal.
         if next_graph and new_ts == timestamp:
             print("[GRAPH] data exhausted at", new_ts)
+            log_session_event("session-finish", new_ts, cashflow, company)
             return new_ts, fig, True, True, session_start_time
 
         print(f"[GRAPH] ok new_ts={new_ts}")

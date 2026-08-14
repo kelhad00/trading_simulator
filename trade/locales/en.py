@@ -36,8 +36,8 @@ translation = {
             'x': 'Date',
             'y': 'Price',
             'legend': {
-                'longMA': ' Simple moving average (20)',
-                'shortMA': ' Simple moving average (50)',
+                'longMA': ' Simple moving average (50)',
+                'shortMA': ' Simple moving average (20)',
                 'twohunMA': ' Simple moving average (200)', 
                 'price': 'Price'
             },
@@ -310,6 +310,12 @@ translation = {
                     "requests": "Max requests",
                     "cashflow": "Initial cashflow",
                     "simulation-duration": "Session duration (minutes)",
+                },
+                "news-font": {
+                    "label": "News article font size",
+                    "small": "Small",
+                    "medium": "Medium",
+                    "large": "Large",
                 },
                 "active": {
                     "dropdown-label": "Add a company",

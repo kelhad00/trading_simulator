@@ -26,6 +26,9 @@ class Defaults:
     # Default real-world session length in minutes
     simulation_duration = 15
 
+    # Default font size for news articles in the runtime dashboard ('S', 'M', or 'L')
+    news_font_size = "S"
+
     # Path to the data folder
     data_path = "../data"
 
