@@ -97,8 +97,8 @@ def fill_market_price(n_clicks, company, timestamp):
     Input('nbr-share-input', 'value'),
     Input('price-input', 'value'),
     Input('action-input', 'value'),
-    State('cashflow', 'data'),
-    State('portfolio-shares', 'data'),
+    Input('cashflow', 'data'),
+    Input('portfolio-shares', 'data'),
     State('company-selector', 'value'),
     prevent_initial_call=False,
 )
