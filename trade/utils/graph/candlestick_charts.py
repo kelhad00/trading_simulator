@@ -79,18 +79,18 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
         # running and other tickers remain unaffected.
         return go.Figure(), dftmp.index[-1]
 
-    # creating the plot the long moving average
-    long_mov_av = go.Scatter(
-        x=plot_df.index,
-        y=plot_df['long_MA'],
-        name='longMA'
-    )
-
     # creating the plot the short moving average
     short_mov_av = go.Scatter(
         x=plot_df.index,
         y=plot_df['short_MA'],
         name='shortMA'
+    )
+
+    # creating the plot the long moving average
+    long_mov_av = go.Scatter(
+        x=plot_df.index,
+        y=plot_df['long_MA'],
+        name='longMA'
     )
 
     # creating the plot the 200 moving average

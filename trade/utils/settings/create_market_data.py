@@ -189,8 +189,8 @@ def format_generated_data(data, stock):
     if data['Close'].dropna().shape[0] < 20:
         print("Not enough non-NaN values to compute the rolling mean")
 
-    data['long_MA'] = data['Close'].rolling(window=20, min_periods=1).mean()
-    data['short_MA'] = data['Close'].rolling(window=50, min_periods=1).mean()
+    data['short_MA'] = data['Close'].rolling(window=20, min_periods=1).mean()
+    data['long_MA'] = data['Close'].rolling(window=50, min_periods=1).mean()
     data['200_MA'] = data['Close'].rolling(window=200, min_periods=1).mean()
 
     #rename col Adj Close to adjclose

@@ -13,8 +13,8 @@ translation = {
             'x': 'Date',
             'y': 'Prix',
             'legend': {
-                'longMA': 'Moyenne mobile simple (20)',
-                'shortMA': 'Moyenne mobile simple (50)',
+                'longMA': 'Moyenne mobile simple (50)',
+                'shortMA': 'Moyenne mobile simple (20)',
                 'twohunMA': 'Moyenne mobile simple (200)',
                 'price': 'Prix'
             },

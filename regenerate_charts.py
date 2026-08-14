@@ -92,8 +92,8 @@ def format_and_combine(raw_df, stock, first_timestamp):
     df.index.name = "date"
     df.index = pd.to_datetime(df.index, utc=True).tz_convert("Europe/Paris")
 
-    df["long_MA"]  = df["Close"].rolling(window=20,  min_periods=1).mean()
-    df["short_MA"] = df["Close"].rolling(window=50,  min_periods=1).mean()
+    df["short_MA"] = df["Close"].rolling(window=20,  min_periods=1).mean()
+    df["long_MA"]  = df["Close"].rolling(window=50,  min_periods=1).mean()
     df["200_MA"]   = df["Close"].rolling(window=200, min_periods=1).mean()
     df.rename(columns={"Adj Close": "adjclose"}, inplace=True)
 
