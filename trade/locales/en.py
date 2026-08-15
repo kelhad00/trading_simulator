@@ -180,6 +180,20 @@ translation = {
                     "rising_wedge": "Rising Wedge",
                     "falling_wedge": "Falling Wedge",
                 },
+                "sim-window": {
+                    "start": "Simulation start",
+                    "end": "Simulation end",
+                    "legend": "🟢 start · 🔴 end — ~%d of %d bars will be shown during the %d-minute session",
+                    "legend-all": "🟢 start · 🔴 end — all %d bars fit within the %d-minute session",
+                    "legend-short": "⚠️ only %d bars generated — the session will run out of data after ~%d of the %d configured minutes",
+                },
+                "bar-count": {
+                    "year": "yr",
+                    "years": "yrs",
+                    "month": "mo",
+                    "with-duration": "%d bars  (~%s of trading data)",
+                    "under-month": "%d bars  (< 1 mo of trading data)",
+                },
             },
             "tickers": {
                 "subtitles": {

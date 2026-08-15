@@ -150,7 +150,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # get_market_dataframe() is cached — only reads disk when file changes
         dftmp = get_market_dataframe()[company]
 
-        fig, new_ts = create_graph(dftmp, timestamp, next_graph, 100, follow=following)
+        fig, new_ts = create_graph(dftmp, timestamp, next_graph, dlt.initial_reveal_bars, follow=following)
 
         if not following and manual_range:
             # Pin the view to exactly where the user left it — sending no
