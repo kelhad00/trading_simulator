@@ -21,13 +21,14 @@ _REMINDERS = [
     Output('notifications', 'children', allow_duplicate=True),
     Output('shown-reminders', 'data'),
     Input('periodic-updater', 'n_intervals'),
+    Input('timestamp', 'data'),
     State('session-start-time', 'data'),
     State('simulation-duration', 'data'),
     State('total-paused-seconds', 'data'),
     State('shown-reminders', 'data'),
     prevent_initial_call=True,
 )
-def fire_time_reminders(n, session_start, sim_duration, total_paused, shown):
+def fire_time_reminders(n, timestamp, session_start, sim_duration, total_paused, shown):
     if session_start is None:
         raise PreventUpdate
 

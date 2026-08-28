@@ -22,7 +22,7 @@ def get_cached_df_companies():
 
 @callback(
     Output("companies", "data"),
-    Output("notifications", "children"),
+    Output("notifications", "children", allow_duplicate=True),
     Output("input-stock", "value"),
     Output("input-company", "value"),
     Output("input-activity", "value"),

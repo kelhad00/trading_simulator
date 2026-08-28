@@ -35,11 +35,12 @@ def select_all_companies(n, companies):
 
 
 @callback(
-    Output("revenues-container", "children"),
+    Output("revenues-container", "children", allow_duplicate=True),
     Input("settings-tabs", "value"),
     Input("modal-revenues", "opened"),
     Input("select-companies-revenues", "value"),
     State("color-scheme-store", "data"),
+    prevent_initial_call="initial_duplicate",
 )
 def display_revenues(tabs, modal, companies, color_scheme):
     """
@@ -93,8 +94,8 @@ def display_revenues(tabs, modal, companies, color_scheme):
 
 
 @callback(
-    Output("modal-revenues", "opened"),
-    Output("modal-select-companies-revenues", "value"),
+    Output("modal-revenues", "opened", allow_duplicate=True),
+    Output("modal-select-companies-revenues", "value", allow_duplicate=True),
     Input("button-modify-revenues", "n_clicks"),
     State("modal-revenues", "opened"),
     State("select-companies-revenues", "value"),

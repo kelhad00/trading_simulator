@@ -36,6 +36,6 @@ def header(lang="fr", url="/", mode=None):
                 target="_blank",
                 style={"textDecoration": "none", "display": "inline-flex"}
             ),
-            lang_menu(lang, url)
+            lang_menu(lang, url, mode=mode)
         ], className="flex gap-4 items-center"),
     ], className="flex justify-between items-center w-full")

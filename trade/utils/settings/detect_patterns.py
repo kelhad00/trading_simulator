@@ -123,6 +123,68 @@ def detect_inverse_head_and_shoulders(df, sp, target):
     return found
 
 
+def detect_double_top(df, sp, target):
+    """Two comparable peaks separated by a clear pullback (bearish reversal)."""
+    peaks = find_peaks(sp, min_dist=6)
+    found, saved = [], []
+    for i in range(len(peaks) - 1):
+        if len(found) >= target:
+            break
+        for j in range(i + 1, len(peaks)):
+            p1, p2 = peaks[i], peaks[j]
+            if p2 - p1 < 15:
+                continue
+            if p2 - p1 > 90:
+                break   # peaks are index-ordered: any later j only widens the gap
+            h1, h2 = sp[p1], sp[p2]
+            # Peaks within 3% of each other
+            if abs(h1 - h2) / max(h1, h2) > 0.03:
+                continue
+            # Trough between them at least 4% below the peaks
+            trough_val   = float(min(sp[p1:p2 + 1]))
+            trough_depth = (max(h1, h2) - trough_val) / max(h1, h2)
+            if trough_depth < 0.04:
+                continue
+            s, e = max(0, p1 - 5), min(len(df), p2 + 10)
+            if not no_overlap(saved, s, e):
+                continue
+            found.append((s, e))
+            saved.append((s, e))
+            break
+    return found
+
+
+def detect_double_bottom(df, sp, target):
+    """Two comparable troughs separated by a clear bounce (bullish reversal)."""
+    troughs = find_troughs(sp, min_dist=6)
+    found, saved = [], []
+    for i in range(len(troughs) - 1):
+        if len(found) >= target:
+            break
+        for j in range(i + 1, len(troughs)):
+            t1, t2 = troughs[i], troughs[j]
+            if t2 - t1 < 15:
+                continue
+            if t2 - t1 > 90:
+                break   # troughs are index-ordered: any later j only widens the gap
+            h1, h2 = sp[t1], sp[t2]
+            # Troughs within 3% of each other
+            if abs(h1 - h2) / min(h1, h2) > 0.03:
+                continue
+            # Peak between them at least 4% above the troughs
+            peak_val       = float(max(sp[t1:t2 + 1]))
+            peak_prominence = (peak_val - min(h1, h2)) / min(h1, h2)
+            if peak_prominence < 0.04:
+                continue
+            s, e = max(0, t1 - 5), min(len(df), t2 + 10)
+            if not no_overlap(saved, s, e):
+                continue
+            found.append((s, e))
+            saved.append((s, e))
+            break
+    return found
+
+
 def detect_ascending_triangle(df, sp, target):
     """Flat resistance + strictly rising support."""
     found, saved = [], []
@@ -382,6 +444,8 @@ def detect_falling_wedge(df, sp, target):
 DETECTORS = {
     'head_and_shoulders':         detect_head_and_shoulders,
     'inverse_head_and_shoulders': detect_inverse_head_and_shoulders,
+    'double_top':                 detect_double_top,
+    'double_bottom':              detect_double_bottom,
     'ascending_triangle':         detect_ascending_triangle,
     'descending_triangle':        detect_descending_triangle,
     'bullish_flag':               detect_bullish_flag,

@@ -345,7 +345,7 @@ def _compute_reveal_bounds(update_time, simulation_duration):
 
 @callback(
     Output("modal-generated-charts-container", "children"),
-    Output("figures", "data"),
+    Output("figures", "data", allow_duplicate=True),
     Output("chart-bar-count", "children"),
     Input("pattern-files", "data"),
     Input("select-event-type", "value"),

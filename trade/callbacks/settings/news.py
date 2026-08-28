@@ -80,7 +80,6 @@ def update_display_container_nbr_news(mode):
 
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
-    Output("generate-news", "loading"),
     Output("manual-positions-store", "data", allow_duplicate=True),
 
     State('companies', 'data'),
@@ -146,7 +145,7 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
             action="show",
             color=color,
             message=message,
-        ), False, {}
+        ), {}
 
     except Exception as e:
         print("Error while generating news:", e)
@@ -165,18 +164,7 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
             action="show",
             color="red",
             message=message,
-        ), False, no_update
-
-
-@callback(
-    Output("generate-news", "loading", allow_duplicate=True),
-    Input("generate-news", "n_clicks"),
-    prevent_initial_call=True
-)
-def update_loading(n):
-    if n is None:
-        raise PreventUpdate
-    return True
+        ), no_update
 
 
 # ── Company dropdown options ──────────────────────────────────────────────────
@@ -267,7 +255,7 @@ def update_hover_indicator(hover_data, mode, sentiment, search):
 # ── Chart click → store ───────────────────────────────────────────────────────
 
 @callback(
-    Output("manual-positions-store", "data"),
+    Output("manual-positions-store", "data", allow_duplicate=True),
     Input("news-chart", "clickData"),
     State("input-news-sentiment", "value"),
     State("news-select-company", "value"),

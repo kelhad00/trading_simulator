@@ -1,3 +1,5 @@
+import os
+
 from dash import html, dcc
 import dash_mantine_components as dmc
 
@@ -6,6 +8,8 @@ from trade.defaults import defaults as dlt
 from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
 
 from trade.components.menu import dashboard_menu as menu
+
+APP_MODE = os.getenv('APP_MODE', 'config')
 
 
 def graph(lang="fr"):
@@ -26,7 +30,7 @@ def graph(lang="fr"):
                     dmc.Text(id="timer", className="whitespace-nowrap", size="sm"),
 
                 ], className="flex flex-col"),
-                menu(lang),
+                menu(lang, mode=APP_MODE),
             ], className="flex gap-4 justify-between items-center"),
 
             dmc.SegmentedControl(

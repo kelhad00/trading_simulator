@@ -9,7 +9,7 @@ import trade.callbacks.settings.stocks as stocks_callbacks
 
 
 @callback(
-    Output("chart", "figure"),
+    Output("chart", "figure", allow_duplicate=True),
     Input("select-company", "value"),
     Input("figures", "data"),
     State("color-scheme-store", "data"),
@@ -35,8 +35,8 @@ def update_graph(company, data, color_scheme):
 
 
 @callback(
-    Output("modal", "opened"),
-    Output("modal-select-companies", "value"),
+    Output("modal", "opened", allow_duplicate=True),
+    Output("modal-select-companies", "value", allow_duplicate=True),
     Input("modify-button", "n_clicks"),
     State("modal", "opened"),
     State("select-company", "value"),

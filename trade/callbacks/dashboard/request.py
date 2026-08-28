@@ -56,7 +56,7 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
 
 
 @callback(
-    Output('price-input', 'value'),
+    Output('price-input', 'value', allow_duplicate=True),
     Input('company-graph', 'clickData'),
     State('company-selector', 'value'),
     prevent_initial_call=True,
