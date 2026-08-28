@@ -5,7 +5,7 @@ import zipfile
 from datetime import datetime
 
 
-def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None):
+def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None):
     """Package stores + CSV files into an in-memory ZIP and return the bytes."""
     from trade.defaults import defaults as dlt
     buf = io.BytesIO()
@@ -20,6 +20,7 @@ def build_session_zip(companies, initial_cashflow, max_requests, update_time, da
                 "update-time": update_time,
                 "simulation-duration": simulation_duration if simulation_duration is not None else dlt.simulation_duration,
                 "news-font-size": news_font_size if news_font_size is not None else dlt.news_font_size,
+                "color-scheme": color_scheme or "light",
             }
         }
         zf.writestr("session.json", json.dumps(payload, ensure_ascii=False, indent=2))
@@ -61,4 +62,5 @@ def extract_session_zip(zip_bytes, data_path):
         "update-time": stores["update-time"],
         "simulation-duration": stores.get("simulation-duration", dlt.simulation_duration),
         "news-font-size": stores.get("news-font-size", dlt.news_font_size),
+        "color-scheme": stores.get("color-scheme", "light"),
     }

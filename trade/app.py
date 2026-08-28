@@ -35,6 +35,7 @@ app = Dash(
     __name__,
     use_pages=True,
     suppress_callback_exceptions=True,
+    prevent_initial_callbacks="initial_duplicate",
     external_scripts=external_scripts,
     index_string="""<!DOCTYPE html>
 <html>

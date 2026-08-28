@@ -4,7 +4,7 @@ from dash_iconify import DashIconify
 
 
 
-def lang_menu(lang="fr", url="/" ):
+def lang_menu(lang="fr", url="/", mode="config"):
     en_bg = ""
     fr_bg = ""
 
@@ -15,15 +15,19 @@ def lang_menu(lang="fr", url="/" ):
         icon = "twemoji:flag-united-states"
         en_bg = ""
 
-    return html.Div([
-        dmc.ActionIcon(
-            DashIconify(icon="carbon:contrast"),
-            id="theme-toggle-home",
-            size="lg",
-            variant="outline",
-            color="dark",
-            n_clicks=0,
-        ),
+    children = []
+    if mode != "runtime":
+        children.append(
+            dmc.ActionIcon(
+                DashIconify(icon="carbon:contrast"),
+                id="theme-toggle-home",
+                size="lg",
+                variant="outline",
+                color="dark",
+                n_clicks=0,
+            )
+        )
+    children.append(
         dmc.Menu(
             [
                 dmc.MenuTarget(
@@ -43,11 +47,12 @@ def lang_menu(lang="fr", url="/" ):
                     ], pos="bottom-end"
                 )
             ]
-        ),
-    ], className="flex gap-2 items-center")
+        )
+    )
+    return html.Div(children, className="flex gap-2 items-center")
 
 
-def dashboard_menu(lang="fr"):
+def dashboard_menu(lang="fr", mode="config"):
     en_bg = ""
     fr_bg = ""
 
@@ -55,6 +60,12 @@ def dashboard_menu(lang="fr"):
         fr_bg = ""
     else:
         en_bg = ""
+
+    theme_items = [] if mode == "runtime" else [
+        dmc.MenuDivider(),
+        dmc.MenuLabel("Theme"),
+        dmc.MenuItem("Dark / Light", icon=DashIconify(icon="carbon:contrast"), id="theme-toggle-dashboard", n_clicks=0),
+    ]
 
     return dmc.Menu(
         [
@@ -71,9 +82,7 @@ def dashboard_menu(lang="fr"):
                     dmc.MenuItem("Pause", icon=DashIconify(icon="carbon:pause"), id="pause-button", n_clicks=0),
                     dmc.MenuItem("Reset", icon=DashIconify(icon="carbon:reset"), id="reset-button", n_clicks=0,
                                  color="red"),
-                    dmc.MenuDivider(),
-                    dmc.MenuLabel("Theme"),
-                    dmc.MenuItem("Dark / Light", icon=DashIconify(icon="carbon:contrast"), id="theme-toggle-dashboard", n_clicks=0),
+                    *theme_items,
                     dmc.MenuDivider(),
                     dmc.MenuLabel("Language"),
                     dmc.MenuItem("Français", icon=DashIconify(icon="twemoji:flag-france"),

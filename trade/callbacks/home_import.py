@@ -40,7 +40,8 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("timestamp", "data", allow_duplicate=True),
     Output("notifications", "children", allow_duplicate=True),
     Output("imported-session-name", "data", allow_duplicate=True),
-    Output("upload-session", "contents"),
+    Output("upload-session", "contents", allow_duplicate=True),
+    Output("color-scheme-store", "data", allow_duplicate=True),
     Input("upload-session", "contents"),
     State("upload-session", "filename"),
     State("url", "search"),
@@ -48,7 +49,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -67,7 +68,7 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None, no_update
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
@@ -95,6 +96,7 @@ def import_session(contents, filename, search):
         notif,
         display_name,
         None,           # reset upload-session.contents so re-upload always fires
+        stores["color-scheme"],
     )
 
 
@@ -135,7 +137,7 @@ clientside_callback(
     """,
     Output("_upload-reset", "children"),
     Input("clear-session-btn", "n_clicks"),
-    prevent_initial_call=True,
+    prevent_initial_call="initial_duplicate",
 )
 
 
@@ -167,9 +169,9 @@ clientside_callback(
         return window.dash_clientside.no_update;
     }
     """,
-    Output("imported-session-name", "data"),
+    Output("imported-session-name", "data", allow_duplicate=True),
     Input("url", "pathname"),
-    prevent_initial_call=False,
+    prevent_initial_call='initial_duplicate',
 )
 
 
