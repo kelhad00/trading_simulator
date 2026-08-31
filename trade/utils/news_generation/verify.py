@@ -267,4 +267,18 @@ def verify_article(title, content, sentiment, company_name, curve_profile, lang)
         'grade':             grade,
         'passed':            passed,
         'flagged':           not passed,
+        'sentiment_label':   _get_sentiment_label(model_label, tone_confidence),
     }
+
+
+def _get_sentiment_label(model_label, tone_confidence):
+    """Map FinBERT direction + confidence to a human-readable combined label."""
+    if model_label in ('unavailable', 'error', 'neutral'):
+        return 'neutral'
+    if tone_confidence >= 0.75:
+        strength = 'strong'
+    elif tone_confidence >= 0.50:
+        strength = 'weak'
+    else:
+        strength = 'no'
+    return f"{strength} {model_label}"

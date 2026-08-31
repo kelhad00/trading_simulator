@@ -4,7 +4,17 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import pandas as pd
 
-_SENTIMENT_COLORS = {"positive": "green", "negative": "red", "neutral": "gray"}
+_SENTIMENT_COLORS = {
+    "positive":        "green",
+    "negative":        "red",
+    "neutral":         "gray",
+    "strong positive": "green",
+    "weak positive":   "teal",
+    "no positive":     "gray",
+    "strong negative": "red",
+    "weak negative":   "orange",
+    "no negative":     "gray",
+}
 
 _FONT_SIZES = {'S': '0.75rem', 'M': '0.9375rem', 'L': '1.125rem'}
 
@@ -58,6 +68,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
 
     nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
     has_sentiment = 'sentiment' in nl.columns
+    has_label = 'sentiment_label' in nl.columns
     nl = nl.head(range)
 
     date_label = tls[lang]['news-table']['date']
@@ -81,8 +92,18 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
             if sentiment in ("positive", "negative"):
                 text_color = color
 
+        badge = None
+        if has_label:
+            raw_label = getattr(row, 'sentiment_label', None)
+            label = str(raw_label).lower().strip() if raw_label and str(raw_label) not in ('nan', '') else None
+            if label:
+                badge_color = _SENTIMENT_COLORS.get(label, "gray")
+                badge = dmc.Badge(label, color=badge_color, size="xs", variant="light",
+                                  style={"marginRight": "6px", "verticalAlign": "middle"})
+
+        article_cell = [badge, article_text] if badge else article_text
         cells = [
-            html.Td(article_text, style={"color": text_color} if text_color else {}),
+            html.Td(article_cell, style={"color": text_color} if text_color else {}),
             html.Td(date_text, style={"whiteSpace": "nowrap", "color": "gray", "fontSize": "0.75rem"}),
         ]
 
@@ -237,7 +258,11 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
                             company_label = val.get('label', ticker)
                             break
 
-            color = "green" if "positive" in sentiment else "red" if "negative" in sentiment else "blue"
+            raw_label = str(row.get('sentiment_label', '')).lower().strip()
+            if raw_label and raw_label != 'nan':
+                color = _SENTIMENT_COLORS.get(raw_label, "blue")
+            else:
+                color = "green" if "positive" in sentiment else "red" if "negative" in sentiment else "blue"
             short_headline = headline[:110] + "…" if len(headline) > 110 else headline
 
             text_color = color if color in ("green", "red") else None

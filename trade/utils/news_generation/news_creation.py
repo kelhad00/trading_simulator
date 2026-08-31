@@ -600,7 +600,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     market_data = market_data.reset_index(drop=False)
 
     # Create a dataframe to store the news we have created
-    news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment'])
+    news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment', 'sentiment_label'])
     verification_results = []
 
     # Browse the positive positions
@@ -640,7 +640,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             date = date.strftime('%d/%m/%y %H:%M')
 
 
-            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, '']
 
             v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
             tone_sym    = '✓' if v['tone_ok']          else '✗'
@@ -657,6 +657,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
                 news_created.at[len(news_created) - 1, 'title']   = title
                 news_created.at[len(news_created) - 1, 'content'] = content
                 print(f"[VERIFY]     Retry grade={v['grade']}")
+            news_created.at[len(news_created) - 1, 'sentiment_label'] = v['sentiment_label']
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
             v['date'] = article_date_str
@@ -702,7 +703,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             # Create a new row in news_created
             date = market_data.iloc[position]['date']
             date = datetime.fromisoformat(date).strftime('%d/%m/%y %H:%M')
-            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment]
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, '']
 
             v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
             tone_sym    = '✓' if v['tone_ok']          else '✗'
@@ -719,6 +720,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
                 news_created.at[len(news_created) - 1, 'title']   = title
                 news_created.at[len(news_created) - 1, 'content'] = content
                 print(f"[VERIFY]     Retry grade={v['grade']}")
+            news_created.at[len(news_created) - 1, 'sentiment_label'] = v['sentiment_label']
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
             v['date'] = article_date_str
