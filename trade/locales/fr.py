@@ -247,6 +247,7 @@ translation = {
                     "notifications": "Notifications",
                 },
                 "notifications": {
+                    "enabled-label": "Afficher les notifications d'actualités",
                     "filter-label": "Afficher les notifications pour",
                     "filter-positive": "Actualités positives",
                     "filter-negative": "Actualités négatives",

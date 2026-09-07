@@ -197,6 +197,13 @@ def news_settings(lang="fr"):
         ]),
 
         section(tl["subtitles"]["notifications"], [
+            dmc.Switch(
+                id="notif-enabled-input",
+                label=tl["notifications"]["enabled-label"],
+                checked=True,
+                persistence=True,
+                persistence_type="local",
+            ),
             dmc.CheckboxGroup(
                 id="notif-filter-input",
                 label=tl["notifications"]["filter-label"],

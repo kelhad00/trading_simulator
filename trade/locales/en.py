@@ -234,6 +234,7 @@ translation = {
                     "notifications": "Notifications",
                 },
                 "notifications": {
+                    "enabled-label": "Show news notifications",
                     "filter-label": "Show notifications for",
                     "filter-positive": "Positive news",
                     "filter-negative": "Negative news",

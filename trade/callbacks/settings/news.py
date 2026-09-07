@@ -21,14 +21,28 @@ def _lang(search):
 # ── Notification settings → stores ───────────────────────────────────────────
 
 @callback(
+    Output("notif-enabled", "data"),
     Output("notif-filter", "data"),
     Output("notif-offset", "data"),
+    Input("notif-enabled-input", "checked"),
     Input("notif-filter-input", "value"),
     Input("notif-offset-input", "value"),
     prevent_initial_call=True,
 )
-def sync_notif_settings(filter_val, offset_val):
-    return filter_val or [], int(offset_val or 0)
+def sync_notif_settings(enabled, filter_val, offset_val):
+    is_enabled = bool(enabled) if enabled is not None else True
+    return is_enabled, filter_val or [], int(offset_val or 0)
+
+
+@callback(
+    Output("notif-filter-input", "style"),
+    Output("notif-offset-input", "style"),
+    Input("notif-enabled-input", "checked"),
+)
+def toggle_notif_filter_visibility(enabled):
+    if enabled:
+        return {}, {}
+    return {"display": "none"}, {"display": "none"}
 
 
 # ── Provider visibility ───────────────────────────────────────────────────────

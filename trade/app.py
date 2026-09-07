@@ -128,6 +128,7 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="last-notified-ts", data=None, storage_type="session"),
 
         # Notification settings — filter by sentiment and optional early-warning offset
+        dcc.Store(id="notif-enabled", data=True, storage_type="local"),
         dcc.Store(id="notif-filter", data=["positive", "negative", "neutral"], storage_type="local"),
         dcc.Store(id="notif-offset", data=0, storage_type="local"),
 

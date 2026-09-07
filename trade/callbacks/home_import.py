@@ -42,6 +42,7 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("imported-session-name", "data", allow_duplicate=True),
     Output("upload-session", "contents", allow_duplicate=True),
     Output("color-scheme-store", "data", allow_duplicate=True),
+    Output("notif-enabled", "data", allow_duplicate=True),
     Input("upload-session", "contents"),
     State("upload-session", "filename"),
     State("url", "search"),
@@ -49,7 +50,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -68,7 +69,7 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, notif, no_update, None, no_update, no_update
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
@@ -97,6 +98,7 @@ def import_session(contents, filename, search):
         display_name,
         None,           # reset upload-session.contents so re-upload always fires
         stores["color-scheme"],
+        stores["notif-enabled"],
     )
 
 

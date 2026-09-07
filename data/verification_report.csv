@@ -1,45 +1,55 @@
-tone_ok,tone_confidence,model_label,company_mentioned,curve_score,curve_ok,language_ok,grade,passed,flagged,company,sentiment_expected,date
-True,0.0,unavailable,True,11,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive,2026-04-17
-True,0.0,unavailable,True,7,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive,2025-09-17
-True,0.0,unavailable,True,4,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative,2025-12-15
-True,0.0,unavailable,True,10,True,True,B,True,False,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative,2026-03-27
-True,0.0,unavailable,True,11,True,True,B,True,False,L'ORÉAL (OR),positive,2025-12-29
-True,0.0,unavailable,True,11,True,True,B,True,False,L'ORÉAL (OR),positive,2026-05-10
-True,0.0,unavailable,True,6,True,True,B,True,False,L'ORÉAL (OR),negative,2026-05-03
-True,0.0,unavailable,True,7,True,True,B,True,False,L'ORÉAL (OR),negative,2025-11-29
-True,0.0,unavailable,True,10,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),positive,2025-10-15
-True,0.0,unavailable,True,10,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),positive,2026-04-21
-True,0.0,unavailable,True,3,False,True,C,False,True,HERMÈS INTERNATIONAL (RMS),negative,2026-03-21
-True,0.0,unavailable,True,7,True,True,B,True,False,HERMÈS INTERNATIONAL (RMS),negative,2025-12-28
-True,0.0,unavailable,True,13,True,True,B,True,False,TOTALENERGIES SE (TTE),positive,2026-01-03
-True,0.0,unavailable,True,7,True,True,B,True,False,TOTALENERGIES SE (TTE),positive,2026-02-19
-True,0.0,unavailable,True,6,True,True,B,True,False,TOTALENERGIES SE (TTE),negative,2025-09-19
-True,0.0,unavailable,True,7,True,True,B,True,False,TOTALENERGIES SE (TTE),negative,2025-11-02
-True,0.0,unavailable,True,10,True,True,B,True,False,SANOFI (SAN),positive,2026-05-06
-True,0.0,unavailable,True,11,True,True,B,True,False,SANOFI (SAN),positive,2025-12-11
-True,0.0,unavailable,True,6,True,True,B,True,False,SANOFI (SAN),negative,2026-04-04
-True,0.0,unavailable,True,7,True,True,B,True,False,SANOFI (SAN),negative,2025-08-17
-True,0.0,unavailable,True,6,True,True,B,True,False,AIRBUS SE (AIR),positive,2025-11-23
-True,0.0,unavailable,True,10,True,True,B,True,False,AIRBUS SE (AIR),positive,2026-03-31
-True,0.0,unavailable,True,10,True,True,B,True,False,AIRBUS SE (AIR),negative,2025-12-24
-True,0.0,unavailable,True,7,True,True,B,True,False,AIRBUS SE (AIR),negative,2025-09-21
-True,0.0,unavailable,True,11,True,True,B,True,False,SCHNEIDER ELECTRIC SE (SU),positive,2025-09-27
-True,0.0,unavailable,True,8,True,True,B,True,False,SCHNEIDER ELECTRIC SE (SU),positive,2025-10-14
-True,0.0,unavailable,True,4,True,True,B,True,False,SCHNEIDER ELECTRIC SE (SU),negative,2025-12-04
-True,0.0,unavailable,True,6,True,True,B,True,False,SCHNEIDER ELECTRIC SE (SU),negative,2025-11-01
-True,0.0,unavailable,True,10,True,True,B,True,False,AIR LIQUIDE (AI),positive,2026-02-15
-True,0.0,unavailable,True,11,True,True,B,True,False,AIR LIQUIDE (AI),positive,2025-12-01
-True,0.0,unavailable,True,3,False,True,C,False,True,AIR LIQUIDE (AI),negative,2026-04-16
-True,0.0,unavailable,True,10,True,True,B,True,False,AIR LIQUIDE (AI),negative,2025-08-24
-True,0.0,unavailable,True,16,True,True,B,True,False,ESSILORLUXOTTICA (EL),positive,2026-01-22
-True,0.0,unavailable,True,10,True,True,B,True,False,ESSILORLUXOTTICA (EL),positive,2026-02-20
-True,0.0,unavailable,True,10,True,True,B,True,False,ESSILORLUXOTTICA (EL),negative,2026-01-14
-True,0.0,unavailable,True,10,True,True,B,True,False,ESSILORLUXOTTICA (EL),negative,2026-03-14
-True,0.0,unavailable,True,10,True,True,B,True,False,BNP PARIBAS (BNP),positive,2025-11-03
-True,0.0,unavailable,True,13,True,True,B,True,False,BNP PARIBAS (BNP),positive,2025-09-25
-True,0.0,unavailable,True,7,True,True,B,True,False,BNP PARIBAS (BNP),negative,2026-01-11
-True,0.0,unavailable,True,4,True,True,B,True,False,BNP PARIBAS (BNP),negative,2026-02-26
-True,0.0,unavailable,True,15,True,True,B,True,False,KERING (KER),positive,2025-10-06
-True,0.0,unavailable,True,11,True,True,B,True,False,KERING (KER),positive,2025-08-20
-True,0.0,unavailable,True,10,True,True,B,True,False,KERING (KER),negative,2025-08-09
-True,0.0,unavailable,True,7,True,True,B,True,False,KERING (KER),negative,2025-12-07
+tone_ok,tone_confidence,model_label,company_mentioned,curve_score,curve_ok,language_ok,grade,passed,flagged,company,sentiment_expected,date,sentiment_label
+True,0.9423,positive,True,0,False,True,C,False,True,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),positive,2026-06-07,strong positive
+True,0.9454,negative,True,3,False,True,C,False,True,LVMH MOËT HENNESSY LOUIS VUITTON SE (MC),negative,2026-09-01,strong negative
+True,0.9418,positive,True,0,False,True,C,False,True,L'ORÉAL (OR),positive,2026-01-06,strong positive
+True,0.9247,negative,True,0,False,True,C,False,True,L'ORÉAL (OR),negative,2025-10-09,strong negative
+True,0.9381,positive,True,0,False,True,C,False,True,HERMÈS INTERNATIONAL (RMS),positive,2025-10-14,strong positive
+True,0.9506,negative,True,3,False,True,C,False,True,HERMÈS INTERNATIONAL (RMS),negative,2025-11-28,strong negative
+True,0.939,positive,True,3,False,True,C,False,True,TOTALENERGIES SE (TTE),positive,2025-10-19,strong positive
+True,0.9523,negative,True,0,False,True,C,False,True,TOTALENERGIES SE (TTE),negative,2025-09-23,strong negative
+True,0.934,positive,True,3,False,True,C,False,True,SANOFI (SAN),positive,2025-09-12,strong positive
+True,0.9553,negative,True,0,False,True,C,False,True,SANOFI (SAN),negative,2026-01-31,strong negative
+True,0.9407,positive,True,2,False,True,C,False,True,AIRBUS SE (AIR),positive,2025-10-02,strong positive
+True,0.9525,negative,True,3,False,True,C,False,True,AIRBUS SE (AIR),negative,2025-11-30,strong negative
+True,0.9369,positive,True,5,True,True,A,True,False,SCHNEIDER ELECTRIC SE (SU),positive,2025-10-17,strong positive
+True,0.9475,negative,True,0,False,True,C,False,True,SCHNEIDER ELECTRIC SE (SU),negative,2026-04-03,strong negative
+True,0.9296,positive,True,3,False,True,C,False,True,AIR LIQUIDE (AI),positive,2026-03-31,strong positive
+True,0.9549,negative,True,3,False,True,C,False,True,AIR LIQUIDE (AI),negative,2025-10-11,strong negative
+True,0.9406,positive,True,6,True,True,A,True,False,ESSILORLUXOTTICA (EL),positive,2026-02-28,strong positive
+True,0.9578,negative,True,3,False,True,C,False,True,ESSILORLUXOTTICA (EL),negative,2025-09-23,strong negative
+True,0.9314,positive,True,1,False,True,C,False,True,BNP PARIBAS (BNP),positive,2025-09-26,strong positive
+True,0.9445,negative,True,7,True,True,A,True,False,BNP PARIBAS (BNP),negative,2026-02-08,strong negative
+True,0.9319,positive,True,4,True,True,A,True,False,KERING (KER),positive,2025-11-26,strong positive
+True,0.9217,negative,True,3,False,True,C,False,True,KERING (KER),negative,2025-12-26,strong negative
+True,0.9345,positive,True,3,False,True,C,False,True,VINCI (DG),positive,2025-08-14,strong positive
+True,0.9497,negative,True,0,False,True,C,False,True,VINCI (DG),negative,2025-08-25,strong negative
+False,0.8811,negative,True,0,False,True,F,False,True,AXA (CS),positive,2026-03-10,strong negative
+True,0.9321,negative,True,3,False,True,C,False,True,AXA (CS),negative,2026-01-15,strong negative
+True,0.9389,positive,True,0,False,True,C,False,True,SAFRAN (SAF),positive,2026-02-13,strong positive
+True,0.9515,negative,True,3,False,True,C,False,True,SAFRAN (SAF),negative,2026-01-11,strong negative
+True,0.4299,positive,True,0,False,True,C,False,True,PERNOD RICARD (RI),positive,2025-11-05,no positive
+True,0.9539,negative,True,3,False,True,C,False,True,PERNOD RICARD (RI),negative,2025-09-14,strong negative
+True,0.9384,positive,True,3,False,True,C,False,True,DASSAULT SYSTÈMES SE (DSY),positive,2026-01-15,strong positive
+True,0.9198,negative,True,0,False,True,C,False,True,DASSAULT SYSTÈMES SE (DSY),negative,2025-11-14,strong negative
+True,0.4568,positive,True,0,False,True,C,False,True,STELLANTIS N.V. (STLAM),positive,2025-11-09,no positive
+True,0.8817,negative,True,0,False,True,C,False,True,STELLANTIS N.V. (STLAM),negative,2026-05-11,strong negative
+True,0.9406,positive,True,2,False,True,C,False,True,DANONE (BN),positive,2026-01-20,strong positive
+True,0.9461,negative,True,0,False,True,C,False,True,DANONE (BN),negative,2026-05-02,strong negative
+True,0.9376,positive,True,3,False,True,C,False,True,STMICROELECTRONICS N.V. (STMPA),positive,2025-08-31,strong positive
+True,0.9509,negative,True,0,False,True,C,False,True,STMICROELECTRONICS N.V. (STMPA),negative,2026-01-22,strong negative
+True,0.9407,positive,True,9,True,True,A,True,False,CRÉDIT AGRICOLE S.A. (ACA),positive,2025-09-30,strong positive
+True,0.9494,negative,True,3,False,True,C,False,True,CRÉDIT AGRICOLE S.A. (ACA),negative,2025-11-16,strong negative
+True,0.9368,positive,True,6,True,True,A,True,False,S&P 500,positive,2025-11-03,strong positive
+True,0.9202,negative,True,3,False,True,C,False,True,S&P 500,negative,2025-12-13,strong negative
+True,0.9325,positive,True,7,True,True,A,True,False,Dow Jones Industrial Average,positive,2025-08-07,strong positive
+True,0.9466,negative,True,3,False,True,C,False,True,Dow Jones Industrial Average,negative,2026-04-12,strong negative
+True,0.9422,positive,True,2,False,True,C,False,True,CAC 40,positive,2026-02-15,strong positive
+True,0.9467,negative,True,3,False,True,C,False,True,CAC 40,negative,2026-05-15,strong negative
+True,0.9376,positive,True,3,False,True,C,False,True,S&P GSCI Gold Index,positive,2026-01-01,strong positive
+True,0.9395,negative,True,0,False,True,C,False,True,S&P GSCI Gold Index,negative,2025-11-22,strong negative
+True,0.6247,positive,True,3,False,True,C,False,True,NVIDIA Corporation (NVDA),positive,2025-08-10,weak positive
+True,0.9525,negative,True,3,False,True,C,False,True,NVIDIA Corporation (NVDA),negative,2026-02-06,strong negative
+True,0.9361,positive,True,6,True,True,A,True,False,Apple Inc. (AAPL),positive,2025-08-28,strong positive
+True,0.9411,negative,True,3,False,True,C,False,True,Apple Inc. (AAPL),negative,2025-09-25,strong negative
+True,0.9376,positive,True,2,False,True,C,False,True,Snowflake Inc. (SNOW),positive,2026-01-27,strong positive
+True,0.9532,negative,True,3,False,True,C,False,True,Snowflake Inc. (SNOW),negative,2026-03-07,strong negative

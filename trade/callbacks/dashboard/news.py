@@ -196,11 +196,15 @@ def view_company_from_description(n_clicks, company_key):
     State('companies', 'data'),
     State('notif-filter', 'data'),
     State('notif-offset', 'data'),
+    State('notif-enabled', 'data'),
     prevent_initial_call=True,
 )
-def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset):
+def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset, notif_enabled):
     if timestamp is None:
         raise PreventUpdate
+
+    if not notif_enabled:
+        return no_update, no_update
 
     try:
         news_df = get_news_dataframe()
