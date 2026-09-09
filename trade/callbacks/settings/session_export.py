@@ -17,9 +17,10 @@ from trade.utils.session import build_session_zip
     State("news-font-size", "data"),
     State("color-scheme-store", "data"),
     State("notif-enabled", "data"),
+    State("color-enabled", "data"),
     prevent_initial_call=True,
 )
-def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size, color_scheme, notif_enabled):
+def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size, color_scheme, notif_enabled, color_enabled):
     from dash import no_update
     if not n_clicks:
         return no_update
@@ -32,6 +33,7 @@ def export_session(n_clicks, companies, initial_cashflow, max_requests, update_t
         news_font_size=news_font_size,
         color_scheme=color_scheme,
         notif_enabled=notif_enabled,
+        color_enabled=color_enabled,
         data_path=dlt.data_path,
     )
     return {

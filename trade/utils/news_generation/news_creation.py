@@ -1,4 +1,4 @@
-from openai import OpenAI, RateLimitError
+from openai import OpenAI, RateLimitError, APITimeoutError, APIConnectionError
 import pandas as pd
 import os
 import random
@@ -22,15 +22,17 @@ GROQ_MODEL = "llama-3.3-70b-versatile"
 OLLAMA_MODEL = "qwen3:8b"
 
 
+OLLAMA_TIMEOUT = 180.0  # seconds per API call before giving up
+
 def _build_client(provider, base_url, groq_api_key):
     """Return (OpenAI client, model name) for the chosen provider."""
     if provider == "groq":
-        return OpenAI(base_url=GROQ_BASE_URL, api_key=groq_api_key), GROQ_MODEL
-    return OpenAI(base_url=base_url, api_key="ollama"), OLLAMA_MODEL
+        return OpenAI(base_url=GROQ_BASE_URL, api_key=groq_api_key, timeout=60.0), GROQ_MODEL
+    return OpenAI(base_url=base_url, api_key="ollama", timeout=OLLAMA_TIMEOUT), OLLAMA_MODEL
 
 
 def _chat_with_retry(client, model, messages, max_retries=4):
-    """Call the chat API with exponential back-off on rate-limit errors."""
+    """Call the chat API with exponential back-off on rate-limit and timeout errors."""
     for attempt in range(max_retries):
         try:
             return client.chat.completions.create(messages=messages, model=model)
@@ -38,6 +40,13 @@ def _chat_with_retry(client, model, messages, max_retries=4):
             if attempt < max_retries - 1:
                 wait = 10 * (2 ** attempt)  # 10s → 20s → 40s → 80s
                 print(f"[NEWS] Rate limit hit — waiting {wait}s (attempt {attempt + 1}/{max_retries})...")
+                time.sleep(wait)
+            else:
+                raise
+        except (APITimeoutError, APIConnectionError) as e:
+            if attempt < max_retries - 1:
+                wait = 15 * (attempt + 1)
+                print(f"[NEWS] Connection/timeout error — retrying in {wait}s (attempt {attempt + 1}/{max_retries}): {e}")
                 time.sleep(wait)
             else:
                 raise
@@ -607,8 +616,9 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     sentiment = 'positive'
     sector = company_sector
     subset = dataset[dataset['sentiment'] == sentiment]
-    if len(subset) >= len(news_position[0]):
-        news = subset.sample(len(news_position[0]))
+    if len(subset) > 0:
+        need_replace = len(subset) < len(news_position[0])
+        news = subset.sample(len(news_position[0]), replace=need_replace)
 
         total_pos = len(news_position[0])
         print(f"[NEWS GEN] {company_name} — {total_pos} POSITIVE article(s) to generate")
@@ -667,14 +677,15 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             i += 1
 
     else:
-        raise Exception('There are not enough positive news in the dataset')
+        raise Exception('There are no positive news articles in the dataset at all')
 
     # Browse the negative positions
     sentiment = 'negative'
     sector = company_sector
     subset = dataset[dataset['sentiment'] == sentiment]
-    if len(subset) >= len(news_position[1]):
-        news = subset.sample(len(news_position[1]))
+    if len(subset) > 0:
+        need_replace = len(subset) < len(news_position[1])
+        news = subset.sample(len(news_position[1]), replace=need_replace)
 
         total_neg = len(news_position[1])
         print(f"[NEWS GEN] {company_name} — {total_neg} NEGATIVE article(s) to generate")
@@ -730,7 +741,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             i += 1
 
     else:
-        raise Exception('There are not enough negative news in the dataset')
+        raise Exception('There are no negative news articles in the dataset at all')
 
     print(f"[NEWS GEN] ============================================")
     print(f"[NEWS GEN] DONE — {company_name} ({company_ticker})")

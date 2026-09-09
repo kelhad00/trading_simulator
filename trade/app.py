@@ -26,6 +26,10 @@ _anti_flash_script = """
       document.documentElement.style.backgroundColor = '#1a1b1e';
       document.body.style.backgroundColor = '#1a1b1e';
     }
+    var ce = JSON.parse(localStorage.getItem('color-enabled'));
+    if (ce === true) {
+      document.body.style.filter = 'invert(100%) hue-rotate(180deg)';
+    }
   } catch(e) {}
 })();
 </script>
@@ -129,6 +133,7 @@ app.layout = dmc.MantineProvider([
 
         # Notification settings — filter by sentiment and optional early-warning offset
         dcc.Store(id="notif-enabled", data=True, storage_type="local"),
+        dcc.Store(id="color-enabled", data=False, storage_type="local"),
         dcc.Store(id="notif-filter", data=["positive", "negative", "neutral"], storage_type="local"),
         dcc.Store(id="notif-offset", data=0, storage_type="local"),
 
@@ -273,6 +278,16 @@ clientside_callback(
     Input("color-scheme-store", "data"),
     State("news-chart", "figure"),
     prevent_initial_call=True,
+)
+
+clientside_callback(
+    """function(enabled) {
+        document.body.style.filter = (enabled === true) ? 'invert(100%) hue-rotate(180deg)' : '';
+        return window.dash_clientside.no_update;
+    }""",
+    Output("color-enabled", "data", allow_duplicate=True),
+    Input("color-enabled", "data"),
+    prevent_initial_call='initial_duplicate',
 )
 
 

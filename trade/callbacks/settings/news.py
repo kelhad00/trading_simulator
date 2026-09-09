@@ -95,6 +95,7 @@ def update_display_container_nbr_news(mode):
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
     Output("manual-positions-store", "data", allow_duplicate=True),
+    Output("generate-news-status", "children"),
 
     State('companies', 'data'),
     State('input-provider', 'value'),
@@ -153,13 +154,14 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
             if total > 0 else "Generation complete!"
         )
 
+        status_msg = dmc.Text(message, color=color, size="sm")
         return dmc.Notification(
             id="notification-news-generated",
             title="News",
             action="show",
             color=color,
             message=message,
-        ), {}
+        ), {}, status_msg
 
     except Exception as e:
         print("Error while generating news:", e)
@@ -172,13 +174,14 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
             message = "A data file is empty or corrupted (news.csv or news_dataset.csv). Check your Data folder."
         else:
             message = f"News generation failed: {e}"
+        status_msg = dmc.Text(message, color="red", size="sm")
         return dmc.Notification(
             id="notification-news-generated",
             title="Error",
             action="show",
             color="red",
             message=message,
-        ), no_update
+        ), no_update, status_msg
 
 
 # ── Company dropdown options ──────────────────────────────────────────────────

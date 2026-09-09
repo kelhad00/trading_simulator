@@ -9,6 +9,13 @@ from trade.components.sections import section
 def advanced_settings(lang="fr"):
     tl = tls[lang]["settings"]["advanced"]
     return html.Div([
+        section(tl["subtitles"]["display"], [
+            dmc.Switch(
+                id="color-enabled-input",
+                label=tl["display"]["color-label"],
+                checked=False,
+            ),
+        ]),
         section(tl["subtitles"]["active"], [
             dmc.Select(
                 id="active-company-dropdown",

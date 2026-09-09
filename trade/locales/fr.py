@@ -329,6 +329,7 @@ translation = {
                 "subtitles": {
                     "init": "Initialisation",
                     "active": "Entreprises actives",
+                    "display": "Affichage",
                 },
                 "button": {
                     "update": "Mettre à jour",
@@ -352,6 +353,9 @@ translation = {
                     "count": "{n} / {total} actives",
                     "error-title": "Impossible de retirer",
                     "error-msg": "Au moins une entreprise doit rester active.",
+                },
+                "display": {
+                    "color-label": "Affichage en couleur",
                 },
             },
         },

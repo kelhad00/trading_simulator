@@ -229,7 +229,14 @@ def news_settings(lang="fr"):
             ),
         ]),
 
-        dmc.Button(tl["button"]["generate"], id="generate-news", color="dark", size="md"),
+        dcc.Loading(
+            id="generate-news-loading",
+            type="circle",
+            children=html.Div([
+                dmc.Button(tl["button"]["generate"], id="generate-news", color="dark", size="md"),
+                html.Div(id="generate-news-status", className="text-sm mt-2"),
+            ], className="flex flex-col gap-2"),
+        ),
         html.Div([], id="news-notification-container"),
 
     ], className="flex flex-col gap-8 w-full")

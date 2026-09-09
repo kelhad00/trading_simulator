@@ -5,6 +5,24 @@ import dash_mantine_components as dmc
 
 
 @callback(
+    Output("color-enabled-input", "checked"),
+    Input("settings-tabs", "value"),
+    Input("color-enabled", "data"),
+)
+def set_color_enabled_default(tabs, color_enabled):
+    return color_enabled if color_enabled is not None else True
+
+
+@callback(
+    Output("color-enabled", "data"),
+    Input("color-enabled-input", "checked"),
+    prevent_initial_call=True,
+)
+def sync_color_enabled(enabled):
+    return bool(enabled) if enabled is not None else True
+
+
+@callback(
     Output("input-update-time", "value"),
     Output("input-max-requests", "value"),
     Output("input-init-cashflow", "value"),
