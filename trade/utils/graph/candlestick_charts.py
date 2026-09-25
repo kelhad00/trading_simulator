@@ -61,12 +61,9 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
             # rendered candles never disappear as new ones are added.
             dftmp = dataframe.iloc[:idx + 1]
         else:  # You want to see the graph of another company
-            # And so with the same timestamp as the previous graph
-            if range == 0 or idx < range:
-                dftmp = dataframe.iloc[: idx]
-            else:
-                dftmp = dataframe.iloc[idx - range: idx]
-
+            # And so with the same timestamp as the previous graph.
+            # Never trim: show every candle revealed so far.
+            dftmp = dataframe.iloc[: idx]
 
     # Strip rows where OHLC data is absent (tickers with fewer data points than
     # the shared index length produce NaN-padded trailing rows; rendering those
@@ -79,30 +76,38 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
         # running and other tickers remain unaffected.
         return go.Figure(), dftmp.index[-1]
 
+    # Fixed horizontal slots: candle i always sits in slot i of the TOTAL
+    # candle count of the file (not the number shown so far). A category axis
+    # ordered by `all_labels` gives exactly that, since slot position is the
+    # candle's position in the full list. The same string labels are used for
+    # every trace so they line up with the slots.
+    all_labels = [str(i) for i in dataframe.dropna(subset=['Open', 'High', 'Low', 'Close']).index]
+    x_labels = [str(i) for i in plot_df.index]
+
     # creating the plot the short moving average
     short_mov_av = go.Scatter(
-        x=plot_df.index,
+        x=x_labels,
         y=plot_df['short_MA'],
         name='shortMA'
     )
 
     # creating the plot the long moving average
     long_mov_av = go.Scatter(
-        x=plot_df.index,
+        x=x_labels,
         y=plot_df['long_MA'],
         name='longMA'
     )
 
     # creating the plot the 200 moving average
     twohun_mov_av = go.Scatter(
-        x=plot_df.index,
+        x=x_labels,
         y=plot_df['200_MA'],
         name='twohunMA'
     )
 
     # creating the plot the candlestick plot
     candelstick = go.Candlestick(
-        x=plot_df.index,
+        x=x_labels,
         open=plot_df['Open'],
         high=plot_df['High'],
         low=plot_df['Low'],
@@ -114,22 +119,41 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
     # Create chart for the selected stock
     figure = go.Figure(data=[long_mov_av, short_mov_av, twohun_mov_av, candelstick])
 
-    # The full history is always in the data now, but by default only show the
-    # last `range` candles so the view keeps scrolling forward like before —
-    # older candles shift out of view instead of being removed, and the user
-    # can still pan/zoom back to see them. Skip this while `follow` is False
-    # (user has manually panned away) so the update doesn't yank their view
-    # back to the live edge.
-    if follow and range:
-        visible = plot_df.iloc[-range:] if 0 < range < len(plot_df) else plot_df
-        # The index may be plain date strings (unparsed CSV column) rather than
-        # a DatetimeIndex, so parse the endpoints before doing date arithmetic.
-        start = pd.Timestamp(visible.index[0])
-        end = pd.Timestamp(visible.index[-1])
-        step = (end - start) / (len(visible) - 1) if len(visible) >= 2 else pd.Timedelta(days=1)
-        # Leave a little breathing room (a few candle-widths) to the right of
-        # the latest candle so it isn't flush against the edge of the plot.
-        figure.update_xaxes(range=[start, end + step * 3])
+    # Category axis in full-file order: slot i is candle i. Ticks are limited to
+    # dates already shown so future dates aren't revealed on the axis.
+    tick_step = max(1, len(x_labels) // 8)
+    tick_labels = x_labels[::tick_step]
+    figure.update_xaxes(
+        type='category',
+        categoryorder='array',
+        categoryarray=all_labels,
+        tickmode='array',
+        tickvals=tick_labels,
+        ticktext=[label[:10] for label in tick_labels],
+    )
+
+    # Price axis on the right, with a dashed line + label at the latest close.
+    figure.update_yaxes(side='right')
+    last_close = float(plot_df['Close'].iloc[-1])
+    figure.add_hline(
+        y=last_close,
+        line_dash='dash',
+        line_width=1,
+        line_color='gray',
+        annotation_text=f'{last_close:,.2f}',
+        annotation_position='right',
+    )
+
+    # While following the live edge, every frame shows ALL slots (the chart
+    # fills left to right and never scrolls) and rescales the price axis to the
+    # highest High / lowest Low shown so far plus 15% padding. Skipped while
+    # `follow` is False so a user's manual pan/zoom isn't overridden.
+    if follow:
+        figure.update_xaxes(range=[-0.5, len(all_labels) - 0.5])
+        hi = float(plot_df['High'].max())
+        lo = float(plot_df['Low'].min())
+        pad = (hi - lo) * 0.15 or hi * 0.01
+        figure.update_yaxes(range=[lo - pad, hi + pad])
 
     return figure, dftmp.index[-1]
 

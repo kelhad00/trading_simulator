@@ -164,8 +164,9 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             yaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['y'],
             yaxis_tickprefix='€',
             yaxis_tickformat=',.2f',
-            margin=dict(l=0, r=90, t=0, b=0),
-            legend=dict(x=0, y=1.0),
+            margin=dict(l=0, r=90, t=30, b=0),
+            # Legend in one row just above the plot so it never covers candles.
+            legend=dict(orientation='h', x=0, y=1.0, xanchor='left', yanchor='bottom'),
             xaxis_rangeslider_visible=False,
             # uirevision keyed to company: preserves zoom/pan on periodic updates,
             # resets only when the user switches company
@@ -173,6 +174,16 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             dragmode='pan',
             template='plotly_dark' if color_scheme == 'dark' else 'plotly_white',
         )
+
+        if following:
+            # Fixed-slot playback: the server sets the x range (all slots) and
+            # the padded y range on every frame, so give both axes a fresh
+            # revision each tick. Otherwise uirevision would keep an old range
+            # (or a "reset axes" autorange) and ignore the new one.
+            fig.update_layout(
+                xaxis_uirevision=f"{company}|{new_ts}",
+                yaxis_uirevision=f"{company}|{new_ts}",
+            )
 
         fig.for_each_trace(
             lambda t: t.update(name=tls[page_registry.get("lang", "fr")]["market-graph"]['legend'][t.name])
