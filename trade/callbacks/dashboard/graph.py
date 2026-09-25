@@ -160,8 +160,13 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             fig.update_xaxes(range=manual_range)
 
         fig.update_layout(
-            xaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['x'],
-            yaxis_title=tls[page_registry.get('lang', 'fr')]["market-graph"]['y'],
+            # No axis titles: the date is shown above the chart and the axis
+            # is already labelled with € prices, so this space goes to candles.
+            xaxis_title=None,
+            yaxis_title=None,
+            # Toolbar in a horizontal strip in the top margin instead of a
+            # vertical column covering the price axis.
+            modebar=dict(orientation='h'),
             yaxis_tickprefix='€',
             yaxis_tickformat=',.2f',
             margin=dict(l=0, r=90, t=30, b=0),

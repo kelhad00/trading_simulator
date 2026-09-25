@@ -121,8 +121,13 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
 
     # Category axis in full-file order: slot i is candle i. Ticks are limited to
     # dates already shown so future dates aren't revealed on the axis.
-    tick_step = max(1, len(x_labels) // 8)
-    tick_labels = x_labels[::tick_step]
+    # Few, horizontal labels keep the axis short so the candles get the height.
+    # Ticks sit at evenly spaced slots across the WHOLE file width (about 6 in
+    # total), so they stay far apart and never move as candles are added. Only
+    # the ones already revealed are drawn. plot_df is a prefix of the full
+    # data, so slot i in all_labels is also candle i of x_labels.
+    tick_step = max(1, len(all_labels) // 6)
+    tick_labels = all_labels[:len(x_labels):tick_step]
     figure.update_xaxes(
         type='category',
         categoryorder='array',
@@ -130,6 +135,7 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
         tickmode='array',
         tickvals=tick_labels,
         ticktext=[label[:10] for label in tick_labels],
+        tickangle=0,
     )
 
     # Price axis on the right, with a dashed line + label at the latest close.
@@ -140,8 +146,13 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
         line_dash='dash',
         line_width=1,
         line_color='gray',
-        annotation_text=f'{last_close:,.2f}',
-        annotation_position='right',
+        annotation_text=f'€{last_close:,.2f}',
+        # Inside the plot, as a filled tag, so it doesn't print over the
+        # right-hand axis numbers.
+        annotation_position='top right',
+        annotation_bgcolor='gray',
+        annotation_font_color='white',
+        annotation_font_size=11,
     )
 
     # While following the live edge, every frame shows ALL slots (the chart
