@@ -499,13 +499,18 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
 
 # ── Export confirmed charts to CSV ────────────────────────────────────────────
 
-def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang, base_url, k=0):
+def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang,
+                        provider, base_url, groq_api_key, k=0):
     """Run news generation in a background thread so the UI is not blocked."""
     try:
         positions = get_news_position_for_companies(
             companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, k=k
         )
-        create_news_for_companies(companies_subset, positions, lang, base_url)
+        # Keyword arguments so the provider settings can't land in the wrong slot
+        create_news_for_companies(
+            companies_subset, positions, lang,
+            provider=provider, base_url=base_url, groq_api_key=groq_api_key, delta=delta,
+        )
         print("Auto news regeneration complete for: " + ", ".join(companies_subset.keys()))
     except Exception as e:
         print("Auto news regeneration failed:", e)
@@ -523,7 +528,9 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
     State("modal-select-companies", "value"),
     State("number-trends", "value"),
     State("companies", "data"),
+    State("input-provider", "value"),
     State("input-api-key", "value"),
+    State("input-groq-key", "value"),
     State("input-alpha", "value"),
     State("input-alpha-day-interval", "value"),
     State("input-delta", "value"),
@@ -535,7 +542,7 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
     prevent_initial_call=True,
 )
 def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
-                             api_key, alpha, alpha_day_interval, delta, generation_mode,
+                             provider, api_key, groq_key, alpha, alpha_day_interval, delta, generation_mode,
                              nbr_positive_news, nbr_negative_news, top_k, search):
     """
     Export the generated charts to generated_data.csv when the generate button is clicked,
@@ -555,7 +562,10 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
     # Build subset of only the companies whose charts were just confirmed
     companies_subset = {c: companies[c] for c in companies_selected}
 
-    effective_url = (api_key or "").strip() or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    # Same provider resolution as the Start button in callbacks/settings/news.py
+    provider = provider or "ollama"
+    effective_url = (api_key or "").strip() or dlt.ollama_base_url
+    effective_groq_key = (groq_key or "").strip() or dlt.groq_api_key
     lang = "en" if (search and "lang=en" in search) else "fr"
 
     thread = threading.Thread(
@@ -569,7 +579,9 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
             alpha_day_interval or 3,
             delta or 0,
             lang,
+            provider,
             effective_url,
+            effective_groq_key,
             top_k or 0,
         ),
         daemon=True,
