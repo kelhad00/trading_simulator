@@ -161,26 +161,17 @@ app.layout = dmc.MantineProvider([
     ])
 ], theme=theme, id="mantine-provider")
 
+# The Dark / Light menu option was removed: dark is now only the "dark mode for
+# the simulation" toggle (color-enabled). Keep the theme on light so an old saved
+# value, or an old session file, can't leave the page dark with no way back, or
+# combine with the toggle's inversion and turn the page light again.
 clientside_callback(
-    """function(n, scheme) {
-        if (!n) return scheme || 'light';
-        return scheme === 'dark' ? 'light' : 'dark';
+    """function(scheme) {
+        return scheme === 'light' ? window.dash_clientside.no_update : 'light';
     }""",
     Output("color-scheme-store", "data", allow_duplicate=True),
-    Input("theme-toggle-home", "n_clicks"),
-    State("color-scheme-store", "data"),
-    prevent_initial_call=True,
-)
-
-clientside_callback(
-    """function(n, scheme) {
-        if (!n) return scheme || 'light';
-        return scheme === 'dark' ? 'light' : 'dark';
-    }""",
-    Output("color-scheme-store", "data", allow_duplicate=True),
-    Input("theme-toggle-dashboard", "n_clicks"),
-    State("color-scheme-store", "data"),
-    prevent_initial_call=True,
+    Input("color-scheme-store", "data"),
+    prevent_initial_call='initial_duplicate',
 )
 
 clientside_callback(

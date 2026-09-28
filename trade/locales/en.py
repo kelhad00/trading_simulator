@@ -342,7 +342,7 @@ translation = {
                     "error-msg": "At least one company must remain active.",
                 },
                 "display": {
-                    "color-label": "Color display",
+                    "color-label": "Dark mode for the simulation",
                 },
             },
         },
