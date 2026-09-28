@@ -18,7 +18,7 @@ from trade.utils.news_generation.verify import verify_article
 from trade.defaults import defaults as dlt
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "openai/gpt-oss-120b"
 OLLAMA_MODEL = "qwen3:8b"
 
 
