@@ -355,7 +355,7 @@ translation = {
                     "error-msg": "Au moins une entreprise doit rester active.",
                 },
                 "display": {
-                    "color-label": "Affichage en couleur",
+                    "color-label": "Mode sombre pour la simulation",
                 },
             },
         },
