@@ -18,6 +18,17 @@ _SENTIMENT_COLORS = {
 
 _FONT_SIZES = {'S': '0.75rem', 'M': '0.9375rem', 'L': '1.125rem'}
 
+
+def _headline_text(children):
+    """Headline text of a news-table article cell.
+
+    Rows with a sentiment tag hold [badge, text] instead of just the text, so
+    the badge must be skipped to find the article by its title.
+    """
+    if isinstance(children, list):
+        return next((c for c in children if isinstance(c, str)), None)
+    return children
+
 clientside_callback(
     """function(size) {
         var fs = {'S': '0.75rem', 'M': '0.9375rem', 'L': '1.125rem'}[size] || '0.75rem';
@@ -146,7 +157,7 @@ def toggle_news_display_type(n, cell_clicked, table, companies):
     try:
         index_clicked = cell_clicked.index(1)
         rows = table['props']['children'][1]['props']['children']
-        titles = [row['props']['children'][0]['props']['children'] for row in rows]
+        titles = [_headline_text(row['props']['children'][0]['props']['children']) for row in rows]
 
         # get_news_dataframe() is cached — negligible cost
         news_df = get_news_dataframe()
