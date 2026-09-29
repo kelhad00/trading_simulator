@@ -1,0 +1,20 @@
+/* Market chart toolbar (Plotly modebar): one row at the top-right, on the same
+   line as the moving-average legend, so it never covers the price axis or the
+   candles. Tailwind's base styles make every <svg> display:block, which
+   stacked the toolbar buttons into a column over the price labels. */
+#company-graph .modebar-container {
+    top: 8px !important;
+    right: 8px !important;
+}
+
+#company-graph .modebar,
+#company-graph .modebar-group {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+}
+
+#company-graph .modebar-group {
+    padding-left: 6px !important;
+}

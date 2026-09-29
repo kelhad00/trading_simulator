@@ -42,7 +42,9 @@ def graph(lang="fr"):
             html.Div(className="flex-1 overflow-hidden", children=[
                 dcc.Graph(
                     id='company-graph',
-                    config=PLOTLY_CONFIG,
+                    # Toolbar always shown (in the legend row, see assets/chart-toolbar.css)
+                    # instead of popping up over the chart on hover
+                    config={**PLOTLY_CONFIG, 'displayModeBar': True},
                     className="w-full h-full",
                 ),
                 dcc.Graph(
