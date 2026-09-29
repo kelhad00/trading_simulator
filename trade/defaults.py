@@ -12,6 +12,11 @@ class Defaults:
     # update_time = 60*1000 # in milliseconds
     update_time = 5*1000  # in milliseconds
 
+    # Moving candles: each candle forms in this many steps (4 = updates at 15,
+    # 30, 45 min of a 1 h candle, then closes). update_time is the time per
+    # step. 1 = the candle appears finished, as before.
+    steps_per_candle = 4
+
     # Simulation window: always ends today, starts `simulation_days` ago
     simulation_days = 300
     _start = datetime.now() - timedelta(days=simulation_days)

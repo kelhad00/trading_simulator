@@ -8,7 +8,8 @@ from dash_iconify import DashIconify
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 from trade.components.table import create_table_delete
-from trade.utils.market import get_price_dataframe, get_low_dataframe, get_high_dataframe
+from trade.utils.market import get_price_dataframe
+from trade.utils.candle_steps import current_price, step_price_range
 
 
 def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests):
@@ -64,6 +65,11 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
 def fill_price_from_candle_click(click_data, company):
     if not click_data or not company:
         raise PreventUpdate
+    # A candle's own close as drawn on the chart: for the forming candle that is
+    # its current price, not the final close from the file
+    point_close = click_data['points'][0].get('close')
+    if point_close is not None:
+        return round(float(point_close), 2)
     try:
         date_str = str(click_data['points'][0]['x'])[:10]
         price_df = get_price_dataframe()
@@ -82,12 +88,15 @@ def fill_price_from_candle_click(click_data, company):
     Input('market-price-btn', 'n_clicks'),
     State('company-selector', 'value'),
     State('timestamp', 'data'),
+    State('candle-step', 'data'),
+    State('steps-per-candle', 'data'),
     prevent_initial_call=True,
 )
-def fill_market_price(n_clicks, company, timestamp):
+def fill_market_price(n_clicks, company, timestamp, candle_step, steps_per_candle):
     if not n_clicks or not company or not timestamp:
         raise PreventUpdate
-    price = get_price_dataframe().loc[timestamp, company]
+    # The price right now (the forming candle's latest price), not its future close
+    price = current_price(company, timestamp, candle_step, steps_per_candle)
     return round(float(price), 2)
 
 
@@ -190,15 +199,17 @@ def process_submit_button(btn, company, action, price, pct, cash, timestamp, por
 
     Input("requests", "data"),
     Input('timestamp', 'data'),
+    Input('candle-step', 'data'),
 
     State('portfolio-shares', 'data'),
     State('cashflow', 'data'),
     State("portfolio-totals", "data"),
     State('cost-basis', 'data'),
     State('sold-data', 'data'),
+    State('steps-per-candle', 'data'),
     prevent_initial_call=True,
 )
-def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals, cost_basis, sold_data):
+def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow, port_totals, cost_basis, sold_data, steps_per_candle):
     """
     Try to execute the requests of the user.
     Update the portfolio, the cashflow and requests list.
@@ -219,17 +230,20 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
     cost_basis = dict(cost_basis or {})
     sold_data = dict(sold_data or {})
 
-    price_list = get_price_dataframe()
-    low_list   = get_low_dataframe()
-    high_list  = get_high_dataframe()
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     port_totals = pd.DataFrame.from_dict(port_totals, orient='index', columns=['Totals'])
+
+    # Moving candles: an order is checked against the prices reached during the
+    # CURRENT step only, and fills at the current price, never at prices from
+    # earlier in the candle or from its future close. With 1 step per candle
+    # this is the whole candle's Low/High and its Close, as before.
+    def price_now(company):
+        return current_price(company, timestamp, candle_step, steps_per_candle)
 
     i = 0
     while i < len(request_list):
         req = request_list[i]
-        low_price  = low_list.loc[timestamp, req['company']]
-        high_price = high_list.loc[timestamp, req['company']]
+        low_price, high_price = step_price_range(req['company'], timestamp, candle_step, steps_per_candle)
 
         # If the request is completed
         if req['action'] == 'buy' and low_price <= req['price']:
@@ -237,7 +251,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
             # trading below it, fill at the (lower) market price and refund the
             # difference between what was reserved (at the limit price) and what was
             # really spent.
-            fill_price = min(req['price'], price_list.loc[timestamp, req['company']])
+            fill_price = min(req['price'], price_now(req['company']))
             port_shares.loc[req['company']] += req['shares']
             cost_basis[req['company']] = cost_basis.get(req['company'], 0) + req['shares'] * fill_price
             cashflow += req['shares'] * (req['price'] - fill_price)
@@ -249,7 +263,7 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
             if port_shares.at[req['company'], 'Shares'] >= req["shares"]:
                 # A limit sell never settles for less than the limit — if the market is
                 # actually trading above it, fill at the (higher) market price.
-                fill_price = max(req['price'], price_list.loc[timestamp, req['company']])
+                fill_price = max(req['price'], price_now(req['company']))
                 # Update only the shares and the cashflow
                 # Because the total price will be updated in the portfolio callback
                 held_before = port_shares.at[req['company'], 'Shares']
@@ -273,7 +287,8 @@ def execute_requests(request_list, timestamp, port_shares, cashflow, port_totals
 
     if not timestamp == "":
         # Update the total price of each stock
-        port_totals['Totals'] = port_shares['Shares'] * price_list.loc[timestamp, port_totals.index]
+        prices = pd.Series({c: price_now(c) for c in port_totals.index})
+        port_totals['Totals'] = port_shares['Shares'] * prices
 
     # cashflow is only ever mutated by the sell branch above — passing it through
     # unconditionally on every trigger (including the periodic timestamp tick, which

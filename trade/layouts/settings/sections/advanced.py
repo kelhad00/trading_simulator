@@ -39,6 +39,20 @@ def advanced_settings(lang="fr"):
                     label=tl["input"]["update-time"],
                     required=True
                 ),
+                # Moving candles: value = steps per candle (4 = every 15 min of a 1 h candle)
+                html.Div([
+                    dmc.Text(tl["candle-steps"]["label"], size="sm", weight=500),
+                    dmc.SegmentedControl(
+                        id="input-steps-per-candle",
+                        data=[
+                            {"value": "1", "label": tl["candle-steps"]["off"]},
+                            {"value": "2", "label": tl["candle-steps"]["30"]},
+                            {"value": "4", "label": tl["candle-steps"]["15"]},
+                            {"value": "12", "label": tl["candle-steps"]["5"]},
+                        ],
+                    ),
+                    dmc.Text(tl["candle-steps"]["help"], size="xs", color="dimmed"),
+                ], className="flex flex-col gap-1"),
                 dmc.NumberInput(
                     id="input-max-requests",
                     label=tl["input"]["requests"],

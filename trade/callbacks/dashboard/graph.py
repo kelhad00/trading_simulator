@@ -7,6 +7,9 @@ import pandas as pd
 from dash_iconify import DashIconify
 
 from trade.utils.graph.candlestick_charts import create_graph
+from trade.utils.candle_steps import (
+    normalize as normalize_step, is_forming, partial_candle, market_time, step_minutes,
+)
 from trade.utils.export import log_session_event
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
 from trade.locales import translations as tls
@@ -51,30 +54,39 @@ def sync_interval(update_time):
     State("timestamp", "data"),
     State("cashflow", "data"),
     State("company-selector", "value"),
+    State("candle-step", "data"),
+    State("steps-per-candle", "data"),
     prevent_initial_call=True,
 )
-def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused, timestamp, cashflow, company):
+def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused, timestamp, cashflow, company, candle_step, steps_per_candle):
     if not pause_clicks:
         # n_clicks reset to 0 on page remount — ignore to avoid spurious pause
         raise PreventUpdate
+    when = market_time(timestamp, candle_step, steps_per_candle)
     if not currently_disabled:
         # Pausing — record when the pause started
-        log_session_event("session-pause", timestamp, cashflow, company)
+        log_session_event("session-pause", when, cashflow, company)
         return True, time.time(), no_update, "Resume", DashIconify(icon="carbon:play")
     else:
         # Unpausing — accumulate the pause duration and clear the start time
         paused_for = time.time() - (pause_start or time.time())
-        log_session_event("session-resume", timestamp, cashflow, company)
+        log_session_event("session-resume", when, cashflow, company)
         return False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
 
 
 @callback(
     Output("timer", "children"),
     Input("timestamp", "data"),
+    Input("candle-step", "data"),
+    State("steps-per-candle", "data"),
 )
-def cb_update_timestamp(timestamp):
-    timestamp = pd.to_datetime(timestamp)
-    return timestamp.strftime("%Y-%m-%d")
+def cb_update_timestamp(timestamp, candle_step, steps_per_candle):
+    date = pd.to_datetime(timestamp).strftime("%Y-%m-%d")
+    step, n_steps = normalize_step(candle_step, steps_per_candle)
+    if n_steps == 1:
+        return date
+    # Moving candles: show the market clock inside the candle (15 / 30 / 45 / 60 min)
+    return f"{date} · {step_minutes(step, n_steps)} min"
 
 
 @callback(
@@ -112,6 +124,7 @@ def track_graph_auto_follow(relayout_data, company):
     Output('periodic-updater', 'disabled', allow_duplicate=True),
     Output('modal', 'opened', allow_duplicate=True),
     Output('session-start-time', 'data'),
+    Output('candle-step', 'data'),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
     State('timestamp', 'data'),
@@ -123,34 +136,51 @@ def track_graph_auto_follow(relayout_data, company):
     State('graph-auto-follow', 'data'),
     State('graph-manual-range', 'data'),
     State('cashflow', 'data'),
+    State('candle-step', 'data'),
+    State('steps-per-candle', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
-    print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp}")
+    step, n_steps = normalize_step(candle_step, steps_per_candle)
+    print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp} step={step}/{n_steps}")
 
     if next_graph:
         if session_start_time is None:
             # First tick of a new session — start the clock, skip end-condition check
             session_start_time = time.time()
-            log_session_event("session-start", timestamp, cashflow, company)
+            log_session_event("session-start", market_time(timestamp, step, n_steps), cashflow, company)
         else:
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
             elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
-            data_done = (timestamp == get_last_timestamp(get_market_dataframe()))
+            # With moving candles the data is only done once the last candle has closed
+            data_done = (timestamp == get_last_timestamp(get_market_dataframe())) and step >= n_steps
             print(f"[GRAPH] elapsed={elapsed:.1f}s duration={duration_secs}s data_done={data_done}")
 
             if elapsed >= duration_secs or data_done:
                 print("[GRAPH] simulation ended")
-                log_session_event("session-finish", timestamp, cashflow, company)
-                return no_update, no_update, True, True, session_start_time
+                log_session_event("session-finish", market_time(timestamp, step, n_steps), cashflow, company)
+                return no_update, no_update, True, True, session_start_time, no_update
+
+    # Moving candles: a tick moves the forming candle one step (15 -> 30 -> 45 min);
+    # only once it has closed does the next candle start and the timestamp advance.
+    # With 1 step per candle every tick advances, as before.
+    advance = next_graph and step >= n_steps
+    new_step = (1 if advance else step + 1) if next_graph else step
+
+    def forming_candle(ts):
+        # ts == timestamp while advancing = no next candle (end of data): stays closed
+        if not is_forming(new_step, n_steps) or (advance and ts == timestamp):
+            return None
+        return partial_candle(company, ts, new_step, n_steps)
 
     try:
         # get_market_dataframe() is cached — only reads disk when file changes
         dftmp = get_market_dataframe()[company]
 
-        fig, new_ts = create_graph(dftmp, timestamp, next_graph, dlt.initial_reveal_bars, follow=following)
+        fig, new_ts = create_graph(dftmp, timestamp, advance, dlt.initial_reveal_bars, follow=following,
+                                   partial=forming_candle)
 
         if not following and manual_range:
             # Pin the view to exactly where the user left it — sending no
@@ -212,17 +242,18 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
 
         # Data exhaustion: create_graph couldn't advance (idx past end of dataframe).
         # Render the last frame and end immediately — no frozen-tick gap before the modal.
-        if next_graph and new_ts == timestamp:
+        # (Only when advancing: while a candle is forming the timestamp stays put on purpose.)
+        if advance and new_ts == timestamp:
             print("[GRAPH] data exhausted at", new_ts)
-            log_session_event("session-finish", new_ts, cashflow, company)
-            return new_ts, fig, True, True, session_start_time
+            log_session_event("session-finish", market_time(new_ts, n_steps, n_steps), cashflow, company)
+            return new_ts, fig, True, True, session_start_time, None
 
-        print(f"[GRAPH] ok new_ts={new_ts}")
-        return new_ts, fig, no_update, no_update, session_start_time
+        print(f"[GRAPH] ok new_ts={new_ts} step={new_step}/{n_steps}")
+        return new_ts, fig, no_update, no_update, session_start_time, (new_step if next_graph else no_update)
 
     except Exception as e:
         print("Error in update_graph:", e)
-        return no_update, no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update, no_update
 
 
 @callback(

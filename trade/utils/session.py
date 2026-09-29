@@ -5,7 +5,7 @@ import zipfile
 from datetime import datetime
 
 
-def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None, notif_enabled=None, color_enabled=None):
+def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None, notif_enabled=None, color_enabled=None, steps_per_candle=None):
     """Package stores + CSV files into an in-memory ZIP and return the bytes."""
     from trade.defaults import defaults as dlt
     buf = io.BytesIO()
@@ -23,6 +23,7 @@ def build_session_zip(companies, initial_cashflow, max_requests, update_time, da
                 "color-scheme": color_scheme or "light",
                 "notif-enabled": notif_enabled if notif_enabled is not None else True,
                 "color-enabled": color_enabled if color_enabled is not None else True,
+                "steps-per-candle": steps_per_candle if steps_per_candle is not None else dlt.steps_per_candle,
             }
         }
         zf.writestr("session.json", json.dumps(payload, ensure_ascii=False, indent=2))
@@ -67,4 +68,6 @@ def extract_session_zip(zip_bytes, data_path):
         "color-scheme": stores.get("color-scheme", "light"),
         "notif-enabled": stores.get("notif-enabled", True),
         "color-enabled": stores.get("color-enabled", False),
+        # Sessions saved before moving candles existed play as before (1 step = finished candles)
+        "steps-per-candle": stores.get("steps-per-candle", 1),
     }

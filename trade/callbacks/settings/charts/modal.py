@@ -326,7 +326,7 @@ def _format_bar_count(n, lang):
     return tl["under-month"] % n
 
 
-def _compute_reveal_bounds(update_time, simulation_duration):
+def _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle=1):
     """Estimate the bar range a live session will actually walk through.
 
     A live session reveals `dlt.initial_reveal_bars` bars at once on the
@@ -336,7 +336,10 @@ def _compute_reveal_bounds(update_time, simulation_duration):
     config preview can show where "live" candles start and how far the
     session can reach; it is an estimate, not a frame-accurate replay.
     """
-    interval_secs = max(float(update_time or dlt.update_time) / 1000.0, 0.1)
+    # Moving candles: a candle takes `steps_per_candle` ticks (15/30/45 min, close),
+    # so `interval_secs` is the time per CANDLE, not per tick.
+    steps = max(int(steps_per_candle or 1), 1)
+    interval_secs = max(float(update_time or dlt.update_time) / 1000.0, 0.1) * steps
     duration_secs = float(simulation_duration or dlt.simulation_duration) * 60.0
     extra_ticks = int(duration_secs // interval_secs)
     start_bars = dlt.initial_reveal_bars
@@ -356,16 +359,18 @@ def _compute_reveal_bounds(update_time, simulation_duration):
     State("update-time", "data"),
     State("simulation-duration", "data"),
     State("url", "search"),
+    State("steps-per-candle", "data"),
     prevent_initial_call=True,
 )
 def apply_patterns_and_display(pattern_files, event_type, event_position, event_magnitude,
-                                base_data, color_scheme, update_time, simulation_duration, search):
+                                base_data, color_scheme, update_time, simulation_duration, search,
+                                steps_per_candle):
     if not base_data:
         raise PreventUpdate
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     sim_labels = tls[lang]["settings"]["charts"]["sim-window"]
-    live_start_bars, live_reach_bars, interval_secs = _compute_reveal_bounds(update_time, simulation_duration)
+    live_start_bars, live_reach_bars, interval_secs = _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle)
 
     try:
         dataset = load_data(os.path.join(dlt.data_path, "CAC40.csv"))

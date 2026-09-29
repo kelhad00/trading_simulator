@@ -55,6 +55,7 @@ if APP_MODE != 'runtime':
     Output('portfolio-totals', 'data', allow_duplicate=True),
     Output('cost-basis', 'data', allow_duplicate=True),
     Output('nb_export', 'data'),
+    Output('candle-step', 'data', allow_duplicate=True),
     Input('reset-button', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
@@ -70,7 +71,8 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data):
     timestamp = get_first_timestamp(market_df, 100)
     portfolio_value = {c: 0 for c, info in (companies_data or {}).items() if info.get('got_charts')}
 
-    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, {}, nb_export + 1
+    # candle-step None = the first candle is closed, like at session start
+    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, {}, nb_export + 1, None
 
 
 @callback(
@@ -88,6 +90,7 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data):
     Output('pause-start-time', 'data', allow_duplicate=True),
     Output('total-paused-seconds', 'data', allow_duplicate=True),
     Output('nav-away-time', 'data', allow_duplicate=True),
+    Output('candle-step', 'data', allow_duplicate=True),
     Input('reset-button-1', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
@@ -95,8 +98,8 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data):
     prevent_initial_call=True,
 )
 def reset_modal(btn, initial_cashflow, nb_export, companies_data):
-    ts, cf, req, shares, totals, basis, nb = reset_data(btn, initial_cashflow, nb_export, companies_data)
-    return ts, cf, req, shares, totals, basis, nb, True, None, False, False, None, 0, None
+    ts, cf, req, shares, totals, basis, nb, step = reset_data(btn, initial_cashflow, nb_export, companies_data)
+    return ts, cf, req, shares, totals, basis, nb, True, None, False, False, None, 0, None, step
 
 
 clientside_callback(

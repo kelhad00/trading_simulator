@@ -322,10 +322,18 @@ translation = {
                     "update": "Update",
                 },
                 "input": {
-                    "update-time": "Time between updates (ms)",
+                    "update-time": "Time between updates (ms), per candle step",
                     "requests": "Max requests",
                     "cashflow": "Initial cashflow",
                     "simulation-duration": "Session duration (minutes)",
+                },
+                "candle-steps": {
+                    "label": "Moving candles: update the forming candle every",
+                    "help": "Like a 1-hour candle on TradingView. Each update lasts the time above.",
+                    "off": "Off",
+                    "30": "30 min",
+                    "15": "15 min",
+                    "5": "5 min",
                 },
                 "news-font": {
                     "label": "News article font size",

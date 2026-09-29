@@ -11,7 +11,7 @@ PLOTLY_CONFIG = {
 }
 
 
-def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True):
+def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True, partial=None):
     """
     Create a candlestick chart for the selected stock or update an existing one
 
@@ -32,6 +32,11 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
         latest `range` candles (default: True). Set to False once the user
         has manually panned/zoomed away, so their view isn't pushed back to
         the live edge on the next update.
+
+    partial : callable, optional
+        Moving candles: called with the newest timestamp shown, returns that
+        candle's (open, high, low, close) at the current step, or None when
+        it is closed. See trade/utils/candle_steps.py.
 
     Returns
     -------
@@ -75,6 +80,19 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
         # figure but still advance the timestamp so the simulation clock keeps
         # running and other tickers remain unaffected.
         return go.Figure(), dftmp.index[-1]
+
+    # Moving candles: draw the newest candle as it looks at the current step,
+    # and stop the moving averages at the last closed candle so they don't give
+    # away where this one will close. Only when that candle is the newest row
+    # (a ticker whose data already ended has nothing forming).
+    if partial is not None and plot_df.index[-1] == dftmp.index[-1]:
+        values = partial(plot_df.index[-1])
+        if values is not None:
+            plot_df = plot_df.copy()
+            last = plot_df.index[-1]
+            plot_df.loc[last, ['Open', 'High', 'Low', 'Close']] = values
+            ma_cols = [col for col in ('short_MA', 'long_MA', '200_MA') if col in plot_df.columns]
+            plot_df.loc[last, ma_cols] = float('nan')
 
     # Fixed horizontal slots: candle i always sits in slot i of the TOTAL
     # candle count of the file (not the number shown so far). A category axis

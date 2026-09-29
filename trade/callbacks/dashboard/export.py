@@ -1,5 +1,6 @@
 from dash import Output, Input, State, callback, no_update, ALL, ctx
 from trade.utils.export import export_data
+from trade.utils.candle_steps import market_time
 
 
 @callback(
@@ -18,10 +19,13 @@ from trade.utils.export import export_data
     State('portfolio-shares', 'data'),
     State("portfolio-totals", "data"),
     State("max-requests", "data"),
+    State('candle-step', 'data'),
+    State('steps-per-candle', 'data'),
     prevent_initial_call=True
 
 )
-def export_display_update(company, title, graph_segmented, request_segmented, requests, delete_requests, delete_all_requests, cashflow, timestamp, shares, totals, max_requests):
+def export_display_update(company, title, graph_segmented, request_segmented, requests, delete_requests, delete_all_requests, cashflow, timestamp, shares, totals, max_requests,
+                           candle_step, steps_per_candle):
     """
     Function triggered when the user interacts with the dashboard
     Update the logs with the latest data
@@ -38,5 +42,6 @@ def export_display_update(company, title, graph_segmented, request_segmented, re
         except:
             delete = []
 
-    export_data(timestamp, requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, delete, max_requests=max_requests)
+    # Moving candles: log the minute reached inside the candle (e.g. 00:15), not just the day
+    export_data(market_time(timestamp, candle_step, steps_per_candle), requests, cashflow, shares, totals, company, title, graph_segmented, request_segmented, delete, max_requests=max_requests)
     return no_update

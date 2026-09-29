@@ -96,6 +96,9 @@ app.layout = dmc.MantineProvider([
         dcc.Location(id="url", refresh=False),
 
         dcc.Store(id='timestamp', data=get_first_timestamp(market_df, dlt.initial_reveal_bars), storage_type="session"),
+        # Moving candles: step reached by the candle at `timestamp` (1..steps-per-candle).
+        # None = the candle is closed, e.g. at session start or after a reset.
+        dcc.Store(id='candle-step', data=None, storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
         # Whether the market graph should auto-scroll to the live edge on each
         # update. Set to False when the user manually pans/zooms away, and
@@ -122,6 +125,7 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="local"),
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="local"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="local"),
+        dcc.Store(id="steps-per-candle", data=dlt.steps_per_candle, storage_type="local"),
         dcc.Store(id="simulation-duration", data=dlt.simulation_duration, storage_type="local"),
         dcc.Store(id="news-font-size", data=dlt.news_font_size, storage_type="local"),
 

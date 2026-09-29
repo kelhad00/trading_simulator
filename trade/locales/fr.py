@@ -335,10 +335,18 @@ translation = {
                     "update": "Mettre à jour",
                 },
                 "input": {
-                    "update-time": "Temps pour une journée (ms)",
+                    "update-time": "Temps entre deux mises à jour (ms), par étape de bougie",
                     "requests": "Requêtes max",
                     "cashflow": "Trésorie initiale",
                     "simulation-duration": "Durée de la session (minutes)",
+                },
+                "candle-steps": {
+                    "label": "Bougies en mouvement : mettre à jour la bougie en cours toutes les",
+                    "help": "Comme une bougie d'une heure sur TradingView. Chaque mise à jour dure le temps ci-dessus.",
+                    "off": "Désactivé",
+                    "30": "30 min",
+                    "15": "15 min",
+                    "5": "5 min",
                 },
                 "news-font": {
                     "label": "Taille de police des articles",
