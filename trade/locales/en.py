@@ -58,6 +58,8 @@ translation = {
             "file-uploaded": "{filename} has been uploaded",
             "upload-error": "Error while uploading the file",
             "news-started": "News generation started for {companies}. This runs in the background.",
+            "news-ready": "News ready for {companies}.",
+            "news-ready-stats": "News ready for {companies}: {passed}/{total} passed, {flagged} flagged.",
             "news-complete": "Generation complete!",
             "news-complete-stats": "Generation complete — {passed}/{total} passed, {flagged} flagged. See verification_report.csv for details.",
             "news-connection": "Could not connect to {provider}. Check your API key, URL, and that the service is running.",

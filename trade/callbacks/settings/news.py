@@ -18,6 +18,18 @@ def _lang(search):
     return "en" if (search and "lang=en" in search) else "fr"
 
 
+def news_error_message(error, provider, tl):
+    """Readable message for a failed news generation (tl = translations["notifications"])."""
+    import pandas as pd
+    from openai import APIConnectionError, AuthenticationError
+    if isinstance(error, (APIConnectionError, AuthenticationError)):
+        provider_label = "Groq" if (provider or "ollama") == "groq" else "Ollama"
+        return tl["news-connection"].format(provider=provider_label)
+    if isinstance(error, (pd.errors.EmptyDataError, pd.errors.ParserError)):
+        return tl["news-bad-file"]
+    return tl["news-failed"].format(error=error)
+
+
 # ── Notification settings → stores ───────────────────────────────────────────
 
 @callback(
@@ -165,15 +177,7 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
 
     except Exception as e:
         print("Error while generating news:", e)
-        import pandas as pd
-        from openai import APIConnectionError, AuthenticationError
-        if isinstance(e, (APIConnectionError, AuthenticationError)):
-            provider_label = "Groq" if (provider or "ollama") == "groq" else "Ollama"
-            message = tl["news-connection"].format(provider=provider_label)
-        elif isinstance(e, (pd.errors.EmptyDataError, pd.errors.ParserError)):
-            message = tl["news-bad-file"]
-        else:
-            message = tl["news-failed"].format(error=e)
+        message = news_error_message(e, provider, tl)
         status_msg = dmc.Text(message, color="red", size="sm")
         return dmc.Notification(
             id="notification-news-generated",

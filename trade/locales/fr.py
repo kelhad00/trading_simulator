@@ -35,6 +35,8 @@ translation = {
             "file-uploaded": "{filename} a été importé",
             "upload-error": "Erreur lors de l'import du fichier",
             "news-started": "Génération des actualités lancée pour {companies}. Elle s'exécute en arrière-plan.",
+            "news-ready": "Actualités prêtes pour {companies}.",
+            "news-ready-stats": "Actualités prêtes pour {companies} : {passed}/{total} validées, {flagged} signalées.",
             "news-complete": "Génération terminée !",
             "news-complete-stats": "Génération terminée — {passed}/{total} validées, {flagged} signalées. Voir verification_report.csv pour les détails.",
             "news-connection": "Impossible de se connecter à {provider}. Vérifiez votre clé API, l'URL et que le service est lancé.",

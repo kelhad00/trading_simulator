@@ -1,5 +1,6 @@
 import os
 import threading
+import uuid
 
 import numpy as np
 import pandas as pd
@@ -28,6 +29,7 @@ from trade.utils.news_generation.news_creation import (
     get_news_position_for_companies, create_news_for_companies,
 )
 import trade.callbacks.settings.stocks as stocks_callbacks
+from trade.callbacks.settings.news import news_error_message
 
 
 # ── Step 1: pick CAC40 windows when trends/params change ─────────────────────
@@ -504,7 +506,13 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
 
 # ── Export confirmed charts to CSV ────────────────────────────────────────────
 
-def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang,
+# Result of each automatic news job, read by `report_auto_news` to show a pop-up.
+# {job_id: {"status": "running" | "done" | "error", "lang", "companies", "stats" | "message"}}
+_AUTO_NEWS_JOBS = {}
+_AUTO_NEWS_LOCK = threading.Lock()
+
+
+def _auto_generate_news(job_id, companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, lang,
                         provider, base_url, groq_api_key, k=0):
     """Run news generation in a background thread so the UI is not blocked."""
     try:
@@ -512,13 +520,63 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
             companies_subset, mode, nbr_pos, nbr_neg, alpha, interval, delta, k=k
         )
         # Keyword arguments so the provider settings can't land in the wrong slot
-        create_news_for_companies(
+        stats = create_news_for_companies(
             companies_subset, positions, lang,
             provider=provider, base_url=base_url, groq_api_key=groq_api_key, delta=delta,
         )
         print("Auto news regeneration complete for: " + ", ".join(companies_subset.keys()))
+        result = {"status": "done", "stats": stats or {}}
     except Exception as e:
         print("Auto news regeneration failed:", e)
+        result = {"status": "error",
+                  "message": news_error_message(e, provider, tls[lang]["notifications"])}
+    with _AUTO_NEWS_LOCK:
+        _AUTO_NEWS_JOBS[job_id].update(result)
+
+
+@callback(
+    Output("notifications", "children", allow_duplicate=True),
+    Output("auto-news-poll", "disabled", allow_duplicate=True),
+    Output("auto-news-job", "data", allow_duplicate=True),
+    Input("auto-news-poll", "n_intervals"),
+    State("auto-news-job", "data"),
+    prevent_initial_call=True,
+)
+def report_auto_news(_, job_id):
+    """While an automatic news job runs, check it every 2 s; when it ends, say how it went."""
+    with _AUTO_NEWS_LOCK:
+        job = dict(_AUTO_NEWS_JOBS.get(job_id) or {})
+    if not job:  # unknown job (e.g. the server restarted): stop checking
+        return no_update, True, None
+    if job["status"] == "running":
+        raise PreventUpdate
+
+    with _AUTO_NEWS_LOCK:
+        _AUTO_NEWS_JOBS.pop(job_id, None)
+    tl = tls[job["lang"]]["notifications"]
+
+    if job["status"] == "error":
+        notification = dmc.Notification(
+            id="notif-news-auto",
+            title=tl["error"],
+            action="show",
+            color="red",
+            autoClose=False,  # stays until closed, so the reason isn't missed
+            message=job["message"],
+        )
+    else:
+        stats = job.get("stats", {})
+        total, passed, flagged = stats.get("total", 0), stats.get("passed", 0), stats.get("flagged", 0)
+        message = (tl["news-ready-stats"].format(companies=job["companies"], passed=passed, total=total, flagged=flagged)
+                   if total else tl["news-ready"].format(companies=job["companies"]))
+        notification = dmc.Notification(
+            id="notif-news-auto",
+            title=tl["news"],
+            action="show",
+            color="green" if not flagged else "orange",
+            message=message,
+        )
+    return notification, True, None
 
 
 @callback(
@@ -527,6 +585,8 @@ def _auto_generate_news(companies_subset, mode, nbr_pos, nbr_neg, alpha, interva
     Output({"type": "timeline-radio", "index": ALL}, "value"),
     Output("companies", "data", allow_duplicate=True),
     Output("notifications", "children", allow_duplicate=True),
+    Output("auto-news-job", "data", allow_duplicate=True),
+    Output("auto-news-poll", "disabled", allow_duplicate=True),
 
     Input("generate-button", "n_clicks"),
     State("figures", "data"),
@@ -573,9 +633,16 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
     effective_groq_key = (groq_key or "").strip() or dlt.groq_api_key
     lang = "en" if (search and "lang=en" in search) else "fr"
 
+    # Register the job so report_auto_news can say how it ended
+    job_id = uuid.uuid4().hex
+    with _AUTO_NEWS_LOCK:
+        _AUTO_NEWS_JOBS[job_id] = {"status": "running", "lang": lang,
+                                   "companies": ", ".join(companies_selected)}
+
     thread = threading.Thread(
         target=_auto_generate_news,
         args=(
+            job_id,
             companies_subset,
             generation_mode or "random",
             nbr_positive_news or 2,
@@ -601,7 +668,8 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
         message=tls[lang]["notifications"]["news-started"].format(companies=", ".join(companies_selected)),
     )
 
-    return list(), False, [None] * nb_radio, companies, notification
+    # Start checking the job every 2 s (auto-news-poll -> report_auto_news)
+    return list(), False, [None] * nb_radio, companies, notification, job_id, False
 
 
 # ── Select-all shortcut ───────────────────────────────────────────────────────

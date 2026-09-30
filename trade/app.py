@@ -92,6 +92,12 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="color-scheme-store", data="light", storage_type="local"),
         html.Div(id="notifications"),
 
+        # Automatic news (after confirming charts) runs in a background thread: the
+        # job id is kept here and the page checks it every 2 s until it finishes,
+        # then shows a success or error pop-up (callbacks/settings/charts/modal.py).
+        dcc.Store(id="auto-news-job", data=None, storage_type="memory"),
+        dcc.Interval(id="auto-news-poll", interval=2000, disabled=True),
+
         # Global location tracker — lets navigation-triggered callbacks re-fire
         dcc.Location(id="url", refresh=False),
 
