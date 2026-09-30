@@ -12,11 +12,34 @@ pip install -r requirements.txt
 ```
 
 ## Start the app
-Run the following command in the root folder:
+Always start the app **from inside the `trade` folder**. The data folder is found as `../data`
+relative to where you start it (that is, `trading_simulator/Data`). Started from another folder, the
+app silently uses a different data folder, or none at all.
+
+There are two versions:
+
+| Version | For | Command (from the `trade` folder) | Open |
+|---|---|---|---|
+| Configurator | Researchers: settings, companies, charts, news | `python app_config.py` | http://127.0.0.1:8050 |
+| Runtime | Running sessions with participants | `python app_runtime.py` | http://127.0.0.1:8051 |
+
 ```bash
 cd trade
-python app.py
+python app_config.py
 ```
+
+With the virtual environment in `trade/venv` (Windows PowerShell):
+```powershell
+cd trade
+.\venv\Scripts\python.exe app_config.py
+```
+
+Stop the app with `Ctrl + C`.
+
+Notes:
+- `python app.py` does **not** start the app: `app.py` only defines it.
+- The configurator downloads market data at startup if `generated_data.csv` or `revenue.csv` is
+  missing from the data folder.
 
 ## Requirements
 - Python 3.10
@@ -25,7 +48,8 @@ python app.py
 
 ## Structure
 ### Files
-- `app.py` : main file to run the application and contains the stores
+- `app_config.py` / `app_runtime.py` : start the configurator (port 8050) / runtime (port 8051) version
+- `app.py` : defines the application and contains the stores (not run directly)
 - `callbacks` : folder containing all the callbacks (dynamic functions, user interactions)
 - `components` : folder containing all the static & reusable front-end elements
 - `layouts` : folder containing all the layouts of the application
