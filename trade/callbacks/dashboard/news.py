@@ -4,17 +4,26 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import pandas as pd
 
-_SENTIMENT_COLORS = {
-    "positive":        "green",
-    "negative":        "red",
-    "neutral":         "gray",
+# The 5 news tags and their colour. The tag (FinBERT's reading of the article,
+# column `sentiment_label`) decides both the badge and the headline colour.
+_TAG_COLORS = {
     "strong positive": "green",
     "weak positive":   "teal",
-    "no positive":     "gray",
-    "strong negative": "red",
+    "neutral":         "gray",
     "weak negative":   "orange",
-    "no negative":     "gray",
+    "strong negative": "red",
 }
+
+
+def _news_tag(raw_label):
+    """One of the 5 tags; "no positive", "no negative", empty or unknown become neutral."""
+    label = str(raw_label).lower().strip() if raw_label is not None else ""
+    return label if label in _TAG_COLORS else "neutral"
+
+
+def _tag_direction(tag):
+    """positive / negative / neutral, as used by the notification filter."""
+    return tag.split()[-1] if tag != "neutral" else "neutral"
 
 _FONT_SIZES = {'S': '0.75rem', 'M': '0.9375rem', 'L': '1.125rem'}
 
@@ -78,7 +87,6 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         ts = pd.Timestamp.now()
 
     nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
-    has_sentiment = 'sentiment' in nl.columns
     has_label = 'sentiment_label' in nl.columns
     nl = nl.head(range)
 
@@ -95,26 +103,14 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         article_text = str(getattr(row, 'article', ''))
         date_text = str(row.date)[:10]
 
-        text_color = None
-        if has_sentiment:
-            raw = getattr(row, 'sentiment', None)
-            sentiment = str(raw).lower().strip() if raw and str(raw) != 'nan' else 'neutral'
-            color = _SENTIMENT_COLORS.get(sentiment, "gray")
-            if sentiment in ("positive", "negative"):
-                text_color = color
+        # Every headline gets one of the 5 tags; badge and text share its colour
+        tag = _news_tag(getattr(row, 'sentiment_label', None) if has_label else None)
+        color = _TAG_COLORS[tag]
+        badge = dmc.Badge(tag, color=color, size="xs", variant="light",
+                          style={"marginRight": "6px", "verticalAlign": "middle"})
 
-        badge = None
-        if has_label:
-            raw_label = getattr(row, 'sentiment_label', None)
-            label = str(raw_label).lower().strip() if raw_label and str(raw_label) not in ('nan', '') else None
-            if label:
-                badge_color = _SENTIMENT_COLORS.get(label, "gray")
-                badge = dmc.Badge(label, color=badge_color, size="xs", variant="light",
-                                  style={"marginRight": "6px", "verticalAlign": "middle"})
-
-        article_cell = [badge, article_text] if badge else article_text
         cells = [
-            html.Td(article_cell, style={"color": text_color} if text_color else {}),
+            html.Td([badge, article_text], style={"color": color}),
             html.Td(date_text, style={"whiteSpace": "nowrap", "color": "gray", "fontSize": "0.75rem"}),
         ]
 
@@ -240,12 +236,13 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
             (news_df['date'] <= notify_ts)
         ]
 
-        # Apply sentiment filter
+        # Apply sentiment filter (positive / negative / neutral), by the article's tag
         allowed = set(notif_filter) if notif_filter else set()
-        if allowed and 'sentiment' in new_articles.columns:
-            new_articles = new_articles[
-                new_articles['sentiment'].str.lower().str.strip().isin(allowed)
-            ]
+        if allowed:
+            labels = new_articles['sentiment_label'] if 'sentiment_label' in new_articles.columns \
+                else pd.Series(None, index=new_articles.index)
+            directions = labels.map(lambda raw: _tag_direction(_news_tag(raw)))
+            new_articles = new_articles[directions.isin(allowed)]
 
         if new_articles.empty:
             return no_update, notify_ts_str
@@ -256,7 +253,6 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
         notifications = []
         for i, (_, row) in enumerate(new_articles.iterrows()):
             ticker    = str(row.get('ticker', ''))
-            sentiment = str(row.get('sentiment', '')).lower()
             title_col = 'article' if 'article' in row.index else 'title'
             headline  = str(row.get(title_col, ''))
 
@@ -273,18 +269,10 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
                             company_label = val.get('label', ticker)
                             break
 
-            raw_label = str(row.get('sentiment_label', '')).lower().strip()
-            if raw_label and raw_label != 'nan':
-                color = _SENTIMENT_COLORS.get(raw_label, "blue")
-            else:
-                color = "green" if "positive" in sentiment else "red" if "negative" in sentiment else "blue"
+            # Same tag and colour as in the news list
+            color = _TAG_COLORS[_news_tag(row.get('sentiment_label'))]
             short_headline = headline[:110] + "…" if len(headline) > 110 else headline
-
-            text_color = color if color in ("green", "red") else None
-            styled_headline = (
-                html.Span(short_headline, style={"color": text_color})
-                if text_color else short_headline
-            )
+            styled_headline = html.Span(short_headline, style={"color": color})
 
             safe_ts = notify_ts_str.replace(":", "-").replace(" ", "-")
             if company_key:
