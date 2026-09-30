@@ -45,6 +45,10 @@ class Defaults:
     # News settings — loaded from env; UI inputs are optional overrides
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
     groq_api_key = os.getenv("GROQ_API_KEY", "")
+    # AI models used to write news. Providers retire models over time: when that
+    # happens, set GROQ_MODEL / OLLAMA_MODEL in .env instead of changing the code.
+    groq_model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+    ollama_model = os.getenv("OLLAMA_MODEL", "qwen3:8b")
 
 
     # Stocks and Indexes used in the interface
