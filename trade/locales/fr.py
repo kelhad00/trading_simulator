@@ -334,6 +334,12 @@ translation = {
                 "button": {
                     "update": "Mettre à jour",
                 },
+                "notif": {
+                    "success-title": "Paramètres mis à jour",
+                    "success-message": "Vos paramètres ont été enregistrés.",
+                    "error-title": "Erreur",
+                    "error-message": "Veuillez remplir tous les champs.",
+                },
                 "input": {
                     "update-time": "Temps entre deux mises à jour (ms), par étape de bougie",
                     "requests": "Requêtes max",

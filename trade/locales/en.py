@@ -321,6 +321,12 @@ translation = {
                 "button": {
                     "update": "Update",
                 },
+                "notif": {
+                    "success-title": "Settings updated",
+                    "success-message": "Your settings have been saved.",
+                    "error-title": "Error",
+                    "error-message": "Please fill all the fields.",
+                },
                 "input": {
                     "update-time": "Time between updates (ms), per candle step",
                     "requests": "Max requests",

@@ -4,6 +4,7 @@ from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
 from trade.defaults import defaults as dlt
+from trade.locales import translations as tls
 
 
 @callback(
@@ -67,29 +68,33 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     State("input-simulation-duration", "value"),
     State("input-news-font-size", "value"),
     State("input-steps-per-candle", "value"),
+    State("url", "search"),
     prevent_initial_call=True
 )
-def update_advanced_settings(n, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle):
+def update_advanced_settings(n, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, search):
     """Update the advanced settings stores with inputs values when the button is clicked"""
 
     if n is None or n == 0:
         raise PreventUpdate
 
+    lang = "en" if (search and "lang=en" in search) else "fr"
+    tl = tls[lang]["settings"]["advanced"]["notif"]
+
     if update_time is None or max_requests is None or init_cashflow is None or simulation_duration is None or news_font_size is None or steps_per_candle is None:
         return no_update, no_update, no_update, no_update, no_update, no_update, dmc.Notification(
-            title="Error",
+            title=tl["error-title"],
             id="simple-notify",
             action="show",
             color="red",
             icon=DashIconify(icon="material-symbols:error"),
-            message="Please fill all the fields",
+            message=tl["error-message"],
         )
 
     else:
         return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, int(steps_per_candle), dmc.Notification(
-            id="notification-company-added",
-            title="Company added",
+            id="notification-settings-updated",
+            title=tl["success-title"],
             action="show",
             color="green",
-            message="Settings updated !",
+            message=tl["success-message"],
         )
