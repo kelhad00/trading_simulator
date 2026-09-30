@@ -35,9 +35,10 @@ def get_cached_df_companies():
     State("input-activity", "value"),
     State("input-description", "value"),
     State("companies", "data"),
+    State("url", "search"),
     prevent_initial_call=True
 )
-def add_company_and_activity(n, stock, company, activity, description, companies):
+def add_company_and_activity(n, stock, company, activity, description, companies, search):
     """
     Add a company and an activity to the stores
     Args:
@@ -62,12 +63,13 @@ def add_company_and_activity(n, stock, company, activity, description, companies
     }
 
     # Success notification
+    tl = tls["en" if (search and "lang=en" in search) else "fr"]["notifications"]
     notif = dmc.Notification(
         id="notification-company-added",
-        title="Company added",
+        title=tl["company-added"],
         action="show",
         color="green",
-        message=f"{company} has been added to the list of companies",
+        message=tl["company-added-message"].format(company=company),
     )
 
     return companies, notif, "", None, None, ""

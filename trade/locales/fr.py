@@ -24,6 +24,31 @@ translation = {
             "netIncome": "Recettes"
         },
 
+        # Notifications (pop-ups)
+        "notifications": {
+            "error": "Erreur",
+            "news": "Actualités",
+            "simulation": "Simulation",
+            "company-added": "Entreprise ajoutée",
+            "company-added-message": "{company} a été ajoutée à la liste des entreprises",
+            "file-uploaded-title": "Fichier importé",
+            "file-uploaded": "{filename} a été importé",
+            "upload-error": "Erreur lors de l'import du fichier",
+            "news-started": "Génération des actualités lancée pour {companies}. Elle s'exécute en arrière-plan.",
+            "news-complete": "Génération terminée !",
+            "news-complete-stats": "Génération terminée — {passed}/{total} validées, {flagged} signalées. Voir verification_report.csv pour les détails.",
+            "news-connection": "Impossible de se connecter à {provider}. Vérifiez votre clé API, l'URL et que le service est lancé.",
+            "news-bad-file": "Un fichier de données est vide ou corrompu (news.csv ou news_dataset.csv). Vérifiez votre dossier Data.",
+            "news-failed": "Échec de la génération des actualités : {error}",
+            "revenues-for": "Revenus de {company}",
+            "reminder-25pct": "Vous avez fait un quart de la session",
+            "reminder-50pct": "Vous êtes à mi-parcours !",
+            "reminder-75pct": "Trois quarts effectués — continuez !",
+            "reminder-5min": "Plus que 5 minutes",
+            "reminder-2min": "Plus que 2 minutes",
+            "reminder-1min": "Plus qu'une minute — finalisez vos ordres !",
+        },
+
         # News table
         "news": "Actualités du Marché",
         "news-table": {

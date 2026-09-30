@@ -47,6 +47,31 @@ translation = {
             "netIncome": "Income"
         },
 
+        # Notifications (pop-ups)
+        "notifications": {
+            "error": "Error",
+            "news": "News",
+            "simulation": "Simulation",
+            "company-added": "Company added",
+            "company-added-message": "{company} has been added to the list of companies",
+            "file-uploaded-title": "File uploaded",
+            "file-uploaded": "{filename} has been uploaded",
+            "upload-error": "Error while uploading the file",
+            "news-started": "News generation started for {companies}. This runs in the background.",
+            "news-complete": "Generation complete!",
+            "news-complete-stats": "Generation complete — {passed}/{total} passed, {flagged} flagged. See verification_report.csv for details.",
+            "news-connection": "Could not connect to {provider}. Check your API key, URL, and that the service is running.",
+            "news-bad-file": "A data file is empty or corrupted (news.csv or news_dataset.csv). Check your Data folder.",
+            "news-failed": "News generation failed: {error}",
+            "revenues-for": "Revenues for {company}",
+            "reminder-25pct": "You're a quarter of the way through",
+            "reminder-50pct": "You're halfway through!",
+            "reminder-75pct": "Three quarters done — keep going!",
+            "reminder-5min": "5 minutes remaining",
+            "reminder-2min": "2 minutes remaining",
+            "reminder-1min": "1 minute remaining — finish your orders!",
+        },
+
         # News table
         "news": "Market News",
         "news-table": {

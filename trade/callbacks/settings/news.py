@@ -120,6 +120,8 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
                             search, manual_positions, n):
     if n is None:
         raise PreventUpdate
+    lang = _lang(search)
+    tl = tls[lang]["notifications"]
     try:
         news_position = get_news_position_for_companies(
             companies, generation_mode, nbr_positive_news, nbr_negative_news,
@@ -128,7 +130,6 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
             manual_positions=manual_positions or {},
         )
 
-        lang = _lang(search)
         provider = provider or "ollama"
 
         if provider == "groq":
@@ -149,15 +150,14 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
         flagged = stats.get('flagged', 0)
         color   = "green" if flagged == 0 else "orange"
         message = (
-            f"Generation complete — {passed}/{total} passed, {flagged} flagged. "
-            f"See verification_report.csv for details."
-            if total > 0 else "Generation complete!"
+            tl["news-complete-stats"].format(passed=passed, total=total, flagged=flagged)
+            if total > 0 else tl["news-complete"]
         )
 
         status_msg = dmc.Text(message, color=color, size="sm")
         return dmc.Notification(
             id="notification-news-generated",
-            title="News",
+            title=tl["news"],
             action="show",
             color=color,
             message=message,
@@ -169,15 +169,15 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
         from openai import APIConnectionError, AuthenticationError
         if isinstance(e, (APIConnectionError, AuthenticationError)):
             provider_label = "Groq" if (provider or "ollama") == "groq" else "Ollama"
-            message = f"Could not connect to {provider_label}. Check your API key, URL, and that the service is running."
+            message = tl["news-connection"].format(provider=provider_label)
         elif isinstance(e, (pd.errors.EmptyDataError, pd.errors.ParserError)):
-            message = "A data file is empty or corrupted (news.csv or news_dataset.csv). Check your Data folder."
+            message = tl["news-bad-file"]
         else:
-            message = f"News generation failed: {e}"
+            message = tl["news-failed"].format(error=e)
         status_msg = dmc.Text(message, color="red", size="sm")
         return dmc.Notification(
             id="notification-news-generated",
-            title="Error",
+            title=tl["error"],
             action="show",
             color="red",
             message=message,

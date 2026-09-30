@@ -77,7 +77,7 @@ def display_revenues(tabs, modal, companies, color_scheme):
                 )
             ])
             fig.update_layout(
-                title=f"Revenues for {company}",
+                title=tls[page_registry.get("lang", "fr")]["notifications"]["revenues-for"].format(company=company),
                 template='plotly_dark' if color_scheme == 'dark' else 'plotly_white',
             )
             children.append(

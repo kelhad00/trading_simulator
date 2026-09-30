@@ -172,7 +172,7 @@ def process_submit_button(btn, company, action, price, pct, cash, timestamp, por
 
     if error is True:
         return no_update, dmc.Notification(
-            title="Error",
+            title=tls[page_registry.get('lang', 'fr')]["notifications"]["error"],
             id="simple-notify",
             action="show",
             color="red",

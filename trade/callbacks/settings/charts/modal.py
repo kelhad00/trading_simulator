@@ -595,10 +595,10 @@ def export_generated_charts(n, datas, companies_selected, nb_radio, companies,
 
     notification = dmc.Notification(
         id="notif-news-auto",
-        title="News",
+        title=tls[lang]["notifications"]["news"],
         action="show",
         color="blue",
-        message="News generation started for " + ", ".join(companies_selected) + ". This runs in the background.",
+        message=tls[lang]["notifications"]["news-started"].format(companies=", ".join(companies_selected)),
     )
 
     return list(), False, [None] * nb_radio, companies, notification
