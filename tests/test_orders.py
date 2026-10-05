@@ -13,8 +13,11 @@ def ts(market_df):
 def run_orders(orders, ts, step, shares=None, cash=100_000):
     shares = shares or {"AAA": 0, "BBB": 0}
     out = request.execute_requests(list(orders), ts, step, dict(shares), cash, dict(shares), {}, {}, 4)
+    # "no_update" means unchanged: the value the browser already has
     waiting = orders if out[0] is request.no_update else out[0]
-    return waiting, out[1], out[3]          # orders still waiting, shares, portfolio values
+    new_shares = shares if out[1] is request.no_update else out[1]
+    values = shares if out[3] is request.no_update else out[3]
+    return waiting, new_shares, values      # orders still waiting, shares, portfolio values
 
 
 def test_buy_reached_during_this_step_is_filled_at_no_more_than_the_limit(ts):

@@ -33,7 +33,7 @@ def test_tag_direction_for_the_notification_filter():
 @pytest.fixture
 def table(fake_data):
     """The news table as the browser receives it."""
-    built = news.cb_update_news_table(1, "2025-01-20 00:00:00")
+    built, _key = news.cb_update_news_table(1, "2025-01-20 00:00:00")
     return json.loads(json.dumps(built, cls=plotly.utils.PlotlyJSONEncoder))
 
 
@@ -57,14 +57,31 @@ def test_contradicting_article_is_shown_with_its_tag_colour(table):
     assert cell["style"]["color"] == "red"
 
 
+def click(monkeypatch, table, index, clicks):
+    """Click headline `index`; `clicks` = click counters of all headlines, as the browser sends them."""
+    monkeypatch.setattr(news, "ctx", SimpleNamespace(triggered_id={"type": "news-lines", "index": index}))
+    return news.toggle_news_display_type(0, clicks, table, {})[1]
+
+
 def test_every_headline_opens_its_article(table, monkeypatch):
-    monkeypatch.setattr(news, "ctx", SimpleNamespace(triggered_id={"type": "news-lines", "index": 0}))
     n = len(rows(table))
     for i in range(n):
         clicks = [0] * n
         clicks[i] = 1
-        title = news.toggle_news_display_type(0, clicks, table, {})[1]
-        assert title is not news.no_update, f"headline {i} did not open"
+        assert click(monkeypatch, table, i, clicks) is not news.no_update, f"headline {i} did not open"
+
+
+def test_same_headline_opens_again_after_going_back(table, monkeypatch):
+    """The list is no longer rebuilt every tick, so a second click counts 2."""
+    n = len(rows(table))
+    clicks = [0] * n
+    clicks[2] = 2
+    assert click(monkeypatch, table, 2, clicks) is not news.no_update
+
+
+def test_a_freshly_drawn_list_opens_nothing(table, monkeypatch):
+    n = len(rows(table))
+    assert click(monkeypatch, table, 0, [0] * n) is news.no_update
 
 
 def test_headline_text_ignores_the_tag():

@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 
 import dash_mantine_components as dmc
@@ -227,6 +229,9 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
     """
     old_req = request_list.copy()
     old_cashflow = cashflow
+    # Fingerprints of what the browser already has, to only send what changed
+    old_shares, old_totals = _fingerprint(port_shares), _fingerprint(port_totals)
+    old_basis, old_sold = _fingerprint(cost_basis or {}), _fingerprint(sold_data or {})
     cost_basis = dict(cost_basis or {})
     sold_data = dict(sold_data or {})
 
@@ -295,14 +300,28 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
     # fires independently of the user) races against other callbacks (edit/submit/
     # delete) that also write 'cashflow': a stale passthrough here can land after a
     # more recent edit and silently overwrite it. Only emit it when it truly changed.
+    # The portfolio values are also only sent when they changed: most ticks change
+    # nothing (no shares held), and every send redraws the portfolio on screen.
+    new_shares, new_totals = port_shares['Shares'].to_dict(), port_totals['Totals'].to_dict()
     return (
         request_list if old_req != request_list else no_update,
-        port_shares['Shares'].to_dict(),
+        new_shares if _fingerprint(new_shares) != old_shares else no_update,
         cashflow if cashflow != old_cashflow else no_update,
-        port_totals['Totals'].to_dict(),
-        cost_basis,
-        sold_data,
+        new_totals if _fingerprint(new_totals) != old_totals else no_update,
+        cost_basis if _fingerprint(cost_basis) != old_basis else no_update,
+        sold_data if _fingerprint(sold_data) != old_sold else no_update,
     )
+
+
+def _fingerprint(data):
+    """Comparable text form of a dict of numbers. NaN counts as empty, because the
+    browser receives NaN as empty (null); numpy numbers count as plain numbers."""
+    def plain(v):
+        if isinstance(v, dict):
+            return {k: plain(x) for k, x in v.items()}
+        v = v.item() if hasattr(v, "item") else v
+        return None if isinstance(v, float) and v != v else v
+    return json.dumps(plain(data), sort_keys=True, default=str)
 
 
 @callback(

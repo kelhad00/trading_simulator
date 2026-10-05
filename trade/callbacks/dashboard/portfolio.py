@@ -23,6 +23,9 @@ def _colored_amount(value, reference):
     State('initial-cashflow', 'data'),
 )
 def display_portfolio_updated(n, totals, cashflow, requests, initial_cashflow):
+    # The timer alone changes nothing here: values change through the other inputs
+    if ctx.triggered_id == 'periodic-updater':
+        raise PreventUpdate
     totals = pd.Series(totals)
     # Funds reserved for pending buy requests are still the user's money — they haven't
     # bought anything yet — so they must be added back or investment looks like a loss.
@@ -50,6 +53,9 @@ def display_portfolio_table_updated(n, totals, shares, selected_company, cost_ba
     Returns:
         The updated portfolio table
     """
+    # The timer alone changes nothing here: the table changes through the other inputs
+    if ctx.triggered_id == 'periodic-updater':
+        raise PreventUpdate
 
     lang = page_registry.get('lang', 'fr')
     cost_basis = dict(cost_basis or {})

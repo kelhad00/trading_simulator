@@ -58,10 +58,12 @@ logger = get_logger("news")
 
 @callback(
     Output('news-table', 'children'),
+    Output('news-table-key', 'data'),
     Input('periodic-updater', 'n_intervals'),
     State('timestamp', 'data'),
+    State('news-table-key', 'data'),
 )
-def cb_update_news_table(n, timestamp, range=50, daily=True):
+def cb_update_news_table(n, timestamp, shown_key=None, range=50, daily=True):
     try:
         # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()
@@ -92,6 +94,12 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
     has_label = 'sentiment_label' in nl.columns
     nl = nl.head(range)
+
+    # Only send the list when it changed (new news, or another language): it is
+    # checked every tick, but most ticks bring no new news.
+    key = [lang] + [[str(d), str(a)] for d, a in zip(nl['date'], nl['article'])]
+    if key == shown_key:
+        return no_update, no_update
 
     date_label = tls[lang]['news-table']['date']
     article_label = tls[lang]['news-table']['article']
@@ -124,7 +132,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
             style={"cursor": "pointer"},
         ))
 
-    return dmc.Table(children=[header, html.Tbody(rows)])
+    return dmc.Table(children=[header, html.Tbody(rows)]), key
 
 
 @callback(
@@ -150,11 +158,17 @@ def toggle_news_display_type(n, cell_clicked, table, companies):
     if ctx.triggered_id == 'back-to-news-list':
         return {'display': 'block'}, None, None, None, {'display': 'none'}, [0] * len(cell_clicked), no_update
 
-    if cell_clicked == [] or 1 not in cell_clicked:
+    # The headline that was just clicked. The list is no longer rebuilt every tick,
+    # so its click counters aren't reset: clicking the same headline again (2, 3…)
+    # must open it too. A rebuilt list (all counters at 0) opens nothing.
+    trigger = ctx.triggered_id
+    if not isinstance(trigger, dict) or trigger.get("index") is None:
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update
+    index_clicked = trigger["index"]
+    if index_clicked >= len(cell_clicked) or not cell_clicked[index_clicked]:
         return no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
     try:
-        index_clicked = cell_clicked.index(1)
         rows = table['props']['children'][1]['props']['children']
         titles = [_headline_text(row['props']['children'][0]['props']['children']) for row in rows]
 

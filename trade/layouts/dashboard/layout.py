@@ -15,6 +15,9 @@ def main_layout(lang="fr"):
         dcc.Interval(id='periodic-updater', interval=5000, n_intervals=0, disabled=False),
         dcc.Store(id='lang', data=lang),
         dcc.Store(id='description-ticker', data=None),
+        # Which headlines the news list is showing; lives with the page, so the
+        # list is always drawn when the page opens (callbacks/dashboard/news.py)
+        dcc.Store(id='news-table-key', data=None),
 
         # Right-click context menu — position:fixed so it floats above everything
         html.Div(
