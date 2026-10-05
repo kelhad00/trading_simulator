@@ -12,9 +12,8 @@ pip install -r requirements.txt
 ```
 
 ## Start the app
-Always start the app **from inside the `trade` folder**. The data folder is found as `../data`
-relative to where you start it (that is, `trading_simulator/Data`). Started from another folder, the
-app silently uses a different data folder, or none at all.
+Start the app from inside the `trade` folder, as shown below. The app always uses the data folder
+`trading_simulator/data` (set in `trade/defaults.py`), whatever folder it is started from.
 
 There are two versions:
 

@@ -7,7 +7,7 @@ quality score per file, and writes data/patterns/quality_scores.json.
 
 Writes a console report showing per-type false-positive rate and average score.
 
-Run from the trading_simulator/trade/ directory:
+Run from the trading_simulator/trade/ directory (works from any folder):
     python utils/settings/validate_patterns.py
 """
 
@@ -19,7 +19,9 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-DATA_PATH     = '../data'
+# trading_simulator/data, found from this file's location (trade/utils/settings/)
+DATA_PATH     = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))), 'data')
 PATTERNS_PATH = os.path.join(DATA_PATH, 'patterns')
 OUTPUT_FILE   = os.path.join(PATTERNS_PATH, 'quality_scores.json')
 SMOOTH_W      = 5

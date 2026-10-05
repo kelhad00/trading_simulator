@@ -39,8 +39,10 @@ class Defaults:
     # Default font size for news articles in the runtime dashboard ('S', 'M', or 'L')
     news_font_size = "S"
 
-    # Path to the data folder
-    data_path = "../data"
+    # Path to the data folder (trading_simulator/data). Worked out from this file's
+    # own location, so it is the same whatever folder the app is started from
+    # (a relative "../data" pointed somewhere else when started from another folder).
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 
     # News settings — loaded from env; UI inputs are optional overrides
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")

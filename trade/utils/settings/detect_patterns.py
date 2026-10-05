@@ -4,7 +4,7 @@ detect_patterns.py
 One-time script that scans CAC40.csv for real occurrences of each technical
 chart pattern and saves matching windows as CSV files under data/patterns/.
 
-Run from the trading_simulator/trade/ directory:
+Run from the trading_simulator/trade/ directory (works from any folder):
     python utils/settings/detect_patterns.py
 """
 
@@ -12,7 +12,9 @@ import os
 import numpy as np
 import pandas as pd
 
-DATA_PATH     = '../data'
+# trading_simulator/data, found from this file's location (trade/utils/settings/)
+DATA_PATH     = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))), 'data')
 PATTERNS_PATH = os.path.join(DATA_PATH, 'patterns')
 CAC40_PATH    = os.path.join(DATA_PATH, 'CAC40.csv')
 TARGET        = 6   # examples to save per pattern type
