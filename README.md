@@ -40,6 +40,19 @@ Notes:
 - The configurator downloads market data at startup if `generated_data.csv` or `revenue.csv` is
   missing from the data folder.
 
+## Run the tests
+Automated checks for moving candles, orders, news tags, settings, translations, session files and
+the data folder. They use a small invented dataset in a temporary folder, so they never touch real
+data and work on any computer.
+
+Install the test tool once, then run all tests from the `trading_simulator` folder:
+```powershell
+.\trade\venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\trade\venv\Scripts\python.exe -m pytest
+```
+Each dot is a passed check; a failure shows the test name and what went wrong. Run the tests
+before committing a change.
+
 ## Requirements
 - Python 3.10
 - Packages in `requirements.txt`

@@ -1,0 +1,3 @@
+# Tools for developers only (not needed to run the app)
+-r requirements.txt
+pytest
