@@ -51,6 +51,9 @@ clientside_callback(
 
 from trade.locales import translations as tls
 from trade.utils.news import get_news_dataframe
+from trade.utils.logs import get_logger
+
+logger = get_logger("news")
 
 
 @callback(
@@ -63,7 +66,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()
     except Exception as e:
-        print(f"[NEWS] Could not load news.csv: {e}")
+        logger.warning("Could not load news.csv: %s", e)
         raise PreventUpdate
 
     lang = page_registry.get('lang', 'fr')
@@ -72,7 +75,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
     if 'title' in news_df.columns:
         news_df = news_df.rename(columns={'title': 'article'})
     elif 'article' not in news_df.columns:
-        print("[NEWS] news.csv has no 'title' or 'article' column — columns found:", news_df.columns.tolist())
+        logger.warning("news.csv has no 'title' or 'article' column, columns found: %s", news_df.columns.tolist())
         raise PreventUpdate
 
     news_df = news_df.drop_duplicates(subset=['article'], keep='first')
@@ -83,7 +86,7 @@ def cb_update_news_table(n, timestamp, range=50, daily=True):
         if daily:
             ts = ts + pd.Timedelta(days=1)
     except Exception as e:
-        print(f"[NEWS] Timestamp conversion failed (value={timestamp}): {e}")
+        logger.warning("Timestamp conversion failed (value=%s): %s", timestamp, e)
         ts = pd.Timestamp.now()
 
     nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
@@ -178,7 +181,7 @@ def toggle_news_display_type(n, cell_clicked, table, companies):
 
         return {'display': 'none'}, title, f"{published_label} {date}", content, {'display': 'block'}, no_update, company_key
     except Exception as e:
-        print('Error :', e)
+        logger.error("Could not open the news article: %s", e)
         return no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
 
@@ -305,7 +308,7 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
         return notifications, notify_ts_str
 
     except Exception as e:
-        print(f"[NEWS NOTIF] Error: {e}")
+        logger.error("News notification error: %s", e)
         raise PreventUpdate
 
 
@@ -348,5 +351,5 @@ def view_article_from_news_notif(clicks, companies):
     except PreventUpdate:
         raise
     except Exception as e:
-        print(f"[NOTIF VIEW] Error: {e}")
+        logger.error("Notification 'view' button error: %s", e)
         raise PreventUpdate

@@ -9,6 +9,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
 APP_MODE = os.getenv('APP_MODE', 'config')
 
 from trade.defaults import defaults as dlt
+from trade.utils.logs import setup_logging, get_logger
+
+# Terminal messages: LOG_LEVEL in .env (DEBUG / INFO / WARNING), see utils/logs.py
+setup_logging()
+logger = get_logger("app")
 from trade.utils.market import get_start_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
 from trade.utils.download import download_market_data
@@ -300,7 +305,7 @@ def run():
     if APP_MODE == 'config':
         if not os.path.exists(os.path.join(path, "generated_data.csv")) \
                 or not os.path.exists(os.path.join(path, "revenue.csv")):
-            print('\nDownloading market data...\n')
+            logger.info("Downloading market data...")
             download_market_data()
 
     port = int(os.getenv('APP_PORT', 8050))

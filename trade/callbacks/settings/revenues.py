@@ -12,6 +12,9 @@ import os
 import plotly.graph_objects as go
 
 from trade.locales import translations as tls
+from trade.utils.logs import get_logger
+
+logger = get_logger("revenues")
 
 @callback(
     Output("select-companies-revenues", "value", allow_duplicate=True),
@@ -87,7 +90,7 @@ def display_revenues(tabs, modal, companies, color_scheme):
                 )
             )
         except Exception as e:
-            print("Error while rendering revenues :", e)
+            logger.error("Error while rendering revenues: %s", e)
             children.append(dcc.Graph())
 
     return children

@@ -5,6 +5,9 @@ from dash.exceptions import PreventUpdate
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.settings.display import display_chart
 from trade.defaults import defaults as dlt
+from trade.utils.logs import get_logger
+
+logger = get_logger("charts")
 import trade.callbacks.settings.stocks as stocks_callbacks
 
 
@@ -30,7 +33,7 @@ def update_graph(company, data, color_scheme):
         return display_chart(df, 0, df.shape[0], company, template=tmpl)
 
     except Exception as e:
-        print('Error while rendering chart :', e)
+        logger.error("Error while rendering chart: %s", e)
         return {"data": [], "layout": {}, "frames": []}
 
 

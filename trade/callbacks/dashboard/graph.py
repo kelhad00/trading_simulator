@@ -14,6 +14,9 @@ from trade.utils.export import log_session_event
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
+from trade.utils.logs import get_logger
+
+logger = get_logger("graph")
 
 
 @callback(
@@ -145,22 +148,24 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     step, n_steps = normalize_step(candle_step, steps_per_candle)
-    print(f"[GRAPH] tick triggered_id={ctx.triggered_id} next_graph={next_graph} company={company} ts={timestamp} step={step}/{n_steps}")
+    logger.debug("tick triggered_id=%s next_graph=%s company=%s ts=%s step=%s/%s",
+                 ctx.triggered_id, next_graph, company, timestamp, step, n_steps)
 
     if next_graph:
         if session_start_time is None:
             # First tick of a new session — start the clock, skip end-condition check
             session_start_time = time.time()
             log_session_event("session-start", market_time(timestamp, step, n_steps), cashflow, company)
+            logger.info("Session started (%s min)", simulation_duration or dlt.simulation_duration)
         else:
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
             elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
             # With moving candles the data is only done once the last candle has closed
             data_done = (timestamp == get_last_timestamp(get_market_dataframe())) and step >= n_steps
-            print(f"[GRAPH] elapsed={elapsed:.1f}s duration={duration_secs}s data_done={data_done}")
+            logger.debug("elapsed=%.1fs duration=%ss data_done=%s", elapsed, duration_secs, data_done)
 
             if elapsed >= duration_secs or data_done:
-                print("[GRAPH] simulation ended")
+                logger.info("Session ended (%s)", "end of data" if data_done else "time is up")
                 log_session_event("session-finish", market_time(timestamp, step, n_steps), cashflow, company)
                 return no_update, no_update, True, True, session_start_time, no_update
 
@@ -245,15 +250,15 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # Render the last frame and end immediately — no frozen-tick gap before the modal.
         # (Only when advancing: while a candle is forming the timestamp stays put on purpose.)
         if advance and new_ts == timestamp:
-            print("[GRAPH] data exhausted at", new_ts)
+            logger.info("Session ended (end of data at %s)", new_ts)
             log_session_event("session-finish", market_time(new_ts, n_steps, n_steps), cashflow, company)
             return new_ts, fig, True, True, session_start_time, None
 
-        print(f"[GRAPH] ok new_ts={new_ts} step={new_step}/{n_steps}")
+        logger.debug("ok new_ts=%s step=%s/%s", new_ts, new_step, n_steps)
         return new_ts, fig, no_update, no_update, session_start_time, (new_step if next_graph else no_update)
 
     except Exception as e:
-        print("Error in update_graph:", e)
+        logger.exception("Error in update_graph: %s", e)
         return no_update, no_update, no_update, no_update, no_update, no_update
 
 
@@ -311,7 +316,7 @@ def update_revenue(n, company, timestamp, companies, color_scheme):
         return fig
 
     except Exception as e:
-        print("Error", e)
+        logger.error("Error while drawing the revenue chart: %s", e)
         return no_update
 
 

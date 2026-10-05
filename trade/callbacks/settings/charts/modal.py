@@ -30,6 +30,9 @@ from trade.utils.news_generation.news_creation import (
 )
 import trade.callbacks.settings.stocks as stocks_callbacks
 from trade.callbacks.settings.news import news_error_message
+from trade.utils.logs import get_logger
+
+logger = get_logger("charts")
 
 
 # ── Step 1: pick CAC40 windows when trends/params change ─────────────────────
@@ -112,7 +115,7 @@ def generate_base_segments(alpha, segment_lengths, start_value, radio_trends, co
         }
 
     except Exception as e:
-        print("Error generating base segments:", e)
+        logger.error("Error generating base segments: %s", e)
         return no_update
 
 
@@ -501,7 +504,7 @@ def apply_patterns_and_display(pattern_files, event_type, event_position, event_
         return children, dataframes, bar_count_children
 
     except Exception as e:
-        print("Error applying patterns:", e)
+        logger.error("Error applying patterns: %s", e)
         return no_update, no_update, no_update
 
 
@@ -525,10 +528,10 @@ def _auto_generate_news(job_id, companies_subset, mode, nbr_pos, nbr_neg, alpha,
             companies_subset, positions, lang,
             provider=provider, base_url=base_url, groq_api_key=groq_api_key, delta=delta,
         )
-        print("Auto news regeneration complete for: " + ", ".join(companies_subset.keys()))
+        logger.info("Automatic news complete for: %s", ", ".join(companies_subset.keys()))
         result = {"status": "done", "stats": stats or {}}
     except Exception as e:
-        print("Auto news regeneration failed:", e)
+        logger.error("Automatic news failed: %s", e)
         result = {"status": "error",
                   "message": news_error_message(e, provider, tls[lang]["notifications"])}
     with _AUTO_NEWS_LOCK:
@@ -721,7 +724,7 @@ def update_timeline(nb, children, search, min=1, max=5):
         return children
 
     except Exception as e:
-        print("Error:", e)
+        logger.error("Error: %s", e)
         return no_update
 
 

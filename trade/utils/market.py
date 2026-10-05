@@ -2,6 +2,9 @@ import os
 import pandas as pd
 
 from trade.defaults import defaults as dlt
+from trade.utils.logs import get_logger
+
+logger = get_logger("market")
 
 # mtime-based caches — key is filename, value is (mtime, dataframe)
 _market_cache: dict = {}
@@ -34,7 +37,7 @@ def get_market_dataframe(generated=True):
         _market_cache[file] = (mtime, df)
         return df
     except Exception:
-        print('ERROR: No market data found in ' + dlt.data_path + ' folder.')
+        logger.error("No market data found in %s", dlt.data_path)
         return None
 
 

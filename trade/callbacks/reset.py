@@ -10,6 +10,9 @@ from trade.locales import translations as tls
 from trade.utils.market import get_market_dataframe, get_start_timestamp
 from trade.utils.news import get_news_dataframe
 from trade.utils.settings.create_market_data import get_generated_data
+from trade.utils.logs import get_logger
+
+logger = get_logger("reset")
 
 APP_MODE = os.getenv('APP_MODE', 'config')
 
@@ -26,7 +29,7 @@ def _archive_exports(nb_export):
                 os.path.join(session_path, file)
             )
     except Exception as e:
-        print("Error archiving exports:", e)
+        logger.error("Error archiving exports: %s", e)
 
 
 _LINK_STYLE_BASE = {"textDecoration": "none", "display": "block"}

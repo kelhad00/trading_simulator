@@ -2,6 +2,9 @@ import os
 import pandas as pd
 
 from trade.defaults import defaults as dlt
+from trade.utils.logs import get_logger
+
+logger = get_logger("news-data")
 
 # mtime-based cache — [dataframe, mtime]
 _news_cache: list = [None, -1.0]
@@ -25,5 +28,5 @@ def get_news_dataframe():
         _news_cache[1] = mtime
         return news_df
     except Exception as e:
-        print(f'[NEWS] get_news_dataframe error: {e}')
+        logger.warning("Could not read news.csv: %s", e)
         raise FileNotFoundError

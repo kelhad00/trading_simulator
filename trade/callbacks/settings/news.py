@@ -12,6 +12,9 @@ from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.news_generation.display import display_chart
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
+from trade.utils.logs import get_logger
+
+logger = get_logger("news-settings")
 
 
 def _lang(search):
@@ -176,7 +179,7 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
         ), {}, status_msg
 
     except Exception as e:
-        print("Error while generating news:", e)
+        logger.error("Error while generating news: %s", e)
         message = news_error_message(e, provider, tl)
         status_msg = dmc.Text(message, color="red", size="sm")
         return dmc.Notification(
@@ -248,7 +251,7 @@ def update_graph_news(company, alpha, alpha_day_interval, delta, mode,
     except PreventUpdate:
         raise
     except Exception as e:
-        print("Error while updating the news graph:", e)
+        logger.error("Error while updating the news graph: %s", e)
         return no_update
 
 
