@@ -10,7 +10,7 @@ from trade.utils.graph.candlestick_charts import create_graph
 from trade.utils.candle_steps import (
     normalize as normalize_step, is_forming, partial_candle, market_time, step_minutes,
 )
-from trade.utils.export import log_session_event
+from trade.utils.export import log_session_event, write_log_info
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
@@ -142,9 +142,15 @@ def track_graph_auto_follow(relayout_data, company):
     State('candle-step', 'data'),
     State('steps-per-candle', 'data'),
     State('initial-bars', 'data'),
+    # Only used to record the session's settings in log-info.json
+    State('update-time', 'data'),
+    State('max-requests', 'data'),
+    State('initial-cashflow', 'data'),
+    State('companies', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
+                 update_time=None, max_requests=None, initial_cashflow=None, companies=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     step, n_steps = normalize_step(candle_step, steps_per_candle)
@@ -157,6 +163,20 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             session_start_time = time.time()
             log_session_event("session-start", market_time(timestamp, step, n_steps), cashflow, company)
             logger.info("Session started (%s min)", simulation_duration or dlt.simulation_duration)
+            try:
+                # Automatic record of the code version and settings this session runs with
+                write_log_info({
+                    "simulation_duration_min": simulation_duration or dlt.simulation_duration,
+                    "update_time_ms": int(update_time or dlt.update_time),
+                    "steps_per_candle": n_steps,
+                    "history_candles_at_start": int(initial_bars or dlt.initial_reveal_bars),
+                    "max_requests": max_requests or dlt.max_requests,
+                    "initial_cashflow": initial_cashflow or dlt.initial_money,
+                    "first_market_timestamp": str(timestamp),
+                    "companies": sorted(k for k, v in (companies or {}).items() if v.get("got_charts")),
+                })
+            except Exception as e:  # recording must never stop a session
+                logger.warning("Could not write log-info.json: %s", e)
         else:
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
             elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
