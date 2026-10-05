@@ -5,7 +5,7 @@ import dash_mantine_components as dmc
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
-from trade.utils.market import get_market_dataframe, get_first_timestamp
+from trade.utils.market import get_market_dataframe, get_start_timestamp
 from trade.utils.session import extract_session_zip
 
 _UPLOAD_VISIBLE = {"display": "block"}
@@ -46,6 +46,7 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("color-enabled", "data", allow_duplicate=True),
     Output("steps-per-candle", "data", allow_duplicate=True),
     Output("candle-step", "data", allow_duplicate=True),
+    Output("initial-bars", "data", allow_duplicate=True),
     Input("upload-session", "contents"),
     State("upload-session", "filename"),
     State("url", "search"),
@@ -53,7 +54,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return (no_update,) * 17
+        return (no_update,) * 18
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -72,11 +73,11 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 5
+        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 6
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
-    timestamp = get_first_timestamp(market_df, 100)
+    timestamp = get_start_timestamp(market_df, stores["initial-bars"])
 
     display_name = filename or "session.zip"
     notif = dmc.Notification(
@@ -105,6 +106,7 @@ def import_session(contents, filename, search):
         stores["color-enabled"],
         stores["steps-per-candle"],
         None,           # candle-step: start with the first candle closed
+        stores["initial-bars"],
     )
 
 

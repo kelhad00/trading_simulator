@@ -62,6 +62,19 @@ def get_first_timestamp(market_df, range=0):
         return 0
 
 
+def get_start_timestamp(market_df, initial_bars=None):
+    """Timestamp where a session starts: `initial_bars` candles of history are
+    already shown (Settings -> Advanced; default `initial_reveal_bars`). Kept
+    inside the data, so a number larger than the data can't break the start."""
+    if initial_bars is None:
+        initial_bars = dlt.initial_reveal_bars
+    try:
+        last = len(market_df.index) - 1
+    except Exception:
+        return 0
+    return get_first_timestamp(market_df, max(0, min(int(initial_bars), last)))
+
+
 def get_last_timestamp(market_df):
     try:
         timestamp = market_df.index[-1]

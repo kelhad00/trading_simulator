@@ -369,6 +369,8 @@ translation = {
                 },
                 "input": {
                     "update-time": "Temps entre deux mises à jour (ms), par étape de bougie",
+                    "initial-bars": "Bougies d'historique affichées au départ",
+                    "initial-bars-help": "Bougies passées visibles avant le début du trading (100 par défaut).",
                     "requests": "Requêtes max",
                     "cashflow": "Trésorie initiale",
                     "simulation-duration": "Durée de la session (minutes)",

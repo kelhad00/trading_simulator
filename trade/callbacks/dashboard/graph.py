@@ -138,9 +138,10 @@ def track_graph_auto_follow(relayout_data, company):
     State('cashflow', 'data'),
     State('candle-step', 'data'),
     State('steps-per-candle', 'data'),
+    State('initial-bars', 'data'),
     prevent_initial_call=True,
 )
-def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle):
+def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     step, n_steps = normalize_step(candle_step, steps_per_candle)
@@ -179,7 +180,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # get_market_dataframe() is cached — only reads disk when file changes
         dftmp = get_market_dataframe()[company]
 
-        fig, new_ts = create_graph(dftmp, timestamp, advance, dlt.initial_reveal_bars, follow=following,
+        fig, new_ts = create_graph(dftmp, timestamp, advance, int(initial_bars or dlt.initial_reveal_bars), follow=following,
                                    partial=forming_candle)
 
         if not following and manual_range:

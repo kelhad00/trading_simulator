@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
 APP_MODE = os.getenv('APP_MODE', 'config')
 
 from trade.defaults import defaults as dlt
-from trade.utils.market import get_first_timestamp, get_market_dataframe
+from trade.utils.market import get_start_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
 from trade.utils.download import download_market_data
 
@@ -101,7 +101,7 @@ app.layout = dmc.MantineProvider([
         # Global location tracker — lets navigation-triggered callbacks re-fire
         dcc.Location(id="url", refresh=False),
 
-        dcc.Store(id='timestamp', data=get_first_timestamp(market_df, dlt.initial_reveal_bars), storage_type="session"),
+        dcc.Store(id='timestamp', data=get_start_timestamp(market_df), storage_type="session"),
         # Moving candles: step reached by the candle at `timestamp` (1..steps-per-candle).
         # None = the candle is closed, e.g. at session start or after a reset.
         dcc.Store(id='candle-step', data=None, storage_type="session"),
@@ -132,6 +132,8 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="local"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="local"),
         dcc.Store(id="steps-per-candle", data=dlt.steps_per_candle, storage_type="local"),
+        # Candles of history already shown when a session starts (Settings -> Advanced)
+        dcc.Store(id="initial-bars", data=dlt.initial_reveal_bars, storage_type="local"),
         dcc.Store(id="simulation-duration", data=dlt.simulation_duration, storage_type="local"),
         dcc.Store(id="news-font-size", data=dlt.news_font_size, storage_type="local"),
 

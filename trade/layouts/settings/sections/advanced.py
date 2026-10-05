@@ -54,6 +54,14 @@ def advanced_settings(lang="fr"):
                     dmc.Text(tl["candle-steps"]["help"], size="xs", color="dimmed"),
                 ], className="flex flex-col gap-1"),
                 dmc.NumberInput(
+                    id="input-initial-bars",
+                    label=tl["input"]["initial-bars"],
+                    description=tl["input"]["initial-bars-help"],
+                    required=True,
+                    min=1,
+                    max=1000,
+                ),
+                dmc.NumberInput(
                     id="input-max-requests",
                     label=tl["input"]["requests"],
                     required=True,

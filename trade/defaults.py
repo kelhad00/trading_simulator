@@ -34,6 +34,8 @@ class Defaults:
     # Number of bars revealed all at once on the first frame of a live
     # session (dashboard/graph.py, app.py) — used by the config-page preview
     # to estimate where the "live" window starts.
+    # Default only: researchers can change it in Settings -> Advanced
+    # ("Candles of history shown at the start"), saved in session.zip.
     initial_reveal_bars = 100
 
     # Default font size for news articles in the runtime dashboard ('S', 'M', or 'L')

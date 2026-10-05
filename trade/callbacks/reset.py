@@ -7,11 +7,9 @@ from dash.exceptions import PreventUpdate
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
-from trade.utils.market import get_first_timestamp, get_market_dataframe
+from trade.utils.market import get_market_dataframe, get_start_timestamp
 from trade.utils.news import get_news_dataframe
 from trade.utils.settings.create_market_data import get_generated_data
-
-market_df = get_market_dataframe()
 
 APP_MODE = os.getenv('APP_MODE', 'config')
 
@@ -39,11 +37,13 @@ if APP_MODE != 'runtime':
         Output("settings-button-link", "style"),
         Input("_pages_location", "pathname"),
         Input("timestamp", "data"),
+        State("initial-bars", "data"),
     )
-    def disable_button(pathname, timestamp):
+    def disable_button(pathname, timestamp, initial_bars):
         if pathname != "/":
             raise PreventUpdate
-        is_disabled = timestamp != get_first_timestamp(market_df, 100)
+        # Locked once the session has moved past its starting candle
+        is_disabled = timestamp != get_start_timestamp(get_market_dataframe(), initial_bars)
         return is_disabled, {**_LINK_STYLE_BASE, "pointerEvents": "none" if is_disabled else "auto"}
 
 
@@ -60,15 +60,16 @@ if APP_MODE != 'runtime':
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
     State('companies', 'data'),
+    State('initial-bars', 'data'),
     prevent_initial_call=True,
 )
-def reset_data(btn, initial_cashflow, nb_export, companies_data):
+def reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars=None):
     if btn is None or btn == 0:
         raise PreventUpdate
 
     threading.Thread(target=_archive_exports, args=(nb_export,), daemon=True).start()
 
-    timestamp = get_first_timestamp(market_df, 100)
+    timestamp = get_start_timestamp(get_market_dataframe(), initial_bars)
     portfolio_value = {c: 0 for c, info in (companies_data or {}).items() if info.get('got_charts')}
 
     # candle-step None = the first candle is closed, like at session start
@@ -95,11 +96,28 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data):
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
     State('companies', 'data'),
+    State('initial-bars', 'data'),
     prevent_initial_call=True,
 )
-def reset_modal(btn, initial_cashflow, nb_export, companies_data):
-    ts, cf, req, shares, totals, basis, nb, step = reset_data(btn, initial_cashflow, nb_export, companies_data)
+def reset_modal(btn, initial_cashflow, nb_export, companies_data, initial_bars):
+    ts, cf, req, shares, totals, basis, nb, step = reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars)
     return ts, cf, req, shares, totals, basis, nb, True, None, False, False, None, 0, None, step
+
+
+@callback(
+    Output('timestamp', 'data', allow_duplicate=True),
+    Output('candle-step', 'data', allow_duplicate=True),
+    Input('initial-bars', 'data'),
+    State('session-start-time', 'data'),
+    prevent_initial_call='initial_duplicate',
+)
+def apply_initial_bars(initial_bars, session_start_time):
+    """Move the session's starting point when the number of history candles
+    changes (Settings -> Advanced, an imported session, or the value saved in
+    the browser). Never moves a session that has already started."""
+    if session_start_time is not None:
+        raise PreventUpdate
+    return get_start_timestamp(get_market_dataframe(), initial_bars), None
 
 
 clientside_callback(

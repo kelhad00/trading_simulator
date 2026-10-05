@@ -356,6 +356,8 @@ translation = {
                 },
                 "input": {
                     "update-time": "Time between updates (ms), per candle step",
+                    "initial-bars": "Candles of history shown at the start",
+                    "initial-bars-help": "Past candles the participant sees before trading starts (default 100).",
                     "requests": "Max requests",
                     "cashflow": "Initial cashflow",
                     "simulation-duration": "Session duration (minutes)",

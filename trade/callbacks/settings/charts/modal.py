@@ -328,7 +328,7 @@ def _format_bar_count(n, lang):
     return tl["under-month"] % n
 
 
-def _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle=1):
+def _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle=1, initial_bars=None):
     """Estimate the bar range a live session will actually walk through.
 
     A live session reveals `dlt.initial_reveal_bars` bars at once on the
@@ -344,7 +344,7 @@ def _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle=1)
     interval_secs = max(float(update_time or dlt.update_time) / 1000.0, 0.1) * steps
     duration_secs = float(simulation_duration or dlt.simulation_duration) * 60.0
     extra_ticks = int(duration_secs // interval_secs)
-    start_bars = dlt.initial_reveal_bars
+    start_bars = int(initial_bars or dlt.initial_reveal_bars)
     return start_bars, start_bars + extra_ticks, interval_secs
 
 
@@ -362,17 +362,18 @@ def _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle=1)
     State("simulation-duration", "data"),
     State("url", "search"),
     State("steps-per-candle", "data"),
+    State("initial-bars", "data"),
     prevent_initial_call=True,
 )
 def apply_patterns_and_display(pattern_files, event_type, event_position, event_magnitude,
                                 base_data, color_scheme, update_time, simulation_duration, search,
-                                steps_per_candle):
+                                steps_per_candle, initial_bars):
     if not base_data:
         raise PreventUpdate
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     sim_labels = tls[lang]["settings"]["charts"]["sim-window"]
-    live_start_bars, live_reach_bars, interval_secs = _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle)
+    live_start_bars, live_reach_bars, interval_secs = _compute_reveal_bounds(update_time, simulation_duration, steps_per_candle, initial_bars)
 
     try:
         dataset = load_data(os.path.join(dlt.data_path, "CAC40.csv"))
