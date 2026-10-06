@@ -28,10 +28,12 @@ _REMINDERS = [
     State('simulation-duration', 'data'),
     State('total-paused-seconds', 'data'),
     State('shown-reminders', 'data'),
+    State('reminders-enabled', 'data'),
     prevent_initial_call=True,
 )
-def fire_time_reminders(n, timestamp, session_start, sim_duration, total_paused, shown):
-    if session_start is None:
+def fire_time_reminders(n, timestamp, session_start, sim_duration, total_paused, shown, reminders_enabled=True):
+    # Switched off in Settings -> News -> Notifications
+    if session_start is None or reminders_enabled is False:
         raise PreventUpdate
 
     elapsed = time.time() - session_start - (total_paused or 0)

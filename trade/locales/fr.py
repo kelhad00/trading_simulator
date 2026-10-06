@@ -275,6 +275,7 @@ translation = {
                 },
                 "notifications": {
                     "enabled-label": "Afficher les notifications d'actualités",
+                    "reminders-label": "Afficher les rappels de temps pendant la session (ex. : plus que 5 minutes)",
                     "filter-label": "Afficher les notifications pour",
                     "filter-positive": "Actualités positives",
                     "filter-negative": "Actualités négatives",

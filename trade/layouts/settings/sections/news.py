@@ -227,6 +227,11 @@ def news_settings(lang="fr"):
                 persistence=True,
                 persistence_type="local",
             ),
+            dmc.Switch(
+                id="reminders-enabled-input",
+                label=tl["notifications"]["reminders-label"],
+                checked=True,
+            ),
         ]),
 
         dcc.Loading(

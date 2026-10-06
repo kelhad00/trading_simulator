@@ -47,6 +47,7 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("steps-per-candle", "data", allow_duplicate=True),
     Output("candle-step", "data", allow_duplicate=True),
     Output("initial-bars", "data", allow_duplicate=True),
+    Output("reminders-enabled", "data", allow_duplicate=True),
     Input("upload-session", "contents"),
     State("upload-session", "filename"),
     State("url", "search"),
@@ -54,7 +55,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return (no_update,) * 18
+        return (no_update,) * 19
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -73,7 +74,7 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 6
+        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 7
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
@@ -107,6 +108,7 @@ def import_session(contents, filename, search):
         stores["steps-per-candle"],
         None,           # candle-step: start with the first candle closed
         stores["initial-bars"],
+        stores["reminders-enabled"],
     )
 
 

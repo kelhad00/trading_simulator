@@ -50,6 +50,23 @@ def sync_notif_settings(enabled, filter_val, offset_val):
 
 
 @callback(
+    Output("reminders-enabled-input", "checked"),
+    Input("reminders-enabled", "data"),
+)
+def show_reminders_setting(enabled):
+    return enabled if enabled is not None else True
+
+
+@callback(
+    Output("reminders-enabled", "data"),
+    Input("reminders-enabled-input", "checked"),
+    prevent_initial_call=True,
+)
+def save_reminders_setting(checked):
+    return bool(checked) if checked is not None else True
+
+
+@callback(
     Output("notif-filter-input", "style"),
     Output("notif-offset-input", "style"),
     Input("notif-enabled-input", "checked"),
