@@ -122,10 +122,12 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id='portfolio-totals', data=portfolio_value, storage_type="session"),
         dcc.Store(id='cost-basis', data={}, storage_type="session"),
         dcc.Store(id='sold-data', data={}, storage_type="session"),
-        # Same persistence tier as "companies"/"simulation-duration" below: it's set
-        # from the imported session and must survive a closed/reopened tab exactly
-        # like they do, otherwise a re-run silently falls back to the hardcoded default.
-        dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="local"),
+        # Cash belongs to one participant's game, like shares and orders: kept per
+        # tab ("session"), so a new tab never inherits the previous participant's
+        # cash. Its starting value comes from "initial-cashflow" (kept in the
+        # browser, set by an imported session): see start_cash_for_new_tab in
+        # callbacks/reset.py.
+        dcc.Store(id='cashflow', data=dlt.initial_money, storage_type="session"),
 
         dcc.Store(id="companies", data=dlt.companies_list, storage_type="local"),
         dcc.Store(id="nb_export", data=len(os.listdir(os.path.join(dlt.data_path, "exports"))), storage_type="session"),

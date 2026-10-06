@@ -108,6 +108,31 @@ def reset_modal(btn, initial_cashflow, nb_export, companies_data, initial_bars):
 
 
 @callback(
+    Output('cashflow', 'data', allow_duplicate=True),
+    Input('initial-cashflow', 'data'),
+    State('session-start-time', 'data'),
+    State('requests', 'data'),
+    State('portfolio-shares', 'data'),
+    State('cashflow', 'data'),
+    prevent_initial_call='initial_duplicate',
+)
+def start_cash_for_new_tab(initial_cashflow, session_start_time, requests, shares, cashflow):
+    """A new tab (or new starting amount) starts with the session's starting money.
+
+    Runs when a page opens and when the starting amount changes. Only while no
+    game is in progress in this tab: session not started, no waiting orders and
+    no shares held, so a refresh in the middle of a session never changes cash.
+    """
+    if initial_cashflow is None or session_start_time is not None:
+        raise PreventUpdate
+    if requests or any((shares or {}).values()):
+        raise PreventUpdate
+    if cashflow == initial_cashflow:
+        raise PreventUpdate
+    return initial_cashflow
+
+
+@callback(
     Output('timestamp', 'data', allow_duplicate=True),
     Output('candle-step', 'data', allow_duplicate=True),
     Input('initial-bars', 'data'),
