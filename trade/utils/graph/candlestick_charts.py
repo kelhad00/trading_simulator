@@ -11,7 +11,37 @@ PLOTLY_CONFIG = {
 }
 
 
-def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True, partial=None):
+MAX_DATE_LABELS = 8
+_LABEL_STEPS = (1, 2, 5, 7, 14, 30, 60, 90, 180, 365)   # candles between two date labels
+
+
+def _date_label_step(candles_on_screen):
+    """Smallest round spacing that keeps at most MAX_DATE_LABELS dates on screen."""
+    for step in _LABEL_STEPS:
+        if candles_on_screen / step <= MAX_DATE_LABELS:
+            return step
+    return -(-candles_on_screen // MAX_DATE_LABELS)
+
+
+def _slots_in_view(view_range, all_labels):
+    """(first, last) candle slot on screen: the zoomed range, or the whole session."""
+    last_slot = len(all_labels) - 1
+    if not view_range:
+        return 0, last_slot
+    ends = []
+    for end in view_range[:2]:
+        try:
+            ends.append(float(end))                       # slot numbers (category axis)
+        except (TypeError, ValueError):
+            ends.append(float(all_labels.index(str(end))) if str(end) in all_labels else None)
+    if None in ends:
+        return 0, last_slot
+    first = max(0, int(-(-min(ends) // 1)))               # first whole slot inside the view
+    last = min(last_slot, int(max(ends) // 1))
+    return (first, last) if first <= last else (0, last_slot)
+
+
+def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True, partial=None, view_range=None):
     """
     Create a candlestick chart for the selected stock or update an existing one
 
@@ -137,15 +167,20 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
     # Create chart for the selected stock
     figure = go.Figure(data=[long_mov_av, short_mov_av, twohun_mov_av, candelstick])
 
-    # Category axis in full-file order: slot i is candle i. Ticks are limited to
-    # dates already shown so future dates aren't revealed on the axis.
-    # Few, horizontal labels keep the axis short so the candles get the height.
-    # Ticks sit at evenly spaced slots across the WHOLE file width (about 6 in
-    # total), so they stay far apart and never move as candles are added. Only
-    # the ones already revealed are drawn. plot_df is a prefix of the full
-    # data, so slot i in all_labels is also candle i of x_labels.
-    tick_step = max(1, len(all_labels) // 6)
-    tick_labels = all_labels[:len(x_labels):tick_step]
+    # Category axis in full-file order: slot i is candle i. Date labels:
+    # - about 8 at most across what is on screen: the whole session normally,
+    #   or the zoomed part (view_range), so a zoom on a few candles still
+    #   shows several dates;
+    # - at round spacings (every 1, 2, 5, 7, 14, 30... candles) counted from
+    #   the first candle, so they don't jump around as candles are added;
+    # - only on candles already shown, so future dates aren't revealed.
+    # plot_df is a prefix of the full data, so slot i in all_labels is also
+    # candle i of x_labels.
+    first, last = _slots_in_view(view_range, all_labels)
+    tick_step = _date_label_step(last - first + 1)
+    # (no range() here: this function has a parameter named `range`)
+    tick_labels = [label for i, label in enumerate(all_labels[:len(x_labels)])
+                   if i % tick_step == 0 and first <= i <= last]
     figure.update_xaxes(
         type='category',
         categoryorder='array',

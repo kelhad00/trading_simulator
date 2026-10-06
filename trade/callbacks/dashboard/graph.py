@@ -206,6 +206,8 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         dftmp = get_market_dataframe()[company]
 
         fig, new_ts = create_graph(dftmp, timestamp, advance, int(initial_bars or dlt.initial_reveal_bars), follow=following,
+                                   # zoomed in: date labels adapt to the candles on screen
+                                   view_range=manual_range if (not following and manual_range) else None,
                                    partial=forming_candle)
 
         if not following and manual_range:
