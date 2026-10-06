@@ -13,19 +13,19 @@ NOW = "2025-01-20 00:00:00"
 
 
 def test_news_list_is_sent_once_then_only_when_it_changes(fake_data):
-    table, key = news.cb_update_news_table(1, NOW)
+    table, key = news.cb_update_news_table(NOW)
     assert table is not news.no_update
-    assert news.cb_update_news_table(2, NOW, key) == (news.no_update, news.no_update)   # quiet tick
+    assert news.cb_update_news_table(NOW, None, key) == (news.no_update, news.no_update)   # quiet tick
 
 
 def test_news_list_is_sent_again_when_new_news_arrives(fake_data):
-    _, key = news.cb_update_news_table(1, "2025-01-11 00:00:00")      # 2 news so far
-    table, new_key = news.cb_update_news_table(2, NOW, key)          # 5 news now
+    _, key = news.cb_update_news_table("2025-01-11 00:00:00")      # 2 news so far
+    table, new_key = news.cb_update_news_table(NOW, None, key)       # 5 news now
     assert table is not news.no_update and new_key != key
 
 
 def test_news_list_is_drawn_when_the_page_opens(fake_data):
-    table, _ = news.cb_update_news_table(1, NOW, None)                # page memory starts empty
+    table, _ = news.cb_update_news_table(NOW, None, None)              # page memory starts empty
     assert table is not news.no_update
 
 

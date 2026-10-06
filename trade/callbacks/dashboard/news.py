@@ -51,6 +51,8 @@ clientside_callback(
 
 from trade.locales import translations as tls
 from trade.utils.news import get_news_dataframe
+from trade.utils.market import get_market_dataframe
+from trade.utils.news_timing import article_positions, now_position, visible
 from trade.utils.logs import get_logger
 
 logger = get_logger("news")
@@ -59,11 +61,13 @@ logger = get_logger("news")
 @callback(
     Output('news-table', 'children'),
     Output('news-table-key', 'data'),
-    Input('periodic-updater', 'n_intervals'),
-    State('timestamp', 'data'),
+    # Recomputed exactly when the session moves (date or 15-min step), not on the timer
+    Input('timestamp', 'data'),
+    Input('candle-step', 'data'),
     State('news-table-key', 'data'),
+    State('steps-per-candle', 'data'),
 )
-def cb_update_news_table(n, timestamp, shown_key=None, range=50, daily=True):
+def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, range=50):
     try:
         # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()
@@ -82,16 +86,16 @@ def cb_update_news_table(n, timestamp, shown_key=None, range=50, daily=True):
 
     news_df = news_df.drop_duplicates(subset=['article'], keep='first')
 
-    # Dates are already parsed by get_news_dataframe() — no need to re-parse
+    # Only articles that have appeared: their own candle, at their step (never a day early)
     try:
-        ts = pd.to_datetime(timestamp).replace(tzinfo=None)
-        if daily:
-            ts = ts + pd.Timedelta(days=1)
+        market_index = get_market_dataframe().index
+        positions = article_positions(news_df, market_index, steps_per_candle, title_column='article')
+        now = now_position(market_index, timestamp, candle_step, steps_per_candle)
     except Exception as e:
-        logger.warning("Timestamp conversion failed (value=%s): %s", timestamp, e)
-        ts = pd.Timestamp.now()
+        logger.warning("Could not work out which news has appeared (timestamp=%s): %s", timestamp, e)
+        raise PreventUpdate
 
-    nl = news_df.loc[news_df['date'] <= ts].sort_values(by='date', ascending=False)
+    nl = news_df.loc[visible(positions, now)].sort_values(by='date', ascending=False)
     has_label = 'sentiment_label' in nl.columns
     nl = nl.head(range)
 
@@ -214,16 +218,19 @@ def view_company_from_description(n_clicks, company_key):
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
     Output('last-notified-ts', 'data'),
-    Input('periodic-updater', 'n_intervals'),
-    State('timestamp', 'data'),
+    # Same moment as the news list: when the session moves (date or 15-min step)
+    Input('timestamp', 'data'),
+    Input('candle-step', 'data'),
     State('last-notified-ts', 'data'),
     State('companies', 'data'),
     State('notif-filter', 'data'),
     State('notif-offset', 'data'),
     State('notif-enabled', 'data'),
+    State('steps-per-candle', 'data'),
     prevent_initial_call=True,
 )
-def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset, notif_enabled):
+def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, notif_offset, notif_enabled,
+                    steps_per_candle=1):
     if timestamp is None:
         raise PreventUpdate
 
@@ -232,26 +239,24 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
 
     try:
         news_df = get_news_dataframe()
-        current_ts = pd.to_datetime(timestamp).replace(tzinfo=None) + pd.Timedelta(days=1)
-        offset_days = int(notif_offset or 0)
-        notify_ts = current_ts + pd.Timedelta(days=offset_days)
-        notify_ts_str = str(notify_ts)
+        market_index = get_market_dataframe().index
+        # 'Warn me X days early' setting: look that many candles ahead
+        now = now_position(market_index, timestamp, candle_step, steps_per_candle,
+                           candles_ahead=int(notif_offset or 0))
+        notify_ts_str = f"{now[0]}-{now[1]}"
 
-        # First tick — just record the position, don't flood with past articles
-        if last_ts is None:
-            return no_update, notify_ts_str
+        # First time — just record the position, don't flood with past articles.
+        # (An older version stored a date string here: treated the same way.)
+        if not isinstance(last_seen, list) or len(last_seen) != 2:
+            return no_update, list(now)
+        last_seen = tuple(last_seen)
 
-        last_ts_dt = pd.to_datetime(last_ts)
+        # The session went back (reset / new session): restart from here
+        if last_seen > now:
+            return no_update, list(now)
 
-        # If last_ts is ahead of the current notify window (stale from a previous run),
-        # treat it as None so notifications restart from the beginning
-        if last_ts_dt > notify_ts:
-            return no_update, notify_ts_str
-
-        new_articles = news_df[
-            (news_df['date'] > last_ts_dt) &
-            (news_df['date'] <= notify_ts)
-        ]
+        positions = article_positions(news_df, market_index, steps_per_candle)
+        new_articles = news_df[positions.map(lambda p: last_seen < tuple(p) <= now)]
 
         # Apply sentiment filter (positive / negative / neutral), by the article's tag
         allowed = set(notif_filter) if notif_filter else set()
@@ -262,7 +267,7 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
             new_articles = new_articles[directions.isin(allowed)]
 
         if new_articles.empty:
-            return no_update, notify_ts_str
+            return no_update, list(now)
 
         lang = page_registry.get('lang', 'en')
         view_label = tls[lang].get('news-notif-view', 'View')
@@ -319,7 +324,7 @@ def notify_new_news(n, timestamp, last_ts, companies, notif_filter, notif_offset
                 )
             )
 
-        return notifications, notify_ts_str
+        return notifications, list(now)
 
     except Exception as e:
         logger.error("News notification error: %s", e)

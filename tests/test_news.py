@@ -33,7 +33,7 @@ def test_tag_direction_for_the_notification_filter():
 @pytest.fixture
 def table(fake_data):
     """The news table as the browser receives it."""
-    built, _key = news.cb_update_news_table(1, "2025-01-20 00:00:00")
+    built, _key = news.cb_update_news_table("2025-01-20 00:00:00")
     return json.loads(json.dumps(built, cls=plotly.utils.PlotlyJSONEncoder))
 
 
