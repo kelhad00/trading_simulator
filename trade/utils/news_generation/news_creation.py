@@ -115,7 +115,7 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
                 except (pd.errors.EmptyDataError, KeyError):
                     pass
             new_rows.to_csv(report_path, index=False)
-            company_passed = sum(1 for r in v_results if r['passed'])
+            company_passed = sum(1 for r in v_results if not r.get('needs_review', not r['passed']))
             total_verified += len(v_results)
             total_passed   += company_passed
             print(f"[VERIFY] {company_name} — {company_passed}/{len(v_results)} passed | report updated")
@@ -591,6 +591,72 @@ Rules:
 }
 
 
+# ── Tone check and retries ────────────────────────────────────────────────────
+# Positive articles were sometimes read as negative by the checker (FinBERT),
+# mostly because of wording like "efficiency drive" or "cost savings".
+# - A wrong tone, company not named or wrong language: the article is rewritten,
+#   up to MAX_ATTEMPTS versions in total (it stops as soon as one is right).
+# - The "fits the price curve" word check never causes a rewrite on its own
+#   (its score is still recorded in verification_report.csv).
+# - Still wrong after the tries: the best version is kept and marked needs_review.
+MAX_ATTEMPTS = 3
+
+_POSITIVE_TONE_GUARD = {
+    "en": ("\nImportant: this is GOOD news for {company}. Every sentence must read as good news. "
+           "Do not mention cost cutting, savings programmes, efficiency drives, restructuring, "
+           "layoffs, job cuts, closures, downsizing, charges or write-downs, even as background: "
+           "readers (and the automatic tone check) read them as bad news."),
+    "fr": ("\nImportant : c'est une BONNE nouvelle pour {company}. Chaque phrase doit se lire comme une "
+           "bonne nouvelle. Ne mentionnez pas de réductions de coûts, plans d'économies, programmes "
+           "d'efficacité, restructurations, licenciements, suppressions de postes, fermetures, "
+           "dépréciations ou charges, même en contexte : les lecteurs (et la vérification automatique "
+           "du ton) les lisent comme de mauvaises nouvelles."),
+}
+
+
+def _needs_rewrite(v):
+    """Tone, company name or language failed (the curve word check is not counted)."""
+    return not (v['tone_ok'] and v['company_mentioned'] and v['language_ok'])
+
+
+def _version_score(v):
+    """Higher is better: right tone first, then the other checks, then the checker's confidence."""
+    return (v['tone_ok'], v['company_mentioned'] and v['language_ok'],
+            v['tone_confidence'] if v['tone_ok'] else -v['tone_confidence'])
+
+
+def _write_checked_article(write, verify, label):
+    """Write an article, check it, and rewrite it when needed (rules above).
+
+    write() -> (title, content); verify(title, content) -> verification dict.
+    Returns (title, content, verification) of the best version, with
+    'attempts' and 'needs_review' added to the verification.
+    """
+    attempts, best = 0, None
+    while True:
+        attempts += 1
+        title, content = write()
+        v = verify(title, content)
+        sym = lambda ok: '✓' if ok else '✗'
+        print(f"[VERIFY] {label} try {attempts}: grade={v['grade']} | tone={sym(v['tone_ok'])}({v['tone_confidence']})"
+              f" | company={sym(v['company_mentioned'])} | curve={sym(v['curve_ok'])}({v['curve_score']})"
+              f" | lang={sym(v['language_ok'])}")
+        if best is None or _version_score(v) > _version_score(best[2]):
+            best = (title, content, v)
+        if not _needs_rewrite(v):
+            break
+        if attempts >= MAX_ATTEMPTS:
+            break
+        reason = "tone" if not v['tone_ok'] else "company/language"
+        print(f"[VERIFY]     {reason} check failed — rewriting (try {attempts + 1}/{MAX_ATTEMPTS})...")
+
+    title, content, v = best
+    v = dict(v, attempts=attempts, needs_review=_needs_rewrite(v))
+    if v['needs_review']:
+        print(f"[VERIFY]     still failing after {attempts} tries — kept and marked needs_review")
+    return title, content, v
+
+
 def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position,
                 model, provider="ollama", base_url="http://localhost:11434/v1", groq_api_key="",
                 company_description="", delta=0):
@@ -638,37 +704,23 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
             print(f"[NEWS GEN]     -> Article category : {category.replace('_', ' ').upper()}")
             print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | range={currency}{price_low:.2f}–{currency}{price_high:.2f} | curve={curve_profile} | delta={delta} ({delta_label})")
-            print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
-            print(f"[NEWS GEN]     -> Content received. Generating title...")
-            title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
-            print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
+            def write():
+                print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
+                c = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
+                                           article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
+                t = transform_news_title(c, company_name, curve_profile, lang, client, model, sentiment)
+                print(f"[NEWS GEN]     -> Title: \"{t[:80]}{'...' if len(t) > 80 else ''}\"")
+                return t, c
+
+            title, content, v = _write_checked_article(
+                write,
+                lambda t, c: verify_article(t, c, sentiment, company_name, curve_profile, lang),
+                f"(+) Article {i + 1}",
+            )
 
             # Create a new row in news_created
-            date = market_data.iloc[position]['date']
-            date = datetime.fromisoformat(date)
-            date = date.strftime('%d/%m/%y %H:%M')
-
-
-            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, '']
-
-            v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
-            tone_sym    = '✓' if v['tone_ok']          else '✗'
-            company_sym = '✓' if v['company_mentioned'] else '✗'
-            curve_sym   = '✓' if v['curve_ok']          else '✗'
-            lang_sym    = '✓' if v['language_ok']        else '✗'
-            print(f"[VERIFY] (+) Article {i + 1}: grade={v['grade']} | tone={tone_sym}({v['tone_confidence']}) | company={company_sym} | curve={curve_sym}({v['curve_score']}) | lang={lang_sym}")
-            if not v['passed']:
-                print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
-                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
-                title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
-                v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
-                news_created.at[len(news_created) - 1, 'title']   = title
-                news_created.at[len(news_created) - 1, 'content'] = content
-                print(f"[VERIFY]     Retry grade={v['grade']}")
-            news_created.at[len(news_created) - 1, 'sentiment_label'] = v['sentiment_label']
+            date = datetime.fromisoformat(market_data.iloc[position]['date']).strftime('%d/%m/%y %H:%M')
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, v['sentiment_label']]
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
             v['date'] = article_date_str
@@ -705,34 +757,23 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
             delta_label = f"BEFORE ({abs(delta)}d)" if delta < 0 else f"AFTER ({delta}d)" if delta > 0 else "AT EVENT"
             print(f"[NEWS GEN]     -> Article category : {category.replace('_', ' ').upper()}")
             print(f"[NEWS GEN]     -> Context: date={article_date_str} | price={currency}{current_price:.2f} | range={currency}{price_low:.2f}–{currency}{price_high:.2f} | curve={curve_profile} | delta={delta} ({delta_label})")
-            print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
-            content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                             article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
-            print(f"[NEWS GEN]     -> Content received. Generating title...")
-            title = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
-            print(f"[NEWS GEN]     -> Title: \"{title[:80]}{'...' if len(title) > 80 else ''}\"")
+            def write():
+                print(f"[NEWS GEN]     -> Sending content to {provider.capitalize()} for rewriting...")
+                c = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
+                                           article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
+                t = transform_news_title(c, company_name, curve_profile, lang, client, model, sentiment)
+                print(f"[NEWS GEN]     -> Title: \"{t[:80]}{'...' if len(t) > 80 else ''}\"")
+                return t, c
+
+            title, content, v = _write_checked_article(
+                write,
+                lambda t, c: verify_article(t, c, sentiment, company_name, curve_profile, lang),
+                f"(-) Article {i + 1}",
+            )
 
             # Create a new row in news_created
-            date = market_data.iloc[position]['date']
-            date = datetime.fromisoformat(date).strftime('%d/%m/%y %H:%M')
-            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, '']
-
-            v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
-            tone_sym    = '✓' if v['tone_ok']          else '✗'
-            company_sym = '✓' if v['company_mentioned'] else '✗'
-            curve_sym   = '✓' if v['curve_ok']          else '✗'
-            lang_sym    = '✓' if v['language_ok']        else '✗'
-            print(f"[VERIFY] (-) Article {i + 1}: grade={v['grade']} | tone={tone_sym}({v['tone_confidence']}) | company={company_sym} | curve={curve_sym}({v['curve_score']}) | lang={lang_sym}")
-            if not v['passed']:
-                print(f"[VERIFY]     Grade {v['grade']} — retrying once...")
-                content = transform_news_content(news.iloc[i]['content'], company_name, sector, curve_profile, lang, client, model, sentiment, company_description,
-                                                 article_date=article_date_str, current_price=current_price, price_high=price_high, price_low=price_low, delta=delta, currency=currency, category=category)
-                title   = transform_news_title(content, company_name, curve_profile, lang, client, model, sentiment)
-                v = verify_article(title, content, sentiment, company_name, curve_profile, lang)
-                news_created.at[len(news_created) - 1, 'title']   = title
-                news_created.at[len(news_created) - 1, 'content'] = content
-                print(f"[VERIFY]     Retry grade={v['grade']}")
-            news_created.at[len(news_created) - 1, 'sentiment_label'] = v['sentiment_label']
+            date = datetime.fromisoformat(market_data.iloc[position]['date']).strftime('%d/%m/%y %H:%M')
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, v['sentiment_label']]
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
             v['date'] = article_date_str
@@ -870,6 +911,9 @@ def transform_news_content(content, company, sector, curve_profile, lang, client
         currency=currency,
     )
 
+    if sentiment == "positive":
+        p += _POSITIVE_TONE_GUARD["en" if lang == "en" else "fr"].format(company=company)
+
     response = _chat_with_retry(client, model, [{"role": "user", "content": p}])
     return response.choices[0].message.content
 
@@ -890,7 +934,7 @@ def transform_news_title(content, company_name, curve_profile, lang, client, mod
         sentiment_instruction = (
             "The headline MUST sound clearly and unmistakably NEGATIVE — use words like 'drops', 'falls', 'crisis', 'loss', 'decline', 'slump', 'fears', 'warning', 'cut', 'crash', or similar. A reader must instantly know it is bad news without reading the article."
             if sentiment == "negative" else
-            "The headline MUST sound clearly and unmistakably POSITIVE — use words like 'rises', 'surges', 'record', 'growth', 'gain', 'boost', 'strong', 'soars', 'leads', or similar. A reader must instantly know it is good news without reading the article."
+            "The headline MUST sound clearly and unmistakably POSITIVE — use words like 'rises', 'surges', 'record', 'growth', 'gain', 'boost', 'strong', 'soars', 'leads', or similar. A reader must instantly know it is good news without reading the article. Avoid 'cuts', 'savings', 'efficiency', 'restructuring' and 'layoffs'."
         )
     else:
         curve_descriptions_short = {
@@ -903,7 +947,7 @@ def transform_news_title(content, company_name, curve_profile, lang, client, mod
         sentiment_instruction = (
             "Le titre DOIT sonner clairement et sans ambiguïté NÉGATIF — utilisez des mots comme 'chute', 'baisse', 'crise', 'perte', 'déclin', 'avertissement', 'effondrement' ou similaires. Le lecteur doit immédiatement savoir que c'est une mauvaise nouvelle sans lire l'article."
             if sentiment == "negative" else
-            "Le titre DOIT sonner clairement et sans ambiguïté POSITIF — utilisez des mots comme 'hausse', 'bond', 'record', 'croissance', 'gain', 'solide', 's'envole' ou similaires. Le lecteur doit immédiatement savoir que c'est une bonne nouvelle sans lire l'article."
+            "Le titre DOIT sonner clairement et sans ambiguïté POSITIF — utilisez des mots comme 'hausse', 'bond', 'record', 'croissance', 'gain', 'solide', 's'envole' ou similaires. Le lecteur doit immédiatement savoir que c'est une bonne nouvelle sans lire l'article. Évitez 'réduction', 'économies', 'efficacité', 'restructuration' et 'licenciements'."
         )
 
     curve_description_short = curve_descriptions_short.get(curve_profile, list(curve_descriptions_short.values())[0])
