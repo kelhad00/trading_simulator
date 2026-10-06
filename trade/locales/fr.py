@@ -38,6 +38,7 @@ translation = {
             "news-ready": "Actualités prêtes pour {companies}.",
             "news-ready-stats": "Actualités prêtes pour {companies} : {passed}/{total} validées, {flagged} signalées.",
             "news-complete": "Génération terminée !",
+            "news-unchecked": "Attention : {n} article(s) n'ont PAS été vérifiés : le vérificateur (FinBERT) n'est pas installé dans cet environnement Python. Voir le README, « Generating news ».",
             "news-complete-stats": "Génération terminée — {passed}/{total} validées, {flagged} signalées. Voir verification_report.csv pour les détails.",
             "news-connection": "Impossible de se connecter à {provider}. Vérifiez votre clé API, l'URL et que le service est lancé.",
             "news-bad-file": "Un fichier de données est vide ou corrompu (news.csv ou news_dataset.csv). Vérifiez votre dossier Data.",

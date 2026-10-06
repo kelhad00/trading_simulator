@@ -1,6 +1,7 @@
 import re
 import os
 import sys
+import importlib.util
 import json
 import subprocess
 import functools
@@ -20,6 +21,27 @@ _worker_available = None   # True / False / None (not yet tried)
 
 _WORKER_SCRIPT = os.path.join(os.path.dirname(__file__), "_finbert_worker.py")
 
+# Packages the checker needs (requirements-news.txt). Without them the tone
+# check cannot run: articles are then marked needs_review, never silently passed.
+CHECKER_PACKAGES = ("transformers", "torch")
+_INSTALL_HINT = ("install them in this Python environment: "
+                 "python -m pip install -r requirements-news.txt (see README, 'Generating news')")
+
+
+def missing_checker_packages():
+    """Checker packages that are not installed in the Python running the app."""
+    return [p for p in CHECKER_PACKAGES if importlib.util.find_spec(p) is None]
+
+
+def checker_problem():
+    """None if the news checker can run, otherwise a short reason."""
+    missing = missing_checker_packages()
+    if missing:
+        return f"missing packages: {', '.join(missing)}"
+    if _worker_available is False:
+        return "the FinBERT checker could not be started"
+    return None
+
 
 def _get_sentiment_worker():
     """
@@ -32,6 +54,16 @@ def _get_sentiment_worker():
         return False
     if _worker_proc is not None and _worker_proc.poll() is None:
         return True   # already running
+
+    missing = missing_checker_packages()
+    if missing:
+        print("[VERIFY] " + "!" * 70)
+        print(f"[VERIFY] NEWS CHECKER UNAVAILABLE: {', '.join(missing)} not installed in {sys.executable}")
+        print("[VERIFY] Articles will NOT be checked and will be marked needs_review.")
+        print(f"[VERIFY] To fix, {_INSTALL_HINT}")
+        print("[VERIFY] " + "!" * 70)
+        _worker_available = False
+        return False
 
     try:
         print("[VERIFY] Starting sentiment worker (FinBERT-Multilingual)...")
@@ -51,7 +83,8 @@ def _get_sentiment_worker():
             return True
         raise RuntimeError(f"Unexpected worker output: {ready_line!r}")
     except Exception as e:
-        print(f"[VERIFY] WARNING: FinBERT worker could not be started ({e}). Tone check will be skipped.")
+        print(f"[VERIFY] WARNING: FinBERT checker could not be started ({e}). "
+              f"Articles will NOT be checked and will be marked needs_review.")
         _worker_available = False
         return False
 

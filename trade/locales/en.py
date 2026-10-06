@@ -61,6 +61,7 @@ translation = {
             "news-ready": "News ready for {companies}.",
             "news-ready-stats": "News ready for {companies}: {passed}/{total} passed, {flagged} flagged.",
             "news-complete": "Generation complete!",
+            "news-unchecked": "Warning: {n} article(s) were NOT checked: the news checker (FinBERT) is not installed in this Python environment. See README, 'Generating news'.",
             "news-complete-stats": "Generation complete — {passed}/{total} passed, {flagged} flagged. See verification_report.csv for details.",
             "news-connection": "Could not connect to {provider}. Check your API key, URL, and that the service is running.",
             "news-bad-file": "A data file is empty or corrupted (news.csv or news_dataset.csv). Check your Data folder.",

@@ -40,6 +40,19 @@ Notes:
 - The configurator downloads market data at startup if `generated_data.csv` or `revenue.csv` is
   missing from the data folder.
 
+## Generating news
+Generating news uses an AI (Ollama or Groq) to write the articles and a second model,
+FinBERT, to check that each article really sounds positive or negative. FinBERT needs extra
+packages (about 2 GB) that are only needed for generating news, not for running sessions.
+Install them once in the same Python environment you start the app with:
+```powershell
+cd trade
+.\venv\Scripts\python.exe -m pip install -r ..\requirements-news.txt
+```
+Without them the app still generates news, but **articles are not checked**: they are marked
+`needs_review` in `verification_report.csv`, the terminal shows a NEWS CHECKER UNAVAILABLE
+warning, and the pop-up after generation says how many articles were not checked.
+
 ## Run the tests
 Automated checks for moving candles, orders, news tags, settings, translations, session files and
 the data folder. They use a small invented dataset in a temporary folder, so they never touch real

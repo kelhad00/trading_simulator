@@ -69,6 +69,7 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
     report_path = os.path.join(dlt.data_path, 'verification_report.csv')
     total_verified = 0
     total_passed   = 0
+    total_unchecked = 0   # articles the news checker could not check
 
     for ticker, company_info in companies.items():
         company_sector = company_info['activity']
@@ -118,6 +119,7 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
             company_passed = sum(1 for r in v_results if not r.get('needs_review', not r['passed']))
             total_verified += len(v_results)
             total_passed   += company_passed
+            total_unchecked += sum(1 for r in v_results if r.get('model_label') in ('unavailable', 'error'))
             print(f"[VERIFY] {company_name} — {company_passed}/{len(v_results)} passed | report updated")
 
     flagged = total_verified - total_passed
@@ -136,10 +138,13 @@ def create_news_for_companies(companies, news_position, lang, provider="ollama",
     print(f"[NEWS] Total duration     : {duration_str}")
     print(f"[NEWS] ============================================")
 
-    if total_verified:
-        return {'total': total_verified, 'passed': total_passed, 'flagged': flagged}
+    if total_unchecked:
+        print(f"[VERIFY] WARNING: {total_unchecked} article(s) were NOT checked (news checker unavailable).")
 
-    return {'total': 0, 'passed': 0, 'flagged': 0}
+    if total_verified:
+        return {'total': total_verified, 'passed': total_passed, 'flagged': flagged, 'unchecked': total_unchecked}
+
+    return {'total': 0, 'passed': 0, 'flagged': 0, 'unchecked': 0}
 
 
 def get_news_position_manual(market_data, positive_dates, negative_dates):
@@ -651,7 +656,9 @@ def _write_checked_article(write, verify, label):
         print(f"[VERIFY]     {reason} check failed — rewriting (try {attempts + 1}/{MAX_ATTEMPTS})...")
 
     title, content, v = best
-    v = dict(v, attempts=attempts, needs_review=_needs_rewrite(v))
+    # Not checked at all (checker unavailable): never counted as passed
+    unchecked = v.get('model_label') in ('unavailable', 'error')
+    v = dict(v, attempts=attempts, needs_review=unchecked or _needs_rewrite(v))
     if v['needs_review']:
         print(f"[VERIFY]     still failing after {attempts} tries — kept and marked needs_review")
     return title, content, v

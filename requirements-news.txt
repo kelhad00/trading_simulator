@@ -1,0 +1,9 @@
+# Extra packages for GENERATING news (the FinBERT news checker), about 2 GB.
+# Not needed to run sessions. Install in the same Python environment as the app:
+#   python -m pip install -r requirements-news.txt
+-r requirements.txt
+transformers>=4.40
+torch>=2.0
+sentencepiece
+protobuf
+tiktoken

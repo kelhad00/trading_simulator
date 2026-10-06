@@ -573,11 +573,15 @@ def report_auto_news(_, job_id):
         total, passed, flagged = stats.get("total", 0), stats.get("passed", 0), stats.get("flagged", 0)
         message = (tl["news-ready-stats"].format(companies=job["companies"], passed=passed, total=total, flagged=flagged)
                    if total else tl["news-ready"].format(companies=job["companies"]))
+        unchecked = stats.get("unchecked", 0)
+        if unchecked:
+            message += " " + tl["news-unchecked"].format(n=unchecked)
         notification = dmc.Notification(
             id="notif-news-auto",
             title=tl["news"],
             action="show",
-            color="green" if not flagged else "orange",
+            color="green" if not flagged and not unchecked else "orange",
+            autoClose=False if unchecked else 4000,   # a warning stays until closed
             message=message,
         )
     return notification, True, None

@@ -180,11 +180,14 @@ def on_start_button_clicked(companies, provider, api_key, groq_key,
         total   = stats.get('total', 0)
         passed  = stats.get('passed', 0)
         flagged = stats.get('flagged', 0)
-        color   = "green" if flagged == 0 else "orange"
+        unchecked = stats.get('unchecked', 0)
+        color   = "green" if flagged == 0 and not unchecked else "orange"
         message = (
             tl["news-complete-stats"].format(passed=passed, total=total, flagged=flagged)
             if total > 0 else tl["news-complete"]
         )
+        if unchecked:
+            message += " " + tl["news-unchecked"].format(n=unchecked)
 
         status_msg = dmc.Text(message, color=color, size="sm")
         return dmc.Notification(
