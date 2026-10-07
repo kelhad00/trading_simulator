@@ -53,6 +53,23 @@ Without them the app still generates news, but **articles are not checked**: the
 `needs_review` in `verification_report.csv`, the terminal shows a NEWS CHECKER UNAVAILABLE
 warning, and the pop-up after generation says how many articles were not checked.
 
+## Working offline
+Sessions work without internet: the page styling and the icons are files in `trade/assets/`
+(`tailwind.css`, `icons.js`), not downloaded when a page opens. Only generating news (Groq, the
+first FinBERT download) and downloading market data need internet.
+
+If you add a new style class or icon to the code, rebuild the files (needs internet once).
+The tests (`tests/test_offline.py`) say what is missing.
+- Icons, from the `trading_simulator` folder:
+  ```powershell
+  .\trade\venv\Scripts\python.exe tools\fetch_icons.py
+  ```
+- Styling: download the Tailwind v3 standalone tool (`tailwindcss-windows-x64.exe`, from the
+  Tailwind CSS releases on GitHub), then from the `trading_simulator` folder:
+  ```powershell
+  .\tailwindcss-windows-x64.exe -c tools\tailwind\tailwind.config.js -i tools\tailwind\input.css -o trade\assets\tailwind.css --minify
+  ```
+
 ## Run the tests
 Automated checks for moving candles, orders, news tags, settings, translations, session files and
 the data folder. They use a small invented dataset in a temporary folder, so they never touch real

@@ -18,9 +18,10 @@ from trade.utils.market import get_start_timestamp, get_market_dataframe
 from trade.utils.news import get_news_dataframe
 from trade.utils.download import download_market_data
 
-external_scripts = [
-    {'src': 'https://cdn.tailwindcss.com'}
-]
+# No scripts from the internet: the app must work offline in the lab. The page
+# styling (Tailwind) and the icons are files in trade/assets/ (tailwind.css,
+# icons.js), loaded automatically by Dash. To rebuild them: README, "Working offline".
+external_scripts = []
 
 _anti_flash_script = """
 <script>
