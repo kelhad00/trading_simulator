@@ -98,7 +98,7 @@ def test_starting_a_session_writes_log_info_automatically(market_df, monkeypatch
 # a log column was renamed or removed: only do that on purpose, then update
 # the expected names here and raise LOG_FORMAT_VERSION in trade/utils/export.py.
 
-INTERFACE_COLUMNS = ["uuid", "market-timestamp", "host-timestamp", "cashflow", "selected-company",
+INTERFACE_COLUMNS = ["uuid", "session-id", "market-timestamp", "host-timestamp", "cashflow", "selected-company",
                      "form-action", "chart-type", "is_news_description_displayed", "news_title"]
 
 
@@ -116,7 +116,7 @@ def test_log_column_names_are_unchanged(export_folder):
 
     assert read_rows(export_folder / "interface-logs.csv")[0] == INTERFACE_COLUMNS
     assert read_rows(export_folder / "portfolio-logs.csv")[0] == [
-        "uuid", "AAA-shares", "BBB-shares", "AAA-totals", "BBB-totals"]
+        "uuid", "session-id", "AAA-shares", "BBB-shares", "AAA-totals", "BBB-totals"]
     assert read_rows(export_folder / "request-logs.csv")[0] == [
-        "uuid", "deleted-request", "request-1", "request-2"]
+        "uuid", "session-id", "deleted-request", "request-1", "request-2"]
     assert all(len(r) == len(INTERFACE_COLUMNS) for r in read_rows(export_folder / "interface-logs.csv"))

@@ -59,21 +59,23 @@ def sync_interval(update_time):
     State("company-selector", "value"),
     State("candle-step", "data"),
     State("steps-per-candle", "data"),
+    State("session-id", "data"),
     prevent_initial_call=True,
 )
-def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused, timestamp, cashflow, company, candle_step, steps_per_candle):
+def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused, timestamp, cashflow, company, candle_step, steps_per_candle,
+                 session_id=None):
     if not pause_clicks:
         # n_clicks reset to 0 on page remount — ignore to avoid spurious pause
         raise PreventUpdate
     when = market_time(timestamp, candle_step, steps_per_candle)
     if not currently_disabled:
         # Pausing — record when the pause started
-        log_session_event("session-pause", when, cashflow, company)
+        log_session_event("session-pause", when, cashflow, company, session_id)
         return True, time.time(), no_update, "Resume", DashIconify(icon="carbon:play")
     else:
         # Unpausing — accumulate the pause duration and clear the start time
         paused_for = time.time() - (pause_start or time.time())
-        log_session_event("session-resume", when, cashflow, company)
+        log_session_event("session-resume", when, cashflow, company, session_id)
         return False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
 
 
@@ -147,10 +149,11 @@ def track_graph_auto_follow(relayout_data, company):
     State('max-requests', 'data'),
     State('initial-cashflow', 'data'),
     State('companies', 'data'),
+    State('session-id', 'data'),
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
-                 update_time=None, max_requests=None, initial_cashflow=None, companies=None):
+                 update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     step, n_steps = normalize_step(candle_step, steps_per_candle)
@@ -161,7 +164,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         if session_start_time is None:
             # First tick of a new session — start the clock, skip end-condition check
             session_start_time = time.time()
-            log_session_event("session-start", market_time(timestamp, step, n_steps), cashflow, company)
+            log_session_event("session-start", market_time(timestamp, step, n_steps), cashflow, company, session_id)
             logger.info("Session started (%s min)", simulation_duration or dlt.simulation_duration)
             try:
                 # Automatic record of the code version and settings this session runs with
@@ -174,7 +177,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
                     "initial_cashflow": initial_cashflow or dlt.initial_money,
                     "first_market_timestamp": str(timestamp),
                     "companies": sorted(k for k, v in (companies or {}).items() if v.get("got_charts")),
-                })
+                }, session_id)
             except Exception as e:  # recording must never stop a session
                 logger.warning("Could not write log-info.json: %s", e)
         else:
@@ -186,7 +189,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
 
             if elapsed >= duration_secs or data_done:
                 logger.info("Session ended (%s)", "end of data" if data_done else "time is up")
-                log_session_event("session-finish", market_time(timestamp, step, n_steps), cashflow, company)
+                log_session_event("session-finish", market_time(timestamp, step, n_steps), cashflow, company, session_id)
                 return no_update, no_update, True, True, session_start_time, no_update
 
     # Moving candles: a tick moves the forming candle one step (15 -> 30 -> 45 min);
@@ -273,7 +276,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # (Only when advancing: while a candle is forming the timestamp stays put on purpose.)
         if advance and new_ts == timestamp:
             logger.info("Session ended (end of data at %s)", new_ts)
-            log_session_event("session-finish", market_time(new_ts, n_steps, n_steps), cashflow, company)
+            log_session_event("session-finish", market_time(new_ts, n_steps, n_steps), cashflow, company, session_id)
             return new_ts, fig, True, True, session_start_time, None
 
         logger.debug("ok new_ts=%s step=%s/%s", new_ts, new_step, n_steps)

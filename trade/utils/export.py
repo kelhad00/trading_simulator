@@ -60,6 +60,23 @@ def format_deleted_requests(deleted_request):
     return deleted_request
 
 
+def new_session_id():
+    """Name of a new session's log folder: date, time and a short random part,
+    e.g. 2026-10-07_10-15_a3f9 (sorts by date, unique even within one minute)."""
+    return f"{datetime.now():%Y-%m-%d_%H-%M}_{uuid4().hex[:4]}"
+
+
+def session_folder(session_id):
+    """Folder holding one session's logs: data/exports/<session id>.
+    Without a session id (older pages), the shared data/export folder as before."""
+    if session_id:
+        folder = os.path.join(dlt.data_path, 'exports', str(session_id))
+    else:
+        folder = os.path.join(dlt.data_path, 'export')
+    os.makedirs(folder, exist_ok=True)
+    return folder
+
+
 def export_data(
         timestamp,
         request_list,
@@ -72,7 +89,8 @@ def export_data(
         form_type,  # used to know if user is going to buy or sell
         deleted_request=None,
         trigger=None,
-        max_requests=dlt.max_requests
+        max_requests=dlt.max_requests,
+        session_id=None,
 ):
     """ Periodically save state of the trade into csv
     """
@@ -88,6 +106,7 @@ def export_data(
 
     df = pd.DataFrame({
         "uuid": [uuid],
+        "session-id": [session_id],
         "market-timestamp": [timestamp],
         "host-timestamp": [datetime.now().timestamp()],
         "cashflow": [cashflow],
@@ -98,29 +117,31 @@ def export_data(
         "news_title" : [news_title],
     })
 
-    portfolio_df = pd.DataFrame({"uuid": [uuid]})
+    portfolio_df = pd.DataFrame({"uuid": [uuid], "session-id": [session_id]})
     portfolio_df = portfolio_df.merge(shares, how='left', left_index=True, right_index=True)
     portfolio_df = portfolio_df.merge(totals, how='left', left_index=True, right_index=True)
 
-    request_df = pd.DataFrame({"uuid": [uuid], "deleted-request": [deleted_request]})
+    request_df = pd.DataFrame({"uuid": [uuid], "session-id": [session_id], "deleted-request": [deleted_request]})
     request_df = request_df.merge(requests, how='left', left_index=True, right_index=True)
 
-    # Save the header only once and append the rest
-    file_path = os.path.join(dlt.data_path, 'export', 'interface-logs.csv')
-    portfolio_path = os.path.join(dlt.data_path, 'export', 'portfolio-logs.csv')
-    request_path = os.path.join(dlt.data_path, 'export', 'request-logs.csv')
+    # Each session has its own folder, so participants' logs never mix
+    folder = session_folder(session_id)
+    file_path = os.path.join(folder, 'interface-logs.csv')
+    portfolio_path = os.path.join(folder, 'portfolio-logs.csv')
+    request_path = os.path.join(folder, 'request-logs.csv')
 
     save_df(df, file_path)
     save_df(portfolio_df, portfolio_path)
     save_df(request_df, request_path)
 
 
-def log_session_event(event, timestamp=None, cashflow=None, company_id=None):
+def log_session_event(event, timestamp=None, cashflow=None, company_id=None, session_id=None):
     """ Log a session lifecycle event (start/pause/resume/finish) into interface-logs.csv """
     uuid = str(uuid4())
 
     df = pd.DataFrame({
         "uuid": [uuid],
+        "session-id": [session_id],
         "market-timestamp": [timestamp],
         "host-timestamp": [datetime.now().timestamp()],
         "cashflow": [cashflow],
@@ -131,7 +152,7 @@ def log_session_event(event, timestamp=None, cashflow=None, company_id=None):
         "news_title": [None],
     })
 
-    file_path = os.path.join(dlt.data_path, 'export', 'interface-logs.csv')
+    file_path = os.path.join(session_folder(session_id), 'interface-logs.csv')
     save_df(df, file_path)
 
 
@@ -141,7 +162,7 @@ _LOG_LOCK = threading.Lock()
 
 # Bump only when the meaning of existing log columns changes (not for new columns:
 # those are added automatically by save_df).
-LOG_FORMAT_VERSION = 2
+LOG_FORMAT_VERSION = 3   # 3: one folder per session, session-id column
 
 
 def _as_text(df):
@@ -221,21 +242,22 @@ def _app_version():
     return "unknown"
 
 
-def write_log_info(settings):
+def write_log_info(settings, session_id=None):
     """Record, next to the logs, which code version and settings a session ran with.
 
-    Written automatically at each session start into export/log-info.json (one
-    entry per session start), and archived with the logs on reset.
+    Written automatically at each session start into log-info.json in the
+    session's folder (one entry per session start).
     """
-    path = os.path.join(dlt.data_path, 'export', 'log-info.json')
+    path = os.path.join(session_folder(session_id), 'log-info.json')
     with _LOG_LOCK:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
         try:
             with open(path, encoding="utf-8") as f:
                 info = json.load(f)
         except (OSError, ValueError):
             info = {}
         info["log_format_version"] = LOG_FORMAT_VERSION
+        if session_id:
+            info["session_id"] = session_id
         info.setdefault("sessions", []).append({
             "started_at": datetime.now().isoformat(timespec="seconds"),
             "tradesim_version": _app_version(),

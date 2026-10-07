@@ -110,6 +110,9 @@ app.layout = dmc.MantineProvider([
         # Moving candles: step reached by the candle at `timestamp` (1..steps-per-candle).
         # None = the candle is closed, e.g. at session start or after a reset.
         dcc.Store(id='candle-step', data=None, storage_type="session"),
+        # This tab's session: its logs go to data/exports/<session-id>/ (utils/export.py).
+        # Set when the dashboard opens; a new one after Reset or a session import.
+        dcc.Store(id='session-id', data=None, storage_type="session"),
         dcc.Store(id='requests', data=[], storage_type="session"),
         # Whether the market graph should auto-scroll to the live edge on each
         # update. Set to False when the user manually pans/zooms away, and

@@ -8,6 +8,7 @@ from dash.exceptions import PreventUpdate
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 from trade.utils.market import get_market_dataframe, get_start_timestamp
+from trade.utils.export import new_session_id
 from trade.utils.news import get_news_dataframe
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.logs import get_logger
@@ -59,6 +60,7 @@ if APP_MODE != 'runtime':
     Output('cost-basis', 'data', allow_duplicate=True),
     Output('nb_export', 'data'),
     Output('candle-step', 'data', allow_duplicate=True),
+    Output('session-id', 'data', allow_duplicate=True),
     Input('reset-button', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
@@ -76,7 +78,8 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars=No
     portfolio_value = {c: 0 for c, info in (companies_data or {}).items() if info.get('got_charts')}
 
     # candle-step None = the first candle is closed, like at session start
-    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, {}, nb_export + 1, None
+    # A new session ID: the next session's logs go to their own folder
+    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, {}, nb_export + 1, None, new_session_id()
 
 
 @callback(
@@ -95,6 +98,7 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars=No
     Output('total-paused-seconds', 'data', allow_duplicate=True),
     Output('nav-away-time', 'data', allow_duplicate=True),
     Output('candle-step', 'data', allow_duplicate=True),
+    Output('session-id', 'data', allow_duplicate=True),
     Input('reset-button-1', 'n_clicks'),
     State('initial-cashflow', 'data'),
     State("nb_export", "data"),
@@ -103,8 +107,8 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars=No
     prevent_initial_call=True,
 )
 def reset_modal(btn, initial_cashflow, nb_export, companies_data, initial_bars):
-    ts, cf, req, shares, totals, basis, nb, step = reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars)
-    return ts, cf, req, shares, totals, basis, nb, True, None, False, False, None, 0, None, step
+    ts, cf, req, shares, totals, basis, nb, step, session_id = reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars)
+    return ts, cf, req, shares, totals, basis, nb, True, None, False, False, None, 0, None, step, session_id
 
 
 @callback(

@@ -253,13 +253,16 @@ There are 3 files per session:
 
 Each line of each CSV contains a UUID to link the logs together.
 
-#### During the simulation
-When the simulation is running, the data is stored in the `data/export` folder.
+#### One folder per session
+Each session writes its logs directly into its own folder, `data/exports/<session id>/`, for
+example `data/exports/2026-10-07_10-15_a3f9/` (date, time and a short random part). A session
+gets its ID when the dashboard opens; Reset or importing a session starts a new one. Every log
+row has a `session-id` column, and `log-info.json` in the folder records the session ID, the
+TradeSim code version and the settings. So participants' logs never mix, even if Reset is
+forgotten or several participants use the same server.
 
-#### After the simulation
-Once the simulation is finished, the data is stored in the `data/exports` folder.
-Each session has its own folder and a unique ID.
-The session ID is incremented with each new session.
+Older sessions were first written to `data/export` and moved to a numbered folder
+(`data/exports/1`, `2`, ...) on Reset; those folders are kept as they are.
 
 ### Triggers
 The data is exported every time an action is performed by the user.
