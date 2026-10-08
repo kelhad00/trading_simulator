@@ -12,6 +12,9 @@ from trade.utils.candle_steps import (
 )
 from trade.utils.export import log_session_event, write_log_info
 from trade.utils.market import get_market_dataframe, get_last_timestamp, get_revenues_dataframe
+from trade.utils.news import get_news_dataframe
+from trade.utils.news_timing import appeared_count, now_position
+from trade.callbacks.dashboard.reminders import due_reminders
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
 from trade.utils.logs import get_logger
@@ -79,13 +82,8 @@ def toggle_pause(pause_clicks, currently_disabled, pause_start, total_paused, ti
         return False, None, (total_paused or 0) + paused_for, "Pause", DashIconify(icon="carbon:pause")
 
 
-@callback(
-    Output("timer", "children"),
-    Input("timestamp", "data"),
-    Input("candle-step", "data"),
-    State("steps-per-candle", "data"),
-)
-def cb_update_timestamp(timestamp, candle_step, steps_per_candle):
+def timer_label(timestamp, candle_step, steps_per_candle):
+    """Date shown above the chart (sent by update_graph, together with the chart)."""
     date = pd.to_datetime(timestamp).strftime("%Y-%m-%d")
     step, n_steps = normalize_step(candle_step, steps_per_candle)
     if n_steps == 1:
@@ -130,6 +128,13 @@ def track_graph_auto_follow(relayout_data, company):
     Output('modal', 'opened', allow_duplicate=True),
     Output('session-start-time', 'data'),
     Output('candle-step', 'data'),
+    # Sent together with the chart instead of as separate updates: every separate
+    # update makes the browser redraw the whole screen, which slows it down.
+    Output('timer', 'children'),
+    Output('news-clock', 'data'),
+    Output('revenue-year', 'data'),
+    Output('notifications', 'children', allow_duplicate=True),
+    Output('shown-reminders', 'data'),
     Input('periodic-updater', 'n_intervals'),
     Input('company-selector', 'value'),
     State('timestamp', 'data'),
@@ -150,10 +155,17 @@ def track_graph_auto_follow(relayout_data, company):
     State('initial-cashflow', 'data'),
     State('companies', 'data'),
     State('session-id', 'data'),
+    # Last values sent with the chart: only sent again when they change
+    State('news-clock', 'data'),
+    State('revenue-year', 'data'),
+    State('notif-offset', 'data'),
+    State('shown-reminders', 'data'),
+    State('reminders-enabled', 'data'),
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
-                 update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None):
+                 update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None,
+                 news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     step, n_steps = normalize_step(candle_step, steps_per_candle)
@@ -190,13 +202,29 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             if elapsed >= duration_secs or data_done:
                 logger.info("Session ended (%s)", "end of data" if data_done else "time is up")
                 log_session_event("session-finish", market_time(timestamp, step, n_steps), cashflow, company, session_id)
-                return no_update, no_update, True, True, session_start_time, no_update
+                return (no_update, no_update, True, True, session_start_time, no_update) + _NOTHING_ELSE
 
     # Moving candles: a tick moves the forming candle one step (15 -> 30 -> 45 min);
     # only once it has closed does the next candle start and the timestamp advance.
     # With 1 step per candle every tick advances, as before.
     advance = next_graph and step >= n_steps
     new_step = (1 if advance else step + 1) if next_graph else step
+
+    def sent_with_chart(ts, shown_step):
+        """Clock label, news clock, revenue year and time reminders for this moment."""
+        clock = _news_clock(ts, shown_step, n_steps, notif_offset, session_id)
+        year = pd.Timestamp(ts).year
+        popups, shown = no_update, no_update
+        if next_graph:
+            try:
+                popups, shown = due_reminders(session_start_time, simulation_duration, total_paused_seconds,
+                                              shown_reminders, reminders_enabled)
+            except PreventUpdate:
+                pass
+        return (timer_label(ts, shown_step, n_steps),
+                clock if clock != news_clock else no_update,
+                year if year != revenue_year else no_update,
+                popups, shown)
 
     def forming_candle(ts):
         # ts == timestamp while advancing = no next candle (end of data): stays closed
@@ -277,37 +305,51 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         if advance and new_ts == timestamp:
             logger.info("Session ended (end of data at %s)", new_ts)
             log_session_event("session-finish", market_time(new_ts, n_steps, n_steps), cashflow, company, session_id)
-            return new_ts, fig, True, True, session_start_time, None
+            return (new_ts, fig, True, True, session_start_time, None) + sent_with_chart(new_ts, n_steps)
 
         logger.debug("ok new_ts=%s step=%s/%s", new_ts, new_step, n_steps)
-        return new_ts, fig, no_update, no_update, session_start_time, (new_step if next_graph else no_update)
+        return ((new_ts, fig, no_update, no_update, session_start_time, (new_step if next_graph else no_update))
+                + sent_with_chart(new_ts, new_step))
 
     except Exception as e:
         logger.exception("Error in update_graph: %s", e)
-        return no_update, no_update, no_update, no_update, no_update, no_update
+        return (no_update,) * 6 + _NOTHING_ELSE
+
+
+# Nothing for the 5 values sent with the chart (timer ... shown-reminders)
+_NOTHING_ELSE = (no_update,) * 5
+
+
+def _news_clock(timestamp, step, n_steps, notif_offset, session_id):
+    """[session, articles appeared, articles appeared incl. the 'warn me early' days].
+    Changes only when a new article appears (or a new session starts), which is when
+    the news list and the news pop-ups need to look again."""
+    try:
+        news_df = get_news_dataframe()
+        index = get_market_dataframe().index
+        now = now_position(index, timestamp, step, n_steps)
+        ahead = now_position(index, timestamp, step, n_steps, candles_ahead=int(notif_offset or 0))
+        return [session_id, appeared_count(news_df, index, n_steps, now), appeared_count(news_df, index, n_steps, ahead)]
+    except Exception as e:
+        logger.debug("Could not count the news that appeared: %s", e)
+        return None
 
 
 @callback(
     Output('revenue-graph', 'figure'),
-    Input('periodic-updater', 'n_intervals'),
+    # A new simulated year (sent by update_graph): revenue data is yearly
+    Input('revenue-year', 'data'),
     Input('company-selector', 'value'),
     State('timestamp', 'data'),
     State("companies", "data"),
     Input('color-scheme-store', 'data'),
 )
-def update_revenue(n, company, timestamp, companies, color_scheme):
+def update_revenue(year, company, timestamp, companies, color_scheme):
     try:
         if companies[company]['activity'] == "Indice":
             return no_update
 
         ts = pd.to_datetime(timestamp)
-
-        # Revenue data is annual — only rebuild on periodic tick when a new year
-        # has just started in the simulation (first 7 days of January).
-        # The graph is always fully rebuilt when the user switches company.
-        if ctx.triggered_id == 'periodic-updater':
-            if not (ts.month == 1 and ts.day <= 7):
-                return no_update
 
         # get_revenues_dataframe() is cached — only reads disk when file changes
         df = get_revenues_dataframe()

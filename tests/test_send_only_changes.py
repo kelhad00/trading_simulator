@@ -1,8 +1,5 @@
 """Faster screen: on a tick where nothing changed, nothing is sent to the browser."""
-from types import SimpleNamespace
-
 import pytest
-from dash.exceptions import PreventUpdate
 
 import trade.callbacks.dashboard.news as news
 import trade.callbacks.dashboard.portfolio as portfolio
@@ -29,18 +26,8 @@ def test_news_list_is_drawn_when_the_page_opens(fake_data):
     assert table is not news.no_update
 
 
-@pytest.mark.parametrize("show", [portfolio.display_portfolio_updated, portfolio.display_portfolio_table_updated])
-def test_portfolio_ignores_the_timer_alone(show, monkeypatch):
-    monkeypatch.setattr(portfolio, "ctx", SimpleNamespace(triggered_id="periodic-updater"))
-    args = {portfolio.display_portfolio_updated: (1, {"AAA": 0.0}, 100_000, [], 100_000),
-            portfolio.display_portfolio_table_updated: (1, {"AAA": 0.0}, {"AAA": 0}, "AAA", {}, {})}[show]
-    with pytest.raises(PreventUpdate):
-        show(*args)
-
-
-def test_portfolio_redraws_when_its_values_change(monkeypatch):
-    monkeypatch.setattr(portfolio, "ctx", SimpleNamespace(triggered_id="portfolio-totals"))
-    cash, investment = portfolio.display_portfolio_updated(1, {"AAA": 500.0}, 100_000, [], 100_000)
+def test_portfolio_redraws_when_its_values_change():
+    cash, investment = portfolio.display_portfolio_updated({"AAA": 500.0}, 100_000, [], 100_000)
     assert "100500" in str(investment)
 
 

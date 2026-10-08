@@ -315,12 +315,15 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
 
 def _fingerprint(data):
     """Comparable text form of a dict of numbers. NaN counts as empty, because the
-    browser receives NaN as empty (null); numpy numbers count as plain numbers."""
+    browser receives NaN as empty (null); numpy numbers count as plain numbers, and
+    whole numbers equal their decimal form (the browser sends 0 back for 0.0)."""
     def plain(v):
         if isinstance(v, dict):
             return {k: plain(x) for k, x in v.items()}
         v = v.item() if hasattr(v, "item") else v
-        return None if isinstance(v, float) and v != v else v
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            return v
+        return None if v != v else float(v)
     return json.dumps(plain(data), sort_keys=True, default=str)
 
 

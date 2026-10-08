@@ -170,6 +170,11 @@ app.layout = dmc.MantineProvider([
         # Time reminder tracking — keys of reminders already shown this session
         dcc.Store(id="shown-reminders", data=[], storage_type="session"),
 
+        # Sent with the chart, only when they change: wake the news list / news pop-ups
+        # (a new article appeared) and the revenue chart (a new year), not every tick
+        dcc.Store(id="news-clock", data=None, storage_type="memory"),
+        dcc.Store(id="revenue-year", data=None, storage_type="memory"),
+
         # Trigger for hard browser redirect after session ends
         dcc.Store(id="do-redirect", data=False, storage_type="memory"),
 

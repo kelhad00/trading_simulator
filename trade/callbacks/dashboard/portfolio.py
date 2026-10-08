@@ -16,16 +16,13 @@ def _colored_amount(value, reference):
 @callback(
     Output('portfolio-cashflow', 'children'),
     Output('portfolio-investment', 'children'),
-    Input('periodic-updater', 'n_intervals'),
+    # Not woken by the timer: values only change through these inputs
     Input('portfolio-totals', 'data'),
     Input('cashflow', 'data'),
     Input('requests', 'data'),
     State('initial-cashflow', 'data'),
 )
-def display_portfolio_updated(n, totals, cashflow, requests, initial_cashflow):
-    # The timer alone changes nothing here: values change through the other inputs
-    if ctx.triggered_id == 'periodic-updater':
-        raise PreventUpdate
+def display_portfolio_updated(totals, cashflow, requests, initial_cashflow):
     totals = pd.Series(totals)
     # Funds reserved for pending buy requests are still the user's money — they haven't
     # bought anything yet — so they must be added back or investment looks like a loss.
@@ -37,14 +34,14 @@ def display_portfolio_updated(n, totals, cashflow, requests, initial_cashflow):
 
 @callback(
     Output("portfolio-table-container", "children"),
-    Input('periodic-updater', 'n_intervals'),
+    # Not woken by the timer: the table only changes through these inputs
     Input('portfolio-totals', 'data'),
     Input('portfolio-shares', 'data'),
     Input('company-selector', 'value'),
     State('cost-basis', 'data'),
     State('sold-data', 'data'),
 )
-def display_portfolio_table_updated(n, totals, shares, selected_company, cost_basis, sold_data):
+def display_portfolio_table_updated(totals, shares, selected_company, cost_basis, sold_data):
     """
     Display the updated portfolio table
     Args:
@@ -53,10 +50,6 @@ def display_portfolio_table_updated(n, totals, shares, selected_company, cost_ba
     Returns:
         The updated portfolio table
     """
-    # The timer alone changes nothing here: the table changes through the other inputs
-    if ctx.triggered_id == 'periodic-updater':
-        raise PreventUpdate
-
     lang = page_registry.get('lang', 'fr')
     cost_basis = dict(cost_basis or {})
     sold_data = dict(sold_data or {})

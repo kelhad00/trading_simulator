@@ -16,7 +16,7 @@ FOURTEEN_MIN_AGO = time.time() - 14 * 60      # in a 15-minute session: 1 minute
 
 
 def fire(enabled):
-    return reminders.fire_time_reminders(1, "ts", FOURTEEN_MIN_AGO, 15, 0, [], enabled)
+    return reminders.due_reminders(FOURTEEN_MIN_AGO, 15, 0, [], enabled)
 
 
 def test_reminders_appear_when_switched_on():

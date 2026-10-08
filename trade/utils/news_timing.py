@@ -11,6 +11,7 @@ was generated) and appears at a step inside that candle, never earlier:
 
 A position is (candle number, step); positions are compared like dates.
 """
+import bisect
 import math
 import zlib
 
@@ -75,3 +76,19 @@ def now_position(market_index, timestamp, candle_step, steps_per_candle, candles
 def visible(positions, now):
     """Which articles have appeared by `now` (boolean Series)."""
     return positions.map(lambda p: tuple(p) <= tuple(now))
+
+
+_sorted_cache = {}
+
+
+def appeared_count(news_df, market_index, steps_per_candle, now):
+    """How many articles have appeared by `now`. It only changes when a new article
+    appears (or the news file changes), so the news list and news pop-ups are only
+    woken then instead of on every tick."""
+    _, n_steps = normalize(None, steps_per_candle)
+    key = (id(news_df), len(news_df), id(market_index), len(market_index), n_steps)
+    if key not in _sorted_cache:
+        _sorted_cache.clear()
+        title_column = "title" if "title" in news_df.columns else "article"
+        _sorted_cache[key] = sorted(article_positions(news_df, market_index, n_steps, title_column))
+    return bisect.bisect_right(_sorted_cache[key], tuple(now))

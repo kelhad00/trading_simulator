@@ -61,13 +61,14 @@ logger = get_logger("news")
 @callback(
     Output('news-table', 'children'),
     Output('news-table-key', 'data'),
-    # Recomputed exactly when the session moves (date or 15-min step), not on the timer
-    Input('timestamp', 'data'),
-    Input('candle-step', 'data'),
+    State('timestamp', 'data'),
+    State('candle-step', 'data'),
     State('news-table-key', 'data'),
     State('steps-per-candle', 'data'),
+    # Woken only when a new article appears (see update_graph), not on every tick
+    Input('news-clock', 'data'),
 )
-def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, range=50):
+def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, news_clock=None, range=50):
     try:
         # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()
@@ -218,19 +219,21 @@ def view_company_from_description(n_clicks, company_key):
 @callback(
     Output('notifications', 'children', allow_duplicate=True),
     Output('last-notified-ts', 'data'),
-    # Same moment as the news list: when the session moves (date or 15-min step)
-    Input('timestamp', 'data'),
-    Input('candle-step', 'data'),
+    State('timestamp', 'data'),
+    State('candle-step', 'data'),
     State('last-notified-ts', 'data'),
     State('companies', 'data'),
     State('notif-filter', 'data'),
     State('notif-offset', 'data'),
     State('notif-enabled', 'data'),
     State('steps-per-candle', 'data'),
-    prevent_initial_call=True,
+    # Woken only when a new article appears (see update_graph), not on every tick.
+    # Also when the page opens, to note where the session is: articles after that pop up.
+    Input('news-clock', 'data'),
+    prevent_initial_call='initial_duplicate',
 )
 def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, notif_offset, notif_enabled,
-                    steps_per_candle=1):
+                    steps_per_candle=1, news_clock=None):
     if timestamp is None:
         raise PreventUpdate
 

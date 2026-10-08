@@ -1,7 +1,7 @@
 import time
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, page_registry
+from dash import page_registry
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
@@ -19,19 +19,10 @@ _REMINDERS = [
 ]
 
 
-@callback(
-    Output('notifications', 'children', allow_duplicate=True),
-    Output('shown-reminders', 'data'),
-    Input('periodic-updater', 'n_intervals'),
-    Input('timestamp', 'data'),
-    State('session-start-time', 'data'),
-    State('simulation-duration', 'data'),
-    State('total-paused-seconds', 'data'),
-    State('shown-reminders', 'data'),
-    State('reminders-enabled', 'data'),
-    prevent_initial_call=True,
-)
-def fire_time_reminders(n, timestamp, session_start, sim_duration, total_paused, shown, reminders_enabled=True):
+def due_reminders(session_start, sim_duration, total_paused, shown, reminders_enabled=True):
+    """Reminders to show now, and the updated list of reminders already shown.
+    Called on every tick by update_graph (graph.py), together with the chart,
+    so the reminders don't cost the screen a separate update."""
     # Switched off in Settings -> News -> Notifications
     if session_start is None or reminders_enabled is False:
         raise PreventUpdate
