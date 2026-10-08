@@ -49,12 +49,16 @@ def sync_notif_settings(enabled, filter_val, offset_val):
     return is_enabled, filter_val or [], int(offset_val or 0)
 
 
+# The reminders switch and its saved value. Showing reads the saved value as a
+# State (it isn't woken by it): if it were, showing and saving would wake each
+# other in a circle, and Dash shows a "Circular Dependencies" error.
 @callback(
     Output("reminders-enabled-input", "checked"),
-    Input("reminders-enabled", "data"),
+    Input("settings-tabs", "value"),
+    State("reminders-enabled", "data"),
 )
-def show_reminders_setting(enabled):
-    return enabled if enabled is not None else True
+def show_reminders_setting(tab, saved):
+    return saved if saved is not None else True
 
 
 @callback(

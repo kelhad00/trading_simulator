@@ -35,9 +35,9 @@ def test_reminders_are_on_when_nothing_is_saved_yet():
 
 
 def test_switch_always_shows_the_saved_setting():
-    assert news_settings.show_reminders_setting(False) is False
-    assert news_settings.show_reminders_setting(True) is True
-    assert news_settings.show_reminders_setting(None) is True        # default: on
+    assert news_settings.show_reminders_setting("news", False) is False
+    assert news_settings.show_reminders_setting("news", True) is True
+    assert news_settings.show_reminders_setting("news", None) is True        # default: on
 
 
 def test_flipping_the_switch_saves_the_setting():

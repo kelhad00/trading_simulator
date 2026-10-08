@@ -7,13 +7,16 @@ from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 
 
+# The dark mode switch and its saved value. Showing reads the saved value as a
+# State (it isn't woken by it): if it were, showing and saving would wake each
+# other in a circle, and Dash shows a "Circular Dependencies" error.
 @callback(
     Output("color-enabled-input", "checked"),
     Input("settings-tabs", "value"),
-    Input("color-enabled", "data"),
+    State("color-enabled", "data"),
 )
-def set_color_enabled_default(tabs, color_enabled):
-    return color_enabled if color_enabled is not None else True
+def show_color_setting(tab, saved):
+    return saved if saved is not None else True
 
 
 @callback(
@@ -21,8 +24,8 @@ def set_color_enabled_default(tabs, color_enabled):
     Input("color-enabled-input", "checked"),
     prevent_initial_call=True,
 )
-def sync_color_enabled(enabled):
-    return bool(enabled) if enabled is not None else True
+def save_color_setting(checked):
+    return bool(checked) if checked is not None else True
 
 
 @callback(
