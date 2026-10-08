@@ -132,25 +132,32 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
     all_labels = [str(i) for i in dataframe.dropna(subset=['Open', 'High', 'Low', 'Close']).index]
     x_labels = [str(i) for i in plot_df.index]
 
+    # Moving averages: always plain lines. Without mode='lines', Plotly adds a
+    # marker on every point while a line has fewer than 20 points, so the
+    # markers showed at the start of a session and vanished at candle 20.
+
     # creating the plot the short moving average
     short_mov_av = go.Scatter(
         x=x_labels,
         y=plot_df['short_MA'],
-        name='shortMA'
+        name='shortMA',
+        mode='lines',
     )
 
     # creating the plot the long moving average
     long_mov_av = go.Scatter(
         x=x_labels,
         y=plot_df['long_MA'],
-        name='longMA'
+        name='longMA',
+        mode='lines',
     )
 
     # creating the plot the 200 moving average
     twohun_mov_av = go.Scatter(
         x=x_labels,
         y=plot_df['200_MA'],
-        name='twohunMA'
+        name='twohunMA',
+        mode='lines',
     )
 
     # creating the plot the candlestick plot
