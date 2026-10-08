@@ -3,18 +3,18 @@ import json
 import pandas as pd
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, no_update, page_registry, ALL, ctx, html, clientside_callback
+from dash import Output, Input, State, callback, no_update, ALL, ctx, html, clientside_callback
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from trade.defaults import defaults as dlt
-from trade.locales import translations as tls
+from trade.locales import translations as tls, language
 from trade.components.table import create_table_delete
 from trade.utils.market import get_price_dataframe
 from trade.utils.candle_steps import current_price, step_price_range
 
 
-def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests):
+def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests, lang=None):
     """
     Add a request to the list of requests.
     Args:
@@ -33,20 +33,20 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
 
     # If the user has too many requests
     if len(req) == max_requests:
-        return True, tls[page_registry.get('lang', 'fr')]["err-too-many-requests"]
+        return True, tls[language(lang)]["err-too-many-requests"]
 
     # If the form isn't filled correctly
     if price == 0:
-        return True, tls[page_registry.get('lang', 'fr')]["err-wrong-form"]
+        return True, tls[language(lang)]["err-wrong-form"]
 
     # If the request is to buy and the user doesn't have enough money
     if action == 'buy' and cash < share * price:
-        return True, tls[page_registry.get('lang', 'fr')]["err-enough-money"]
+        return True, tls[language(lang)]["err-enough-money"]
 
     # If the request is to sell and the user doesn't have enough shares
     port_shares = pd.DataFrame.from_dict(port_shares, orient='index', columns=['Shares'])
     if action == 'sell' and share > port_shares['Shares'].loc[company]:
-        return True, tls[page_registry.get('lang', 'fr')]["err-enough-shares"].format(company)
+        return True, tls[language(lang)]["err-enough-shares"].format(company)
 
     # Add the request to the list if no error
     req.append({
@@ -153,9 +153,10 @@ def update_share_preview(pct, price, action, cash, port_shares, company):
     State('portfolio-shares', 'data'),
     State("requests", "data"),
     State("max-requests", "data"),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call=True,
 )
-def process_submit_button(btn, company, action, price, pct, cash, timestamp, port_shares, req, max_requests):
+def process_submit_button(btn, company, action, price, pct, cash, timestamp, port_shares, req, max_requests, lang=None):
     if btn is None or btn == 0:
         raise PreventUpdate
 
@@ -170,11 +171,11 @@ def process_submit_button(btn, company, action, price, pct, cash, timestamp, por
     else:
         share = max(1, int((cash * pct / 100) // price)) if price > 0 else 1
 
-    error, message = add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests)
+    error, message = add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests, lang)
 
     if error is True:
         return no_update, dmc.Notification(
-            title=tls[page_registry.get('lang', 'fr')]["notifications"]["error"],
+            title=tls[language(lang)]["notifications"]["error"],
             id="simple-notify",
             action="show",
             color="red",
@@ -336,7 +337,7 @@ def _fingerprint(data):
     prevent_initial_call='initial_duplicate'
 )
 def cb_display_requests(req, lang, port_shares, cashflow):
-    lang = lang or page_registry.get('lang', 'fr')
+    lang = language(lang)
     t = tls[lang]
     choices = t['request-action']['choices']
     port_shares = port_shares or {}

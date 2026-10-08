@@ -1,4 +1,4 @@
-from dash import callback, clientside_callback, Output, Input, State, page_registry, ALL, no_update, ctx, html
+from dash import callback, clientside_callback, Output, Input, State, ALL, no_update, ctx, html
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -49,7 +49,7 @@ clientside_callback(
     prevent_initial_call=False,
 )
 
-from trade.locales import translations as tls
+from trade.locales import translations as tls, language
 from trade.utils.news import get_news_dataframe
 from trade.utils.market import get_market_dataframe
 from trade.utils.news_timing import article_positions, now_position, visible
@@ -67,8 +67,9 @@ logger = get_logger("news")
     State('steps-per-candle', 'data'),
     # Woken only when a new article appears (see update_graph), not on every tick
     Input('news-clock', 'data'),
+    State("url", "search"),     # ?lang=en in this participant's address
 )
-def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, news_clock=None, range=50):
+def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, news_clock=None, lang=None, range=50):
     try:
         # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()
@@ -76,7 +77,7 @@ def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_
         logger.warning("Could not load news.csv: %s", e)
         raise PreventUpdate
 
-    lang = page_registry.get('lang', 'fr')
+    lang = language(lang)
 
     # Normalise column name: support both 'title' and 'article'
     if 'title' in news_df.columns:
@@ -154,10 +155,11 @@ def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_
 
     State('news-table', 'children'),
     State('companies', 'data'),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call=True,
 )
-def toggle_news_display_type(n, cell_clicked, table, companies):
-    lang = page_registry.get('lang', 'fr')
+def toggle_news_display_type(n, cell_clicked, table, companies, lang=None):
+    lang = language(lang)
     published_label = tls[lang].get('news-published', 'Published:')
 
     if ctx.triggered_id == 'back-to-news-list':
@@ -230,10 +232,11 @@ def view_company_from_description(n_clicks, company_key):
     # Woken only when a new article appears (see update_graph), not on every tick.
     # Also when the page opens, to note where the session is: articles after that pop up.
     Input('news-clock', 'data'),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call='initial_duplicate',
 )
 def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, notif_offset, notif_enabled,
-                    steps_per_candle=1, news_clock=None):
+                    steps_per_candle=1, news_clock=None, lang=None):
     if timestamp is None:
         raise PreventUpdate
 
@@ -272,7 +275,7 @@ def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, 
         if new_articles.empty:
             return no_update, list(now)
 
-        lang = page_registry.get('lang', 'en')
+        lang = language(lang)
         view_label = tls[lang].get('news-notif-view', 'View')
 
         notifications = []
@@ -343,15 +346,16 @@ def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, 
     Output('description-ticker', 'data', allow_duplicate=True),
     Input({"type": "news-view-btn", "index": ALL}, "n_clicks"),
     State('companies', 'data'),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call=True,
 )
-def view_article_from_news_notif(clicks, companies):
+def view_article_from_news_notif(clicks, companies, lang=None):
     if not any(clicks):
         raise PreventUpdate
     article_title = ctx.triggered_id['index']
     try:
         news_df = get_news_dataframe()
-        lang = page_registry.get('lang', 'fr')
+        lang = language(lang)
         published_label = tls[lang].get('news-published', 'Published:')
         article = news_df.loc[news_df['title'] == article_title]
         if article.empty:

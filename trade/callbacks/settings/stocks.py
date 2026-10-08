@@ -1,9 +1,9 @@
-from dash import callback, Input, Output, State, ALL, MATCH, no_update, html, page_registry
+from dash import callback, Input, Output, State, ALL, MATCH, no_update, html
 import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
 
 from trade.components.list import stock_list_element
-from trade.locales import translations as tls
+from trade.locales import translations as tls, language
 from trade.utils.settings.create_market_data import delete_generated_data, get_generated_data
 from trade.defaults import defaults as dlt
 
@@ -78,9 +78,10 @@ def add_company_and_activity(n, stock, company, activity, description, companies
 @callback(
     Output("list-companies", "children"),
     Input("companies", "data"),
-    Input("settings-tabs", "value")
+    Input("settings-tabs", "value"),
+    State("url", "search"),     # ?lang=en in this participant's address
 )
-def display_companies(companies, tabs):
+def display_companies(companies, tabs, lang=None):
     """
     Display the list of companies in the stocks tab
     Args:
@@ -89,7 +90,7 @@ def display_companies(companies, tabs):
     Returns:
         list of companies displayed
     """
-    lang = page_registry.get("lang", "fr")
+    lang = language(lang)
     return [
         stock_list_element(stock, company["label"], lang,
                            activity=company.get("activity", ""),
@@ -266,9 +267,10 @@ def _make_company_chip(ticker, label):
     Output("active-companies-count", "children"),
     Input("companies", "data"),
     Input("settings-tabs", "value"),
+    State("url", "search"),     # ?lang=en in this participant's address
 )
-def update_active_companies_ui(companies, tabs):
-    lang = page_registry.get("lang", "fr")
+def update_active_companies_ui(companies, tabs, lang=None):
+    lang = language(lang)
     tl = tls[lang]["settings"]["advanced"]["active"]
 
     active = {k: v for k, v in companies.items() if v.get("got_charts")}
@@ -304,13 +306,14 @@ def add_active_company(ticker, companies):
     Output("notifications", "children", allow_duplicate=True),
     Input({"type": "remove-active-company", "index": ALL}, "n_clicks"),
     State("companies", "data"),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call=True,
 )
-def remove_active_company(clicks, companies):
+def remove_active_company(clicks, companies, lang=None):
     if not clicks or not any(clicks):
         raise PreventUpdate
 
-    lang = page_registry.get("lang", "fr")
+    lang = language(lang)
     tl = tls[lang]["settings"]["advanced"]["active"]
 
     active = [k for k, v in companies.items() if v.get("got_charts")]
@@ -390,9 +393,10 @@ def enter_edit_mode(n):
     State({"type": "edit-activity-input", "index": ALL}, "value"),
     State({"type": "edit-description-input", "index": ALL}, "value"),
     State("companies", "data"),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call=True,
 )
-def save_company_label(clicks, new_labels, new_activities, new_descriptions, companies):
+def save_company_label(clicks, new_labels, new_activities, new_descriptions, companies, lang=None):
     """
     Persist the edited company label, activity, and description to the companies store.
     After this callback updates the store, display_companies re-renders the list.
@@ -409,7 +413,7 @@ def save_company_label(clicks, new_labels, new_activities, new_descriptions, com
     new_activity    = new_activities[index]   if index < len(new_activities)   else None
     new_description = new_descriptions[index] if index < len(new_descriptions) else None
 
-    lang = page_registry.get("lang", "fr")
+    lang = language(lang)
     tl = tls[lang]["settings"]["tickers"]["notification"]
 
     if not new_label or not new_label.strip():

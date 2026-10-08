@@ -1,12 +1,11 @@
 import time
 
 import dash_mantine_components as dmc
-from dash import page_registry
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from trade.defaults import defaults as dlt
-from trade.locales import translations as tls
+from trade.locales import translations as tls, language
 
 # Message text is in locales: notifications -> "reminder-<key>"
 _REMINDERS = [
@@ -19,7 +18,7 @@ _REMINDERS = [
 ]
 
 
-def due_reminders(session_start, sim_duration, total_paused, shown, reminders_enabled=True):
+def due_reminders(session_start, sim_duration, total_paused, shown, reminders_enabled=True, lang=None):
     """Reminders to show now, and the updated list of reminders already shown.
     Called on every tick by update_graph (graph.py), together with the chart,
     so the reminders don't cost the screen a separate update."""
@@ -31,7 +30,7 @@ def due_reminders(session_start, sim_duration, total_paused, shown, reminders_en
     duration_secs = (sim_duration or dlt.simulation_duration) * 60
     shown = list(shown or [])
 
-    tl = tls[page_registry.get('lang', 'fr')]["notifications"]
+    tl = tls[language(lang)]["notifications"]
     new_notifications = []
     for condition, key, color in _REMINDERS:
         if key not in shown and condition(elapsed, duration_secs):

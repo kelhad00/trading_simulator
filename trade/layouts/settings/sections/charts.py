@@ -1,4 +1,4 @@
-from dash import html, dcc, page_registry
+from dash import html, dcc
 import dash_mantine_components as dmc
 
 from trade.components.modal import modal
@@ -70,7 +70,7 @@ def generate_charts_modal(lang="fr"):
                         className="w-full"
                     ),
                     html.Div(
-                        timeline('timeline', 2),
+                        timeline('timeline', 2, lang),
                         id="timeline-radio-section",
                     ),
                 ]),
@@ -119,8 +119,7 @@ def generate_charts_modal(lang="fr"):
 
 
 
-def timeline_item(id, index, title, lang=None):
-    lang = lang or page_registry["lang"]
+def timeline_item(id, index, title, lang="fr"):
     tl = tls[lang]["settings"]["charts"]
     label = tl["radio"]["label"]
     option_values = tl["radio"]["options"]
@@ -176,9 +175,8 @@ def timeline_item(id, index, title, lang=None):
 
 
 
-def timeline(id, nb=5):
+def timeline(id, nb=5, lang="fr"):
     def format_title(i):
-        lang = page_registry["lang"]
         title = tls[lang]["settings"]["charts"]["radio"]["title"]
         return f"{ordinal(i, lang)} {title}"
 
@@ -192,7 +190,8 @@ def timeline(id, nb=5):
             *[timeline_item(
                 id=id,
                 index=i,
-                title=format_title(i)
+                title=format_title(i),
+                lang=lang,
             ) for i in range(1, nb + 1)],
         ]
     )

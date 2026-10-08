@@ -8,7 +8,6 @@ import threading
 import pandas as pd
 from datetime import datetime
 import os
-from dash import page_registry
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
@@ -45,8 +44,8 @@ def format_requests_dataframe(request_list, max_requests):
 
 
 def format_charts_type(chart_type):
-    lang = page_registry.get('lang', 'fr')
-    if chart_type == tls[lang]['tab-market']:
+    # The tab's name in any language: the log never depends on a language setting
+    if chart_type in {tls[lang]['tab-market'] for lang in tls}:
         return "market"
     else:
         return "revenue"

@@ -1,4 +1,4 @@
-from dash import callback, Output, Input, State, page_registry, html, dcc, ALL
+from dash import callback, Output, Input, State, html, dcc, ALL
 import pandas as pd
 import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
@@ -11,7 +11,7 @@ from trade.defaults import defaults as dlt
 import os
 import plotly.graph_objects as go
 
-from trade.locales import translations as tls
+from trade.locales import translations as tls, language
 from trade.utils.logs import get_logger
 
 logger = get_logger("revenues")
@@ -43,9 +43,10 @@ def select_all_companies(n, companies):
     Input("modal-revenues", "opened"),
     Input("select-companies-revenues", "value"),
     State("color-scheme-store", "data"),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call="initial_duplicate",
 )
-def display_revenues(tabs, modal, companies, color_scheme):
+def display_revenues(tabs, modal, companies, color_scheme, lang=None):
     """
     Display the revenues
     Args:
@@ -71,16 +72,16 @@ def display_revenues(tabs, modal, companies, color_scheme):
             # Create the graph
             fig = go.Figure(data=[
                 go.Bar(
-                    name=tls[page_registry["lang"]]["revenue-graph"]['totalRevenue'],
+                    name=tls[language(lang)]["revenue-graph"]['totalRevenue'],
                     x=df['asOfDate'], y=df['TotalRevenue']
                 ),
                 go.Bar(
-                    name=tls[page_registry["lang"]]["revenue-graph"]['netIncome'],
+                    name=tls[language(lang)]["revenue-graph"]['netIncome'],
                     x=df['asOfDate'], y=df['NetIncome']
                 )
             ])
             fig.update_layout(
-                title=tls[page_registry.get("lang", "fr")]["notifications"]["revenues-for"].format(company=company),
+                title=tls[language(lang)]["notifications"]["revenues-for"].format(company=company),
                 template='plotly_dark' if color_scheme == 'dark' else 'plotly_white',
             )
             children.append(
@@ -157,8 +158,9 @@ def select_all_companies_modal(n, companies):
     Output("modal-input-container-revenues", "children"),
     Input("modal-select-companies-revenues", "value"),
     Input("modal-radio-mode-revenues", "value"),
+    State("url", "search"),     # ?lang=en in this participant's address
 )
-def update_revenues_inputs(companies, mode):
+def update_revenues_inputs(companies, mode, lang=None):
     """
     Update the revenues inputs
     Args:
@@ -211,7 +213,7 @@ def update_revenues_inputs(companies, mode):
 
         # Display an input for revenue and net income for each year for each company
         # defaults values are the data in revenues_list and net_incomes_list
-        tl = tls[page_registry["lang"]]["settings"]["revenues"]["select"]
+        tl = tls[language(lang)]["settings"]["revenues"]["select"]
         children.append(
             html.Div(
                 children=[

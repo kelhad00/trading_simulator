@@ -2,7 +2,7 @@ import os
 import threading
 
 import dash_mantine_components as dmc
-from dash import Output, Input, State, callback, clientside_callback, html, page_registry, ctx, no_update
+from dash import Output, Input, State, callback, clientside_callback, html, ctx, no_update
 from dash.exceptions import PreventUpdate
 
 from trade.defaults import defaults as dlt

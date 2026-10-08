@@ -1,8 +1,8 @@
-from dash import Output, Input, State, callback, page_registry, ctx, html, ALL, no_update
+from dash import Output, Input, State, callback, ctx, html, ALL, no_update
 import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
 
-from trade.locales import translations as tls
+from trade.locales import translations as tls, language
 
 import pandas as pd
 
@@ -40,8 +40,9 @@ def display_portfolio_updated(totals, cashflow, requests, initial_cashflow):
     Input('company-selector', 'value'),
     State('cost-basis', 'data'),
     State('sold-data', 'data'),
+    State("url", "search"),     # ?lang=en in this participant's address
 )
-def display_portfolio_table_updated(totals, shares, selected_company, cost_basis, sold_data):
+def display_portfolio_table_updated(totals, shares, selected_company, cost_basis, sold_data, lang=None):
     """
     Display the updated portfolio table
     Args:
@@ -50,7 +51,7 @@ def display_portfolio_table_updated(totals, shares, selected_company, cost_basis
     Returns:
         The updated portfolio table
     """
-    lang = page_registry.get('lang', 'fr')
+    lang = language(lang)
     cost_basis = dict(cost_basis or {})
     sold_data = dict(sold_data or {})
     cols = tls[lang]['portfolio-columns']

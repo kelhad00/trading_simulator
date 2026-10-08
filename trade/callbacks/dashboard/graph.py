@@ -1,6 +1,6 @@
 import time
 
-from dash import Output, Input, State, callback, page_registry, ctx, no_update
+from dash import Output, Input, State, callback, ctx, no_update
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import pandas as pd
@@ -15,7 +15,7 @@ from trade.utils.market import get_market_dataframe, get_last_timestamp, get_rev
 from trade.utils.news import get_news_dataframe
 from trade.utils.news_timing import appeared_count, now_position
 from trade.callbacks.dashboard.reminders import due_reminders
-from trade.locales import translations as tls
+from trade.locales import translations as tls, language
 from trade.defaults import defaults as dlt
 from trade.utils.logs import get_logger
 
@@ -161,11 +161,12 @@ def track_graph_auto_follow(relayout_data, company):
     State('notif-offset', 'data'),
     State('shown-reminders', 'data'),
     State('reminders-enabled', 'data'),
+    State("url", "search"),     # ?lang=en in this participant's address
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
                  update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None,
-                 news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True):
+                 news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True, lang=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     step, n_steps = normalize_step(candle_step, steps_per_candle)
@@ -218,7 +219,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         if next_graph:
             try:
                 popups, shown = due_reminders(session_start_time, simulation_duration, total_paused_seconds,
-                                              shown_reminders, reminders_enabled)
+                                              shown_reminders, reminders_enabled, lang)
             except PreventUpdate:
                 pass
         return (timer_label(ts, shown_step, n_steps),
@@ -280,7 +281,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             )
 
         fig.for_each_trace(
-            lambda t: t.update(name=tls[page_registry.get("lang", "fr")]["market-graph"]['legend'][t.name])
+            lambda t: t.update(name=tls[language(lang)]["market-graph"]['legend'][t.name])
         )
 
         for req in (requests or []):
@@ -343,8 +344,9 @@ def _news_clock(timestamp, step, n_steps, notif_offset, session_id):
     State('timestamp', 'data'),
     State("companies", "data"),
     Input('color-scheme-store', 'data'),
+    State("url", "search"),     # ?lang=en in this participant's address
 )
-def update_revenue(year, company, timestamp, companies, color_scheme):
+def update_revenue(year, company, timestamp, companies, color_scheme, lang=None):
     try:
         if companies[company]['activity'] == "Indice":
             return no_update
@@ -364,11 +366,11 @@ def update_revenue(year, company, timestamp, companies, color_scheme):
 
         fig = go.Figure(data=[
             go.Bar(
-                name=tls[page_registry.get("lang", "fr")]["revenue-graph"]['totalRevenue'],
+                name=tls[language(lang)]["revenue-graph"]['totalRevenue'],
                 x=df['asOfDate'], y=df['TotalRevenue']
             ),
             go.Bar(
-                name=tls[page_registry.get("lang", "fr")]["revenue-graph"]['netIncome'],
+                name=tls[language(lang)]["revenue-graph"]['netIncome'],
                 x=df['asOfDate'], y=df['NetIncome']
             )
         ])
@@ -393,8 +395,8 @@ def update_revenue(year, company, timestamp, companies, color_scheme):
     Input('segmented', "value")
 )
 def toggle_graph_type(value):
-    lang = page_registry.get('lang', 'fr')
-    if value == tls[lang]['tab-market']:
+    # The tab's name in any language: no need to know the participant's language
+    if value in {tls[lang]['tab-market'] for lang in tls}:
         return {'display': 'none'}, {'display': 'block'}
     else:
         return {'display': 'block'}, {'display': 'none'}

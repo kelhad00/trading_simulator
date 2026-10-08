@@ -23,7 +23,6 @@ if os.getenv('APP_MODE') == 'config':
 
 
 def layout(lang="fr", **kwargs):
-    dash.page_registry['lang'] = lang
     return main_layout(lang)
 
 
