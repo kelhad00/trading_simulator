@@ -72,3 +72,11 @@ def test_reset_starts_a_new_session(fake_data, monkeypatch):
     second = reset.reset_data(1, 100_000, 0, {}, None)[-1]
     assert first and second and first != second
     assert reset.reset_modal(1, 100_000, 0, {}, None)[-1] not in (first, second)
+
+
+def test_reset_empties_buy_and_sell_history(fake_data, monkeypatch):
+    # Px Achat and Px Vente must go back to "-" after a reset
+    monkeypatch.setattr(reset, "_archive_exports", lambda *a, **k: None)
+    for result in (reset.reset_data(1, 100_000, 0, {}, None), reset.reset_modal(1, 100_000, 0, {}, None)):
+        assert result[5] == {}   # cost-basis (Px Achat)
+        assert result[6] == {}   # sold-data (Px Vente)

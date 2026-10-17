@@ -58,6 +58,7 @@ if APP_MODE != 'runtime':
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
     Output('cost-basis', 'data', allow_duplicate=True),
+    Output('sold-data', 'data', allow_duplicate=True),
     Output('nb_export', 'data'),
     Output('candle-step', 'data', allow_duplicate=True),
     Output('session-id', 'data', allow_duplicate=True),
@@ -79,7 +80,8 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars=No
 
     # candle-step None = the first candle is closed, like at session start
     # A new session ID: the next session's logs go to their own folder
-    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, {}, nb_export + 1, None, new_session_id()
+    # Both buy (cost-basis) and sell (sold-data) history are emptied, so Px Achat and Px Vente show "-"
+    return timestamp, initial_cashflow, [], portfolio_value, portfolio_value, {}, {}, nb_export + 1, None, new_session_id()
 
 
 @callback(
@@ -89,6 +91,7 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars=No
     Output('portfolio-shares', 'data', allow_duplicate=True),
     Output('portfolio-totals', 'data', allow_duplicate=True),
     Output('cost-basis', 'data', allow_duplicate=True),
+    Output('sold-data', 'data', allow_duplicate=True),
     Output('nb_export', 'data', allow_duplicate=True),
     Output('do-redirect', 'data'),
     Output('session-start-time', 'data', allow_duplicate=True),
@@ -107,8 +110,8 @@ def reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars=No
     prevent_initial_call=True,
 )
 def reset_modal(btn, initial_cashflow, nb_export, companies_data, initial_bars):
-    ts, cf, req, shares, totals, basis, nb, step, session_id = reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars)
-    return ts, cf, req, shares, totals, basis, nb, True, None, False, False, None, 0, None, step, session_id
+    ts, cf, req, shares, totals, basis, sold, nb, step, session_id = reset_data(btn, initial_cashflow, nb_export, companies_data, initial_bars)
+    return ts, cf, req, shares, totals, basis, sold, nb, True, None, False, False, None, 0, None, step, session_id
 
 
 @callback(
