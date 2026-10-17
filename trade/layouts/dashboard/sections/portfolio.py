@@ -2,6 +2,7 @@ from dash import html
 import dash_mantine_components as dmc
 
 from trade.locales import translations as tls
+from trade.layouts.dashboard.sections.leaderboard import leaderboard
 
 def portfolio(lang="fr"):
     return html.Div([
@@ -10,6 +11,8 @@ def portfolio(lang="fr"):
             portfolio_section(tls[lang]['portfolio-investment'], "portfolio-investment"),
         ], className="flex gap-2 justify-between flex-wrap"),
         portfolio_table(lang),
+        # Only shown when switched on in Settings; the table above then gets shorter
+        leaderboard(lang),
     ], className="col-span-2 row-span-3 flex flex-col gap-2 h-full w-full")
 
 

@@ -3,6 +3,7 @@ import dash_mantine_components as dmc
 from dash.exceptions import PreventUpdate
 
 from trade.locales import translations as tls, language
+from trade.utils.leaderboard import total_assets
 
 import pandas as pd
 
@@ -23,11 +24,10 @@ def _colored_amount(value, reference):
     State('initial-cashflow', 'data'),
 )
 def display_portfolio_updated(totals, cashflow, requests, initial_cashflow):
-    totals = pd.Series(totals)
     # Funds reserved for pending buy requests are still the user's money — they haven't
-    # bought anything yet — so they must be added back or investment looks like a loss.
-    reserved = sum(r['shares'] * r['price'] for r in (requests or []) if r['action'] == 'buy')
-    investment = cashflow + reserved + totals.sum()
+    # bought anything yet — so total_assets adds them back or investment looks like a loss.
+    # The leaderboard ranks the participant by this same total.
+    investment = total_assets(cashflow, totals, requests)
     ref = initial_cashflow or 0
     return _colored_amount(cashflow, ref), _colored_amount(investment, ref)
 

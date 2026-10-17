@@ -5,7 +5,7 @@ import zipfile
 from datetime import datetime
 
 
-def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None, notif_enabled=None, color_enabled=None, steps_per_candle=None, initial_bars=None, reminders_enabled=None, news_tags_enabled=None):
+def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None, notif_enabled=None, color_enabled=None, steps_per_candle=None, initial_bars=None, reminders_enabled=None, news_tags_enabled=None, leaderboard_enabled=None):
     """Package stores + CSV files into an in-memory ZIP and return the bytes."""
     from trade.defaults import defaults as dlt
     buf = io.BytesIO()
@@ -27,6 +27,7 @@ def build_session_zip(companies, initial_cashflow, max_requests, update_time, da
                 "initial-bars": initial_bars if initial_bars is not None else dlt.initial_reveal_bars,
                 "reminders-enabled": reminders_enabled if reminders_enabled is not None else True,
                 "news-tags-enabled": news_tags_enabled if news_tags_enabled is not None else True,
+                "leaderboard-enabled": bool(leaderboard_enabled),
             }
         }
         zf.writestr("session.json", json.dumps(payload, ensure_ascii=False, indent=2))
@@ -79,4 +80,6 @@ def extract_session_zip(zip_bytes, data_path):
         "reminders-enabled": stores.get("reminders-enabled", True),
         # Sessions saved before this switch existed: news tags shown, as before
         "news-tags-enabled": stores.get("news-tags-enabled", True),
+        # Sessions saved before the leaderboard existed: no leaderboard, as before
+        "leaderboard-enabled": stores.get("leaderboard-enabled", False),
     }

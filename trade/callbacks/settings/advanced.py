@@ -28,6 +28,25 @@ def save_color_setting(checked):
     return bool(checked) if checked is not None else True
 
 
+# The leaderboard switch, same as the dark mode switch above (off by default)
+@callback(
+    Output("leaderboard-enabled-input", "checked"),
+    Input("settings-tabs", "value"),
+    State("leaderboard-enabled", "data"),
+)
+def show_leaderboard_setting(tab, saved):
+    return bool(saved)
+
+
+@callback(
+    Output("leaderboard-enabled", "data"),
+    Input("leaderboard-enabled-input", "checked"),
+    prevent_initial_call=True,
+)
+def save_leaderboard_setting(checked):
+    return bool(checked)
+
+
 @callback(
     Output("input-update-time", "value"),
     Output("input-max-requests", "value"),

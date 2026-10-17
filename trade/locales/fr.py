@@ -6,6 +6,17 @@ translation = {
         "portfolio-cashflow": "Trésorie",
         "portfolio-investment": "Investissement total",
 
+        # Classement (sous le portefeuille, Paramètres -> Avancé -> Affichage)
+        "leaderboard": {
+            "title": "Classement",
+            "rank": "Rang",
+            "name": "Trader",
+            "assets": "Actifs totaux",
+            "you": "Vous",
+            "my-rank": "Mon rang : {rank} / {total} — {assets}",
+            "unavailable": "Le classement n'est pas disponible pour cette session",
+        },
+
         # Company graph
         "tab-market": "Analyse Technique",
         "tab-revenue": "Revenus",
@@ -402,6 +413,7 @@ translation = {
                 },
                 "display": {
                     "color-label": "Mode sombre pour la simulation",
+                    "leaderboard-label": "Afficher le classement (participant contre 20 traders robots)",
                 },
             },
         },

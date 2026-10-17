@@ -22,9 +22,10 @@ from trade.utils.session import build_session_zip
     State("initial-bars", "data"),
     State("reminders-enabled", "data"),
     State("news-tags-enabled", "data"),
+    State("leaderboard-enabled", "data"),
     prevent_initial_call=True,
 )
-def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size, color_scheme, notif_enabled, color_enabled, steps_per_candle, initial_bars, reminders_enabled, news_tags_enabled=None):
+def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size, color_scheme, notif_enabled, color_enabled, steps_per_candle, initial_bars, reminders_enabled, news_tags_enabled=None, leaderboard_enabled=None):
     from dash import no_update
     if not n_clicks:
         return no_update
@@ -42,6 +43,7 @@ def export_session(n_clicks, companies, initial_cashflow, max_requests, update_t
         initial_bars=initial_bars,
         reminders_enabled=reminders_enabled,
         news_tags_enabled=news_tags_enabled,
+        leaderboard_enabled=leaderboard_enabled,
         data_path=dlt.data_path,
     )
     return {

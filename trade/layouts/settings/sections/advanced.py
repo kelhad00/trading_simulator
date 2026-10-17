@@ -15,6 +15,11 @@ def advanced_settings(lang="fr"):
                 label=tl["display"]["color-label"],
                 checked=False,
             ),
+            dmc.Switch(
+                id="leaderboard-enabled-input",
+                label=tl["display"]["leaderboard-label"],
+                checked=False,
+            ),
         ]),
         section(tl["subtitles"]["active"], [
             dmc.Select(

@@ -29,6 +29,17 @@ translation = {
         "portfolio-cashflow": "Cashflow: ",
         "portfolio-investment": "Total investment: ",
 
+        # Leaderboard (under the portfolio, Settings -> Advanced -> Display)
+        "leaderboard": {
+            "title": "Leaderboard",
+            "rank": "Rank",
+            "name": "Trader",
+            "assets": "Total assets",
+            "you": "You",
+            "my-rank": "My rank: {rank} / {total} — {assets}",
+            "unavailable": "Ranking is not available for this session",
+        },
+
         # Company graph
         "tab-market": "Technical Analysis",
         "tab-revenue": "Revenue",
@@ -389,6 +400,7 @@ translation = {
                 },
                 "display": {
                     "color-label": "Dark mode for the simulation",
+                    "leaderboard-label": "Show the leaderboard (participant vs 20 robot traders)",
                 },
             },
         },
