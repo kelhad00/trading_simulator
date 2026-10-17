@@ -14,6 +14,10 @@ _TAG_COLORS = {
     "strong negative": "red",
 }
 
+# Notification colour when the tags are switched off: the same for every news,
+# so the colour doesn't give the sentiment away
+_NO_TAG_COLOR = "blue"
+
 
 def _news_tag(raw_label):
     """One of the 5 tags; "no positive", "no negative", empty or unknown become neutral."""
@@ -24,6 +28,11 @@ def _news_tag(raw_label):
 def _tag_direction(tag):
     """positive / negative / neutral, as used by the notification filter."""
     return tag.split()[-1] if tag != "neutral" else "neutral"
+
+
+def _notification_color(raw_label, show_tags):
+    """The tag's colour, or the same colour for every news when the tags are switched off."""
+    return _NO_TAG_COLOR if show_tags is False else _TAG_COLORS[_news_tag(raw_label)]
 
 _FONT_SIZES = {'S': '0.75rem', 'M': '0.9375rem', 'L': '1.125rem'}
 
@@ -68,8 +77,10 @@ logger = get_logger("news")
     # Woken only when a new article appears (see update_graph), not on every tick
     Input('news-clock', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
+    State('news-tags-enabled', 'data'),
 )
-def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, news_clock=None, lang=None, range=50):
+def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, news_clock=None, lang=None,
+                         show_tags=True, range=50):
     try:
         # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()
@@ -78,6 +89,7 @@ def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_
         raise PreventUpdate
 
     lang = language(lang)
+    show_tags = show_tags is not False      # nothing saved yet: tags on, as before
 
     # Normalise column name: support both 'title' and 'article'
     if 'title' in news_df.columns:
@@ -103,7 +115,7 @@ def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_
 
     # Only send the list when it changed (new news, or another language): it is
     # checked every tick, but most ticks bring no new news.
-    key = [lang] + [[str(d), str(a)] for d, a in zip(nl['date'], nl['article'])]
+    key = [lang, show_tags] + [[str(d), str(a)] for d, a in zip(nl['date'], nl['article'])]
     if key == shown_key:
         return no_update, no_update
 
@@ -120,14 +132,19 @@ def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_
         article_text = str(getattr(row, 'article', ''))
         date_text = str(row.date)[:10]
 
-        # Every headline gets one of the 5 tags; badge and text share its colour
-        tag = _news_tag(getattr(row, 'sentiment_label', None) if has_label else None)
-        color = _TAG_COLORS[tag]
-        badge = dmc.Badge(tag, color=color, size="xs", variant="light",
-                          style={"marginRight": "6px", "verticalAlign": "middle"})
+        # Every headline gets one of the 5 tags; badge and text share its colour.
+        # Tags switched off: plain text, so the participant has to read the news.
+        if show_tags:
+            tag = _news_tag(getattr(row, 'sentiment_label', None) if has_label else None)
+            color = _TAG_COLORS[tag]
+            badge = dmc.Badge(tag, color=color, size="xs", variant="light",
+                              style={"marginRight": "6px", "verticalAlign": "middle"})
+            article_cell = html.Td([badge, article_text], style={"color": color})
+        else:
+            article_cell = html.Td(article_text)
 
         cells = [
-            html.Td([badge, article_text], style={"color": color}),
+            article_cell,
             html.Td(date_text, style={"whiteSpace": "nowrap", "color": "gray", "fontSize": "0.75rem"}),
         ]
 
@@ -233,10 +250,11 @@ def view_company_from_description(n_clicks, company_key):
     # Also when the page opens, to note where the session is: articles after that pop up.
     Input('news-clock', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
+    State('news-tags-enabled', 'data'),
     prevent_initial_call='initial_duplicate',
 )
 def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, notif_offset, notif_enabled,
-                    steps_per_candle=1, news_clock=None, lang=None):
+                    steps_per_candle=1, news_clock=None, lang=None, show_tags=True):
     if timestamp is None:
         raise PreventUpdate
 
@@ -297,8 +315,8 @@ def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, 
                             company_label = val.get('label', ticker)
                             break
 
-            # Same tag and colour as in the news list
-            color = _TAG_COLORS[_news_tag(row.get('sentiment_label'))]
+            # Same tag and colour as in the news list (one colour for all when tags are off)
+            color = _notification_color(row.get('sentiment_label'), show_tags)
             short_headline = headline[:110] + "…" if len(headline) > 110 else headline
             styled_headline = html.Span(short_headline, style={"color": color})
 

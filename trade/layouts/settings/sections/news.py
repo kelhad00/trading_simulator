@@ -232,6 +232,11 @@ def news_settings(lang="fr"):
                 label=tl["notifications"]["reminders-label"],
                 checked=True,
             ),
+            dmc.Switch(
+                id="news-tags-enabled-input",
+                label=tl["notifications"]["news-tags-label"],
+                checked=True,
+            ),
         ]),
 
         dcc.Loading(

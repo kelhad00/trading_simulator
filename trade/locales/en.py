@@ -264,6 +264,7 @@ translation = {
                 "notifications": {
                     "enabled-label": "Show news notifications",
                     "reminders-label": "Show time reminders during the session (e.g. 5 minutes remaining)",
+                    "news-tags-label": "Show sentiment tags and colours on news",
                     "filter-label": "Show notifications for",
                     "filter-positive": "Positive news",
                     "filter-negative": "Negative news",

@@ -158,6 +158,8 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="notif-enabled", data=True, storage_type="local"),
         # Time reminders during a session ("5 minutes remaining"...), Settings -> News
         dcc.Store(id="reminders-enabled", data=True, storage_type="local"),
+        # Sentiment tags and colours on the news, Settings -> News. Off: participants must read the news
+        dcc.Store(id="news-tags-enabled", data=True, storage_type="local"),
         dcc.Store(id="color-enabled", data=False, storage_type="local"),
         dcc.Store(id="notif-filter", data=["positive", "negative", "neutral"], storage_type="local"),
         dcc.Store(id="notif-offset", data=0, storage_type="local"),

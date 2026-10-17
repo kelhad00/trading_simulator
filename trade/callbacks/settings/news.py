@@ -70,6 +70,25 @@ def save_reminders_setting(checked):
     return bool(checked) if checked is not None else True
 
 
+# The news tags switch, same as the reminders switch above
+@callback(
+    Output("news-tags-enabled-input", "checked"),
+    Input("settings-tabs", "value"),
+    State("news-tags-enabled", "data"),
+)
+def show_news_tags_setting(tab, saved):
+    return saved if saved is not None else True
+
+
+@callback(
+    Output("news-tags-enabled", "data"),
+    Input("news-tags-enabled-input", "checked"),
+    prevent_initial_call=True,
+)
+def save_news_tags_setting(checked):
+    return bool(checked) if checked is not None else True
+
+
 @callback(
     Output("notif-filter-input", "style"),
     Output("notif-offset-input", "style"),
