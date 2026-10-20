@@ -34,8 +34,10 @@ def _money(value):
     State('initial-cashflow', 'data'),
     State('companies', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
+    State('commission-fee', 'data'),
 )
-def update_leaderboard(timestamp, totals, cashflow, requests, enabled, initial_bars, initial_cashflow, companies, lang=None):
+def update_leaderboard(timestamp, totals, cashflow, requests, enabled, initial_bars, initial_cashflow, companies, lang=None,
+                       fee_pct=0):
     if not enabled:
         return _HIDDEN, None
 
@@ -45,7 +47,7 @@ def update_leaderboard(timestamp, totals, cashflow, requests, enabled, initial_b
         return _SHOWN, dmc.Text(t['unavailable'], size="sm", color="dimmed")
 
     start = get_start_timestamp(market_df, initial_bars)
-    robots = robots_at(market_df, timestamp, start, initial_cashflow or dlt.initial_money, companies)
+    robots = robots_at(market_df, timestamp, start, initial_cashflow or dlt.initial_money, companies, fee_pct)
     if not robots:
         logger.debug("No robot values at %s (session start %s)", timestamp, start)
         return _SHOWN, dmc.Text(t['unavailable'], size="sm", color="dimmed")

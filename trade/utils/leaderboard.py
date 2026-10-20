@@ -9,6 +9,8 @@ same robots.
 import numpy as np
 import pandas as pd
 
+from trade.utils.fees import rate, reserved
+
 ROBOTS = 20
 SEED = 2024
 YOU = "You"
@@ -20,18 +22,21 @@ _cache: dict = {}
 def total_assets(cashflow, totals, requests):
     """The participant's total: cash + money reserved for waiting buy orders + shares' value.
 
-    Reserved money is still the participant's: nothing has been bought with it yet.
+    Reserved money (fee included) is still the participant's: nothing has been
+    bought with it yet, and a fee is only paid when an order is executed.
     """
-    reserved = sum(r['shares'] * r['price'] for r in (requests or []) if r['action'] == 'buy')
+    put_aside = sum(reserved(r) for r in (requests or []))
     shares_value = sum(v for v in (totals or {}).values() if v is not None and not pd.isna(v))
-    return (cashflow or 0) + reserved + shares_value
+    return (cashflow or 0) + put_aside + shares_value
 
 
-def robot_assets(prices, start_pos, initial_money, n=ROBOTS, seed=SEED):
+def robot_assets(prices, start_pos, initial_money, n=ROBOTS, seed=SEED, fee_pct=0):
     """Each robot's total assets, one row per candle from `start_pos` on.
 
     `prices`: Close prices, one column per company. A company without a price at
     the start is not bought; a company whose data stops keeps its last price.
+    `fee_pct`: the commission fee, paid by the robots on their one purchase, like
+    the participant.
     """
     prices = prices.ffill()
     start = prices.iloc[start_pos]
@@ -45,12 +50,13 @@ def robot_assets(prices, start_pos, initial_money, n=ROBOTS, seed=SEED):
         # Small alpha: most robots bet mostly on one or two companies, so they differ
         weights = rng.dirichlet(np.full(len(tradable), 0.5)) if tradable else np.array([])
         invested = initial_money * (1 - cash_part) if tradable else 0
-        shares = invested * weights / start[tradable].to_numpy() if tradable else weights
+        # `invested` pays for the shares and their fee
+        shares = invested * weights / (start[tradable].to_numpy() * (1 + rate(fee_pct))) if tradable else weights
         values[f"Trader {i}"] = (initial_money - invested) + (future @ shares if tradable else 0)
     return pd.DataFrame(values, index=prices.index[start_pos:])
 
 
-def robots_at(market_df, timestamp, start_timestamp, initial_money, companies=None):
+def robots_at(market_df, timestamp, start_timestamp, initial_money, companies=None, fee_pct=0):
     """{robot name: total assets} at `timestamp`, or {} when it can't be worked out."""
     try:
         prices = market_df.xs('Close', axis=1, level=1)
@@ -65,10 +71,10 @@ def robots_at(market_df, timestamp, start_timestamp, initial_money, companies=No
     if row < 0:
         return {}
 
-    key = (id(market_df), start_pos, initial_money, tuple(prices.columns))
+    key = (id(market_df), start_pos, initial_money, tuple(prices.columns), rate(fee_pct))
     if _cache.get('key') != key:
         _cache.update(key=key, market_df=market_df,    # kept so id() stays this dataframe's
-                      robots=robot_assets(prices, start_pos, initial_money))
+                      robots=robot_assets(prices, start_pos, initial_money, fee_pct=fee_pct))
     robots = _cache['robots']
     return robots.iloc[min(row, len(robots) - 1)].to_dict()
 

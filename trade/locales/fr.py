@@ -387,6 +387,8 @@ translation = {
                     "initial-bars-help": "Bougies passées visibles avant le début du trading (100 par défaut).",
                     "requests": "Requêtes max",
                     "cashflow": "Trésorie initiale",
+                    "commission-fee": "Frais de commission (%)",
+                    "commission-fee-help": "Payés à chaque achat et vente exécutés. Exemple : 0,05 → acheter 100€ coûte 100,05€, vendre 100€ rapporte 99,95€. 0 = sans frais.",
                     "simulation-duration": "Durée de la session (minutes)",
                 },
                 "candle-steps": {

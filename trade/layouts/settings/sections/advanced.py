@@ -80,6 +80,16 @@ def advanced_settings(lang="fr"):
                     min=1,
                 ),
                 dmc.NumberInput(
+                    id="input-commission-fee",
+                    label=tl["input"]["commission-fee"],
+                    description=tl["input"]["commission-fee-help"],
+                    required=True,
+                    min=0,
+                    max=dlt.max_commission_fee,
+                    step=0.01,
+                    precision=3,
+                ),
+                dmc.NumberInput(
                     id="input-simulation-duration",
                     label=tl["input"]["simulation-duration"],
                     required=True,

@@ -374,6 +374,8 @@ translation = {
                     "initial-bars-help": "Past candles the participant sees before trading starts (default 100).",
                     "requests": "Max requests",
                     "cashflow": "Initial cashflow",
+                    "commission-fee": "Commission fee (%)",
+                    "commission-fee-help": "Paid on every executed buy and sell. Example: 0.05 → buying 100€ costs 100.05€, selling 100€ brings 99.95€. 0 = no fee.",
                     "simulation-duration": "Session duration (minutes)",
                 },
                 "candle-steps": {

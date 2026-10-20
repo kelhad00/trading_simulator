@@ -140,6 +140,8 @@ app.layout = dmc.MantineProvider([
         # part of the same session.zip, so they need the same "local" persistence to
         # survive a closed/reopened browser tab (sessionStorage does not).
         dcc.Store(id="initial-cashflow", data=dlt.initial_money, storage_type="local"),
+        # Commission fee in %, paid on every executed buy and sell (Settings -> Advanced)
+        dcc.Store(id="commission-fee", data=dlt.commission_fee, storage_type="local"),
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="local"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="local"),
         dcc.Store(id="steps-per-candle", data=dlt.steps_per_candle, storage_type="local"),

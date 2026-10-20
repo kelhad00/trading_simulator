@@ -162,11 +162,13 @@ def track_graph_auto_follow(relayout_data, company):
     State('shown-reminders', 'data'),
     State('reminders-enabled', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
+    State('commission-fee', 'data'),    # only recorded in log-info.json
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
                  update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None,
-                 news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True, lang=None):
+                 news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True, lang=None,
+                 commission_fee=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     step, n_steps = normalize_step(candle_step, steps_per_candle)
@@ -188,6 +190,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
                     "history_candles_at_start": int(initial_bars or dlt.initial_reveal_bars),
                     "max_requests": max_requests or dlt.max_requests,
                     "initial_cashflow": initial_cashflow or dlt.initial_money,
+                    "commission_fee_pct": commission_fee if commission_fee is not None else dlt.commission_fee,
                     "first_market_timestamp": str(timestamp),
                     "companies": sorted(k for k, v in (companies or {}).items() if v.get("got_charts")),
                 }, session_id)

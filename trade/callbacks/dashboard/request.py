@@ -12,9 +12,11 @@ from trade.locales import translations as tls, language
 from trade.components.table import create_table_delete
 from trade.utils.market import get_price_dataframe
 from trade.utils.candle_steps import current_price, step_price_range
+from trade.utils.fees import buy_cost, sell_proceeds, max_buy_shares, reserved
 
 
-def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests, lang=None):
+def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests, lang=None,
+                fee_pct=0):
     """
     Add a request to the list of requests.
     Args:
@@ -26,6 +28,7 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
         cash: the money of the user
         timestamp: the current timestamp
         port_shares: the shares of the user
+        fee_pct: the commission fee in percent, remembered by the request
     Returns:
         boolean: is error ?
         msg: the error message or the updated list of requests
@@ -39,8 +42,8 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
     if price == 0:
         return True, tls[language(lang)]["err-wrong-form"]
 
-    # If the request is to buy and the user doesn't have enough money
-    if action == 'buy' and cash < share * price:
+    # If the request is to buy and the user doesn't have enough money (fee included)
+    if action == 'buy' and cash < buy_cost(share, price, fee_pct):
         return True, tls[language(lang)]["err-enough-money"]
 
     # If the request is to sell and the user doesn't have enough shares
@@ -53,7 +56,8 @@ def add_request(req, company, action, price, share, cash, timestamp, port_shares
         'action': action,
         'shares': share,
         'company': company,
-        'price': price
+        'price': price,
+        'fee': float(fee_pct or 0),
     })
     return False, req
 
@@ -111,9 +115,10 @@ def fill_market_price(n_clicks, company, timestamp, candle_step, steps_per_candl
     Input('cashflow', 'data'),
     Input('portfolio-shares', 'data'),
     State('company-selector', 'value'),
+    State('commission-fee', 'data'),
     prevent_initial_call=False,
 )
-def update_share_preview(pct, price, action, cash, port_shares, company):
+def update_share_preview(pct, price, action, cash, port_shares, company, fee_pct=0):
     pct = pct or 10
     price = float(price or 0)
     cash = float(cash or 0)
@@ -127,7 +132,7 @@ def update_share_preview(pct, price, action, cash, port_shares, company):
     else:
         if price > 0:
             amount = cash * pct / 100
-            shares = int(amount // price)
+            shares = max_buy_shares(amount, price, fee_pct)     # price + fee fit in the amount
             badge = f"{pct}% — {shares} share(s)"
             preview = f"≈€{amount:,.0f} · {shares} share(s)"
         else:
@@ -154,9 +159,11 @@ def update_share_preview(pct, price, action, cash, port_shares, company):
     State("requests", "data"),
     State("max-requests", "data"),
     State("url", "search"),     # ?lang=en in this participant's address
+    State('commission-fee', 'data'),
     prevent_initial_call=True,
 )
-def process_submit_button(btn, company, action, price, pct, cash, timestamp, port_shares, req, max_requests, lang=None):
+def process_submit_button(btn, company, action, price, pct, cash, timestamp, port_shares, req, max_requests, lang=None,
+                          fee_pct=0):
     if btn is None or btn == 0:
         raise PreventUpdate
 
@@ -169,9 +176,10 @@ def process_submit_button(btn, company, action, price, pct, cash, timestamp, por
         held = int(_port.at[company, 'Shares']) if company in _port.index else 0
         share = max(1, int(held * pct / 100))
     else:
-        share = max(1, int((cash * pct / 100) // price)) if price > 0 else 1
+        share = max(1, max_buy_shares(cash * pct / 100, price, fee_pct)) if price > 0 else 1
 
-    error, message = add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests, lang)
+    error, message = add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests, lang,
+                                 fee_pct)
 
     if error is True:
         return no_update, dmc.Notification(
@@ -187,7 +195,8 @@ def process_submit_button(btn, company, action, price, pct, cash, timestamp, por
         req = message
 
     if action == 'buy':
-        cash -= share * price
+        # Price and fee are put aside now, so the cash can never go below 0
+        cash -= reserved(req[-1])
 
     return req, no_update, cash
 
@@ -258,9 +267,12 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
             # difference between what was reserved (at the limit price) and what was
             # really spent.
             fill_price = min(req['price'], price_now(req['company']))
+            fee = req.get('fee', 0)
             port_shares.loc[req['company']] += req['shares']
-            cost_basis[req['company']] = cost_basis.get(req['company'], 0) + req['shares'] * fill_price
-            cashflow += req['shares'] * (req['price'] - fill_price)
+            # The fee is part of what the shares cost (Px Achat and PnL include it)
+            cost = buy_cost(req['shares'], fill_price, fee)
+            cost_basis[req['company']] = cost_basis.get(req['company'], 0) + cost
+            cashflow += reserved(req) - cost
             request_list.remove(req)
 
         # Same as above for the sell request
@@ -274,7 +286,8 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
                 # Because the total price will be updated in the portfolio callback
                 held_before = port_shares.at[req['company'], 'Shares']
                 port_shares.loc[req['company']] -= req["shares"]
-                cashflow += req['shares'] * fill_price
+                # The fee is taken from the money received
+                cashflow += sell_proceeds(req['shares'], fill_price, req.get('fee', 0))
                 if held_before > 0:
                     avg = cost_basis.get(req['company'], 0) / held_before
                     cost_basis[req['company']] = cost_basis.get(req['company'], 0) - req['shares'] * avg
@@ -360,10 +373,10 @@ def cb_display_requests(req, lang, port_shares, cashflow):
                 max_shares = int(port_shares.get(r['company'], 0)) or None
             else:
                 price = r.get('price', 0)
-                # This row's own funds are already reserved out of cashflow — add them
-                # back to see what's really available for it.
-                available = cashflow + r.get('shares', 0) * price
-                max_shares = int(available // price) if price > 0 else None
+                # This row's own funds (fee included) are already reserved out of
+                # cashflow — add them back to see what's really available for it.
+                available = cashflow + reserved(r)
+                max_shares = max_buy_shares(available, price, r.get('fee', 0)) if price > 0 else None
 
             rows.append(html.Tr([
                 html.Td(r['company'], style={"verticalAlign": "middle", "fontSize": "13px"}),
@@ -446,7 +459,8 @@ def edit_request_values(prices, shares, actions, requests, port_shares, cashflow
         old_price = requests[i]['price']
         old_shares = requests[i]['shares']
         old_action = requests[i]['action']
-        old_reserved = old_shares * old_price if old_action == 'buy' else 0
+        old_reserved = reserved(requests[i])
+        fee = requests[i].get('fee', 0)     # the fee the order was placed with
 
         # Use the updated values where available, otherwise fall back to stored values
         company = requests[i]['company']
@@ -461,10 +475,10 @@ def edit_request_values(prices, shares, actions, requests, port_shares, cashflow
         if eff_action == 'sell':
             max_shares = int(port_shares.get(company, 0)) or None
         else:
-            max_shares = int(available_pool // eff_price) if eff_price > 0 else None
+            max_shares = max_buy_shares(available_pool, eff_price, fee) if eff_price > 0 else None
         eff_shares = max(1, min(eff_shares, max_shares)) if max_shares else max(1, eff_shares)
 
-        new_reserved = eff_shares * eff_price if eff_action == 'buy' else 0
+        new_reserved = buy_cost(eff_shares, eff_price, fee) if eff_action == 'buy' else 0
         cashflow = available_pool - new_reserved
 
         if old_price != eff_price or old_shares != eff_shares or old_action != eff_action:
@@ -502,13 +516,14 @@ def remove_request(n, values_to_remove, req, cashflow):
     if ctx.triggered_id == 'clear-done-btn':
         if not n:
             raise PreventUpdate
-        refund = sum(r['shares'] * r['price'] for r in req if r['action'] == 'buy')
+        # Nothing was bought, so the whole amount put aside (fee included) comes back
+        refund = sum(reserved(r) for r in req)
         return [], cashflow + refund
     else:
         if 1 in values_to_remove:
             index = values_to_remove.index(1)
             cancelled = req[index]
-            refund = cancelled['shares'] * cancelled['price'] if cancelled['action'] == 'buy' else 0
+            refund = reserved(cancelled)
             del req[index]
             return req, cashflow + refund
         else:

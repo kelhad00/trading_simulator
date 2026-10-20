@@ -28,6 +28,11 @@ class Defaults:
     # Initial money the user has
     initial_money = 100000
 
+    # Commission fee in percent, paid on every executed buy and sell
+    # (0.05 = 0.05%). Default only: researchers set it in Settings -> Advanced.
+    commission_fee = 0
+    max_commission_fee = 10
+
     # Default real-world session length in minutes
     simulation_duration = 15
 

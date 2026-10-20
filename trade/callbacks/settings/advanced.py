@@ -55,6 +55,7 @@ def save_leaderboard_setting(checked):
     Output("input-news-font-size", "value"),
     Output("input-steps-per-candle", "value"),
     Output("input-initial-bars", "value"),
+    Output("input-commission-fee", "value"),
 
     Input('settings-tabs', 'value'),
 
@@ -65,15 +66,18 @@ def save_leaderboard_setting(checked):
     Input("news-font-size", "data"),
     Input("steps-per-candle", "data"),
     Input("initial-bars", "data"),
+    Input("commission-fee", "data"),
 )
-def set_advanced_settings_default_values(tabs, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars):
+def set_advanced_settings_default_values(tabs, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars,
+                                         commission_fee=None):
     """
     Default values for the advanced settings inputs
     (PS : settings-tabs is used to refresh the callback when the tab is switched)
     """
     steps = str(steps_per_candle if steps_per_candle is not None else dlt.steps_per_candle)
     bars = initial_bars if initial_bars is not None else dlt.initial_reveal_bars
-    return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps, bars
+    fee = commission_fee if commission_fee is not None else dlt.commission_fee
+    return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps, bars, fee
 
 
 @callback(
@@ -84,6 +88,7 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     Output("news-font-size", "data"),
     Output("steps-per-candle", "data"),
     Output("initial-bars", "data"),
+    Output("commission-fee", "data"),
     Output("notifications", "children", allow_duplicate=True),
 
     Input("update-advanced-settings", "n_clicks"),
@@ -96,9 +101,11 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     State("input-steps-per-candle", "value"),
     State("input-initial-bars", "value"),
     State("url", "search"),
+    State("input-commission-fee", "value"),
     prevent_initial_call=True
 )
-def update_advanced_settings(n, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars, search):
+def update_advanced_settings(n, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars, search,
+                             commission_fee=dlt.commission_fee):
     """Update the advanced settings stores with inputs values when the button is clicked"""
 
     if n is None or n == 0:
@@ -107,8 +114,10 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow, simula
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["settings"]["advanced"]["notif"]
 
-    if update_time is None or max_requests is None or init_cashflow is None or simulation_duration is None or news_font_size is None or steps_per_candle is None or initial_bars is None:
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, dmc.Notification(
+    fee_ok = commission_fee is not None and 0 <= float(commission_fee) <= dlt.max_commission_fee
+    if update_time is None or max_requests is None or init_cashflow is None or simulation_duration is None or news_font_size is None or steps_per_candle is None or initial_bars is None \
+            or not fee_ok:
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, dmc.Notification(
             title=tl["error-title"],
             id="simple-notify",
             action="show",
@@ -118,7 +127,7 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow, simula
         )
 
     else:
-        return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, int(steps_per_candle), int(initial_bars), dmc.Notification(
+        return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, int(steps_per_candle), int(initial_bars), float(commission_fee), dmc.Notification(
             id="notification-settings-updated",
             title=tl["success-title"],
             action="show",
