@@ -18,6 +18,9 @@ def main_layout(lang="fr"):
         # Which headlines the news list is showing; lives with the page, so the
         # list is always drawn when the page opens (callbacks/dashboard/news.py)
         dcc.Store(id='news-table-key', data=None),
+        # Discrete mode: candle number of the trial just reached, so the chart is
+        # drawn again (callbacks/dashboard/trials.py -> update_graph)
+        dcc.Store(id='trial-jump', data=None),
 
         # Right-click context menu — position:fixed so it floats above everything
         html.Div(

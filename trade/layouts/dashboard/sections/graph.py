@@ -30,6 +30,9 @@ def graph(lang="fr"):
                     dmc.Text(id="timer", className="whitespace-nowrap", size="sm"),
 
                 ], className="flex flex-col"),
+                # Discrete mode only (shown by callbacks/dashboard/trials.py)
+                dmc.Button(id="next-trial-btn", n_clicks=0, color="dark", style={"display": "none"},
+                           className="whitespace-nowrap"),
                 menu(lang, mode=APP_MODE),
             ], className="flex gap-4 justify-between items-center"),
 

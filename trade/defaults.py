@@ -33,6 +33,9 @@ class Defaults:
     commission_fee = 0
     max_commission_fee = 10
 
+    # Discrete mode (off by default): candle numbers of the trials, Settings -> Advanced
+    discrete_checkpoints = [10, 15]
+
     # Default real-world session length in minutes
     simulation_duration = 15
 

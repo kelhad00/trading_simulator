@@ -40,6 +40,12 @@ translation = {
             "unavailable": "Ranking is not available for this session",
         },
 
+        # Discrete mode button, above the chart
+        "trials": {
+            "next": "Next trial ➔",
+            "finish": "Finish ➔",
+        },
+
         # Company graph
         "tab-market": "Technical Analysis",
         "tab-revenue": "Revenue",
@@ -367,6 +373,13 @@ translation = {
                     "success-message": "Your settings have been saved.",
                     "error-title": "Error",
                     "error-message": "Please fill all the fields.",
+                    "discrete-error": "Discrete mode: the candle list must be whole numbers from 2 to {n}, each bigger than the one before (e.g. 10, 15, 150).",
+                },
+                "discrete": {
+                    "title": "Discrete mode (trials)",
+                    "switch": "Discrete mode: the chart stops at each trial and the participant clicks \"Next trial\"",
+                    "checkpoints": "Candles shown at each trial",
+                    "help": "Example: 10, 15 → trial 1 shows candles 1 to 10, trial 2 candles 1 to 15. Waiting orders are checked on every candle in between. No timer: the session ends after the last trial. Saving also sets \"Candles of history shown at the start\".",
                 },
                 "input": {
                     "update-time": "Time between updates (ms), per candle step",

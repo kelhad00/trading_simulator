@@ -17,6 +17,12 @@ translation = {
             "unavailable": "Le classement n'est pas disponible pour cette session",
         },
 
+        # Bouton du mode discret, au-dessus du graphique
+        "trials": {
+            "next": "Essai suivant ➔",
+            "finish": "Terminer ➔",
+        },
+
         # Company graph
         "tab-market": "Analyse Technique",
         "tab-revenue": "Revenus",
@@ -380,6 +386,13 @@ translation = {
                     "success-message": "Vos paramètres ont été enregistrés.",
                     "error-title": "Erreur",
                     "error-message": "Veuillez remplir tous les champs.",
+                    "discrete-error": "Mode discret : la liste doit contenir des nombres entiers de 2 à {n}, chacun plus grand que le précédent (ex. 10, 15, 150).",
+                },
+                "discrete": {
+                    "title": "Mode discret (essais)",
+                    "switch": "Mode discret : le graphique s'arrête à chaque essai et le participant clique sur « Essai suivant »",
+                    "checkpoints": "Bougies affichées à chaque essai",
+                    "help": "Exemple : 10, 15 → l'essai 1 montre les bougies 1 à 10, l'essai 2 les bougies 1 à 15. Les ordres en attente sont vérifiés sur chaque bougie entre les deux. Pas de minuteur : la session se termine après le dernier essai. L'enregistrement règle aussi « Bougies d'historique affichées au départ ».",
                 },
                 "input": {
                     "update-time": "Temps entre deux mises à jour (ms), par étape de bougie",

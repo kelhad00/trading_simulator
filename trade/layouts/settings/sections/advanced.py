@@ -109,6 +109,18 @@ def advanced_settings(lang="fr"):
                 ], className="flex flex-col gap-1"),
             ], className="flex flex-col gap-2"),
 
+            # Discrete mode, saved with the same button
+            html.Div([
+                dmc.Text(tl["discrete"]["title"], weight=700, size="md"),
+                dmc.Switch(id="discrete-enabled-input", label=tl["discrete"]["switch"], checked=False),
+                dmc.TextInput(
+                    id="input-discrete-checkpoints",
+                    label=tl["discrete"]["checkpoints"],
+                    description=tl["discrete"]["help"],
+                    placeholder="10, 15",
+                ),
+            ], className="flex flex-col gap-2"),
+
             dmc.Button(tl["button"]["update"], id="update-advanced-settings", color="dark", size="md"),
         ]),
     ], className="flex flex-col gap-8 w-full")

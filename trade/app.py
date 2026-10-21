@@ -164,6 +164,10 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="news-tags-enabled", data=True, storage_type="local"),
         # Leaderboard under the portfolio, Settings -> Advanced. Off by default
         dcc.Store(id="leaderboard-enabled", data=False, storage_type="local"),
+        # Discrete mode: trials at these candle numbers instead of a running clock,
+        # Settings -> Advanced. Off by default (utils/trials.py)
+        dcc.Store(id="discrete-enabled", data=False, storage_type="local"),
+        dcc.Store(id="discrete-checkpoints", data=dlt.discrete_checkpoints, storage_type="local"),
         dcc.Store(id="color-enabled", data=False, storage_type="local"),
         dcc.Store(id="notif-filter", data=["positive", "negative", "neutral"], storage_type="local"),
         dcc.Store(id="notif-offset", data=0, storage_type="local"),

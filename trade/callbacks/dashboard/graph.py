@@ -163,14 +163,24 @@ def track_graph_auto_follow(relayout_data, company):
     State('reminders-enabled', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
     State('commission-fee', 'data'),    # only recorded in log-info.json
+    # Discrete mode: the clock doesn't move; "Next trial" changes the timestamp
+    # (callbacks/dashboard/trials.py) and trial-jump asks for the new chart
+    Input('trial-jump', 'data'),
+    State('discrete-enabled', 'data'),
+    State('discrete-checkpoints', 'data'),
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
                  update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None,
                  news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True, lang=None,
-                 commission_fee=None):
+                 commission_fee=None, trial_jump=None, discrete=False, checkpoints=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
+    if discrete:
+        # No moving candles and no running clock: the session only moves by trials
+        steps_per_candle = 1
+        if next_graph and session_start_time is not None:
+            raise PreventUpdate
     step, n_steps = normalize_step(candle_step, steps_per_candle)
     logger.debug("tick triggered_id=%s next_graph=%s company=%s ts=%s step=%s/%s",
                  ctx.triggered_id, next_graph, company, timestamp, step, n_steps)
@@ -191,6 +201,8 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
                     "max_requests": max_requests or dlt.max_requests,
                     "initial_cashflow": initial_cashflow or dlt.initial_money,
                     "commission_fee_pct": commission_fee if commission_fee is not None else dlt.commission_fee,
+                    "discrete_mode": bool(discrete),
+                    "discrete_checkpoints": list(checkpoints or []) if discrete else None,
                     "first_market_timestamp": str(timestamp),
                     "companies": sorted(k for k, v in (companies or {}).items() if v.get("got_charts")),
                 }, session_id)
@@ -207,6 +219,12 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
                 logger.info("Session ended (%s)", "end of data" if data_done else "time is up")
                 log_session_event("session-finish", market_time(timestamp, step, n_steps), cashflow, company, session_id)
                 return (no_update, no_update, True, True, session_start_time, no_update) + _NOTHING_ELSE
+
+    # Discrete mode: the first tick only starts the session (above); the chart stays
+    # on the first trial and the timer is switched off.
+    stop_clock = bool(discrete and next_graph)
+    if stop_clock:
+        next_graph = False
 
     # Moving candles: a tick moves the forming candle one step (15 -> 30 -> 45 min);
     # only once it has closed does the next candle start and the timestamp advance.
@@ -312,7 +330,8 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             return (new_ts, fig, True, True, session_start_time, None) + sent_with_chart(new_ts, n_steps)
 
         logger.debug("ok new_ts=%s step=%s/%s", new_ts, new_step, n_steps)
-        return ((new_ts, fig, no_update, no_update, session_start_time, (new_step if next_graph else no_update))
+        return ((new_ts, fig, (True if stop_clock else no_update), no_update, session_start_time,
+                 (new_step if next_graph else no_update))
                 + sent_with_chart(new_ts, new_step))
 
     except Exception as e:

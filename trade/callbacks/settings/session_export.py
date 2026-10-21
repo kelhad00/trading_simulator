@@ -24,9 +24,12 @@ from trade.utils.session import build_session_zip
     State("news-tags-enabled", "data"),
     State("leaderboard-enabled", "data"),
     State("commission-fee", "data"),
+    State("discrete-enabled", "data"),
+    State("discrete-checkpoints", "data"),
     prevent_initial_call=True,
 )
-def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size, color_scheme, notif_enabled, color_enabled, steps_per_candle, initial_bars, reminders_enabled, news_tags_enabled=None, leaderboard_enabled=None, commission_fee=None):
+def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size, color_scheme, notif_enabled, color_enabled, steps_per_candle, initial_bars, reminders_enabled, news_tags_enabled=None, leaderboard_enabled=None, commission_fee=None,
+                   discrete_enabled=None, discrete_checkpoints=None):
     from dash import no_update
     if not n_clicks:
         return no_update
@@ -46,6 +49,8 @@ def export_session(n_clicks, companies, initial_cashflow, max_requests, update_t
         news_tags_enabled=news_tags_enabled,
         leaderboard_enabled=leaderboard_enabled,
         commission_fee=commission_fee,
+        discrete_enabled=discrete_enabled,
+        discrete_checkpoints=discrete_checkpoints,
         data_path=dlt.data_path,
     )
     return {

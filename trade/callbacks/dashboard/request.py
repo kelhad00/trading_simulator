@@ -12,7 +12,8 @@ from trade.locales import translations as tls, language
 from trade.components.table import create_table_delete
 from trade.utils.market import get_price_dataframe
 from trade.utils.candle_steps import current_price, step_price_range
-from trade.utils.fees import buy_cost, sell_proceeds, max_buy_shares, reserved
+from trade.utils.fees import buy_cost, max_buy_shares, reserved
+from trade.utils.orders import fill_orders
 
 
 def add_request(req, company, action, price, share, cash, timestamp, port_shares, max_requests=dlt.max_requests, lang=None,
@@ -219,9 +220,11 @@ def process_submit_button(btn, company, action, price, pct, cash, timestamp, por
     State('cost-basis', 'data'),
     State('sold-data', 'data'),
     State('steps-per-candle', 'data'),
+    State('discrete-enabled', 'data'),
     prevent_initial_call=True,
 )
-def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow, port_totals, cost_basis, sold_data, steps_per_candle):
+def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow, port_totals, cost_basis, sold_data, steps_per_candle,
+                     discrete=False):
     """
     Try to execute the requests of the user.
     Update the portfolio, the cashflow and requests list.
@@ -255,54 +258,18 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
     def price_now(company):
         return current_price(company, timestamp, candle_step, steps_per_candle)
 
-    i = 0
-    while i < len(request_list):
-        req = request_list[i]
-        low_price, high_price = step_price_range(req['company'], timestamp, candle_step, steps_per_candle)
+    if discrete:
+        # Discrete mode: the participant already saw this candle close, so only an
+        # order at the market price (or better) is executed now. The others wait
+        # for the candles of the next trial (trade/utils/trials.py).
+        def price_range(company):
+            now = price_now(company)
+            return now, now
+    else:
+        def price_range(company):
+            return step_price_range(company, timestamp, candle_step, steps_per_candle)
 
-        # If the request is completed
-        if req['action'] == 'buy' and low_price <= req['price']:
-            # A limit buy never pays more than the limit — if the market is actually
-            # trading below it, fill at the (lower) market price and refund the
-            # difference between what was reserved (at the limit price) and what was
-            # really spent.
-            fill_price = min(req['price'], price_now(req['company']))
-            fee = req.get('fee', 0)
-            port_shares.loc[req['company']] += req['shares']
-            # The fee is part of what the shares cost (Px Achat and PnL include it)
-            cost = buy_cost(req['shares'], fill_price, fee)
-            cost_basis[req['company']] = cost_basis.get(req['company'], 0) + cost
-            cashflow += reserved(req) - cost
-            request_list.remove(req)
-
-        # Same as above for the sell request
-        elif req['action'] == 'sell' and high_price >= req['price']:
-            # If the user has enough shares
-            if port_shares.at[req['company'], 'Shares'] >= req["shares"]:
-                # A limit sell never settles for less than the limit — if the market is
-                # actually trading above it, fill at the (higher) market price.
-                fill_price = max(req['price'], price_now(req['company']))
-                # Update only the shares and the cashflow
-                # Because the total price will be updated in the portfolio callback
-                held_before = port_shares.at[req['company'], 'Shares']
-                port_shares.loc[req['company']] -= req["shares"]
-                # The fee is taken from the money received
-                cashflow += sell_proceeds(req['shares'], fill_price, req.get('fee', 0))
-                if held_before > 0:
-                    avg = cost_basis.get(req['company'], 0) / held_before
-                    cost_basis[req['company']] = cost_basis.get(req['company'], 0) - req['shares'] * avg
-                sold_data.setdefault(req['company'], {"revenue": 0, "shares": 0})
-                sold_data[req['company']]["revenue"] += req['shares'] * fill_price
-                sold_data[req['company']]["shares"] += req['shares']
-
-            # the request is removed, with or without the user having enough shares
-            request_list.remove(req)
-
-        # If the request is not completed yet, pass to the next one.
-        # If the request is completed, the request is removed from the list and
-        # the next request is now at the current index.
-        else:
-            i += 1
+    cashflow = fill_orders(request_list, port_shares, cashflow, cost_basis, sold_data, price_range, price_now)
 
     if not timestamp == "":
         # Update the total price of each stock

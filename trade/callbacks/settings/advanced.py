@@ -5,6 +5,8 @@ import dash_mantine_components as dmc
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
+from trade.utils.market import get_market_dataframe
+from trade.utils.trials import parse_checkpoints, history_bars
 
 
 # The dark mode switch and its saved value. Showing reads the saved value as a
@@ -56,6 +58,8 @@ def save_leaderboard_setting(checked):
     Output("input-steps-per-candle", "value"),
     Output("input-initial-bars", "value"),
     Output("input-commission-fee", "value"),
+    Output("discrete-enabled-input", "checked"),
+    Output("input-discrete-checkpoints", "value"),
 
     Input('settings-tabs', 'value'),
 
@@ -67,9 +71,11 @@ def save_leaderboard_setting(checked):
     Input("steps-per-candle", "data"),
     Input("initial-bars", "data"),
     Input("commission-fee", "data"),
+    Input("discrete-enabled", "data"),
+    Input("discrete-checkpoints", "data"),
 )
 def set_advanced_settings_default_values(tabs, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars,
-                                         commission_fee=None):
+                                         commission_fee=None, discrete=False, checkpoints=None):
     """
     Default values for the advanced settings inputs
     (PS : settings-tabs is used to refresh the callback when the tab is switched)
@@ -77,7 +83,9 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     steps = str(steps_per_candle if steps_per_candle is not None else dlt.steps_per_candle)
     bars = initial_bars if initial_bars is not None else dlt.initial_reveal_bars
     fee = commission_fee if commission_fee is not None else dlt.commission_fee
-    return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps, bars, fee
+    checkpoints_text = ", ".join(str(c) for c in (checkpoints or dlt.discrete_checkpoints))
+    return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps, bars, fee, \
+        bool(discrete), checkpoints_text
 
 
 @callback(
@@ -89,6 +97,8 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     Output("steps-per-candle", "data"),
     Output("initial-bars", "data"),
     Output("commission-fee", "data"),
+    Output("discrete-enabled", "data"),
+    Output("discrete-checkpoints", "data"),
     Output("notifications", "children", allow_duplicate=True),
 
     Input("update-advanced-settings", "n_clicks"),
@@ -102,10 +112,12 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     State("input-initial-bars", "value"),
     State("url", "search"),
     State("input-commission-fee", "value"),
+    State("discrete-enabled-input", "checked"),
+    State("input-discrete-checkpoints", "value"),
     prevent_initial_call=True
 )
 def update_advanced_settings(n, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars, search,
-                             commission_fee=dlt.commission_fee):
+                             commission_fee=dlt.commission_fee, discrete=False, checkpoints_text=None):
     """Update the advanced settings stores with inputs values when the button is clicked"""
 
     if n is None or n == 0:
@@ -114,20 +126,33 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow, simula
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["settings"]["advanced"]["notif"]
 
-    fee_ok = commission_fee is not None and 0 <= float(commission_fee) <= dlt.max_commission_fee
-    if update_time is None or max_requests is None or init_cashflow is None or simulation_duration is None or news_font_size is None or steps_per_candle is None or initial_bars is None \
-            or not fee_ok:
-        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, dmc.Notification(
+    def error(message):
+        return (no_update,) * 10 + (dmc.Notification(
             title=tl["error-title"],
             id="simple-notify",
             action="show",
             color="red",
             icon=DashIconify(icon="material-symbols:error"),
-            message=tl["error-message"],
-        )
+            message=message,
+        ),)
 
-    else:
-        return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, int(steps_per_candle), int(initial_bars), float(commission_fee), dmc.Notification(
+    fee_ok = commission_fee is not None and 0 <= float(commission_fee) <= dlt.max_commission_fee
+    if update_time is None or max_requests is None or init_cashflow is None or simulation_duration is None or news_font_size is None or steps_per_candle is None or initial_bars is None \
+            or not fee_ok:
+        return error(tl["error-message"])
+
+    # Discrete mode: a valid candle list, and the session opens on the first trial
+    checkpoints = no_update
+    if discrete:
+        market_df = get_market_dataframe()
+        n_candles = len(market_df.index) if market_df is not None else 0
+        checkpoints = parse_checkpoints(checkpoints_text, n_candles)
+        if checkpoints is None:
+            return error(tl["discrete-error"].format(n=n_candles))
+        initial_bars = history_bars(checkpoints)
+
+    return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, int(steps_per_candle), int(initial_bars), float(commission_fee), \
+        bool(discrete), checkpoints, dmc.Notification(
             id="notification-settings-updated",
             title=tl["success-title"],
             action="show",
