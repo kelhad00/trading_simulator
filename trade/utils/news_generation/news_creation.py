@@ -2,6 +2,7 @@ from openai import OpenAI, RateLimitError, APITimeoutError, APIConnectionError
 import pandas as pd
 import os
 import random
+import re
 import functools
 import time
 from datetime import datetime
@@ -14,7 +15,7 @@ from trade.utils.news_generation.modules import load_data, save_data
 from trade.utils.news_generation.modules import percentage_change
 from trade.utils.market import get_market_dataframe
 from trade.utils.news_generation.modules import find_sector_for_company
-from trade.utils.news_generation.verify import verify_article
+from trade.utils.news_generation.verify import verify_article, check_language, check_company
 from trade.defaults import defaults as dlt
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
@@ -664,6 +665,61 @@ def _write_checked_article(write, verify, label):
     return title, content, v
 
 
+# Each article is stored in both languages: written and checked in the Settings page's
+# language, then translated (the same story, numbers and tone). The dashboard shows the
+# participant's language (trade/utils/news.py: article_text).
+LANGS = ("fr", "en")
+NEWS_COLUMNS = ['date', 'ticker', 'sector', 'title', 'content', 'sentiment', 'sentiment_label',
+                'title_fr', 'content_fr', 'title_en', 'content_en']
+TRANSLATION_ATTEMPTS = 3
+
+_TRANSLATE_PROMPT = {
+    "fr": ("Traduisez cet article financier en français. Gardez exactement les mêmes faits, chiffres, "
+           "noms d'entreprises et le même ton. Répondez UNIQUEMENT dans ce format :\n"
+           "TITRE: <le titre traduit>\nARTICLE: <l'article traduit>\n\n"
+           "Titre : {title}\nArticle : {content}"),
+    "en": ("Translate this financial news article into English. Keep exactly the same facts, numbers, "
+           "company names and tone. Reply ONLY in this format:\n"
+           "TITLE: <the translated title>\nARTICLE: <the translated article>\n\n"
+           "Title: {title}\nArticle: {content}"),
+}
+
+
+def _parse_translation(text):
+    """'TITLE: ...\\nARTICLE: ...' (or TITRE) -> (title, content), or (None, None).
+    A model's '<think>...</think>' notes before the answer are skipped."""
+    text = re.sub(r'<think>.*?</think>', '', text or "", flags=re.S)
+    match = re.search(r'(?:TITLE|TITRE)\s*:\s*(.+?)\s*\n+\s*ARTICLE\s*:\s*(.+)', text, re.S | re.I)
+    if not match:
+        return None, None
+    return match.group(1).strip().strip('"'), match.group(2).strip()
+
+
+def translate_article(title, content, to_lang, company_name, client, model):
+    """The article in `to_lang`: (title, content), or ("", "") when no good translation
+    came back after TRANSLATION_ATTEMPTS tries (the dashboard then shows the original)."""
+    for attempt in range(1, TRANSLATION_ATTEMPTS + 1):
+        prompt = _TRANSLATE_PROMPT[to_lang].format(title=title, content=content)
+        response = _chat_with_retry(client, model, [{"role": "user", "content": prompt}])
+        t, c = _parse_translation(response.choices[0].message.content)
+        if t and c and check_language(f"{t} {c}", to_lang) and check_company(f"{t} {c}", company_name):
+            print(f"[NEWS GEN]     -> Translated to {to_lang.upper()} (try {attempt})")
+            return t, c
+        print(f"[NEWS GEN]     -> Translation to {to_lang.upper()} not right (try {attempt}/{TRANSLATION_ATTEMPTS})")
+    print(f"[NEWS GEN]     -> No {to_lang.upper()} translation kept: the original will be shown")
+    return "", ""
+
+
+def _both_languages(title, content, lang, company_name, client, model, verification):
+    """[title_fr, content_fr, title_en, content_en] for the news.csv row."""
+    versions = {lang: (title, content)}
+    for other in LANGS:
+        if other != lang:
+            versions[other] = translate_article(title, content, other, company_name, client, model)
+            verification['translated'] = bool(versions[other][0])
+    return [part for code in LANGS for part in versions[code]]
+
+
 def create_news(company_ticker, company_name, company_sector, curve_profile, lang, news_position,
                 model, provider="ollama", base_url="http://localhost:11434/v1", groq_api_key="",
                 company_description="", delta=0):
@@ -683,7 +739,7 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
     market_data = market_data.reset_index(drop=False)
 
     # Create a dataframe to store the news we have created
-    news_created = pd.DataFrame(columns=['date', 'ticker', 'sector', 'title', 'content', 'sentiment', 'sentiment_label'])
+    news_created = pd.DataFrame(columns=NEWS_COLUMNS)
     verification_results = []
 
     # Browse the positive positions
@@ -724,10 +780,11 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
                 lambda t, c: verify_article(t, c, sentiment, company_name, curve_profile, lang),
                 f"(+) Article {i + 1}",
             )
+            translations = _both_languages(title, content, lang, company_name, client, model, v)
 
             # Create a new row in news_created
             date = datetime.fromisoformat(market_data.iloc[position]['date']).strftime('%d/%m/%y %H:%M')
-            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, v['sentiment_label']]
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, v['sentiment_label']] + translations
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
             v['date'] = article_date_str
@@ -777,10 +834,11 @@ def create_news(company_ticker, company_name, company_sector, curve_profile, lan
                 lambda t, c: verify_article(t, c, sentiment, company_name, curve_profile, lang),
                 f"(-) Article {i + 1}",
             )
+            translations = _both_languages(title, content, lang, company_name, client, model, v)
 
             # Create a new row in news_created
             date = datetime.fromisoformat(market_data.iloc[position]['date']).strftime('%d/%m/%y %H:%M')
-            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, v['sentiment_label']]
+            news_created.loc[len(news_created)] = [date, company_name, sector, title, content, sentiment, v['sentiment_label']] + translations
             v['company'] = company_name
             v['sentiment_expected'] = sentiment
             v['date'] = article_date_str

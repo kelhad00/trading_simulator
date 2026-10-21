@@ -59,7 +59,7 @@ clientside_callback(
 )
 
 from trade.locales import translations as tls, language
-from trade.utils.news import get_news_dataframe
+from trade.utils.news import get_news_dataframe, article_text, find_article
 from trade.utils.market import get_market_dataframe
 from trade.utils.news_timing import article_positions, now_position, visible
 from trade.utils.logs import get_logger
@@ -134,20 +134,21 @@ def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_
     ]))
 
     rows = []
-    for idx, row in enumerate(nl.itertuples(index=False)):
-        article_text = str(getattr(row, 'article', ''))
-        date_text = str(row.date)[:10]
+    for idx, row in enumerate(nl.to_dict('records')):
+        # The headline in the participant's language (the original if not translated)
+        headline, _ = article_text(row, lang)
+        date_text = str(row['date'])[:10]
 
         # Every headline gets one of the 5 tags; badge and text share its colour.
         # Tags switched off: plain text, so the participant has to read the news.
         if show_tags:
-            tag = _news_tag(getattr(row, 'sentiment_label', None) if has_label else None)
+            tag = _news_tag(row.get('sentiment_label') if has_label else None)
             color = _TAG_COLORS[tag]
             badge = dmc.Badge(tag, color=color, size="xs", variant="light",
                               style={"marginRight": "6px", "verticalAlign": "middle"})
-            article_cell = html.Td([badge, article_text], style={"color": color})
+            article_cell = html.Td([badge, headline], style={"color": color})
         else:
-            article_cell = html.Td(article_text)
+            article_cell = html.Td(headline)
 
         cells = [
             article_cell,
@@ -204,11 +205,11 @@ def toggle_news_display_type(n, cell_clicked, table, companies, lang=None):
 
         # get_news_dataframe() is cached — negligible cost
         news_df = get_news_dataframe()
-        article_clicked = news_df.loc[news_df['title'] == titles[index_clicked]]
+        # The headline shown may be in either language
+        article_clicked = find_article(news_df, titles[index_clicked])
         if article_clicked.empty:
             return no_update, no_update, no_update, no_update, no_update, no_update, no_update
-        title   = article_clicked['title'].iloc[0]
-        content = article_clicked['content'].iloc[0]
+        title, content = article_text(article_clicked.iloc[0], lang)
         date    = str(article_clicked['date'].iloc[0])[:16]
 
         # Resolve company key from ticker so the View button can navigate to the chart
@@ -305,8 +306,7 @@ def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, 
         notifications = []
         for i, (_, row) in enumerate(new_articles.iterrows()):
             ticker    = str(row.get('ticker', ''))
-            title_col = 'article' if 'article' in row.index else 'title'
-            headline  = str(row.get(title_col, ''))
+            headline, _ = article_text(row, lang)    # in the participant's language
 
             company_label = ticker
             company_key   = None
@@ -381,11 +381,10 @@ def view_article_from_news_notif(clicks, companies, lang=None):
         news_df = get_news_dataframe()
         lang = language(lang)
         published_label = tls[lang].get('news-published', 'Published:')
-        article = news_df.loc[news_df['title'] == article_title]
+        article = find_article(news_df, article_title)     # the pop-up's headline, any language
         if article.empty:
             raise PreventUpdate
-        title   = article['title'].iloc[0]
-        content = article['content'].iloc[0]
+        title, content = article_text(article.iloc[0], lang)
         date    = str(article['date'].iloc[0])[:16]
         ticker  = str(article['ticker'].iloc[0]) if 'ticker' in article.columns else ''
         company_key = None
