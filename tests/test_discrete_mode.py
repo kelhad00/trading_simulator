@@ -11,7 +11,6 @@ from types import SimpleNamespace
 
 import pandas as pd
 import pytest
-from dash.exceptions import PreventUpdate
 
 import trade.callbacks.dashboard.graph as graph
 import trade.callbacks.dashboard.request as request
@@ -155,9 +154,21 @@ def draw(market_df, monkeypatch, trigger, i, started):
                               discrete=True, checkpoints=CHECKPOINTS)
 
 
-def test_timer_does_nothing_once_the_session_has_started(market_df, monkeypatch):
-    with pytest.raises(PreventUpdate):
-        draw(market_df, monkeypatch, "periodic-updater", 104, time.time())
+def test_after_a_page_reload_the_trial_is_drawn_again(market_df, monkeypatch):
+    """Changing the language reloads the page: the first tick must draw the chart
+    again (bug found 2026-10-21: chart, news and date stayed empty)."""
+    started = time.time() - 600
+    out = draw(market_df, monkeypatch, "periodic-updater", 109, started)
+    assert out[0] == market_df.index[109]               # same trial, not moved
+    assert len(out[1].data[-1].x) == 110                # the chart is drawn
+    assert out[2] is True                               # timer off again
+    assert out[4] == started                            # same session, not restarted
+    assert out[6]                                       # the date label is sent
+
+
+def test_no_time_limit_in_discrete_mode(market_df, monkeypatch):
+    out = draw(market_df, monkeypatch, "periodic-updater", 109, time.time() - 3600)   # 1 h > 15 min
+    assert out[3] is not True                           # no results window
 
 
 def test_first_tick_starts_the_session_without_moving_and_stops_the_timer(market_df, monkeypatch):

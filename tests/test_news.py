@@ -87,3 +87,29 @@ def test_a_freshly_drawn_list_opens_nothing(table, monkeypatch):
 def test_headline_text_ignores_the_tag():
     assert news._headline_text("Plain title") == "Plain title"
     assert news._headline_text([{"type": "Badge"}, "Tagged title"]) == "Tagged title"
+
+
+def test_news_list_is_drawn_when_the_dashboard_is_rebuilt():
+    """Changing the language rebuilds the dashboard without reloading the page and
+    without a new article. The list must still be drawn: it needs a trigger that is
+    part of the dashboard screen ('lang') and must run when the screen is built
+    (bug found 2026-10-21: the news list stayed empty after switching language)."""
+    import dash
+    from trade.layouts.dashboard.layout import main_layout
+
+    callback = next(cb for cb in dash._callback.GLOBAL_CALLBACK_LIST
+                    if "news-table.children" in cb["output"])
+    assert callback["prevent_initial_call"] is False
+    triggers = {i["id"] for i in callback["inputs"]}
+    screen_ids = set()
+
+    def collect(component):
+        if isinstance(getattr(component, "id", None), str):
+            screen_ids.add(component.id)
+        children = getattr(component, "children", None)
+        for child in children if isinstance(children, (list, tuple)) else [children]:
+            if child is not None and not isinstance(child, str):
+                collect(child)
+
+    collect(main_layout("en"))
+    assert triggers & screen_ids, "no trigger of the news list is part of the dashboard screen"

@@ -78,9 +78,15 @@ logger = get_logger("news")
     Input('news-clock', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
     State('news-tags-enabled', 'data'),
+    # Also when the dashboard is built (opening it, or changing the language, which
+    # rebuilds the screen without a new article): otherwise the list stays empty
+    # until the next article appears (bug found 2026-10-21). 'lang' is part of the
+    # dashboard screen, so it fires each time the screen is built.
+    Input('lang', 'data'),
+    prevent_initial_call=False,
 )
 def cb_update_news_table(timestamp, candle_step=None, shown_key=None, steps_per_candle=1, news_clock=None, lang=None,
-                         show_tags=True, range=50):
+                         show_tags=True, page_lang=None, range=50):
     try:
         # get_news_dataframe() is cached — only re-reads CSV when the file changes
         news_df = get_news_dataframe()

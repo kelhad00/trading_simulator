@@ -179,8 +179,6 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
     if discrete:
         # No moving candles and no running clock: the session only moves by trials
         steps_per_candle = 1
-        if next_graph and session_start_time is not None:
-            raise PreventUpdate
     step, n_steps = normalize_step(candle_step, steps_per_candle)
     logger.debug("tick triggered_id=%s next_graph=%s company=%s ts=%s step=%s/%s",
                  ctx.triggered_id, next_graph, company, timestamp, step, n_steps)
@@ -208,7 +206,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
                 }, session_id)
             except Exception as e:  # recording must never stop a session
                 logger.warning("Could not write log-info.json: %s", e)
-        else:
+        elif not discrete:      # discrete mode has no time limit: it ends after the last trial
             duration_secs = (simulation_duration or dlt.simulation_duration) * 60
             elapsed = time.time() - session_start_time - (total_paused_seconds or 0)
             # With moving candles the data is only done once the last candle has closed
@@ -220,8 +218,9 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
                 log_session_event("session-finish", market_time(timestamp, step, n_steps), cashflow, company, session_id)
                 return (no_update, no_update, True, True, session_start_time, no_update) + _NOTHING_ELSE
 
-    # Discrete mode: the first tick only starts the session (above); the chart stays
-    # on the first trial and the timer is switched off.
+    # Discrete mode: a tick never moves the chart. The first tick of a session starts
+    # it (above); the first tick after a page load (a language change reloads the
+    # page) draws the current trial again. Both then switch the timer off.
     stop_clock = bool(discrete and next_graph)
     if stop_clock:
         next_graph = False
