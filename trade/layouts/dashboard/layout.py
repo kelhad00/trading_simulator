@@ -21,6 +21,9 @@ def main_layout(lang="fr"):
         # Discrete mode: candle number of the trial just reached, so the chart is
         # drawn again (callbacks/dashboard/trials.py -> update_graph)
         dcc.Store(id='trial-jump', data=None),
+        # The chart's "Reset axes" button: draw the chart again at once, also while
+        # paused or after the end (callbacks/dashboard/graph.py)
+        dcc.Store(id='graph-redraw', data=None),
 
         # Right-click context menu — position:fixed so it floats above everything
         html.Div(

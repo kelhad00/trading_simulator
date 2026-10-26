@@ -184,6 +184,9 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
     # plot_df is a prefix of the full data, so slot i in all_labels is also
     # candle i of x_labels.
     first, last = _slots_in_view(view_range, all_labels)
+    if not follow and not view_range:
+        # Autoscale button: Plotly fits the candles shown, so that's what is on screen
+        first, last = 0, len(x_labels) - 1
     tick_step = _date_label_step(last - first + 1)
     # (no range() here: this function has a parameter named `range`)
     tick_labels = [label for i, label in enumerate(all_labels[:len(x_labels)])

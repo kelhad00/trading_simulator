@@ -95,28 +95,45 @@ def timer_label(timestamp, candle_step, steps_per_candle):
 @callback(
     Output('graph-auto-follow', 'data'),
     Output('graph-manual-range', 'data'),
+    Output('graph-redraw', 'data'),
     Input('company-graph', 'relayoutData'),
     Input('company-selector', 'value'),
     prevent_initial_call=True,
 )
 def track_graph_auto_follow(relayout_data, company):
+    """Who decides what the chart shows:
+    - following (True, None): the app, on every update — the whole session width with
+      the prices fitted, as when the simulation started;
+    - autoscale (False, None): Plotly, fitting the candles shown, on every update;
+    - zoom/pan (False, [start, end]): the participant, pinned where they left it."""
     # Switching company always resumes auto-follow for the new chart.
     if ctx.triggered_id == 'company-selector':
-        return True, None
+        return True, None, no_update
 
     if not relayout_data:
         raise PreventUpdate
 
-    # "Reset axes" (modebar button or double-click) re-enables auto-follow.
-    if relayout_data.get('xaxis.autorange') or relayout_data.get('autosize'):
-        return True, None
+    # "Reset axes" button: back to the starting view and follow again. Plotly sends
+    # the same autorange as Autoscale, plus the spike lines' setting (showspikes).
+    # The chart is drawn again at once, so it also works while paused or after the end.
+    if relayout_data.get('xaxis.autorange') and 'xaxis.showspikes' in relayout_data:
+        return True, None, time.time()
+
+    # "Autoscale" button (or a double-click): fit the candles shown, and keep fitting
+    # them on every update instead of going back to the starting view.
+    if relayout_data.get('xaxis.autorange'):
+        return False, None, no_update
+
+    # The window was resized: keep following.
+    if relayout_data.get('autosize'):
+        return True, None, no_update
 
     # A manual pan or zoom disables auto-follow until the user resets it.
     # Remember exactly where they left the view so every subsequent update
     # can be pinned back to that same window instead of re-autoranging.
     if 'xaxis.range[0]' in relayout_data and 'xaxis.range[1]' in relayout_data:
         manual_range = [relayout_data['xaxis.range[0]'], relayout_data['xaxis.range[1]']]
-        return False, manual_range
+        return False, manual_range, no_update
 
     raise PreventUpdate
 
@@ -168,12 +185,14 @@ def track_graph_auto_follow(relayout_data, company):
     Input('trial-jump', 'data'),
     State('discrete-enabled', 'data'),
     State('discrete-checkpoints', 'data'),
+    # "Reset axes" (track_graph_auto_follow): draw the chart again at the same moment
+    Input('graph-redraw', 'data'),
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
                  update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None,
                  news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True, lang=None,
-                 commission_fee=None, trial_jump=None, discrete=False, checkpoints=None):
+                 commission_fee=None, trial_jump=None, discrete=False, checkpoints=None, graph_redraw=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     if discrete:
@@ -258,7 +277,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         dftmp = get_market_dataframe()[company]
 
         fig, new_ts = create_graph(dftmp, timestamp, advance, int(initial_bars or dlt.initial_reveal_bars), follow=following,
-                                   # zoomed in: date labels adapt to the candles on screen
+                                   # zoomed in or autoscaled: date labels adapt to the candles on screen
                                    view_range=manual_range if (not following and manual_range) else None,
                                    partial=forming_candle)
 
@@ -294,10 +313,11 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
             # Fixed-slot playback: the server sets the x range (all slots) and
             # the padded y range on every frame, so give both axes a fresh
             # revision each tick. Otherwise uirevision would keep an old range
-            # (or a "reset axes" autorange) and ignore the new one.
+            # (or an autoscale) and ignore the new one. graph_redraw: "Reset axes"
+            # while paused draws the same moment again, which needs a new revision too.
             fig.update_layout(
-                xaxis_uirevision=f"{company}|{new_ts}",
-                yaxis_uirevision=f"{company}|{new_ts}",
+                xaxis_uirevision=f"{company}|{new_ts}|{graph_redraw}",
+                yaxis_uirevision=f"{company}|{new_ts}|{graph_redraw}",
             )
 
         fig.for_each_trace(
