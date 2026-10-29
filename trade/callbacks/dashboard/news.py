@@ -258,14 +258,17 @@ def view_company_from_description(n_clicks, company_key):
     Input('news-clock', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
     State('news-tags-enabled', 'data'),
+    State('discrete-enabled', 'data'),
     prevent_initial_call='initial_duplicate',
 )
 def notify_new_news(timestamp, candle_step, last_seen, companies, notif_filter, notif_offset, notif_enabled,
-                    steps_per_candle=1, news_clock=None, lang=None, show_tags=True):
+                    steps_per_candle=1, news_clock=None, lang=None, show_tags=True, discrete=False):
     if timestamp is None:
         raise PreventUpdate
 
-    if not notif_enabled:
+    # No pop-ups in discrete mode: a trial can jump over many candles and all their
+    # news would pop up at once over the screen (Fan, 29 Oct 2026). The news list still shows them.
+    if not notif_enabled or discrete:
         return no_update, no_update
 
     try:

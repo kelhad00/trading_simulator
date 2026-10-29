@@ -387,7 +387,7 @@ translation = {
                     "title": "Discrete mode (trials)",
                     "switch": "Discrete mode: the chart stops at each trial and the participant clicks \"Next trial\"",
                     "checkpoints": "Candles shown at each trial",
-                    "help": "Example: 10, 15 → trial 1 shows candles 1 to 10, trial 2 candles 1 to 15. Waiting orders are checked on every candle in between. No timer: the session ends after the last trial. Saving also sets \"Candles of history shown at the start\".",
+                    "help": "Example: 10, 15 → trial 1 shows candles 1 to 10, trial 2 candles 1 to 15. Waiting orders are checked on every candle in between. No timer: the session ends after the last trial. News pop-ups are not shown in this mode; the news stays in the news list. Saving also sets \"Candles of history shown at the start\".",
                 },
                 "input": {
                     "update-time": "Time between updates (ms), per candle step",

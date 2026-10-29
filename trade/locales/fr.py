@@ -400,7 +400,7 @@ translation = {
                     "title": "Mode discret (essais)",
                     "switch": "Mode discret : le graphique s'arrête à chaque essai et le participant clique sur « Essai suivant »",
                     "checkpoints": "Bougies affichées à chaque essai",
-                    "help": "Exemple : 10, 15 → l'essai 1 montre les bougies 1 à 10, l'essai 2 les bougies 1 à 15. Les ordres en attente sont vérifiés sur chaque bougie entre les deux. Pas de minuteur : la session se termine après le dernier essai. L'enregistrement règle aussi « Bougies d'historique affichées au départ ».",
+                    "help": "Exemple : 10, 15 → l'essai 1 montre les bougies 1 à 10, l'essai 2 les bougies 1 à 15. Les ordres en attente sont vérifiés sur chaque bougie entre les deux. Pas de minuteur : la session se termine après le dernier essai. Les notifications d'actualités ne s'affichent pas dans ce mode ; les actualités restent dans la liste. L'enregistrement règle aussi « Bougies d'historique affichées au départ ».",
                 },
                 "input": {
                     "update-time": "Temps entre deux mises à jour (ms), par étape de bougie",

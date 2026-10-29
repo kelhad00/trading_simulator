@@ -59,6 +59,17 @@ def test_popup_appears_at_the_same_moment_as_the_list(fake_data):
     assert popups is news.no_update                        # not repeated
 
 
+def test_no_popups_in_discrete_mode_but_the_list_still_shows_the_news(fake_data):
+    """A trial can jump over many candles: their news must not all pop up at once (Fan, 29 Oct 2026)."""
+    def notify_discrete(timestamp, last_seen, discrete):
+        return news.notify_new_news(timestamp, None, last_seen, {}, None, 0, True, 1, None, None, True, discrete)
+    _, seen = notify_discrete(day(9), None, False)          # first time: records where we are
+    assert notify_discrete(day(14), seen, True) == (news.no_update, news.no_update)   # jump to 14 Jan: nothing pops
+    assert "AAA beats expectations" in shown_titles(day(14), steps=1)                 # still in the news list
+    popups, _ = notify_discrete(day(14), seen, False)                                  # timer mode: pops up as before
+    assert popups is not news.no_update and len(popups) >= 1
+
+
 def test_warn_me_early_setting_still_looks_ahead(fake_data):
     _, seen = notify(day(9), 4, None, offset=1)            # 9 Jan + 1 day ahead
     popups, _ = notify(day(10), 1, [8, 4], offset=1)       # now looking at 11 Jan step 1
