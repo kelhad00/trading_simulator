@@ -41,12 +41,61 @@ _anti_flash_script = """
 </script>
 """
 
+# Dash puts this in the browser tab while callbacks are running
+UPDATE_TITLE = "Updating..."
+
+
+def _loading_overlay(mode):
+    """Configurator only: cover the page with "Updating..." while Dash is busy, so the
+    researcher cannot click a half-drawn page. Shown when the tab title has been
+    UPDATE_TITLE for 300 ms (short polls don't flash it) and hidden as soon as Dash
+    finishes, also after an error, because Dash always puts the title back.
+    The Runtime gets nothing: it updates on every tick and must stay usable."""
+    if mode != 'config':
+        return ""
+    return """
+    <style>
+      #loading-overlay { display: none; position: fixed; inset: 0; z-index: 20000;
+        background: rgba(255, 255, 255, 0.75); cursor: wait;
+        align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+      #loading-overlay.visible { display: flex; }
+      #loading-overlay .spinner { width: 48px; height: 48px; border-radius: 50%;
+        border: 5px solid #ddd; border-top-color: #25262b; animation: loading-spin 0.9s linear infinite; }
+      #loading-overlay .text { font-size: 18px; font-weight: 600; color: #25262b; }
+      @keyframes loading-spin { to { transform: rotate(360deg); } }
+    </style>
+    <div id="loading-overlay"><div class="spinner"></div><div class="text"></div></div>
+    <script>
+    (function(){
+      var overlay = document.getElementById('loading-overlay');
+      var title = document.querySelector('title');
+      if (!overlay || !title) return;
+      var timer = null;
+      function check() {
+        if (document.title === '""" + UPDATE_TITLE + """') {
+          if (timer === null) timer = setTimeout(function() {
+            var en = new URLSearchParams(window.location.search).get('lang') === 'en';
+            overlay.querySelector('.text').textContent = en ? 'Updating…' : 'Mise à jour…';
+            overlay.classList.add('visible');
+          }, 300);
+        } else {
+          clearTimeout(timer);
+          timer = null;
+          overlay.classList.remove('visible');
+        }
+      }
+      new MutationObserver(check).observe(title, {childList: true, characterData: true, subtree: true});
+    })();
+    </script>"""
+
+
 app = Dash(
     __name__,
     use_pages=True,
     suppress_callback_exceptions=True,
     prevent_initial_callbacks="initial_duplicate",
     external_scripts=external_scripts,
+    update_title=UPDATE_TITLE,
     index_string="""<!DOCTYPE html>
 <html>
   <head>
@@ -58,6 +107,7 @@ app = Dash(
   </head>
   <body>
     {%app_entry%}
+    """ + _loading_overlay(APP_MODE) + """
     <footer>
       {%config%}
       {%scripts%}
