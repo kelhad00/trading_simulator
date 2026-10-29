@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None, notif_enabled=None, color_enabled=None, steps_per_candle=None, initial_bars=None, reminders_enabled=None, news_tags_enabled=None, leaderboard_enabled=None, commission_fee=None,
-                      discrete_enabled=None, discrete_checkpoints=None):
+                      discrete_enabled=None, discrete_checkpoints=None, discrete_zoom_candles=None):
     """Package stores + CSV files into an in-memory ZIP and return the bytes."""
     from trade.defaults import defaults as dlt
     buf = io.BytesIO()
@@ -32,6 +32,7 @@ def build_session_zip(companies, initial_cashflow, max_requests, update_time, da
                 "commission-fee": commission_fee if commission_fee is not None else dlt.commission_fee,
                 "discrete-enabled": bool(discrete_enabled),
                 "discrete-checkpoints": discrete_checkpoints or dlt.discrete_checkpoints,
+                "discrete-zoom-candles": discrete_zoom_candles if discrete_zoom_candles is not None else dlt.discrete_zoom_candles,
             }
         }
         zf.writestr("session.json", json.dumps(payload, ensure_ascii=False, indent=2))
@@ -91,4 +92,6 @@ def extract_session_zip(zip_bytes, data_path):
         # Sessions saved before discrete mode existed: running clock, as before
         "discrete-enabled": stores.get("discrete-enabled", False),
         "discrete-checkpoints": stores.get("discrete-checkpoints", dlt.discrete_checkpoints),
+        # Sessions saved before this setting existed: always the whole session, as before
+        "discrete-zoom-candles": stores.get("discrete-zoom-candles", 0),
     }

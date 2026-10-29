@@ -269,3 +269,58 @@ def test_old_session_files_play_with_the_clock(tmp_path):
         zf.writestr("session.json", json.dumps({"version": 1, "stores": {
             "companies": {}, "initial-cashflow": 100_000, "max-requests": 10, "update-time": 5000}}))
     assert extract_session_zip(buf.getvalue(), str(tmp_path))["discrete-enabled"] is False
+
+
+# ── Zoom on the first trials (asked by Fan, 2026-10-29) ──────────────────
+# A few candles across the whole session width look tiny: while fewer than
+# "discrete-zoom-candles" are shown, the chart shows only the candles seen so far.
+
+def draw_zoom(market_df, monkeypatch, i, zoom, discrete=True):
+    monkeypatch.setattr(graph, "ctx", SimpleNamespace(triggered_id="trial-jump"))
+    return graph.update_graph(1, "AAA", market_df.index[i], time.time(), 15, 0, [], "light", True, None,
+                              100_000, None, 4, 104, 2000, 10, 100_000, {}, "session-1",
+                              discrete=discrete, checkpoints=CHECKPOINTS, discrete_zoom=zoom)
+
+
+def x_range(out):
+    return list(out[1].layout.xaxis.range)
+
+
+def test_few_candles_are_zoomed_on(market_df, monkeypatch):
+    out = draw_zoom(market_df, monkeypatch, 104, zoom=200)         # 105 candles < 200
+    assert x_range(out) == [-0.5, 114.5]                            # 105 candles + 10 empty slots
+
+
+def test_from_the_threshold_on_the_whole_session_is_shown(market_df, monkeypatch):
+    out = draw_zoom(market_df, monkeypatch, 104, zoom=105)         # 105 candles, not fewer than 105
+    assert x_range(out) == [-0.5, 159.5]                            # all 160 slots, as before
+
+
+def test_zero_means_never_zoom(market_df, monkeypatch):
+    assert x_range(draw_zoom(market_df, monkeypatch, 104, zoom=0)) == [-0.5, 159.5]
+
+
+def test_timer_mode_never_zooms(market_df):
+    from trade.utils.graph.candlestick_charts import create_graph
+    fig, _ = create_graph(market_df["AAA"], market_df.index[19], False, 20, follow=True, zoom_below=None)
+    assert list(fig.layout.xaxis.range) == [-0.5, 159.5]
+
+
+def test_zoom_setting_is_saved_and_refused_when_negative(fake_data):
+    out = advanced.update_advanced_settings(1, *VALUES, "?lang=en", 0, True, "105, 110", 80)
+    assert out[10] == 80 and out[-1].title == "Settings updated"
+    out = advanced.update_advanced_settings(1, *VALUES, "?lang=en", 0, True, "105, 110", -5)
+    assert out[-1].title == "Error" and out[10] is advanced.no_update
+
+
+def test_zoom_setting_is_kept_in_session_files(fake_data, tmp_path):
+    raw = build_session_zip({}, 100_000, 10, 5000, str(fake_data), discrete_enabled=True, discrete_zoom_candles=80)
+    assert extract_session_zip(raw, str(tmp_path))["discrete-zoom-candles"] == 80
+
+
+def test_old_session_files_never_zoom(tmp_path):
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("session.json", json.dumps({"version": 1, "stores": {
+            "companies": {}, "initial-cashflow": 100_000, "max-requests": 10, "update-time": 5000}}))
+    assert extract_session_zip(buf.getvalue(), str(tmp_path))["discrete-zoom-candles"] == 0

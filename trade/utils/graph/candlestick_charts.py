@@ -41,7 +41,13 @@ def _slots_in_view(view_range, all_labels):
     return (first, last) if first <= last else (0, last_slot)
 
 
-def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True, partial=None, view_range=None):
+def _zoom_end(shown, total):
+    """Last slot + 1 shown when zoomed on the first candles: a little room on the right."""
+    return min(total, shown + max(2, round(shown * 0.1)))
+
+
+def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True, partial=None, view_range=None,
+                 zoom_below=None):
     """
     Create a candlestick chart for the selected stock or update an existing one
 
@@ -67,6 +73,11 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
         Moving candles: called with the newest timestamp shown, returns that
         candle's (open, high, low, close) at the current step, or None when
         it is closed. See trade/utils/candle_steps.py.
+
+    zoom_below : int, optional
+        Discrete mode: while fewer candles than this are shown, the followed view
+        is zoomed on them instead of the whole session width, where a few candles
+        look tiny (asked by Fan, 2026-10-29). None or 0: always the whole session.
 
     Returns
     -------
@@ -183,9 +194,11 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
     # - only on candles already shown, so future dates aren't revealed.
     # plot_df is a prefix of the full data, so slot i in all_labels is also
     # candle i of x_labels.
+    zoomed = bool(follow and zoom_below and len(x_labels) < zoom_below)
     first, last = _slots_in_view(view_range, all_labels)
-    if not follow and not view_range:
-        # Autoscale button: Plotly fits the candles shown, so that's what is on screen
+    if (not follow and not view_range) or zoomed:
+        # Autoscale button (Plotly fits the candles shown) or zoomed on the first
+        # candles: the candles shown are what is on screen
         first, last = 0, len(x_labels) - 1
     tick_step = _date_label_step(last - first + 1)
     # (no range() here: this function has a parameter named `range`)
@@ -223,7 +236,8 @@ def create_graph(dataframe, timestamp='', next_graph=True, range=10, follow=True
     # highest High / lowest Low shown so far plus 15% padding. Skipped while
     # `follow` is False so a user's manual pan/zoom isn't overridden.
     if follow:
-        figure.update_xaxes(range=[-0.5, len(all_labels) - 0.5])
+        end = _zoom_end(len(x_labels), len(all_labels)) if zoomed else len(all_labels)
+        figure.update_xaxes(range=[-0.5, end - 0.5])
         hi = float(plot_df['High'].max())
         lo = float(plot_df['Low'].min())
         pad = (hi - lo) * 0.15 or hi * 0.01

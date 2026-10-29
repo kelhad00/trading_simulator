@@ -187,12 +187,15 @@ def track_graph_auto_follow(relayout_data, company):
     State('discrete-checkpoints', 'data'),
     # "Reset axes" (track_graph_auto_follow): draw the chart again at the same moment
     Input('graph-redraw', 'data'),
+    # Discrete mode: zoom on the candles while fewer than this are shown
+    State('discrete-zoom-candles', 'data'),
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
                  update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None,
                  news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True, lang=None,
-                 commission_fee=None, trial_jump=None, discrete=False, checkpoints=None, graph_redraw=None):
+                 commission_fee=None, trial_jump=None, discrete=False, checkpoints=None, graph_redraw=None,
+                 discrete_zoom=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     if discrete:
@@ -279,7 +282,8 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         fig, new_ts = create_graph(dftmp, timestamp, advance, int(initial_bars or dlt.initial_reveal_bars), follow=following,
                                    # zoomed in or autoscaled: date labels adapt to the candles on screen
                                    view_range=manual_range if (not following and manual_range) else None,
-                                   partial=forming_candle)
+                                   partial=forming_candle,
+                                   zoom_below=int(discrete_zoom or 0) if discrete else None)
 
         if not following and manual_range:
             # Pin the view to exactly where the user left it — sending no

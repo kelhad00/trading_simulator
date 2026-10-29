@@ -53,6 +53,7 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("commission-fee", "data", allow_duplicate=True),
     Output("discrete-enabled", "data", allow_duplicate=True),
     Output("discrete-checkpoints", "data", allow_duplicate=True),
+    Output("discrete-zoom-candles", "data", allow_duplicate=True),
     Output("session-id", "data", allow_duplicate=True),
     Input("upload-session", "contents"),
     State("upload-session", "filename"),
@@ -61,7 +62,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return (no_update,) * 25
+        return (no_update,) * 26
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -80,7 +81,7 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 13
+        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 14
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
@@ -120,6 +121,7 @@ def import_session(contents, filename, search):
         stores["commission-fee"],
         stores["discrete-enabled"],
         stores["discrete-checkpoints"],
+        stores["discrete-zoom-candles"],
         None,          # session-id: a new one when the dashboard opens (new log folder)
     )
 

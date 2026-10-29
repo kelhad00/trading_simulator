@@ -119,6 +119,13 @@ def advanced_settings(lang="fr"):
                     description=tl["discrete"]["help"],
                     placeholder="10, 15",
                 ),
+                dmc.NumberInput(
+                    id="input-discrete-zoom",
+                    label=tl["discrete"]["zoom"],
+                    description=tl["discrete"]["zoom-help"],
+                    min=0,
+                    step=10,
+                ),
             ], className="flex flex-col gap-2"),
 
             dmc.Button(tl["button"]["update"], id="update-advanced-settings", color="dark", size="md"),

@@ -60,6 +60,7 @@ def save_leaderboard_setting(checked):
     Output("input-commission-fee", "value"),
     Output("discrete-enabled-input", "checked"),
     Output("input-discrete-checkpoints", "value"),
+    Output("input-discrete-zoom", "value"),
 
     Input('settings-tabs', 'value'),
 
@@ -73,9 +74,10 @@ def save_leaderboard_setting(checked):
     Input("commission-fee", "data"),
     Input("discrete-enabled", "data"),
     Input("discrete-checkpoints", "data"),
+    Input("discrete-zoom-candles", "data"),
 )
 def set_advanced_settings_default_values(tabs, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars,
-                                         commission_fee=None, discrete=False, checkpoints=None):
+                                         commission_fee=None, discrete=False, checkpoints=None, zoom_candles=None):
     """
     Default values for the advanced settings inputs
     (PS : settings-tabs is used to refresh the callback when the tab is switched)
@@ -84,8 +86,9 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     bars = initial_bars if initial_bars is not None else dlt.initial_reveal_bars
     fee = commission_fee if commission_fee is not None else dlt.commission_fee
     checkpoints_text = ", ".join(str(c) for c in (checkpoints or dlt.discrete_checkpoints))
+    zoom = zoom_candles if zoom_candles is not None else dlt.discrete_zoom_candles
     return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps, bars, fee, \
-        bool(discrete), checkpoints_text
+        bool(discrete), checkpoints_text, zoom
 
 
 @callback(
@@ -99,6 +102,7 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     Output("commission-fee", "data"),
     Output("discrete-enabled", "data"),
     Output("discrete-checkpoints", "data"),
+    Output("discrete-zoom-candles", "data"),
     Output("notifications", "children", allow_duplicate=True),
 
     Input("update-advanced-settings", "n_clicks"),
@@ -114,10 +118,12 @@ def set_advanced_settings_default_values(tabs, update_time, max_requests, init_c
     State("input-commission-fee", "value"),
     State("discrete-enabled-input", "checked"),
     State("input-discrete-checkpoints", "value"),
+    State("input-discrete-zoom", "value"),
     prevent_initial_call=True
 )
 def update_advanced_settings(n, update_time, max_requests, init_cashflow, simulation_duration, news_font_size, steps_per_candle, initial_bars, search,
-                             commission_fee=dlt.commission_fee, discrete=False, checkpoints_text=None):
+                             commission_fee=dlt.commission_fee, discrete=False, checkpoints_text=None,
+                             zoom_candles=dlt.discrete_zoom_candles):
     """Update the advanced settings stores with inputs values when the button is clicked"""
 
     if n is None or n == 0:
@@ -127,7 +133,7 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow, simula
     tl = tls[lang]["settings"]["advanced"]["notif"]
 
     def error(message):
-        return (no_update,) * 10 + (dmc.Notification(
+        return (no_update,) * 11 + (dmc.Notification(
             title=tl["error-title"],
             id="simple-notify",
             action="show",
@@ -138,8 +144,9 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow, simula
 
     fee_ok = commission_fee is not None and 0 <= float(commission_fee) <= dlt.max_commission_fee
     if update_time is None or max_requests is None or init_cashflow is None or simulation_duration is None or news_font_size is None or steps_per_candle is None or initial_bars is None \
-            or not fee_ok:
+            or not fee_ok or (zoom_candles is not None and float(zoom_candles) < 0):
         return error(tl["error-message"])
+    zoom_candles = int(zoom_candles) if zoom_candles is not None else dlt.discrete_zoom_candles
 
     # Discrete mode: a valid candle list, and the session opens on the first trial
     checkpoints = no_update
@@ -152,7 +159,7 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow, simula
         initial_bars = history_bars(checkpoints)
 
     return update_time, max_requests, init_cashflow, simulation_duration, news_font_size, int(steps_per_candle), int(initial_bars), float(commission_fee), \
-        bool(discrete), checkpoints, dmc.Notification(
+        bool(discrete), checkpoints, zoom_candles, dmc.Notification(
             id="notification-settings-updated",
             title=tl["success-title"],
             action="show",

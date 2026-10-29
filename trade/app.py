@@ -218,6 +218,7 @@ app.layout = dmc.MantineProvider([
         # Settings -> Advanced. Off by default (utils/trials.py)
         dcc.Store(id="discrete-enabled", data=False, storage_type="local"),
         dcc.Store(id="discrete-checkpoints", data=dlt.discrete_checkpoints, storage_type="local"),
+        dcc.Store(id="discrete-zoom-candles", data=dlt.discrete_zoom_candles, storage_type="local"),
         dcc.Store(id="color-enabled", data=False, storage_type="local"),
         dcc.Store(id="notif-filter", data=["positive", "negative", "neutral"], storage_type="local"),
         dcc.Store(id="notif-offset", data=0, storage_type="local"),

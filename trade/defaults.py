@@ -35,6 +35,11 @@ class Defaults:
 
     # Discrete mode (off by default): candle numbers of the trials, Settings -> Advanced
     discrete_checkpoints = [10, 15]
+    # Discrete mode: the chart zooms on the candles while fewer than this are shown
+    # (a few candles across the whole session width look tiny). 0 = never zoom.
+    # 100 chosen by comparing screenshots with 20 to 200 candles (29 Oct 2026): below
+    # 100 the whole-session view is a thin strip; from 100 it uses about a quarter of the chart.
+    discrete_zoom_candles = 100
 
     # Default real-world session length in minutes
     simulation_duration = 15

@@ -388,6 +388,8 @@ translation = {
                     "switch": "Discrete mode: the chart stops at each trial and the participant clicks \"Next trial\"",
                     "checkpoints": "Candles shown at each trial",
                     "help": "Example: 10, 15 → trial 1 shows candles 1 to 10, trial 2 candles 1 to 15. Waiting orders are checked on every candle in between. No timer: the session ends after the last trial. News pop-ups are not shown in this mode; the news stays in the news list. Saving also sets \"Candles of history shown at the start\".",
+                    "zoom": "Zoom on the candles while fewer than this are shown",
+                    "zoom-help": "A few candles across the whole session width look tiny: below this number the chart shows only the candles already seen; from this number on, the whole session. 0 = always the whole session.",
                 },
                 "input": {
                     "update-time": "Time between updates (ms), per candle step",
