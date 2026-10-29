@@ -32,3 +32,51 @@ def test_loading_copies_the_data_files(fake_data, tmp_path_factory):
     target = tmp_path_factory.mktemp("load")
     extract_session_zip(raw, str(target))
     assert (target / "generated_data.csv").exists() and (target / "news.csv").exists()
+
+
+def test_revenue_data_reaches_the_participant_computer(fake_data, tmp_path_factory):
+    """The zip looked for "revenues.csv", a file that never exists: the revenue data
+    never reached the participants' computers (found in the audit, fixed 30 Oct 2026)."""
+    (fake_data / "revenue.csv").write_text("symbol,AAA\nasOfDate,2024-12-31\nTotalRevenue,1000\n", encoding="utf-8")
+    raw = build_session_zip({}, 100_000, 10, 5000, str(fake_data))
+    assert "revenue.csv" in zipfile.ZipFile(io.BytesIO(raw)).namelist()
+    target = tmp_path_factory.mktemp("participant")             # a clean participant computer
+    extract_session_zip(raw, str(target))
+    assert (target / "revenue.csv").read_text(encoding="utf-8") == (fake_data / "revenue.csv").read_text(encoding="utf-8")
+
+
+def test_notification_settings_reach_the_participant_computer(fake_data, tmp_path):
+    raw = build_session_zip({}, 100_000, 10, 5000, str(fake_data), notif_filter=["negative"], notif_offset=2)
+    stores = extract_session_zip(raw, str(tmp_path))
+    assert stores["notif-filter"] == ["negative"]
+    assert stores["notif-offset"] == 2
+
+
+def test_old_session_files_keep_the_default_notification_settings(tmp_path):
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("session.json", json.dumps({"version": 1, "stores": {
+            "companies": {}, "initial-cashflow": 100_000, "max-requests": 10, "update-time": 5000}}))
+    stores = extract_session_zip(buf.getvalue(), str(tmp_path))
+    assert stores["notif-filter"] == ["positive", "negative", "neutral"]
+    assert stores["notif-offset"] == 0
+
+
+def test_every_setting_saved_in_the_configurator_is_in_the_session_file():
+    """Each participant uses their own computer: a setting missing from session.zip is
+    silently replaced by its default there. Every local store the Configurator writes
+    must be exported and imported."""
+    import re
+    from pathlib import Path
+    trade = Path(__file__).resolve().parents[1] / "trade"
+    settings_code = "".join(p.read_text(encoding="utf-8") for p in (trade / "callbacks" / "settings").rglob("*.py"))
+    written = set(re.findall(r'Output\(\s*["\']([\w-]+)["\']\s*,\s*["\']data["\']', settings_code))
+    app_code = (trade / "app.py").read_text(encoding="utf-8")
+    local = set(re.findall(r'dcc\.Store\(id=["\']([\w-]+)["\'][^)]*storage_type=["\']local["\']', app_code))
+    exported = set(json.loads(zipfile.ZipFile(io.BytesIO(build_session_zip({}, 1, 1, 1, str(trade))))
+                              .read("session.json"))["stores"])
+    import_code = (trade / "callbacks" / "home_import.py").read_text(encoding="utf-8")
+    imported = set(re.findall(r'Output\(\s*["\']([\w-]+)["\']\s*,\s*["\']data["\']', import_code))
+    settings = (written & local) - {"companies"}               # companies: exported, set elsewhere
+    assert settings - exported == set(), "saved in the Configurator but not exported"
+    assert settings - imported == set(), "exported but not imported on the participant's computer"

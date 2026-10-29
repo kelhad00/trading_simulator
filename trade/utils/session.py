@@ -4,9 +4,19 @@ import os
 import zipfile
 from datetime import datetime
 
+# Data files carried in session.zip, under the names the app reads them by
+# (trade/utils/market.py). It said "revenues.csv" before 30 Oct 2026, a file that
+# never exists, so revenue data never reached the participants' computers.
+DATA_FILES = ("generated_data.csv", "news.csv", "revenue.csv")
+
+# Notification settings (Settings -> News), defaults as in trade/app.py
+NOTIF_FILTER_DEFAULT = ["positive", "negative", "neutral"]
+NOTIF_OFFSET_DEFAULT = 0
+
 
 def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None, notif_enabled=None, color_enabled=None, steps_per_candle=None, initial_bars=None, reminders_enabled=None, news_tags_enabled=None, leaderboard_enabled=None, commission_fee=None,
-                      discrete_enabled=None, discrete_checkpoints=None, discrete_zoom_candles=None):
+                      discrete_enabled=None, discrete_checkpoints=None, discrete_zoom_candles=None,
+                      notif_filter=None, notif_offset=None):
     """Package stores + CSV files into an in-memory ZIP and return the bytes."""
     from trade.defaults import defaults as dlt
     buf = io.BytesIO()
@@ -33,11 +43,13 @@ def build_session_zip(companies, initial_cashflow, max_requests, update_time, da
                 "discrete-enabled": bool(discrete_enabled),
                 "discrete-checkpoints": discrete_checkpoints or dlt.discrete_checkpoints,
                 "discrete-zoom-candles": discrete_zoom_candles if discrete_zoom_candles is not None else dlt.discrete_zoom_candles,
+                "notif-filter": notif_filter if notif_filter is not None else NOTIF_FILTER_DEFAULT,
+                "notif-offset": notif_offset if notif_offset is not None else NOTIF_OFFSET_DEFAULT,
             }
         }
         zf.writestr("session.json", json.dumps(payload, ensure_ascii=False, indent=2))
 
-        for filename in ("generated_data.csv", "news.csv", "revenues.csv"):
+        for filename in DATA_FILES:
             path = os.path.join(data_path, filename)
             if os.path.exists(path):
                 zf.write(path, filename)
@@ -60,7 +72,7 @@ def extract_session_zip(zip_bytes, data_path):
 
         stores = payload["stores"]
 
-        for filename in ("generated_data.csv", "news.csv", "revenues.csv"):
+        for filename in DATA_FILES:
             if filename in names:
                 dest = os.path.join(data_path, filename)
                 with open(dest, "wb") as f:
@@ -94,4 +106,7 @@ def extract_session_zip(zip_bytes, data_path):
         "discrete-checkpoints": stores.get("discrete-checkpoints", dlt.discrete_checkpoints),
         # Sessions saved before this setting existed: always the whole session, as before
         "discrete-zoom-candles": stores.get("discrete-zoom-candles", 0),
+        # Sessions saved before 30 Oct 2026 didn't carry these: the defaults, as before
+        "notif-filter": stores.get("notif-filter", NOTIF_FILTER_DEFAULT),
+        "notif-offset": stores.get("notif-offset", NOTIF_OFFSET_DEFAULT),
     }
