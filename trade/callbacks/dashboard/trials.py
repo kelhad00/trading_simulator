@@ -1,5 +1,5 @@
 """Discrete mode on the dashboard: the "Next trial" button (trade/utils/trials.py)."""
-from dash import Output, Input, State, callback, no_update
+from dash import Output, Input, State, callback, ctx, no_update
 from dash.exceptions import PreventUpdate
 
 from trade.locales import translations as tls, language
@@ -36,6 +36,35 @@ def show_next_trial_button(timestamp, discrete, checkpoints, lang=None):
 
 
 @callback(
+    Output('trial-confirm-modal', 'opened'),
+    Output('trial-confirm-modal', 'title'),
+    Output('trial-confirm-text', 'children'),
+    Output('trial-confirm-no', 'children'),
+    Output('trial-confirm-yes', 'children'),
+    Input('next-trial-btn', 'n_clicks'),
+    Input('trial-confirm-no', 'n_clicks'),
+    State('timestamp', 'data'),
+    State('discrete-checkpoints', 'data'),
+    State("url", "search"),
+    prevent_initial_call=True,
+)
+def ask_before_next_trial(n_next, n_no, timestamp, checkpoints, lang=None):
+    """"Next trial" first asks if the participant has finished: a trial cannot be
+    seen again. "No" closes the window; "Yes" runs next_trial below."""
+    if ctx.triggered_id == 'trial-confirm-no':
+        return False, no_update, no_update, no_update, no_update
+    if not n_next:
+        raise PreventUpdate
+    t = tls[language(lang)]['trials']
+    market_df = get_market_dataframe()
+    number = candle_number(market_df.index, timestamp) if market_df is not None else None
+    last = number is not None and next_checkpoint(checkpoints or [], number) is None
+    if last:
+        return True, t['confirm-title-last'], t['confirm-text-last'], t['confirm-no'], t['confirm-yes-last']
+    return True, t['confirm-title'], t['confirm-text'], t['confirm-no'], t['confirm-yes']
+
+
+@callback(
     Output('timestamp', 'data', allow_duplicate=True),
     Output('requests', 'data', allow_duplicate=True),
     Output('portfolio-shares', 'data', allow_duplicate=True),
@@ -47,7 +76,8 @@ def show_next_trial_button(timestamp, discrete, checkpoints, lang=None):
     Output('trial-jump', 'data'),
     Output('modal', 'opened', allow_duplicate=True),
     Output('periodic-updater', 'disabled', allow_duplicate=True),
-    Input('next-trial-btn', 'n_clicks'),
+    Output('trial-confirm-modal', 'opened', allow_duplicate=True),
+    Input('trial-confirm-yes', 'n_clicks'),     # "Yes" in the window asked by ask_before_next_trial
     State('timestamp', 'data'),
     State('discrete-enabled', 'data'),
     State('discrete-checkpoints', 'data'),
@@ -76,7 +106,7 @@ def next_trial(n_clicks, timestamp, discrete, checkpoints, requests, port_shares
     if target is None:
         logger.info("Last trial done: session ended")
         log_session_event("session-finish", timestamp, cashflow, company, session_id)
-        return (no_update,) * 8 + (True, True)
+        return (no_update,) * 8 + (True, True, False)
 
     requests = list(requests or [])
     cost_basis, sold_data = dict(cost_basis or {}), dict(sold_data or {})
@@ -85,4 +115,4 @@ def next_trial(n_clicks, timestamp, discrete, checkpoints, requests, port_shares
     new_ts = market_df.index[target - 1]
     log_session_event("next-trial", new_ts, cashflow, company, session_id)
     logger.info("Trial: candle %s -> %s", number, target)
-    return new_ts, requests, shares, cashflow, cost_basis, sold_data, None, target, no_update, no_update
+    return new_ts, requests, shares, cashflow, cost_basis, sold_data, None, target, no_update, no_update, False

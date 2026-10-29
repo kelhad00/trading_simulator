@@ -33,6 +33,20 @@ def graph(lang="fr"):
                 # Discrete mode only (shown by callbacks/dashboard/trials.py)
                 dmc.Button(id="next-trial-btn", n_clicks=0, color="dark", style={"display": "none"},
                            className="whitespace-nowrap"),
+                # Asked after "Next trial": the participant cannot come back to a trial
+                dmc.Modal(
+                    id="trial-confirm-modal",
+                    opened=False,
+                    centered=True,
+                    zIndex=10000,
+                    children=[
+                        dmc.Text(id="trial-confirm-text"),
+                        dmc.Group([
+                            dmc.Button(id="trial-confirm-no", n_clicks=0, variant="outline", color="dark"),
+                            dmc.Button(id="trial-confirm-yes", n_clicks=0, color="dark"),
+                        ], position="right", style={"marginTop": 24}),
+                    ],
+                ),
                 menu(lang, mode=APP_MODE),
             ], className="flex gap-4 justify-between items-center"),
 

@@ -44,6 +44,14 @@ translation = {
         "trials": {
             "next": "Next trial ➔",
             "finish": "Finish ➔",
+            # Window asked before going on (the participant cannot come back)
+            "confirm-title": "Go to the next trial?",
+            "confirm-text": "Have you finished buying and selling for this trial? You cannot come back to it.",
+            "confirm-title-last": "End the session?",
+            "confirm-text-last": "Have you finished buying and selling? The session will end and your results will be shown.",
+            "confirm-no": "No, stay",
+            "confirm-yes": "Yes, next trial",
+            "confirm-yes-last": "Yes, end the session",
         },
 
         # Company graph

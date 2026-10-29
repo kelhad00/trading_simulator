@@ -21,6 +21,14 @@ translation = {
         "trials": {
             "next": "Essai suivant ➔",
             "finish": "Terminer ➔",
+            # Fenêtre demandée avant de passer à la suite (pas de retour possible)
+            "confirm-title": "Passer à l'essai suivant ?",
+            "confirm-text": "Avez-vous fini d'acheter et de vendre pour cet essai ? Vous ne pourrez pas y revenir.",
+            "confirm-title-last": "Terminer la session ?",
+            "confirm-text-last": "Avez-vous fini d'acheter et de vendre ? La session va se terminer et vos résultats seront affichés.",
+            "confirm-no": "Non, rester",
+            "confirm-yes": "Oui, essai suivant",
+            "confirm-yes-last": "Oui, terminer la session",
         },
 
         # Company graph

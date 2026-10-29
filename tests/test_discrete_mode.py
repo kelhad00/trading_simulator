@@ -145,6 +145,52 @@ def test_no_button_in_normal_mode(market_df):
     assert style == {"display": "none"}
 
 
+# ── "Are you sure?" before going on (asked by Fan, 2026-10-29) ───────────
+
+def ask(market_df, monkeypatch, trigger, i, lang="?lang=en"):
+    monkeypatch.setattr(trials_cb, "ctx", SimpleNamespace(triggered_id=trigger))
+    return trials_cb.ask_before_next_trial(1, 0, market_df.index[i], CHECKPOINTS, lang)
+
+
+def test_next_trial_button_only_asks_first(market_df, monkeypatch):
+    opened, title, text, no, yes = ask(market_df, monkeypatch, "next-trial-btn", 104)
+    assert opened is True
+    assert title == "Go to the next trial?"
+    assert "cannot come back" in text
+    assert (no, yes) == ("No, stay", "Yes, next trial")
+
+
+def test_last_trial_asks_to_end_the_session(market_df, monkeypatch):
+    opened, title, text, _, yes = ask(market_df, monkeypatch, "next-trial-btn", 109)
+    assert opened is True
+    assert title == "End the session?"
+    assert yes == "Yes, end the session"
+
+
+def test_question_in_french(market_df, monkeypatch):
+    _, title, _, no, yes = ask(market_df, monkeypatch, "next-trial-btn", 104, "?lang=fr")
+    assert title == "Passer à l'essai suivant ?"
+    assert (no, yes) == ("Non, rester", "Oui, essai suivant")
+
+
+def test_no_closes_the_window_and_stays(market_df, monkeypatch):
+    out = ask(market_df, monkeypatch, "trial-confirm-no", 104)
+    assert out[0] is False
+    assert all(x is trials_cb.no_update for x in out[1:])
+
+
+def test_yes_goes_on_and_closes_the_window(market_df):
+    out = trials_cb.next_trial(1, market_df.index[104], True, CHECKPOINTS, [], {}, 100_000, {}, {}, "AAA", None)
+    assert out[0] == market_df.index[109]               # next trial
+    assert out[-1] is False                             # window closed
+
+
+def test_yes_on_the_last_trial_ends_the_session_and_closes_the_window(market_df):
+    out = trials_cb.next_trial(1, market_df.index[109], True, CHECKPOINTS, [], {}, 100_000, {}, {}, "AAA", None)
+    assert out[8] is True                               # results window
+    assert out[-1] is False
+
+
 # ── The chart: no running clock ──────────────────────────────────────────
 
 def draw(market_df, monkeypatch, trigger, i, started):
