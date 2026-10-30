@@ -292,6 +292,10 @@ in Settings, or clear the browser's site data for the app.
 | Show the leaderboard | A ranking of the participant against 20 robot traders | off |
 | Show the Autoscale and Reset axes buttons on the chart | The two buttons described in [Participant chart](#participant-chart) | off |
 
+<img src="docs/img/settings-advanced-en.png" alt="Settings → Advanced: display switches, moving candles and the price movement inside a candle" width="560">
+
+*Example with moving candles (every 15 min), the Random path and the chart buttons turned on; all three are off by default.*
+
 ### Price movement inside a forming candle
 The market data only has each candle's final Open, High, Low and Close, so the prices in between are
 generated (`trade/utils/candle_steps.py`):
@@ -306,6 +310,8 @@ The path is generated from a seed made of the company and the date, so every par
 same one. The chart, the "market price" button, waiting orders and the leaderboard all use the
 chosen path.
 
+<img src="docs/img/candle-paths-en.png" alt="The same real candle with the Simple and Random paths" width="700">
+
 ### Leaderboard
 The 20 robots are made from the app's own prices: at the first candle each robot keeps 5–40 % of
 the starting money as cash and buys a random mix of companies (paying the commission fee), then
@@ -314,9 +320,13 @@ assets = cash + money put aside for waiting buy orders + shares' value. With mov
 robots are valued at the price reached so far in the forming candle, like the participant
 (`trade/utils/leaderboard.py`).
 
+<img src="docs/img/leaderboard-en.png" alt="Leaderboard on the participant dashboard" width="420">
+
 ### Discrete mode (trials)
 Instead of a running clock, the chart stops at fixed candles ("trials") and the participant moves on
 with a **Next trial** button. Off by default.
+
+<img src="docs/img/settings-discrete-en.png" alt="Settings → Advanced: discrete mode" width="560">
 
 - **Candles shown at each trial**: for example `10, 15` → trial 1 shows candles 1 to 10, trial 2 candles
   1 to 15. Whole numbers, each bigger than the one before. Saving also sets "Candles of history shown
@@ -341,6 +351,8 @@ with a **Next trial** button. Off by default.
 | Show time reminders | Pop-ups at 25 %, 50 %, 75 % of the session and at 5, 2 and 1 minutes left | off |
 | Show sentiment tags and colours on news | Positive/negative tags and colours in the news list | on |
 
+<img src="docs/img/settings-notifications-en.png" alt="Settings → News → Notifications" width="560">
+
 ## Participant chart
 The toolbar above the chart (zoom, pan, draw a line, zoom in/out) is always shown. The two buttons
 below are only there when **Show the Autoscale and Reset axes buttons on the chart** is on
@@ -352,6 +364,8 @@ below are only there when **Show the Autoscale and Reset axes buttons on the cha
 - A manual zoom or pan stays where the participant left it until one of these two buttons is used.
   Switching company always goes back to the starting view.
 - Implemented in `trade/callbacks/dashboard/graph.py` (`track_graph_auto_follow`).
+
+<img src="docs/img/chart-buttons-en.png" alt="Participant chart with the Autoscale and Reset axes buttons at the top right" width="700">
 
 ## End of the session
 A results window shows the starting money, the final value and the profit or loss. The final value

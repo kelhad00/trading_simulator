@@ -291,6 +291,10 @@ paramètres) : le changer dans Paramètres, ou effacer les données du site pour
 | Afficher le classement | Classement du participant contre 20 traders robots | désactivé |
 | Afficher les boutons Autoscale et Reset axes sur le graphique | Les deux boutons décrits dans [Graphique du participant](#graphique-du-participant) | désactivé |
 
+<img src="docs/img/settings-advanced-fr.png" alt="Paramètres → Avancé : affichage, bougies en mouvement et mouvement du prix dans une bougie" width="560">
+
+*Exemple avec les bougies en mouvement (toutes les 15 min), le chemin Aléatoire et les boutons du graphique activés ; les trois sont désactivés par défaut.*
+
 ### Mouvement du prix dans une bougie en cours
 Les données de marché n'ont que l'ouverture, le plus haut, le plus bas et la clôture finale de chaque
 bougie : les prix entre les deux sont donc générés (`trade/utils/candle_steps.py`) :
@@ -305,6 +309,8 @@ finissent exactement à sa clôture. Le chemin est généré à partir d'une gra
 de la date : tous les participants voient le même. Le graphique, le bouton « prix du marché », les
 ordres en attente et le classement utilisent tous le chemin choisi.
 
+<img src="docs/img/candle-paths-fr.png" alt="La même vraie bougie avec les chemins Simple et Aléatoire" width="700">
+
 ### Classement
 Les 20 robots sont créés à partir des prix de l'application : à la première bougie, chaque robot garde
 5 à 40 % de l'argent de départ en liquide et achète un mélange aléatoire d'entreprises (en payant les
@@ -313,9 +319,13 @@ participants. Tout le monde est classé selon son total = liquide + argent mis d
 d'achat en attente + valeur des actions. Avec les bougies en mouvement, les robots sont évalués au prix
 atteint jusque-là dans la bougie en cours, comme le participant (`trade/utils/leaderboard.py`).
 
+<img src="docs/img/leaderboard-fr.png" alt="Classement sur le tableau de bord du participant" width="420">
+
 ### Mode discret (essais)
 Au lieu d'une horloge qui avance, le graphique s'arrête à des bougies fixées (« essais ») et le
 participant passe à la suite avec le bouton **Essai suivant**. Désactivé par défaut.
+
+<img src="docs/img/settings-discrete-fr.png" alt="Paramètres → Avancé : mode discret" width="560">
 
 - **Bougies affichées à chaque essai** : par exemple `10, 15` → l'essai 1 montre les bougies 1 à 10,
   l'essai 2 les bougies 1 à 15. Des nombres entiers, chacun plus grand que le précédent. L'enregistrement
@@ -341,6 +351,8 @@ participant passe à la suite avec le bouton **Essai suivant**. Désactivé par 
 | Afficher les rappels de temps | Pop-ups à 25 %, 50 %, 75 % de la session et à 5, 2 et 1 minutes de la fin | désactivé |
 | Afficher les étiquettes et couleurs de sentiment | Étiquettes et couleurs positives/négatives dans la liste des actualités | activé |
 
+<img src="docs/img/settings-notifications-fr.png" alt="Paramètres → Actualités → Notifications" width="560">
+
 ## Graphique du participant
 La barre d'outils au-dessus du graphique (zoom, déplacement, tracer une ligne, zoom avant/arrière) est
 toujours affichée. Les deux boutons ci-dessous n'y sont que si **Afficher les boutons Autoscale et Reset
@@ -352,6 +364,8 @@ axes sur le graphique** est activé (Paramètres → Avancé, désactivé par d�
 - Un zoom ou un déplacement manuel reste là où le participant l'a laissé jusqu'à l'utilisation d'un de
   ces deux boutons. Changer d'entreprise revient toujours à la vue de départ.
 - Code : `trade/callbacks/dashboard/graph.py` (`track_graph_auto_follow`).
+
+<img src="docs/img/chart-buttons-fr.png" alt="Graphique du participant avec les boutons Autoscale et Reset axes en haut à droite" width="700">
 
 ## Fin de la session
 Une fenêtre de résultats montre l'argent de départ, la valeur finale et le gain ou la perte. La valeur
