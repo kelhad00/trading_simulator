@@ -65,6 +65,15 @@ Les données de marché sont générées pour chaque entreprise en fonction de l
 - `Alpha` : La valeur minimale de variation du marché entre le premier et le dernier jour.
 - `Length` : Le nombre de jours pour la tendance générée.
 - `Start value` : La valeur de départ pour les données générées.
+- `Modèle technique (facultatif)` : une figure chartiste dessinée dans une tendance : Double Top,
+  Double Bottom, Head & Shoulders, Inverse Head & Shoulders, Ascending / Descending Triangle,
+  Bullish / Bearish Flag, Cup & Handle, Rising / Falling Wedge.
+- `Superposition d'événement` : un **Crash** ou un **Rally** soudain ajouté par-dessus les tendances,
+  avec sa `Position (%)` dans le graphique et son `Ampleur (%)`. Un avertissement apparaît si
+  l'événement commence dans un segment qui contient une figure, car sa forme serait déformée.
+
+Une fois les données de marché générées, les actualités de ces entreprises sont générées en arrière-plan
+avec les réglages de l'onglet Actualités ; une notification indique quand c'est fini.
 
 # News
 
@@ -84,10 +93,13 @@ Les données sauvegardées pour chaque ticker sont les suivantes :
 - `title` : Le titre de l'article
 - `content` : Le contenu de l'article
 - `sector` : Le secteur de l'entreprise (Uniquement si la news est générée)
-- `sentiment` : Le sentiment de l'article (Uniquement si la news est générée)
+- `sentiment` : Le ton demandé pour l'article, `positive` ou `negative` (Uniquement si la news est générée)
+- `sentiment_label` : Le ton que FinBERT lit dans l'article : `strong positive`, `weak positive`,
+  `neutral`, `weak negative` ou `strong negative`. Il décide de l'étiquette et de la couleur montrées
+  au participant, et du filtre des notifications (Uniquement si la news est générée)
 
 #### Columns
-les colonnes du fichier sont celles decrites ci-dessus
+Les colonnes du fichier sont celles décrites ci-dessus, séparées par `;`.
 
 #### Example
 ```csv
@@ -97,14 +109,32 @@ date;ticker;sector;title;content;sentiment
 
 ## Generation
 
-Les articles de news sont générés à l'aide de Llama3 et d'un dataset d'articles de news scrappé depuis abcbourse.com. Le LLM prend un article de news du même secteur d'activité que l'entreprise dans le dataset et le reformule. Les news seront ensuite affichées de manière aléatoire ou séquentielle, en fonction du mode sélectionné, lorsqu'une variation répond aux paramètres spécifiés (alpha & alpha interval).
+Les articles sont écrits par un modèle d'IA, soit dans le cloud avec **Groq** (offre gratuite, clé
+d'API nécessaire), soit sur l'ordinateur avec **Ollama**. Le modèle est réglé dans `.env`
+(`GROQ_MODEL`, par défaut `openai/gpt-oss-120b` ; `OLLAMA_MODEL`, par défaut `qwen3:8b`). Chaque
+article est placé là où le prix varie assez (alpha) et écrit pour correspondre à ce mouvement :
+positif quand le prix monte, négatif quand il baisse. Chaque entreprise a un secteur d'activité,
+utilisé dans l'article.
+
+Chaque article est ensuite vérifié par **FinBERT**, un second modèle qui lit son ton (colonne
+`sentiment_label`). Les résultats sont dans `data/verification_report.csv` ; sans les paquets de
+FinBERT, les articles sont marqués `needs_review` (voir README, « Generating news »).
 
 ### Parameters
-- `API key` : Entrez votre clé d'API Groq pour la génération de news.
-- `Alpha` : La valeur minimale de variation du marché entre le premier et le dernier jour.
+- `Choisir le mode de génération` : Local (Ollama) ou Groq (Cloud). L'URL d'Ollama et la clé d'API
+  Groq sont lues dans `.env` ; écrire dans la case les remplace.
+- `Alpha` : Le pourcentage minimal de variation du marché entre deux jours pour placer une actualité.
 - `Alpha interval` : L'intervalle de jours utilisé pour calculer la variation alpha.
 - `Delta` : Cette valeur décale les news de quelques jours. Par exemple, en la réglant à 1, les news seront affichées un jour plus tôt.
-- `Mode` : Sélectionnez le mode de génération des news (Aléatoire ou Séquentiel).
+
+### Mode de génération
+- `Mode aléatoire` : choisir combien d'actualités positives et négatives placer, au hasard parmi les
+  mouvements au-dessus d'alpha.
+- `Mode linéaire` : placer les actualités sur les mouvements au-dessus d'alpha, dans l'ordre. `Top-K`
+  ne garde que les K plus grandes variations (0 = toutes).
+- `Mode manuel` : cliquer sur le graphique (ou choisir une date) pour placer soi-même chaque actualité
+  positive ou négative. Les entreprises avec des positions manuelles les utilisent à la place du
+  placement automatique.
 
 Chaque entreprise est assignée à un secteur d'activité. Les news générées seront du même secteur que l'entreprise.
 
@@ -126,15 +156,18 @@ Plusieurs entreprises peuvent être enregistrées en une fois dans Paramètres �
 
 Les données sauvegardées pour chaque ticker sont les suivantes :
 - `currencyCode`: la devise
-- `NetIncome`:
-- `TotalRevenue`: 
-- `asOfDate`: l'année de la donnée 
-- `symbol`: le ticker 
+- `NetIncome`: le résultat net de l'entreprise (bénéfice après tous les coûts et impôts) pour l'année
+- `TotalRevenue`: le chiffre d'affaires total de l'entreprise pour l'année
+- `asOfDate`: la date de fin de l'exercice
+- `symbol`: le ticker
+
+Le participant les voit sous forme de graphique en barres (l'onglet revenus du graphique), seulement
+pour les années terminées avant la date simulée en cours. Les indices n'ont pas de revenus.
 
 #### Index 
 - `currencyCode` : la devise
-- `NetIncome` : le revenus net
-- `TotalRevenue` : le revenus total
+- `NetIncome` : le résultat net
+- `TotalRevenue` : le chiffre d'affaires total
 
 #### Columns
 - `symbol` : le ticker
@@ -343,7 +376,7 @@ Pour importer proprement vos données, veuillez utiliser l'onglet `Import` de la
 Importer les données de marché à travers cette page, permet de mettre à jour le champ `got_charts` du Store companies (cf [Companies](#format-2)).
 
 # Export
-All the data used and generated are stored. We export the information of the interactions with the application, the portfolio and the requests. 
+Toutes les données utilisées et générées sont conservées. On enregistre les interactions avec l'application, le portefeuille et les requêtes.
 
 ## Storage
 
@@ -368,55 +401,78 @@ Les anciennes sessions étaient d'abord écrites dans `data/export` puis déplac
 numéroté (`data/exports/1`, `2`, ...) au Reset ; ces dossiers sont gardés tels quels.
 
 ### Triggers
-Les données sont exportées à chaque fois qu'une action est effectuée par l'utilisateur.
-- Lorsqu'une news est cliquée ou fermée
-- Lorsqu'une action est effectuée sur le formulaire de requêtes (changement de type d'action)
-- Lors d'un changement de type de graphique (Données de marché ou Revenus)
-- Lorsque le ticker selectionné change
-- Lorsqu'une requête est ajoutée
-- Lorsqu'une requête est supprimée
-- Lorsqu'une action est effectuée sur le portefeuille (Achat ou Vente)
-- Lorsque le timestamp de la donnée de marché change
+Une ligne est écrite dans chacun des trois fichiers à chaque action du participant
+(`trade/callbacks/dashboard/export.py`) :
+- Lorsqu'une actualité est ouverte ou fermée
+- Lorsque le formulaire de requêtes passe d'Achat à Vente ou l'inverse
+- Lorsque le graphique passe des données de marché aux revenus ou l'inverse
+- Lorsque l'entreprise sélectionnée change
+- Lorsque la liste des ordres en attente change : un ordre est ajouté, modifié, exécuté ou annulé
+- Lorsqu'un ordre ou tous les ordres sont supprimés
 
-### interface-logs.csv 
+Les trois lignes d'une même action ont le même `uuid` : elles peuvent être reliées.
+
+Les événements de session sont aussi écrits dans `interface-logs.csv`, avec le nom de l'événement dans
+la colonne `form-action` : `session-start`, `session-pause`, `session-resume`, `next-trial` (mode
+discret) et `session-finish`.
+
+Avec les bougies en mouvement, `market-timestamp` contient les minutes atteintes dans la bougie
+(ex. 03:15), pas seulement la date de la bougie.
+
+### interface-logs.csv
 Les données sauvegardées sont les suivantes :
-- `uuid` : L'identifiant unique de la session (trigger)
+- `uuid` : L'identifiant unique de l'action
+- `session-id` : La session (même nom que le dossier)
 - `market-timestamp` : Le timestamp de la donnée de marché (la date de la simulation)
-- `host-timestamp` : Le timestamp de l'interaction (la date réele)
-- `cashflow` : Le cashflow de l'utilisateur
+- `host-timestamp` : Le timestamp de l'interaction (la date réelle, en secondes depuis 1970)
+- `cashflow` : Le liquide du participant
 - `selected-company` : L'entreprise sélectionnée
-- `form-action` : L'état du formulaire de requetes (Achat ou Vente)
-- `chart-type` : Le type de graphique sélectionné (Données de marché ou Revenus)
-- `is_news_description_displayed` : (bool) Si une news a été cliqué pour afficher la description
-- `news_title` : Le titre de la news cliqué ou None
+- `form-action` : L'état du formulaire de requêtes (`buy` ou `sell`), ou un événement de session
+- `chart-type` : Le graphique sélectionné (`market` ou `revenue`)
+- `is_news_description_displayed` : (bool) Si une actualité a été cliquée pour afficher sa description
+- `news_title` : Le titre de l'actualité cliquée, ou vide
 
 #### Example
 ```csv
-uuid,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart-type,is_news_description_displayed,news_title
-6ab4129b-1d72-410b-bed8-6e001bed8a85,2005-04-30T00:00:00,1721135847.22061,100000,OR.PA,sell,market,False,
+uuid,session-id,market-timestamp,host-timestamp,cashflow,selected-company,form-action,chart-type,is_news_description_displayed,news_title
+6bcf94a5-a75e-4d98-8115-8eb1fb87b340,2026-10-29_22-30_1e98,2025-08-11 03:00:00+02:00,1793309455.129577,100000,MC.PA,buy,market,False,
 ```
 
 ### portfolio-logs.csv
 Les données sauvegardées sont les suivantes :
-- `uuid` : L'identifiant unique de la session (trigger)
+- `uuid` : L'identifiant unique de l'action
+- `session-id` : La session
 - `[Ticker]-shares` : Le nombre d'actions du ticker
 - `[Ticker]-totals` : La valeur totale des actions du ticker
 
 #### Example
 ```csv
-uuid,MC.PA-shares,OR.PA-shares,RMS.PA-shares,TTE.PA-shares,SAN.PA-shares,AIR.PA-shares,SU.PA-shares,AI.PA-shares,EL.PA-shares,BNP.PA-shares,KER.PA-shares,DG.PA-shares,CS.PA-shares,SAF.PA-shares,RI.PA-shares,DSY.PA-shares,STLAM.MI-shares,BN.PA-shares,STMPA.PA-shares,ACA.PA-shares,^GSPC-shares,^DJI-shares,^FCHI-shares,^SPGSGC-shares,MC.PA-totals,OR.PA-totals,RMS.PA-totals,TTE.PA-totals,SAN.PA-totals,AIR.PA-totals,SU.PA-totals,AI.PA-totals,EL.PA-totals,BNP.PA-totals,KER.PA-totals,DG.PA-totals,CS.PA-totals,SAF.PA-totals,RI.PA-totals,DSY.PA-totals,STLAM.MI-totals,BN.PA-totals,STMPA.PA-totals,ACA.PA-totals,^GSPC-totals,^DJI-totals,^FCHI-totals,^SPGSGC-totals
-8ae40745-8d76-4cd8-b3f3-c2b8d229e7fb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+uuid,session-id,MC.PA-shares,OR.PA-shares,...,MC.PA-totals,OR.PA-totals,...
+6bcf94a5-a75e-4d98-8115-8eb1fb87b340,2026-10-29_22-30_1e98,0,0,...,0,0,...
 ```
 
 ### request-logs.csv
 Les données sauvegardées sont les suivantes :
-- uuid : L'identifiant unique de la ligne (trigger)
-- deleted-request : les index des requêtes supprimées
-- request-[n] : Les requêtes de l'utilisateur : [action] [price] [quantity] [ticker]
+- `uuid` : L'identifiant unique de l'action
+- `session-id` : La session
+- `deleted-request` : Les index des ordres supprimés (`["all"]` quand tous sont supprimés)
+- `request-[n]` : Les ordres en attente : [action] [prix] [quantité] [ticker], une colonne par ordre jusqu'à « Requêtes max »
 
 #### Example
 ```csv
-uuid,deleted-request,request-1,request-2,request-3,request-4,request-5,request-6,request-7,request-8,request-9,request-10
-62cffea7-2113-498f-aef9-fa6963640406,[0],buy 1000 1 MC.PA,buy 1000 1 MC.PA,buy 1000 1 MC.PA,,,,,,,
+uuid,session-id,deleted-request,request-1,request-2,request-3,request-4,request-5,request-6,request-7,request-8,request-9,request-10
+62cffea7-2113-498f-aef9-fa6963640406,2026-10-29_22-30_1e98,[0],buy 1000 1 MC.PA,buy 1000 1 MC.PA,,,,,,,,
 ```
 
+### log-info.json
+Écrit dans le dossier de la session à chaque démarrage : l'ID de session, la version du format des
+logs, et pour chaque démarrage l'heure, la version du code TradeSim (commit git) et tous les
+paramètres utilisés. Il répond à la question « quels paramètres et quelle version ont produit ces
+logs ? ».
+
+### Quand les colonnes changent
+Si les entreprises ou les paramètres changent pendant une session, le fichier de log est réécrit avec
+toutes les colonnes, les anciennes lignes recevant des cases vides pour les nouvelles : aucune valeur
+ne se retrouve sous le mauvais titre. Un fichier abîmé par une ancienne version n'est pas modifié et
+les nouvelles lignes vont dans une nouvelle partie, par ex. `portfolio-logs-2.csv`
+(`trade/utils/export.py`, `save_df`).

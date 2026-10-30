@@ -1,9 +1,7 @@
-En cours d'écriture....
-
 # TradeSim
-TradeSim is a web application that allows users to simulate trading stocks, and other financial instruments. 
-The application is built using Dash.
-Reasearchers can use this application to simulate trading strategies and export datas to analyze the results.
+TradeSim is a web application that simulates trading stocks and indexes, built with Dash.
+Researchers prepare a market (prices, news, company revenue) and run sessions with participants;
+every action of the participant is logged for analysis.
 
 ## Install required packages
 Run the following command in the root folder:
@@ -117,49 +115,58 @@ before committing a change.
 
 
 ## Structure
-### Files
-- `app_config.py` / `app_runtime.py` : start the configurator (port 8050) / runtime (port 8051) version
-- `app.py` : defines the application and contains the stores (not run directly)
-- `callbacks` : folder containing all the callbacks (dynamic functions, user interactions)
-- `components` : folder containing all the static & reusable front-end elements
-- `layouts` : folder containing all the layouts of the application
-- `assets` : folder containing all the static files (css, images, etc.)
-- `locales` : folder containing all the translations for each language
-- `pages` : folder containing all the pages of the application. **import the layouts and specific callbacks files.**
-- `utils` : folder containing all the static & utility functions
-- `defaults.py` : file containing all the default values for the application
-
-### Styling
-- `Tailwind CSS` is used for the styling of the application. (https://tailwindcss.com/)
-- `Dash Mantine Components` is used for the visual components. (version 1.12) (https://dmc-docs-0-12.onrender.com/)
+### Folders
+| Path (in `trading_simulator`) | Contents |
+|---|---|
+| `trade/app_config.py` / `trade/app_runtime.py` | Start the Configurator (port 8050) / the Runtime (port 8051) |
+| `trade/app.py` | Defines the application and all the stores (not run directly) |
+| `trade/defaults.py` | Default values (money, timings, companies, data folder...) |
+| `trade/pages/` | The three pages (home, settings, dashboard): import their layouts and callbacks |
+| `trade/layouts/` | What each page shows |
+| `trade/callbacks/` | What happens when the user does something (see below) |
+| `trade/components/` | Reusable pieces of interface (header, menu, sections, sliders...) |
+| `trade/utils/` | Logic without interface: candles, orders, fees, leaderboard, trials, logs, session file, news generation, market data |
+| `trade/locales/` | Texts in English (`en.py`) and French (`fr.py`) |
+| `trade/assets/` | Static files: local Tailwind CSS, icons, images |
+| `data/` | Market data, news, revenue, and the session logs (`data/exports/`) |
+| `tests/` | Automated tests (see "Run the tests") |
+| `tools/` | Rebuild the local icons and Tailwind CSS (see "Working offline") |
+| `docs/HANDOVER.md` | State of the project for the next developer |
 
 ### Callbacks
-Each callback is sorted by the page it is used in.
-Actually there is 2 main pages :
-- `dashboard` 
-- `settings` 
-#### Dashboard
-Dashboard is divided in 5 main sections :
-- `portfolio` : all the callbacks related to the portfolio (updated by requests too)
-- `graph` : all the callbacks related to the graph (market_data and revenue)
-- `news` : all the callbacks related to the news
-- `request` : all the callbacks related to the requests (update the portfolio too)
-- `export` : all the callbacks related to the export of the data
-#### Settings
-Settings is divided in 6 sections :
-- `charts` : all the callbacks related to the charts and their generation
-- `news` : all the callbacks related to the generation of the news
-- `revenues` : all the callbacks related to the revenues and their generation
-- `stocks` : all the callbacks related to the tickers
-- `advanced` : all the callbacks related to the advanced settings
-- `upload` : all the callbacks related to the upload of the data
+Sorted by the page they belong to.
+
+**Home** (`trade/callbacks/`): `home.py` (Start and Export buttons), `home_import.py` (import a
+session file), `reset.py` (Reset, end-of-session results).
+
+**Dashboard** (`trade/callbacks/dashboard/`):
+- `graph`: the chart, the clock, moving candles, pause, revenue chart
+- `request`: placing, editing, cancelling and executing orders
+- `portfolio`: cash, investment and the portfolio table
+- `news`: the news list and the news pop-ups
+- `reminders`: the time reminders
+- `trials`: discrete mode ("Next trial" and its confirmation)
+- `leaderboard`: the ranking against the robot traders
+- `export`: the logs
+
+**Settings** (`trade/callbacks/settings/`):
+- `charts/`: generating market data (trends, patterns, events), then news in the background
+- `news`: generating news
+- `revenues`: company revenue
+- `stocks`: the list of companies
+- `advanced`: the Advanced tab (money, timings, fee, discrete mode, leaderboard...)
+- `upload`: importing CSV files
+- `session_export`: the Export Session button
+
+### Styling
+- [Tailwind CSS](https://tailwindcss.com/) for the layout (a local file, see "Working offline").
+- [Dash Mantine Components 0.12](https://dmc-docs-0-12.onrender.com/) for the visual components.
 
 ## Why was this project created?
-In the financial laboratories of the University of Mons, a study has been launched to analyse the reactions of traders to the stock markets. 
-To better understand which factors are most important in their choices, what is the "human" part of this equation, and many other questions. 
-To improve their results, the researchers needed to create a controlled, automated data-gathering environment. 
-tradesim is an independent part of this environment, to which several sensors have been added. 
-To find out more, have a look at the corresponding repository here.
+In the financial laboratories of the University of Mons, a study has been launched to analyse the reactions of traders to the stock markets.
+To better understand which factors are most important in their choices, what is the "human" part of this equation, and many other questions.
+To improve their results, the researchers needed to create a controlled, automated data-gathering environment.
+TradeSim is an independent part of this environment, to which several sensors have been added.
 
 ## Contributing
 Feel free to create an issue/PR if you want to see anything else implemented.

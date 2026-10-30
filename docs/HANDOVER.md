@@ -30,9 +30,35 @@ explained in the [WIKI](../WIKI.md#settings-and-features) ([français](../WIKI_F
 3. Each session writes its logs to its own folder, with `log-info.json` (session ID, code version,
    settings).
 
-When you add a new setting, add it to the session file too (`trade/utils/session.py`,
-`trade/callbacks/settings/session_export.py`, `trade/callbacks/home_import.py`).
-`tests/test_session_zip.py` fails if you forget.
+### Where to look
+| I want to change... | Look in (under `trade/`) |
+|---|---|
+| a default value | `defaults.py` |
+| a text, in English or French | `locales/en.py`, `locales/fr.py` (always both: `tests/test_translations.py` checks) |
+| the chart | `utils/graph/candlestick_charts.py` (drawing), `callbacks/dashboard/graph.py` (updates, clock, pause) |
+| how orders are placed or executed | `callbacks/dashboard/request.py`, `utils/orders.py`, `utils/fees.py` |
+| moving candles | `utils/candle_steps.py` |
+| discrete mode | `utils/trials.py`, `callbacks/dashboard/trials.py` |
+| the news list and pop-ups | `callbacks/dashboard/news.py`, `utils/news_timing.py` |
+| news generation | `utils/news_generation/` (writing: `news_creation.py`, FinBERT check: `verify.py`) |
+| market data generation | `callbacks/settings/charts/`, `utils/settings/` |
+| the logs | `utils/export.py`, `callbacks/dashboard/export.py` |
+| the session file | `utils/session.py`, `callbacks/settings/session_export.py`, `callbacks/home_import.py` |
+| the page layouts | `layouts/` (one folder per page) |
+
+### Adding a new setting (checklist)
+1. `app.py`: a `dcc.Store(id="my-setting", data=<default>, storage_type="local")`.
+2. `layouts/settings/sections/<tab>.py`: the input box.
+3. `callbacks/settings/<tab>.py`: show the saved value in the box, and save the box into the store
+   (check the value: refuse negative or empty values).
+4. `locales/en.py` and `locales/fr.py`: the label and help text.
+5. The session file: `utils/session.py` (`build_session_zip` and `extract_session_zip`, with a default
+   for older files), `callbacks/settings/session_export.py` (a `State`) and `callbacks/home_import.py`
+   (an `Output`; keep the number of returned values equal to the number of Outputs).
+6. Where the setting is used: add `State("my-setting", "data")` at the **end** of the callback, with
+   a default parameter, so the existing tests keep working.
+7. Tests: the setting is saved, refused when wrong, carried by the session file, and does what it
+   should. `tests/test_session_zip.py` fails if step 5 is forgotten.
 
 ## 2. Built during the internship
 All on `intern/develop`, each with its tests:
@@ -63,9 +89,20 @@ The "Updating…" screen is for the Configurator only, on purpose: the Runtime u
 seconds, so it would flash all the time.
 
 ## 4. Open issues
-From a full review of the Configurator and the Runtime (Oct 2026). Items 1–6 (wrong money or wrong
-experiment data) are **fixed**. The rest are still open. "Likely" means it was found by reading the
-code and still needs a check in the browser. Paths are under `trade/`.
+From a full review of the Configurator and the Runtime (Oct 2026). "Likely" means it was found by
+reading the code and still needs a check in the browser. Paths are under `trade/`.
+
+### Fixed (30 Oct 2026), each with tests
+| # | Problem | Commit |
+|---|---|---|
+| 1 | The session file looked for `revenues.csv` (real name `revenue.csv`): revenue never reached the participants | 06618e7 |
+| 2 | Notification filter and delay not carried by the session file | 06618e7 |
+| 3 | Saving revenue crashed with 2 or more companies | 576941a |
+| 4 | Editing a waiting order could make cash negative | 1b95c9c |
+| 5 | The results window ignored money put aside for waiting buy orders | 1b95c9c |
+| 6 | With moving candles, the leaderboard robots were valued at the forming candle's final Close (a future price) | 576941a |
+
+The open items are below.
 
 ### Medium: a feature misbehaves
 | # | Problem | Where |
