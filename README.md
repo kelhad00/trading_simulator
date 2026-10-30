@@ -49,14 +49,16 @@ Notes:
 
 ## Features
 Every option is explained in the [WIKI](WIKI.md#settings-and-features) ([français](WIKI_FR.md#paramètres-et-fonctionnalités)).
-- **Moving candles**: the newest candle forms in steps before it closes, like a live chart.
+The features added in 2026 are off until the researcher turns them on in the Settings.
+- **Moving candles**: the newest candle forms in steps before it closes, like a live chart, with a
+  Simple or Random price movement inside the candle.
 - **Discrete mode (trials)**: the chart stops at chosen candles and the participant clicks "Next trial"
   (with a confirmation window, no news pop-ups, and a zoom on the first candles).
 - **Leaderboard**: the participant against 20 robot traders made from the same prices.
 - **Commission fee** on every executed buy and sell (0 by default).
 - **News notifications**: on/off, filter by sentiment, show news some days early, sentiment tags on/off.
 - **Time reminders** during the session (25 %, 50 %, 75 %, 5/2/1 minutes left).
-- **Chart buttons**: Autoscale (fit the candles shown) and Reset axes (back to the live view).
+- **Chart buttons** (on/off): Autoscale (fit the candles shown) and Reset axes (back to the live view).
 - **Results window** at the end: final value and profit/loss, counting money put aside for waiting orders.
 - **One log folder per session**, with the settings and code version (`log-info.json`).
 - **"Updating…" screen** in the Configurator while it is working.
@@ -96,7 +98,7 @@ The tests (`tests/test_offline.py`) say what is missing.
   ```
 
 ## Run the tests
-About 280 automated checks (folder `tests/`) for moving candles, orders and money, fees, discrete
+About 300 automated checks (folder `tests/`) for moving candles, orders and money, fees, discrete
 mode, the leaderboard, news, settings, translations, session files, logs and the data folder. They
 use a small invented dataset in a temporary folder, so they never touch real data and work on any
 computer.

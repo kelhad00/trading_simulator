@@ -265,6 +265,15 @@ The researcher sets these in the Configurator (`python app_config.py`, Settings 
 is saved in the browser and carried to the participants' computers in the
 [session file](#session-file-sessionzip). Labels below are the English ones.
 
+Every feature added during the 2026 internship is **off until the researcher turns it on**
+(supervisors' decision, 30 Oct 2026): moving candles, random path, time reminders, leaderboard,
+discrete mode, commission fee, chart Autoscale / Reset axes buttons. News pop-ups and news tags,
+which existed before, stay on.
+
+These defaults apply to a browser that has never saved the setting. A browser that has already
+saved one keeps its value (the **Reset** button restarts the simulation, not the settings): change it
+in Settings, or clear the browser's site data for the app.
+
 ## Settings → Advanced
 
 | Setting | What it does | Default |
@@ -275,11 +284,27 @@ is saved in the browser and carried to the participants' computers in the
 | Time between updates (ms), per candle step | Time between two chart updates | 5000 |
 | Candles of history shown at the start | Past candles the participant sees before trading starts | 100 |
 | Commission fee (%) | Paid on every executed buy and sell: with 0.05, buying 100 € costs 100.05 €, selling 100 € brings 99.95 € | 0 (no fee) |
-| Moving candles | The newest candle forms in steps (every 30, 15 or 5 min of a 1 h candle) before it closes, like a live chart. "Off" = candles appear finished | every 15 min (4 steps) |
+| Moving candles | The newest candle forms in steps (every 30, 15 or 5 min of a 1 h candle) before it closes, like a live chart. "Off" = candles appear finished | Off |
+| Price movement inside a forming candle | Only with moving candles. **Simple** or **Random**, see [below](#price-movement-inside-a-forming-candle) | Simple |
 | News article font size | Small / Medium / Large | Small |
 | Active companies | Companies the participant can trade (at least one) | all with market data |
 | Dark mode for the simulation | Dark theme for the participant | off |
 | Show the leaderboard | A ranking of the participant against 20 robot traders | off |
+| Show the Autoscale and Reset axes buttons on the chart | The two buttons described in [Participant chart](#participant-chart) | off |
+
+### Price movement inside a forming candle
+The market data only has each candle's final Open, High, Low and Close, so the prices in between are
+generated (`trade/utils/candle_steps.py`):
+- **Simple**: Open → Low → High → Close for a rising candle (Open → High → Low → Close for a falling
+  one), with a little noise.
+- **Random** (added after the supervisors' answer, 30 Oct 2026): the High or the Low can come first,
+  and the price wanders between them (a "Brownian bridge": a random walk whose start and end are
+  fixed), like a leaf drifting down a river between its two banks.
+
+Both always stay inside the real candle, reach its real High and Low, and end exactly on its Close.
+The path is generated from a seed made of the company and the date, so every participant sees the
+same one. The chart, the "market price" button, waiting orders and the leaderboard all use the
+chosen path.
 
 ### Leaderboard
 The 20 robots are made from the app's own prices: at the first candle each robot keeps 5–40 % of
@@ -313,10 +338,13 @@ with a **Next trial** button. Off by default.
 | Show news notifications | Pop-ups when a news article appears | on |
 | Show notifications for | Positive / negative / neutral news | all three |
 | Days before news appears | Shows news this many days before its date (0 = same time) | 0 |
-| Show time reminders | Pop-ups at 25 %, 50 %, 75 % of the session and at 5, 2 and 1 minutes left | on |
+| Show time reminders | Pop-ups at 25 %, 50 %, 75 % of the session and at 5, 2 and 1 minutes left | off |
 | Show sentiment tags and colours on news | Positive/negative tags and colours in the news list | on |
 
 ## Participant chart
+The toolbar above the chart (zoom, pan, draw a line, zoom in/out) is always shown. The two buttons
+below are only there when **Show the Autoscale and Reset axes buttons on the chart** is on
+(Settings → Advanced, off by default).
 - **Autoscale** (toolbar button or double-click): fits the candles shown, and keeps fitting them on
   every update.
 - **Reset axes** (toolbar button): back to the starting view (the whole session width) and follows the
@@ -348,12 +376,12 @@ is imported.
 The zip contains:
 - `session.json`: every setting above (companies, starting money, max requests, update time, session
   duration, font size, theme, notifications on/off, notification filter and delay, moving candles,
-  candles of history, reminders, news tags, leaderboard, commission fee, discrete mode, trials, zoom);
+  price movement inside a candle, chart buttons, candles of history, reminders, news tags, leaderboard, commission fee, discrete mode, trials, zoom);
 - the data files `generated_data.csv`, `news.csv` and `revenue.csv` (`trade/utils/session.py`,
   `DATA_FILES`).
 
 Older session files without a setting use the old behaviour for it (for example no leaderboard, no
-fee, no zoom in discrete mode).
+fee, no zoom in discrete mode, Simple price movement, no chart buttons).
 
 A test (`tests/test_session_zip.py`) checks that every setting the Configurator saves is exported and
 imported, so a new setting can't be forgotten.

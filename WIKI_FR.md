@@ -264,6 +264,15 @@ Le chercheur les règle dans le Configurateur (`python app_config.py`, page Para
 paramètre est enregistré dans le navigateur et transmis aux ordinateurs des participants par le
 [fichier de session](#fichier-de-session-sessionzip). Les libellés ci-dessous sont ceux de l'interface en français.
 
+Chaque fonctionnalité ajoutée pendant le stage de 2026 est **désactivée tant que le chercheur ne
+l'active pas** (décision des encadrants, 30 oct. 2026) : bougies en mouvement, chemin aléatoire,
+rappels de temps, classement, mode discret, frais de commission, boutons Autoscale / Reset axes du
+graphique. Les notifications et les étiquettes des actualités, qui existaient avant, restent activées.
+
+Ces valeurs par défaut valent pour un navigateur qui n'a jamais enregistré le paramètre. Un navigateur
+qui en a déjà enregistré un garde sa valeur (le bouton **Réinitialiser** relance la simulation, pas les
+paramètres) : le changer dans Paramètres, ou effacer les données du site pour l'application.
+
 ## Paramètres → Avancé
 
 | Paramètre | Rôle | Par défaut |
@@ -274,11 +283,27 @@ paramètre est enregistré dans le navigateur et transmis aux ordinateurs des pa
 | Temps entre deux mises à jour (ms), par étape de bougie | Temps entre deux mises à jour du graphique | 5000 |
 | Bougies d'historique affichées au départ | Bougies passées visibles avant le début du trading | 100 |
 | Frais de commission (%) | Payés à chaque achat et vente exécutés : avec 0,05, acheter 100 € coûte 100,05 €, vendre 100 € rapporte 99,95 € | 0 (sans frais) |
-| Bougies en mouvement | La dernière bougie se forme par étapes (toutes les 30, 15 ou 5 min d'une bougie d'1 h) avant de se fermer, comme un graphique en direct. « Désactivé » = bougies affichées terminées | toutes les 15 min (4 étapes) |
+| Bougies en mouvement | La dernière bougie se forme par étapes (toutes les 30, 15 ou 5 min d'une bougie d'1 h) avant de se fermer, comme un graphique en direct. « Désactivé » = bougies affichées terminées | désactivé |
+| Mouvement du prix dans une bougie en cours | Seulement avec les bougies en mouvement. **Simple** ou **Aléatoire**, voir [plus bas](#mouvement-du-prix-dans-une-bougie-en-cours) | Simple |
 | Taille de police des articles | Petite / Moyenne / Grande | Petite |
 | Entreprises actives | Entreprises que le participant peut trader (au moins une) | toutes celles avec des données de marché |
 | Mode sombre pour la simulation | Thème sombre pour le participant | désactivé |
 | Afficher le classement | Classement du participant contre 20 traders robots | désactivé |
+| Afficher les boutons Autoscale et Reset axes sur le graphique | Les deux boutons décrits dans [Graphique du participant](#graphique-du-participant) | désactivé |
+
+### Mouvement du prix dans une bougie en cours
+Les données de marché n'ont que l'ouverture, le plus haut, le plus bas et la clôture finale de chaque
+bougie : les prix entre les deux sont donc générés (`trade/utils/candle_steps.py`) :
+- **Simple** : ouverture → plus bas → plus haut → clôture pour une bougie haussière (ouverture → plus
+  haut → plus bas → clôture pour une bougie baissière), avec un peu de bruit.
+- **Aléatoire** (ajouté après la réponse des encadrants, 30 oct. 2026) : le plus haut ou le plus bas peut
+  venir en premier, et le prix varie librement entre eux (un « pont brownien » : une marche aléatoire
+  dont le début et la fin sont fixés), comme une feuille qui dérive sur une rivière entre ses deux rives.
+
+Les deux restent toujours dans la vraie bougie, atteignent son vrai plus haut et son vrai plus bas, et
+finissent exactement à sa clôture. Le chemin est généré à partir d'une graine faite de l'entreprise et
+de la date : tous les participants voient le même. Le graphique, le bouton « prix du marché », les
+ordres en attente et le classement utilisent tous le chemin choisi.
 
 ### Classement
 Les 20 robots sont créés à partir des prix de l'application : à la première bougie, chaque robot garde
@@ -313,10 +338,13 @@ participant passe à la suite avec le bouton **Essai suivant**. Désactivé par 
 | Afficher les notifications d'actualités | Pop-ups quand une actualité apparaît | activé |
 | Afficher les notifications pour | Actualités positives / négatives / neutres | les trois |
 | Jours avant l'apparition de l'actualité | Montre l'actualité ce nombre de jours avant sa date (0 = en même temps) | 0 |
-| Afficher les rappels de temps | Pop-ups à 25 %, 50 %, 75 % de la session et à 5, 2 et 1 minutes de la fin | activé |
+| Afficher les rappels de temps | Pop-ups à 25 %, 50 %, 75 % de la session et à 5, 2 et 1 minutes de la fin | désactivé |
 | Afficher les étiquettes et couleurs de sentiment | Étiquettes et couleurs positives/négatives dans la liste des actualités | activé |
 
 ## Graphique du participant
+La barre d'outils au-dessus du graphique (zoom, déplacement, tracer une ligne, zoom avant/arrière) est
+toujours affichée. Les deux boutons ci-dessous n'y sont que si **Afficher les boutons Autoscale et Reset
+axes sur le graphique** est activé (Paramètres → Avancé, désactivé par défaut).
 - **Autoscale** (bouton de la barre d'outils ou double-clic) : ajuste la vue aux bougies affichées, et
   continue de l'ajuster à chaque mise à jour.
 - **Reset axes** (bouton de la barre d'outils) : revient à la vue de départ (toute la largeur de la
@@ -348,13 +376,14 @@ de démarrage reste désactivé tant qu'aucune session n'est importée.
 Le zip contient :
 - `session.json` : tous les paramètres ci-dessus (entreprises, argent de départ, requêtes max, temps
   de mise à jour, durée de la session, taille de police, thème, notifications activées, filtre et délai
-  des notifications, bougies en mouvement, bougies d'historique, rappels, étiquettes des actualités,
+  des notifications, bougies en mouvement, mouvement du prix dans une bougie, boutons du graphique, bougies d'historique, rappels, étiquettes des actualités,
   classement, frais de commission, mode discret, essais, zoom) ;
 - les fichiers de données `generated_data.csv`, `news.csv` et `revenue.csv` (`trade/utils/session.py`,
   `DATA_FILES`).
 
 Un ancien fichier de session sans un paramètre garde l'ancien comportement pour celui-ci (par exemple
-pas de classement, pas de frais, pas de zoom en mode discret).
+pas de classement, pas de frais, pas de zoom en mode discret, mouvement du prix Simple, pas de boutons
+du graphique).
 
 Un test (`tests/test_session_zip.py`) vérifie que chaque paramètre enregistré par le Configurateur est
 exporté et importé, pour qu'un nouveau paramètre ne puisse pas être oublié.

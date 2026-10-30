@@ -15,7 +15,7 @@ explained in the [WIKI](../WIKI.md#settings-and-features) ([français](../WIKI_F
 | Logs of the sessions | `data/exports/<session id>/` |
 | Default values | `trade/defaults.py` |
 | Texts (English / French) | `trade/locales/en.py`, `trade/locales/fr.py` |
-| Tests | from `trading_simulator`: `.\trade\venv\Scripts\python.exe -m pytest` (about 280, all passing on 30 Oct 2026) |
+| Tests | from `trading_simulator`: `.\trade\venv\Scripts\python.exe -m pytest` (about 300, all passing on 30 Oct 2026) |
 
 ### Branches
 - `main`: the stable version.
@@ -61,15 +61,17 @@ explained in the [WIKI](../WIKI.md#settings-and-features) ([français](../WIKI_F
    should. `tests/test_session_zip.py` fails if step 5 is forgotten.
 
 ## 2. Built during the internship
-All on `intern/develop`, each with its tests:
-- moving candles (`trade/utils/candle_steps.py`);
+All on `intern/develop`, each with its tests. Each one is **off until the researcher turns it on**
+(decision 7 below); news pop-ups and news tags existed before and stay on.
+- moving candles (`trade/utils/candle_steps.py`), with a Simple or Random price path inside the
+  forming candle;
 - discrete mode with trials (`trade/utils/trials.py`, `trade/callbacks/dashboard/trials.py`):
   confirmation before the next trial, no news pop-ups, zoom on the first candles;
 - leaderboard against 20 robot traders (`trade/utils/leaderboard.py`);
 - commission fee (`trade/utils/fees.py`);
 - news notifications: filter, delay, sentiment tags on/off; time reminders;
 - news generation with Groq or Ollama, checked by FinBERT (`trade/utils/news_generation/`);
-- chart Autoscale / Reset axes buttons; fixed candle slots, date labels;
+- chart Autoscale / Reset axes buttons (shown only when switched on); fixed candle slots, date labels;
 - one log folder per session; session file carries every setting and the three data files;
 - "Updating…" screen in the Configurator (`trade/app.py`, `_loading_overlay`);
 - works offline (local `tailwind.css` and icons); English and French.
@@ -84,6 +86,7 @@ All on `intern/develop`, each with its tests:
 | 4 | Discrete mode: first trials look tiny | Zoom while fewer than N candles are shown; N set in the interface; tested 20–200 candles, N = 100 | Yes |
 | 5 | Commission fee default | Keep 0 | Yes |
 | 6 | One shared server or one computer per participant | Each participant uses their own computer | Workflow above |
+| 7 | Prices inside a forming candle: keep the simple path or add a random one | Add the random path, as a setting; every feature added during the internship off by default | Yes (1dc5e0b): Settings → Advanced "Price movement inside a forming candle" (Simple by default) and "Show the Autoscale and Reset axes buttons" (off); moving candles and time reminders now off by default |
 
 The "Updating…" screen is for the Configurator only, on purpose: the Runtime updates every few
 seconds, so it would flash all the time.
