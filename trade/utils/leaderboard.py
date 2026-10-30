@@ -30,6 +30,27 @@ def total_assets(cashflow, totals, requests):
     return (cashflow or 0) + put_aside + shares_value
 
 
+def _robot_holdings(prices, start_pos, initial_money, n=ROBOTS, seed=SEED, fee_pct=0):
+    """What each robot bought at the session's first candle.
+
+    Returns (tradable companies, {robot name: (cash, shares per tradable company)}).
+    """
+    start = prices.iloc[start_pos]
+    tradable = [c for c in prices.columns if pd.notna(start[c]) and start[c] > 0]
+    rng = np.random.default_rng(seed)
+
+    holdings = {}
+    for i in range(1, n + 1):
+        cash_part = rng.uniform(0.05, 0.4)
+        # Small alpha: most robots bet mostly on one or two companies, so they differ
+        weights = rng.dirichlet(np.full(len(tradable), 0.5)) if tradable else np.array([])
+        invested = initial_money * (1 - cash_part) if tradable else 0
+        # `invested` pays for the shares and their fee
+        shares = invested * weights / (start[tradable].to_numpy() * (1 + rate(fee_pct))) if tradable else weights
+        holdings[f"Trader {i}"] = (initial_money - invested, shares)
+    return tradable, holdings
+
+
 def robot_assets(prices, start_pos, initial_money, n=ROBOTS, seed=SEED, fee_pct=0):
     """Each robot's total assets, one row per candle from `start_pos` on.
 
@@ -39,25 +60,20 @@ def robot_assets(prices, start_pos, initial_money, n=ROBOTS, seed=SEED, fee_pct=
     the participant.
     """
     prices = prices.ffill()
-    start = prices.iloc[start_pos]
-    tradable = [c for c in prices.columns if pd.notna(start[c]) and start[c] > 0]
+    tradable, holdings = _robot_holdings(prices, start_pos, initial_money, n, seed, fee_pct)
     future = prices.iloc[start_pos:][tradable].to_numpy()
-    rng = np.random.default_rng(seed)
-
-    values = {}
-    for i in range(1, n + 1):
-        cash_part = rng.uniform(0.05, 0.4)
-        # Small alpha: most robots bet mostly on one or two companies, so they differ
-        weights = rng.dirichlet(np.full(len(tradable), 0.5)) if tradable else np.array([])
-        invested = initial_money * (1 - cash_part) if tradable else 0
-        # `invested` pays for the shares and their fee
-        shares = invested * weights / (start[tradable].to_numpy() * (1 + rate(fee_pct))) if tradable else weights
-        values[f"Trader {i}"] = (initial_money - invested) + (future @ shares if tradable else 0)
+    values = {name: cash + (future @ shares if tradable else 0) for name, (cash, shares) in holdings.items()}
     return pd.DataFrame(values, index=prices.index[start_pos:])
 
 
-def robots_at(market_df, timestamp, start_timestamp, initial_money, companies=None, fee_pct=0):
-    """{robot name: total assets} at `timestamp`, or {} when it can't be worked out."""
+def robots_at(market_df, timestamp, start_timestamp, initial_money, companies=None, fee_pct=0, price_now=None):
+    """{robot name: total assets} at `timestamp`, or {} when it can't be worked out.
+
+    `price_now(company)`: moving candles, while the candle at `timestamp` is still
+    forming: the robots are valued at the price reached so far, like the
+    participant, not at the Close the candle will reach (audit #6, 30 Oct 2026).
+    A missing price falls back to the Close.
+    """
     try:
         prices = market_df.xs('Close', axis=1, level=1)
         if companies:
@@ -76,7 +92,20 @@ def robots_at(market_df, timestamp, start_timestamp, initial_money, companies=No
         _cache.update(key=key, market_df=market_df,    # kept so id() stays this dataframe's
                       robots=robot_assets(prices, start_pos, initial_money, fee_pct=fee_pct))
     robots = _cache['robots']
-    return robots.iloc[min(row, len(robots) - 1)].to_dict()
+    if price_now is None:
+        return robots.iloc[min(row, len(robots) - 1)].to_dict()
+
+    if _cache.get('holdings_key') != key:
+        _cache.update(holdings_key=key,
+                      holdings=_robot_holdings(prices.ffill(), start_pos, initial_money, fee_pct=fee_pct))
+    tradable, holdings = _cache['holdings']
+    closes = prices.ffill().iloc[start_pos + min(row, len(robots) - 1)]
+    now = []
+    for c in tradable:
+        p = price_now(c)
+        now.append(float(p) if p is not None and pd.notna(p) else float(closes[c]))
+    now = np.array(now)
+    return {name: cash + (now @ shares if tradable else 0) for name, (cash, shares) in holdings.items()}
 
 
 def ranking(robots, my_total):

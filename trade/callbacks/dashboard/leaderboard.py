@@ -3,6 +3,7 @@ import dash_mantine_components as dmc
 
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls, language
+from trade.utils.candle_steps import current_price, is_forming
 from trade.utils.leaderboard import YOU, ranking, robots_at, total_assets
 from trade.utils.market import get_market_dataframe, get_start_timestamp
 from trade.utils.logs import get_logger
@@ -35,9 +36,12 @@ def _money(value):
     State('companies', 'data'),
     State("url", "search"),     # ?lang=en in this participant's address
     State('commission-fee', 'data'),
+    # Moving candles: robots valued at the forming candle's price so far, like the participant
+    State('candle-step', 'data'),
+    State('steps-per-candle', 'data'),
 )
 def update_leaderboard(timestamp, totals, cashflow, requests, enabled, initial_bars, initial_cashflow, companies, lang=None,
-                       fee_pct=0):
+                       fee_pct=0, candle_step=None, steps_per_candle=None):
     if not enabled:
         return _HIDDEN, None
 
@@ -47,7 +51,12 @@ def update_leaderboard(timestamp, totals, cashflow, requests, enabled, initial_b
         return _SHOWN, dmc.Text(t['unavailable'], size="sm", color="dimmed")
 
     start = get_start_timestamp(market_df, initial_bars)
-    robots = robots_at(market_df, timestamp, start, initial_cashflow or dlt.initial_money, companies, fee_pct)
+    price_now = None
+    if is_forming(candle_step, steps_per_candle):
+        def price_now(company):
+            return current_price(company, timestamp, candle_step, steps_per_candle)
+    robots = robots_at(market_df, timestamp, start, initial_cashflow or dlt.initial_money, companies, fee_pct,
+                       price_now=price_now)
     if not robots:
         logger.debug("No robot values at %s (session start %s)", timestamp, start)
         return _SHOWN, dmc.Text(t['unavailable'], size="sm", color="dimmed")

@@ -279,24 +279,22 @@ def export_revenues(n, companies, mode, revenues, revenues_label, incomes, incom
     if 'symbol' in existing_revenues.columns.names:
         symbols_list = existing_revenues.columns.get_level_values('symbol').unique()
 
+    # The new data of every selected company, built once. (It used to be built
+    # inside a per-company loop whose own loop variables replaced the `revenues`
+    # and `incomes` lists, so saving 2+ companies crashed: audit #3, 30 Oct 2026.)
+    index = pd.Index(['currencyCode', 'NetIncome', 'TotalRevenue'], dtype='object')
+    data = {}
+    for label, revenue, income in zip(revenues_label, revenues, incomes):
+        data[(label['company'], f"{label['year']}-12-31 00:00:00")] = ['EUR', income, revenue]
+    data = pd.DataFrame(data, index=index)
+    data.columns.names = ['symbol', 'asOfDate']
+
+    # Drop the selected companies already saved: their new values replace them
     for company in companies:
-        # Define indexes of dataset
-        index = pd.Index(['currencyCode', 'NetIncome', 'TotalRevenue'], dtype='object')
-
-        # Format the data to be easily converted to a DataFrame
-        data = {}
-        for labels, revenues, incomes in zip(revenues_label, revenues, incomes):
-            data[(labels['company'], f"{labels['year']}-12-31 00:00:00")] = ['EUR', incomes, revenues]
-
-        data = pd.DataFrame(data, index=index)  # Create the DataFrame
-        data.columns.names = ['symbol', 'asOfDate']  # Define the columns names
-
-        # Drop the company in existing dataframe if it already exists
         if company in symbols_list:
-            existing_revenues.drop(columns=company, level=0, inplace=True)
+            existing_revenues = existing_revenues.drop(columns=company, level=0)
 
-        # Add the new data to the existing dataframe
-        existing_revenues = pd.concat([existing_revenues, data], axis=1)
+    existing_revenues = pd.concat([existing_revenues, data], axis=1)
 
     # Save data to single CSV file
     file_path = os.path.join(dlt.data_path, 'revenue.csv')

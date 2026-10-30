@@ -5,10 +5,12 @@ import json
 import zipfile
 
 import plotly
+import pytest
 
 import trade.callbacks.dashboard.leaderboard as board
 import trade.callbacks.settings.advanced as advanced_settings
 from trade.utils import leaderboard as lb
+from trade.utils.candle_steps import current_price
 from trade.utils.market import get_market_dataframe, get_start_timestamp
 from trade.utils.session import build_session_zip, extract_session_zip
 
@@ -56,6 +58,57 @@ def test_robots_at_a_moment_of_the_session(fake_data):
     assert len(lb.robots_at(df, df.index[110], start, MONEY, COMPANIES)) == 20
     assert lb.robots_at(df, df.index[50], start, MONEY, COMPANIES) == {}     # before the session
     assert lb.robots_at(df, "not a date", start, MONEY, COMPANIES) == {}
+
+
+def test_closed_candle_same_values_as_before(fake_data):
+    # The Close is the price now once a candle is closed: same as without price_now
+    df = get_market_dataframe()
+    start = get_start_timestamp(df, 100)
+    ts = df.index[110]
+    plain = lb.robots_at(df, ts, start, MONEY, COMPANIES)
+    closes = prices().loc[ts]
+    same = lb.robots_at(df, ts, start, MONEY, COMPANIES, price_now=lambda c: closes[c])
+    assert same == pytest.approx(plain)
+
+
+def test_forming_candle_robots_use_the_price_so_far(fake_data):
+    # Audit #6: while a candle is forming, the robots must not be valued at the
+    # Close it will reach (a price the participant hasn't seen yet)
+    df = get_market_dataframe()
+    start = get_start_timestamp(df, 100)
+    ts = df.index[110]
+    now = {c: current_price(c, ts, 1, 4) for c in ("AAA", "BBB")}
+    robots = lb.robots_at(df, ts, start, MONEY, COMPANIES, price_now=lambda c: now[c])
+    _, holdings = lb._robot_holdings(prices().ffill(), 100, MONEY)
+    for name, (cash, shares) in holdings.items():
+        assert robots[name] == pytest.approx(cash + shares @ [now["AAA"], now["BBB"]])
+    assert robots != pytest.approx(lb.robots_at(df, ts, start, MONEY, COMPANIES))
+
+
+def test_missing_price_now_falls_back_to_the_close(fake_data):
+    df = get_market_dataframe()
+    start = get_start_timestamp(df, 100)
+    ts = df.index[110]
+    robots = lb.robots_at(df, ts, start, MONEY, COMPANIES, price_now=lambda c: float("nan"))
+    assert robots == pytest.approx(lb.robots_at(df, ts, start, MONEY, COMPANIES))
+
+
+def test_board_uses_the_forming_price(fake_data, monkeypatch):
+    seen = {}
+    real = lb.robots_at
+
+    def spy(*args, price_now=None, **kwargs):
+        seen["price_now"] = price_now
+        return real(*args, price_now=price_now, **kwargs)
+    monkeypatch.setattr(board, "robots_at", spy)
+    df = get_market_dataframe()
+    args = (df.index[110], {}, MONEY, [], True, 100, MONEY, COMPANIES, "?lang=en", 0)
+    board.update_leaderboard(*args, 1, 4)                       # step 1 of 4: forming
+    assert seen["price_now"]("AAA") == pytest.approx(current_price("AAA", df.index[110], 1, 4))
+    board.update_leaderboard(*args, 4, 4)                       # last step: closed
+    assert seen["price_now"] is None
+    board.update_leaderboard(*args)                             # moving candles off
+    assert seen["price_now"] is None
 
 
 # ── Ranking ───────────────────────────────────────────────────────────────
