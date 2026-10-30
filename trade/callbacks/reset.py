@@ -9,6 +9,7 @@ from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 from trade.utils.market import get_market_dataframe, get_start_timestamp
 from trade.utils.export import new_session_id
+from trade.utils.fees import reserved
 from trade.utils.news import get_news_dataframe
 from trade.utils.settings.create_market_data import get_generated_data
 from trade.utils.logs import get_logger
@@ -178,9 +179,10 @@ clientside_callback(
     State("initial-cashflow", "data"),
     State("companies", "data"),
     State("lang", "data"),
+    State("requests", "data"),
     prevent_initial_call=True,
 )
-def display_pnl_summary(opened, cashflow, totals, shares, initial, companies, lang):
+def display_pnl_summary(opened, cashflow, totals, shares, initial, companies, lang, requests=None):
     if not opened:
         raise PreventUpdate
 
@@ -191,6 +193,11 @@ def display_pnl_summary(opened, cashflow, totals, shares, initial, companies, la
     shares = shares or {}
     initial = initial or dlt.initial_money
 
+    # Money put aside for buy orders still waiting at the end is still the
+    # participant's cash: nothing was bought with it (audit #5, 30 Oct 2026).
+    # Without it the final value showed a loss that never happened, unlike the
+    # portfolio panel and the leaderboard (trade/utils/leaderboard.py total_assets).
+    cashflow    += sum(reserved(r) for r in (requests or []))
     stocks_value = sum(v for v in totals.values() if v is not None)
     final_value  = cashflow + stocks_value
     pnl          = final_value - initial

@@ -443,6 +443,16 @@ def edit_request_values(prices, shares, actions, requests, port_shares, cashflow
             max_shares = int(port_shares.get(company, 0)) or None
         else:
             max_shares = max_buy_shares(available_pool, eff_price, fee) if eff_price > 0 else None
+            if max_shares is not None and max_shares <= 0:
+                # Not enough money for even one share at this price: keep the order
+                # as it was. 0 used to read as "no limit" below, and the wallet went
+                # below zero (audit #4, 30 Oct 2026). changed=True redraws the row
+                # so its boxes show the kept values again (only when the participant
+                # typed something new, or the redraw would fire this again forever).
+                if (eff_action, eff_price, eff_shares) != (old_action, old_price, old_shares):
+                    changed = True
+                eff_action, eff_price, eff_shares = old_action, old_price, old_shares
+                max_shares = None
         eff_shares = max(1, min(eff_shares, max_shares)) if max_shares else max(1, eff_shares)
 
         new_reserved = buy_cost(eff_shares, eff_price, fee) if eff_action == 'buy' else 0
