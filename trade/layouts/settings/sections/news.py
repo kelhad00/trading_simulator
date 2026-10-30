@@ -230,7 +230,7 @@ def news_settings(lang="fr"):
             dmc.Switch(
                 id="reminders-enabled-input",
                 label=tl["notifications"]["reminders-label"],
-                checked=True,
+                checked=False,
             ),
             dmc.Switch(
                 id="news-tags-enabled-input",

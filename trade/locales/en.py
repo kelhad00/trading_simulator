@@ -409,6 +409,12 @@ translation = {
                     "15": "15 min",
                     "5": "5 min",
                 },
+                "candle-path": {
+                    "label": "Price movement inside a forming candle",
+                    "help": "Used only with moving candles. Simple: the price goes to the Low and the High, then to the Close. Random: it wanders more, like a real price. Both stay inside the real candle and end at its Close; every participant sees the same path.",
+                    "simple": "Simple",
+                    "random": "Random",
+                },
                 "news-font": {
                     "label": "News article font size",
                     "small": "Small",
@@ -426,6 +432,7 @@ translation = {
                 "display": {
                     "color-label": "Dark mode for the simulation",
                     "leaderboard-label": "Show the leaderboard (participant vs 20 robot traders)",
+                    "chart-buttons-label": "Show the Autoscale and Reset axes buttons on the chart",
                 },
             },
         },

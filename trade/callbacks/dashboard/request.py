@@ -97,13 +97,14 @@ def fill_price_from_candle_click(click_data, company):
     State('timestamp', 'data'),
     State('candle-step', 'data'),
     State('steps-per-candle', 'data'),
+    State('candle-path', 'data'),
     prevent_initial_call=True,
 )
-def fill_market_price(n_clicks, company, timestamp, candle_step, steps_per_candle):
+def fill_market_price(n_clicks, company, timestamp, candle_step, steps_per_candle, path=None):
     if not n_clicks or not company or not timestamp:
         raise PreventUpdate
     # The price right now (the forming candle's latest price), not its future close
-    price = current_price(company, timestamp, candle_step, steps_per_candle)
+    price = current_price(company, timestamp, candle_step, steps_per_candle, path)
     return round(float(price), 2)
 
 
@@ -221,10 +222,11 @@ def process_submit_button(btn, company, action, price, pct, cash, timestamp, por
     State('sold-data', 'data'),
     State('steps-per-candle', 'data'),
     State('discrete-enabled', 'data'),
+    State('candle-path', 'data'),     # "simple" or "random" path inside a forming candle
     prevent_initial_call=True,
 )
 def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow, port_totals, cost_basis, sold_data, steps_per_candle,
-                     discrete=False):
+                     discrete=False, path=None):
     """
     Try to execute the requests of the user.
     Update the portfolio, the cashflow and requests list.
@@ -256,7 +258,7 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
     # earlier in the candle or from its future close. With 1 step per candle
     # this is the whole candle's Low/High and its Close, as before.
     def price_now(company):
-        return current_price(company, timestamp, candle_step, steps_per_candle)
+        return current_price(company, timestamp, candle_step, steps_per_candle, path)
 
     if discrete:
         # Discrete mode: the participant already saw this candle close, so only an
@@ -267,7 +269,7 @@ def execute_requests(request_list, timestamp, candle_step, port_shares, cashflow
             return now, now
     else:
         def price_range(company):
-            return step_price_range(company, timestamp, candle_step, steps_per_candle)
+            return step_price_range(company, timestamp, candle_step, steps_per_candle, path)
 
     cashflow = fill_orders(request_list, port_shares, cashflow, cost_basis, sold_data, price_range, price_now)
 

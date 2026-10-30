@@ -80,3 +80,22 @@ def test_every_setting_saved_in_the_configurator_is_in_the_session_file():
     settings = (written & local) - {"companies"}               # companies: exported, set elsewhere
     assert settings - exported == set(), "saved in the Configurator but not exported"
     assert settings - imported == set(), "exported but not imported on the participant's computer"
+
+
+def test_import_returns_one_value_per_setting(fake_data):
+    """Adding a setting means adding an Output AND a returned value in home_import.py:
+    if the counts differ, Dash refuses the answer and the import does nothing."""
+    import base64
+    import re
+    from pathlib import Path
+    import trade.callbacks.home_import as home_import
+    code = (Path(__file__).resolve().parents[1] / "trade" / "callbacks" / "home_import.py").read_text(encoding="utf-8")
+    head = code[:code.index("def import_session(")]
+    outputs = re.findall(r'Output\(\s*["\']([\w-]+)["\']', head[head.rindex("@callback"):])
+    raw = build_session_zip({}, 100_000, 10, 5000, str(fake_data), candle_path="random", chart_buttons_enabled=True)
+    good = home_import.import_session("data:application/zip;base64," + base64.b64encode(raw).decode(), "s.zip", "?lang=en")
+    assert len(good) == len(outputs)
+    assert dict(zip(outputs, good))["candle-path"] == "random"
+    assert dict(zip(outputs, good))["chart-buttons-enabled"] is True
+    assert len(home_import.import_session("data:application/zip;base64,AAAA", "x.zip", "?lang=en")) == len(outputs)
+    assert len(home_import.import_session(None, None, None)) == len(outputs)

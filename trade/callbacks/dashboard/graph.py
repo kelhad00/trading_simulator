@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from dash_iconify import DashIconify
 
-from trade.utils.graph.candlestick_charts import create_graph
+from trade.utils.graph.candlestick_charts import create_graph, chart_config
 from trade.utils.candle_steps import (
     normalize as normalize_step, is_forming, partial_candle, market_time, step_minutes,
 )
@@ -90,6 +90,15 @@ def timer_label(timestamp, candle_step, steps_per_candle):
         return date
     # Moving candles: show the market clock inside the candle (15 / 30 / 45 / 60 min)
     return f"{date} · {step_minutes(step, n_steps)} min"
+
+
+@callback(
+    Output('company-graph', 'config'),
+    Input('chart-buttons-enabled', 'data'),
+)
+def show_chart_buttons(enabled):
+    """Autoscale / Reset axes buttons on the chart, only when turned on in the settings."""
+    return chart_config(bool(enabled))
 
 
 @callback(
@@ -189,13 +198,15 @@ def track_graph_auto_follow(relayout_data, company):
     Input('graph-redraw', 'data'),
     # Discrete mode: zoom on the candles while fewer than this are shown
     State('discrete-zoom-candles', 'data'),
+    # Moving candles: "simple" or "random" path inside the forming candle
+    State('candle-path', 'data'),
     prevent_initial_call=True,
 )
 def update_graph(n, company, timestamp, session_start_time, simulation_duration, total_paused_seconds, requests, color_scheme, auto_follow, manual_range, cashflow, candle_step, steps_per_candle, initial_bars,
                  update_time=None, max_requests=None, initial_cashflow=None, companies=None, session_id=None,
                  news_clock=None, revenue_year=None, notif_offset=0, shown_reminders=None, reminders_enabled=True, lang=None,
                  commission_fee=None, trial_jump=None, discrete=False, checkpoints=None, graph_redraw=None,
-                 discrete_zoom=None):
+                 discrete_zoom=None, candle_path=None):
     following = auto_follow if auto_follow is not None else True
     next_graph = ctx.triggered_id == 'periodic-updater'
     if discrete:
@@ -273,7 +284,7 @@ def update_graph(n, company, timestamp, session_start_time, simulation_duration,
         # ts == timestamp while advancing = no next candle (end of data): stays closed
         if not is_forming(new_step, n_steps) or (advance and ts == timestamp):
             return None
-        return partial_candle(company, ts, new_step, n_steps)
+        return partial_candle(company, ts, new_step, n_steps, candle_path)
 
     try:
         # get_market_dataframe() is cached — only reads disk when file changes

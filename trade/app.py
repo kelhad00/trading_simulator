@@ -195,6 +195,7 @@ app.layout = dmc.MantineProvider([
         dcc.Store(id="max-requests", data=dlt.max_requests, storage_type="local"),
         dcc.Store(id="update-time", data=dlt.update_time, storage_type="local"),
         dcc.Store(id="steps-per-candle", data=dlt.steps_per_candle, storage_type="local"),
+        dcc.Store(id="candle-path", data=dlt.candle_path, storage_type="local"),
         # Candles of history already shown when a session starts (Settings -> Advanced)
         dcc.Store(id="initial-bars", data=dlt.initial_reveal_bars, storage_type="local"),
         dcc.Store(id="simulation-duration", data=dlt.simulation_duration, storage_type="local"),
@@ -209,11 +210,13 @@ app.layout = dmc.MantineProvider([
         # Notification settings — filter by sentiment and optional early-warning offset
         dcc.Store(id="notif-enabled", data=True, storage_type="local"),
         # Time reminders during a session ("5 minutes remaining"...), Settings -> News
-        dcc.Store(id="reminders-enabled", data=True, storage_type="local"),
+        dcc.Store(id="reminders-enabled", data=False, storage_type="local"),
         # Sentiment tags and colours on the news, Settings -> News. Off: participants must read the news
         dcc.Store(id="news-tags-enabled", data=True, storage_type="local"),
         # Leaderboard under the portfolio, Settings -> Advanced. Off by default
         dcc.Store(id="leaderboard-enabled", data=False, storage_type="local"),
+        # Autoscale / Reset axes buttons on the chart (off by default)
+        dcc.Store(id="chart-buttons-enabled", data=False, storage_type="local"),
         # Discrete mode: trials at these candle numbers instead of a running clock,
         # Settings -> Advanced. Off by default (utils/trials.py)
         dcc.Store(id="discrete-enabled", data=False, storage_type="local"),

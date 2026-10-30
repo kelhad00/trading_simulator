@@ -5,7 +5,7 @@ import dash_mantine_components as dmc
 
 from trade.locales import translations as tls
 from trade.defaults import defaults as dlt
-from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG
+from trade.utils.graph.candlestick_charts import PLOTLY_CONFIG, chart_config
 
 from trade.components.menu import dashboard_menu as menu
 
@@ -60,8 +60,9 @@ def graph(lang="fr"):
                 dcc.Graph(
                     id='company-graph',
                     # Toolbar always shown (in the legend row, see assets/chart-toolbar.css)
-                    # instead of popping up over the chart on hover
-                    config={**PLOTLY_CONFIG, 'displayModeBar': True},
+                    # instead of popping up over the chart on hover. Autoscale / Reset axes
+                    # are added by show_chart_buttons (callbacks/dashboard/graph.py) if turned on.
+                    config=chart_config(False),
                     className="w-full h-full",
                 ),
                 dcc.Graph(

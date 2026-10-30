@@ -56,6 +56,8 @@ _LOADED_HIDDEN = {"display": "none"}
     Output("discrete-zoom-candles", "data", allow_duplicate=True),
     Output("notif-filter", "data", allow_duplicate=True),
     Output("notif-offset", "data", allow_duplicate=True),
+    Output("candle-path", "data", allow_duplicate=True),
+    Output("chart-buttons-enabled", "data", allow_duplicate=True),
     Output("session-id", "data", allow_duplicate=True),
     Input("upload-session", "contents"),
     State("upload-session", "filename"),
@@ -64,7 +66,7 @@ _LOADED_HIDDEN = {"display": "none"}
 )
 def import_session(contents, filename, search):
     if not contents:
-        return (no_update,) * 28
+        return (no_update,) * 30
 
     lang = "en" if (search and "lang=en" in search) else "fr"
     tl = tls[lang]["session"]
@@ -83,7 +85,7 @@ def import_session(contents, filename, search):
             autoClose=6000,
         )
         # Reset contents so re-upload of the same file will fire again
-        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 16
+        return (no_update,) * 9 + (notif, no_update, None) + (no_update,) * 18
 
     # Reload market data from the freshly written CSV and get the correct start timestamp
     market_df = get_market_dataframe()
@@ -126,6 +128,8 @@ def import_session(contents, filename, search):
         stores["discrete-zoom-candles"],
         stores["notif-filter"],
         stores["notif-offset"],
+        stores["candle-path"],
+        stores["chart-buttons-enabled"],
         None,          # session-id: a new one when the dashboard opens (new log folder)
     )
 

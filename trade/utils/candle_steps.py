@@ -9,7 +9,8 @@ price path inside a candle is generated:
     up candle   (Close >= Open):  Open -> Low  -> High -> Close
     down candle (Close <  Open):  Open -> High -> Low  -> Close
 
-with a little seeded noise, always inside the real High/Low. After the last
+with a little seeded noise, always inside the real High/Low ("simple"
+setting). The "random" setting (`_random_path`) wanders more: see there. After the last
 step the candle is exactly the one in the file. The seed depends on the
 company and the date, so every participant sees the same path.
 
@@ -54,10 +55,53 @@ def _path(o, h, l, c, n_steps, seed):
     return path
 
 
+def _bridge(a, b, m, sigma, rng):
+    """Brownian bridge: a random walk of m steps from a to b (both ends exact)."""
+    walk = np.concatenate([[0.0], np.cumsum(rng.normal(0, sigma, m))])
+    t = np.arange(m + 1) / m
+    return np.linspace(a, b, m + 1) + walk - t * walk[-1]
+
+
+def _random_path(o, h, l, c, n_steps, seed):
+    """"Random" setting (Fan, 30 Oct 2026): a more irregular path than `_path`.
+
+    Same fixed points (Open, the High and the Low at random times, Close at the
+    end) but the High or the Low can come first, and the price wanders between
+    them (Brownian bridges) instead of going straight. Stays inside High/Low.
+    """
+    n = n_steps * TICKS_PER_STEP
+    rng = np.random.default_rng(seed)
+
+    if h == l:
+        return np.full(n + 1, o)
+
+    first, second = (l, h) if rng.random() < 0.5 else (h, l)
+    t1 = rng.uniform(0.15, 0.45)
+    t2 = rng.uniform(t1 + 0.15, 0.85)
+    i1, i2 = round(t1 * n), round(t2 * n)
+
+    sigma = (h - l) * 0.06
+    path = np.concatenate([
+        _bridge(o, first, i1, sigma, rng)[:-1],
+        _bridge(first, second, i2 - i1, sigma, rng)[:-1],
+        _bridge(second, c, n - i2, sigma, rng),
+    ])
+    # Bounce off the High and the Low instead of going through them
+    width = h - l
+    y = np.mod(path - l, 2 * width)
+    path = l + np.where(y > width, 2 * width - y, y)
+    path = np.clip(path, l, h)
+    path[0], path[i1], path[i2], path[-1] = o, first, second, c
+    return path
+
+
+PATHS = {"simple": _path, "random": _random_path}
+
+
 @lru_cache(maxsize=4096)
-def _steps(o, h, l, c, n_steps, seed):
+def _steps(o, h, l, c, n_steps, seed, path_mode="simple"):
     """Per step: (open, high so far, low so far, price now, low of this step, high of this step)."""
-    path = _path(o, h, l, c, n_steps, seed)
+    path = PATHS.get(path_mode, _path)(o, h, l, c, n_steps, seed)
     out = []
     for k in range(1, n_steps + 1):
         seen = path[: k * TICKS_PER_STEP + 1]
@@ -99,7 +143,7 @@ def _seed(company, timestamp):
     return zlib.crc32(f"{company}|{timestamp}".encode())
 
 
-def _step_values(company, timestamp, step, n_steps):
+def _step_values(company, timestamp, step, n_steps, path="simple"):
     real = _real_candle(company, timestamp)
     if real is None:
         return None
@@ -107,28 +151,28 @@ def _step_values(company, timestamp, step, n_steps):
     if n_steps == 1:
         o, h, l, c = real
         return o, h, l, c, l, h
-    return _steps(*real, n_steps, _seed(company, timestamp))[step - 1]
+    return _steps(*real, n_steps, _seed(company, timestamp), path or "simple")[step - 1]
 
 
-def partial_candle(company, timestamp, step, n_steps):
+def partial_candle(company, timestamp, step, n_steps, path="simple"):
     """(open, high, low, close) of the candle at `timestamp` as shown at this step, or None."""
-    values = _step_values(company, timestamp, step, n_steps)
+    values = _step_values(company, timestamp, step, n_steps, path)
     return None if values is None else values[:4]
 
 
-def current_price(company, timestamp, step, n_steps):
+def current_price(company, timestamp, step, n_steps, path="simple"):
     """Price right now: the forming candle's latest price (its close once closed)."""
-    values = _step_values(company, timestamp, step, n_steps)
+    values = _step_values(company, timestamp, step, n_steps, path)
     return float("nan") if values is None else values[3]
 
 
-def step_price_range(company, timestamp, step, n_steps):
+def step_price_range(company, timestamp, step, n_steps, path="simple"):
     """(low, high) reached DURING the current step only; the whole candle when steps are off.
 
     Used to fill limit orders: an order placed now can only be reached by prices
     from now on, not by prices earlier in the candle.
     """
-    values = _step_values(company, timestamp, step, n_steps)
+    values = _step_values(company, timestamp, step, n_steps, path)
     return (float("nan"), float("nan")) if values is None else values[4:6]
 
 

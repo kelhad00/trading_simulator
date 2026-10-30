@@ -15,7 +15,12 @@ class Defaults:
     # Moving candles: each candle forms in this many steps (4 = updates at 15,
     # 30, 45 min of a 1 h candle, then closes). update_time is the time per
     # step. 1 = the candle appears finished, as before.
-    steps_per_candle = 4
+    # Off (1) by default: every feature added during the internship stays off
+    # until the researcher turns it on (Fan, 30 Oct 2026).
+    steps_per_candle = 1
+    # Price path inside a forming candle: "simple" (Open -> Low -> High -> Close
+    # with a little noise) or "random" (wanders more). See trade/utils/candle_steps.py.
+    candle_path = "simple"
 
     # Simulation window: always ends today, starts `simulation_days` ago
     simulation_days = 300

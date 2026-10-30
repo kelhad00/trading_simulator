@@ -29,11 +29,13 @@ from trade.utils.session import build_session_zip
     State("discrete-zoom-candles", "data"),
     State("notif-filter", "data"),
     State("notif-offset", "data"),
+    State("candle-path", "data"),
+    State("chart-buttons-enabled", "data"),
     prevent_initial_call=True,
 )
 def export_session(n_clicks, companies, initial_cashflow, max_requests, update_time, simulation_duration, news_font_size, color_scheme, notif_enabled, color_enabled, steps_per_candle, initial_bars, reminders_enabled, news_tags_enabled=None, leaderboard_enabled=None, commission_fee=None,
                    discrete_enabled=None, discrete_checkpoints=None, discrete_zoom_candles=None,
-                   notif_filter=None, notif_offset=None):
+                   notif_filter=None, notif_offset=None, candle_path=None, chart_buttons_enabled=None):
     from dash import no_update
     if not n_clicks:
         return no_update
@@ -58,6 +60,8 @@ def export_session(n_clicks, companies, initial_cashflow, max_requests, update_t
         discrete_zoom_candles=discrete_zoom_candles,
         notif_filter=notif_filter,
         notif_offset=notif_offset,
+        candle_path=candle_path,
+        chart_buttons_enabled=chart_buttons_enabled,
         data_path=dlt.data_path,
     )
     return {

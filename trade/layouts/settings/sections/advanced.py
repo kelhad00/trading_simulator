@@ -20,6 +20,11 @@ def advanced_settings(lang="fr"):
                 label=tl["display"]["leaderboard-label"],
                 checked=False,
             ),
+            dmc.Switch(
+                id="chart-buttons-enabled-input",
+                label=tl["display"]["chart-buttons-label"],
+                checked=False,
+            ),
         ]),
         section(tl["subtitles"]["active"], [
             dmc.Select(
@@ -57,6 +62,17 @@ def advanced_settings(lang="fr"):
                         ],
                     ),
                     dmc.Text(tl["candle-steps"]["help"], size="xs", color="dimmed"),
+                ], className="flex flex-col gap-1"),
+                html.Div([
+                    dmc.Text(tl["candle-path"]["label"], size="sm", weight=500),
+                    dmc.SegmentedControl(
+                        id="input-candle-path",
+                        data=[
+                            {"value": "simple", "label": tl["candle-path"]["simple"]},
+                            {"value": "random", "label": tl["candle-path"]["random"]},
+                        ],
+                    ),
+                    dmc.Text(tl["candle-path"]["help"], size="xs", color="dimmed"),
                 ], className="flex flex-col gap-1"),
                 dmc.NumberInput(
                     id="input-initial-bars",

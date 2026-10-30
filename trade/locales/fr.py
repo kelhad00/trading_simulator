@@ -422,6 +422,12 @@ translation = {
                     "15": "15 min",
                     "5": "5 min",
                 },
+                "candle-path": {
+                    "label": "Mouvement du prix dans une bougie en cours",
+                    "help": "Utilisé seulement avec les bougies en mouvement. Simple : le prix va au plus bas et au plus haut, puis à la clôture. Aléatoire : il varie davantage, comme un vrai prix. Les deux restent dans la vraie bougie et finissent à sa clôture ; tous les participants voient le même chemin.",
+                    "simple": "Simple",
+                    "random": "Aléatoire",
+                },
                 "news-font": {
                     "label": "Taille de police des articles",
                     "small": "Petite",
@@ -439,6 +445,7 @@ translation = {
                 "display": {
                     "color-label": "Mode sombre pour la simulation",
                     "leaderboard-label": "Afficher le classement (participant contre 20 traders robots)",
+                    "chart-buttons-label": "Afficher les boutons Autoscale et Reset axes sur le graphique",
                 },
             },
         },

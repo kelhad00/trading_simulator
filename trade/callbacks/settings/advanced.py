@@ -49,6 +49,45 @@ def save_leaderboard_setting(checked):
     return bool(checked)
 
 
+# The chart's Autoscale / Reset axes buttons, same as the switches above (off by default)
+@callback(
+    Output("chart-buttons-enabled-input", "checked"),
+    Input("settings-tabs", "value"),
+    State("chart-buttons-enabled", "data"),
+)
+def show_chart_buttons_setting(tab, saved):
+    return bool(saved)
+
+
+@callback(
+    Output("chart-buttons-enabled", "data"),
+    Input("chart-buttons-enabled-input", "checked"),
+    prevent_initial_call=True,
+)
+def save_chart_buttons_setting(checked):
+    return bool(checked)
+
+
+# Moving candles: price path inside a forming candle, "simple" (default) or "random".
+# Saved as soon as it is chosen, like the switches above.
+@callback(
+    Output("input-candle-path", "value"),
+    Input("settings-tabs", "value"),
+    State("candle-path", "data"),
+)
+def show_candle_path_setting(tab, saved):
+    return saved if saved in ("simple", "random") else dlt.candle_path
+
+
+@callback(
+    Output("candle-path", "data"),
+    Input("input-candle-path", "value"),
+    prevent_initial_call=True,
+)
+def save_candle_path_setting(value):
+    return value if value in ("simple", "random") else dlt.candle_path
+
+
 @callback(
     Output("input-update-time", "value"),
     Output("input-max-requests", "value"),

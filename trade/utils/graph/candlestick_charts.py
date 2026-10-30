@@ -11,6 +11,18 @@ PLOTLY_CONFIG = {
 }
 
 
+def chart_config(buttons_enabled=False):
+    """Config of the participant's chart: toolbar always shown (assets/chart-toolbar.css).
+
+    The Autoscale and Reset axes buttons are only there when the researcher turns
+    them on (Settings -> Advanced, off by default).
+    """
+    config = {**PLOTLY_CONFIG, 'displayModeBar': True}
+    if not buttons_enabled:
+        config['modeBarButtonsToRemove'] = PLOTLY_CONFIG['modeBarButtonsToRemove'] + ['autoScale2d', 'resetScale2d']
+    return config
+
+
 MAX_DATE_LABELS = 8
 _LABEL_STEPS = (1, 2, 5, 7, 14, 30, 60, 90, 180, 365)   # candles between two date labels
 

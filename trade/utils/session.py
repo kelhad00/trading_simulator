@@ -16,7 +16,7 @@ NOTIF_OFFSET_DEFAULT = 0
 
 def build_session_zip(companies, initial_cashflow, max_requests, update_time, data_path, simulation_duration=None, news_font_size=None, color_scheme=None, notif_enabled=None, color_enabled=None, steps_per_candle=None, initial_bars=None, reminders_enabled=None, news_tags_enabled=None, leaderboard_enabled=None, commission_fee=None,
                       discrete_enabled=None, discrete_checkpoints=None, discrete_zoom_candles=None,
-                      notif_filter=None, notif_offset=None):
+                      notif_filter=None, notif_offset=None, candle_path=None, chart_buttons_enabled=None):
     """Package stores + CSV files into an in-memory ZIP and return the bytes."""
     from trade.defaults import defaults as dlt
     buf = io.BytesIO()
@@ -36,7 +36,7 @@ def build_session_zip(companies, initial_cashflow, max_requests, update_time, da
                 "color-enabled": color_enabled if color_enabled is not None else True,
                 "steps-per-candle": steps_per_candle if steps_per_candle is not None else dlt.steps_per_candle,
                 "initial-bars": initial_bars if initial_bars is not None else dlt.initial_reveal_bars,
-                "reminders-enabled": reminders_enabled if reminders_enabled is not None else True,
+                "reminders-enabled": bool(reminders_enabled),
                 "news-tags-enabled": news_tags_enabled if news_tags_enabled is not None else True,
                 "leaderboard-enabled": bool(leaderboard_enabled),
                 "commission-fee": commission_fee if commission_fee is not None else dlt.commission_fee,
@@ -45,6 +45,8 @@ def build_session_zip(companies, initial_cashflow, max_requests, update_time, da
                 "discrete-zoom-candles": discrete_zoom_candles if discrete_zoom_candles is not None else dlt.discrete_zoom_candles,
                 "notif-filter": notif_filter if notif_filter is not None else NOTIF_FILTER_DEFAULT,
                 "notif-offset": notif_offset if notif_offset is not None else NOTIF_OFFSET_DEFAULT,
+                "candle-path": candle_path or dlt.candle_path,
+                "chart-buttons-enabled": bool(chart_buttons_enabled),
             }
         }
         zf.writestr("session.json", json.dumps(payload, ensure_ascii=False, indent=2))
@@ -109,4 +111,7 @@ def extract_session_zip(zip_bytes, data_path):
         # Sessions saved before 30 Oct 2026 didn't carry these: the defaults, as before
         "notif-filter": stores.get("notif-filter", NOTIF_FILTER_DEFAULT),
         "notif-offset": stores.get("notif-offset", NOTIF_OFFSET_DEFAULT),
+        # Sessions saved before these settings existed (30 Oct 2026): simple path, no buttons
+        "candle-path": stores.get("candle-path", "simple"),
+        "chart-buttons-enabled": stores.get("chart-buttons-enabled", False),
     }
