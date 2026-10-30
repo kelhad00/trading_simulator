@@ -40,6 +40,33 @@ Notes:
 - The configurator downloads market data at startup if `generated_data.csv` or `revenue.csv` is
   missing from the data folder.
 
+## Running an experiment
+1. **Prepare** the session in the Configurator (Settings page): companies, charts, news, revenues and
+   the options below.
+2. **Export** it with the **Export Session** button at the top of the Settings page: this gives
+   `session.zip` (all settings + `generated_data.csv`, `news.csv`, `revenue.csv`).
+3. On **each participant's computer**, start the Runtime and **import** `session.zip` on the home page;
+   the Start button is enabled once a session is imported.
+4. **Collect** the logs: each session writes to its own folder `data/exports/<session id>/`.
+
+## Features
+Every option is explained in the [WIKI](WIKI.md#settings-and-features) ([français](WIKI_FR.md#paramètres-et-fonctionnalités)).
+- **Moving candles**: the newest candle forms in steps before it closes, like a live chart.
+- **Discrete mode (trials)**: the chart stops at chosen candles and the participant clicks "Next trial"
+  (with a confirmation window, no news pop-ups, and a zoom on the first candles).
+- **Leaderboard**: the participant against 20 robot traders made from the same prices.
+- **Commission fee** on every executed buy and sell (0 by default).
+- **News notifications**: on/off, filter by sentiment, show news some days early, sentiment tags on/off.
+- **Time reminders** during the session (25 %, 50 %, 75 %, 5/2/1 minutes left).
+- **Chart buttons**: Autoscale (fit the candles shown) and Reset axes (back to the live view).
+- **Results window** at the end: final value and profit/loss, counting money put aside for waiting orders.
+- **One log folder per session**, with the settings and code version (`log-info.json`).
+- **"Updating…" screen** in the Configurator while it is working.
+- **Works offline** (see below) and in **English and French** (`?lang=en` / `?lang=fr`).
+
+For the next developer: [docs/HANDOVER.md](docs/HANDOVER.md) (state of the project, open issues,
+decisions taken).
+
 ## Generating news
 Generating news uses an AI (Ollama or Groq) to write the articles and a second model,
 FinBERT, to check that each article really sounds positive or negative. FinBERT needs extra
@@ -71,9 +98,10 @@ The tests (`tests/test_offline.py`) say what is missing.
   ```
 
 ## Run the tests
-Automated checks for moving candles, orders, news tags, settings, translations, session files and
-the data folder. They use a small invented dataset in a temporary folder, so they never touch real
-data and work on any computer.
+About 280 automated checks (folder `tests/`) for moving candles, orders and money, fees, discrete
+mode, the leaderboard, news, settings, translations, session files, logs and the data folder. They
+use a small invented dataset in a temporary folder, so they never touch real data and work on any
+computer.
 
 Install the test tool once, then run all tests from the `trading_simulator` folder:
 ```powershell

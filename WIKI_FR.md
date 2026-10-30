@@ -4,6 +4,8 @@
 - [News](#news)
 - [Revenues](#revenues)
 - [Companies](#companies)
+- [Paramètres et fonctionnalités](#paramètres-et-fonctionnalités)
+- [Fichier de session (session.zip)](#fichier-de-session-sessionzip)
 - [Import](#import-)
 - [Export](#export)
 
@@ -49,9 +51,11 @@ date,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 ```
 
 ## Reset
-Vous pouvez réinitialiser les données de marché en coupant l'application et en supprimant le fichier `data/generated_data.csv`
-> **TODO** :
-> Ajouter un bouton de réinitialisation dans l'interface
+Vous pouvez réinitialiser les données de marché en coupant l'application et en supprimant le fichier `data/generated_data.csv`,
+ou générer de nouvelles données pour une entreprise dans Paramètres → Graphiques (« Modifier »).
+
+Le bouton **Reset** du menu ne touche pas aux données de marché : il démarre une nouvelle session pour le
+participant (argent de départ, aucun ordre ni action, nouveau dossier de logs). Voir [Export](#export).
 
 ## Generation
 Les données de marché sont générées pour chaque entreprise en fonction de la tendance sélectionnée (Bull, Bear, Flat). L'algorithme recherche aléatoirement dans les données de marché du CAC40 des tendances qui correspondent aux paramètres sélectionnés.
@@ -113,8 +117,10 @@ Ces données sont réelles.
 ## Storage
 
 ### Path
-Les données de marché sont stockées dans un fichier CSV.
-Voici le chemin du fichier : `data/revenues.csv`
+Les données de revenus sont stockées dans un fichier CSV.
+Voici le chemin du fichier : `data/revenue.csv`
+
+Plusieurs entreprises peuvent être enregistrées en une fois dans Paramètres → Revenus (cela plantait avant le 30 oct. 2026).
 
 ### Format
 
@@ -217,6 +223,112 @@ Une fois ceci fait, vous pouvez générer les données de marché et les revenus
 Si vous n'avez pas assigné de données de marché au ticker, vous ne pourrez pas generer les revenus ni les news.
 Ainsi, ce Ticker ne sera pas intégré dans la simulation.
 
+
+
+
+# Paramètres et fonctionnalités
+Le chercheur les règle dans le Configurateur (`python app_config.py`, page Paramètres). Chaque
+paramètre est enregistré dans le navigateur et transmis aux ordinateurs des participants par le
+[fichier de session](#fichier-de-session-sessionzip). Les libellés ci-dessous sont ceux de l'interface en français.
+
+## Paramètres → Avancé
+
+| Paramètre | Rôle | Par défaut |
+|---|---|---|
+| Trésorie initiale | Argent de départ du participant | 100 000 € |
+| Requêtes max | Nombre maximum d'ordres en attente en même temps | 10 |
+| Durée de la session (minutes) | Durée réelle de la session (mode chronomètre) | 15 |
+| Temps entre deux mises à jour (ms), par étape de bougie | Temps entre deux mises à jour du graphique | 5000 |
+| Bougies d'historique affichées au départ | Bougies passées visibles avant le début du trading | 100 |
+| Frais de commission (%) | Payés à chaque achat et vente exécutés : avec 0,05, acheter 100 € coûte 100,05 €, vendre 100 € rapporte 99,95 € | 0 (sans frais) |
+| Bougies en mouvement | La dernière bougie se forme par étapes (toutes les 30, 15 ou 5 min d'une bougie d'1 h) avant de se fermer, comme un graphique en direct. « Désactivé » = bougies affichées terminées | toutes les 15 min (4 étapes) |
+| Taille de police des articles | Petite / Moyenne / Grande | Petite |
+| Entreprises actives | Entreprises que le participant peut trader (au moins une) | toutes celles avec des données de marché |
+| Mode sombre pour la simulation | Thème sombre pour le participant | désactivé |
+| Afficher le classement | Classement du participant contre 20 traders robots | désactivé |
+
+### Classement
+Les 20 robots sont créés à partir des prix de l'application : à la première bougie, chaque robot garde
+5 à 40 % de l'argent de départ en liquide et achète un mélange aléatoire d'entreprises (en payant les
+frais de commission), puis ne fait plus aucun ordre. Une graine fixe donne les mêmes robots à tous les
+participants. Tout le monde est classé selon son total = liquide + argent mis de côté pour les ordres
+d'achat en attente + valeur des actions. Avec les bougies en mouvement, les robots sont évalués au prix
+atteint jusque-là dans la bougie en cours, comme le participant (`trade/utils/leaderboard.py`).
+
+### Mode discret (essais)
+Au lieu d'une horloge qui avance, le graphique s'arrête à des bougies fixées (« essais ») et le
+participant passe à la suite avec le bouton **Essai suivant**. Désactivé par défaut.
+
+- **Bougies affichées à chaque essai** : par exemple `10, 15` → l'essai 1 montre les bougies 1 à 10,
+  l'essai 2 les bougies 1 à 15. Des nombres entiers, chacun plus grand que le précédent. L'enregistrement
+  règle aussi « Bougies d'historique affichées au départ » sur le premier nombre.
+- Les ordres en attente sont vérifiés sur chaque bougie sautée par un essai.
+- Pas de chronomètre : la session se termine après le dernier essai.
+- **Confirmation** : « Essai suivant » demande d'abord « Avez-vous fini d'acheter et de vendre pour cet
+  essai ? Vous ne pourrez pas y revenir. » (« Non, rester » / « Oui, essai suivant ») ; au dernier essai,
+  il demande de terminer la session.
+- **Pas de notifications d'actualités** dans ce mode (un essai peut sauter beaucoup d'actualités d'un
+  coup) ; les actualités restent dans la liste.
+- **Zoomer sur les bougies tant qu'il y en a moins que** (100 par défaut) : tant que moins de bougies
+  que ce nombre sont affichées, le graphique zoome sur elles ; à partir de ce nombre, il montre toute la
+  largeur de la session. 0 = toujours toute la session.
+
+## Paramètres → Actualités → Notifications
+
+| Paramètre | Rôle | Par défaut |
+|---|---|---|
+| Afficher les notifications d'actualités | Pop-ups quand une actualité apparaît | activé |
+| Afficher les notifications pour | Actualités positives / négatives / neutres | les trois |
+| Jours avant l'apparition de l'actualité | Montre l'actualité ce nombre de jours avant sa date (0 = en même temps) | 0 |
+| Afficher les rappels de temps | Pop-ups à 25 %, 50 %, 75 % de la session et à 5, 2 et 1 minutes de la fin | activé |
+| Afficher les étiquettes et couleurs de sentiment | Étiquettes et couleurs positives/négatives dans la liste des actualités | activé |
+
+## Graphique du participant
+- **Autoscale** (bouton de la barre d'outils ou double-clic) : ajuste la vue aux bougies affichées, et
+  continue de l'ajuster à chaque mise à jour.
+- **Reset axes** (bouton de la barre d'outils) : revient à la vue de départ (toute la largeur de la
+  session) et suit à nouveau le graphique en direct, aussi en pause ou après la fin.
+- Un zoom ou un déplacement manuel reste là où le participant l'a laissé jusqu'à l'utilisation d'un de
+  ces deux boutons. Changer d'entreprise revient toujours à la vue de départ.
+- Code : `trade/callbacks/dashboard/graph.py` (`track_graph_auto_follow`).
+
+## Fin de la session
+Une fenêtre de résultats montre l'argent de départ, la valeur finale et le gain ou la perte. La valeur
+finale compte le liquide, l'argent mis de côté pour les ordres d'achat encore en attente et la valeur des
+actions : le même total que le portefeuille et le classement (`trade/callbacks/reset.py`).
+
+## Écran « Mise à jour… » (Configurateur uniquement)
+Quand le Configurateur travaille plus de 0,3 s, la fenêtre est couverte par un indicateur de chargement
+et « Mise à jour… » (« Updating… » en anglais), pour que le chercheur ne clique pas pendant une mise à
+jour, comme un écran de chargement dans un jeu. Il disparaît dès que la mise à jour est finie.
+L'application des participants (Runtime) n'en a pas (`trade/app.py`, `_loading_overlay`).
+
+
+
+
+# Fichier de session (session.zip)
+Le chercheur prépare la session dans le Configurateur, puis clique sur **Exporter la session** en haut
+de la page Paramètres (disponible dès que des données de marché existent). Sur l'ordinateur de chaque
+participant, le Runtime (`python app_runtime.py`) importe ce fichier sur la page d'accueil ; le bouton
+de démarrage reste désactivé tant qu'aucune session n'est importée.
+
+Le zip contient :
+- `session.json` : tous les paramètres ci-dessus (entreprises, argent de départ, requêtes max, temps
+  de mise à jour, durée de la session, taille de police, thème, notifications activées, filtre et délai
+  des notifications, bougies en mouvement, bougies d'historique, rappels, étiquettes des actualités,
+  classement, frais de commission, mode discret, essais, zoom) ;
+- les fichiers de données `generated_data.csv`, `news.csv` et `revenue.csv` (`trade/utils/session.py`,
+  `DATA_FILES`).
+
+Un ancien fichier de session sans un paramètre garde l'ancien comportement pour celui-ci (par exemple
+pas de classement, pas de frais, pas de zoom en mode discret).
+
+Un test (`tests/test_session_zip.py`) vérifie que chaque paramètre enregistré par le Configurateur est
+exporté et importé, pour qu'un nouveau paramètre ne puisse pas être oublié.
+
+
+
+
 # Import 
 
 Vous pouvez importer des données de marché, des revenus et des news en important des fichiers CSV formaté dans le bon format :
@@ -244,13 +356,16 @@ Il y a 3 fichiers par session :
 
 Chaque ligne de chaque CSV contient un UUID permettant de relier les logs entre eux.
 
-#### During the simulation
-Lorsque la simulation est en cours, les données sont stockées dans le dossier `data/export`
+#### Un dossier par session
+Chaque session écrit ses logs directement dans son propre dossier, `data/exports/<id de session>/`,
+par exemple `data/exports/2026-10-07_10-15_a3f9/` (date, heure et une petite partie aléatoire). Une
+session reçoit son ID à l'ouverture du tableau de bord ; Reset ou l'import d'une session en démarre une
+nouvelle. Chaque ligne de log a une colonne `session-id`, et `log-info.json` dans le dossier enregistre
+l'ID de session, la version du code TradeSim et les paramètres. Ainsi les logs des participants ne se
+mélangent jamais, même si Reset est oublié ou si plusieurs participants utilisent le même serveur.
 
-#### After the simulation
-Une fois la simulation terminée, les données sont stockées dans le dossier `data/exports`
-Chaque session a son propre dossier et un ID unique.
-L'ID des sessions est incrémenté à chaque nouvelle session.
+Les anciennes sessions étaient d'abord écrites dans `data/export` puis déplacées dans un dossier
+numéroté (`data/exports/1`, `2`, ...) au Reset ; ces dossiers sont gardés tels quels.
 
 ### Triggers
 Les données sont exportées à chaque fois qu'une action est effectuée par l'utilisateur.
