@@ -15,7 +15,7 @@ explained in the [WIKI](../WIKI.md#settings-and-features) ([français](../WIKI_F
 | Logs of the sessions | `data/exports/<session id>/` |
 | Default values | `trade/defaults.py` |
 | Texts (English / French) | `trade/locales/en.py`, `trade/locales/fr.py` |
-| Tests | from `trading_simulator`: `.\trade\venv\Scripts\python.exe -m pytest` (about 300, all passing on 30 Oct 2026) |
+| Tests | from `trading_simulator`: `.\trade\venv\Scripts\python.exe -m pytest` (318, all passing on 8 Nov 2026) |
 
 ### Branches
 - `main`: the stable version.
@@ -67,6 +67,10 @@ All on `intern/develop`, each with its tests. Each one is **off until the resear
   forming candle;
 - discrete mode with trials (`trade/utils/trials.py`, `trade/callbacks/dashboard/trials.py`):
   confirmation before the next trial, no news pop-ups, zoom on the first candles;
+- discrete mode candle list: numbers separated by spaces and/or commas; any other character (a dot,
+  a dash, a letter...) shows a red warning under the box while typing, and Save refuses it
+  (`trade/utils/trials.py`, `has_wrong_characters`; `trade/callbacks/settings/advanced.py`,
+  `warn_wrong_characters`) (d63de3f, 8 Nov 2026);
 - leaderboard against 20 robot traders (`trade/utils/leaderboard.py`);
 - commission fee (`trade/utils/fees.py`);
 - news notifications: filter, delay, sentiment tags on/off; time reminders;
@@ -148,3 +152,33 @@ The Configurator takes about 14 s to open the Settings page and 8–9 s to switc
 answers in about 0.3 s; the time is the browser drawing the Dash Mantine components. The
 "Updating…" screen makes the wait visible; making it faster would mean drawing fewer components
 per tab.
+
+### Every tab refreshes at each tab click (noticed at the demo, Nov 2026)
+About 15 callbacks listen to `Input("settings-tabs", "value")` and run for **every** tab click, not
+only for the tab being opened. The heaviest is `display_revenues` (`callbacks/settings/revenues.py`),
+which redraws every revenue chart. So the "Updating…" screen shows at almost every click. Nothing is
+saved by a tab click; the tabs only reload what is already saved (unsaved typing in a box is lost).
+
+Proposed fix, not applied: at the top of each of these callbacks,
+
+```python
+if ctx.triggered_id == "settings-tabs" and tabs != "<its tab>":
+    raise PreventUpdate
+```
+
+When the callback is woken by something else (a store, a modal, an import), it still runs. Which tab
+each callback belongs to (checked against the layout ids):
+
+| File (under `callbacks/settings/`) | Callback | Runs only when opening |
+|---|---|---|
+| `stocks.py` | `display_companies` (list-companies) | `tickers` |
+| `stocks.py` | `update_select_company_options` (select-company, input-company, modal) | `charts` or `tickers` |
+| `stocks.py` | `update_activities` (input-activity) | `tickers` |
+| `stocks.py` | active-companies-count (shown in the Advanced tab) | `advanced` |
+| `news.py` | reminders switch, news tags switch, news-select-company | `news` |
+| `revenues.py` | `display_revenues`, revenue company options | `revenues` |
+| `advanced.py` | dark mode / leaderboard / chart buttons / candle path switches, `set_advanced_settings_default_values` | `advanced` |
+
+Leave `update_companies` (`stocks.py`) as it is: it is cheap and already stops when nothing changed.
+Risk: low to medium. A wrong tab name only shows old data until the next click; test it by clicking
+through every tab and checking the lists, the revenue charts and the saved Advanced values.
