@@ -381,7 +381,8 @@ translation = {
                     "success-message": "Your settings have been saved.",
                     "error-title": "Error",
                     "error-message": "Please fill all the fields.",
-                    "discrete-error": "Discrete mode: the candle list must be whole numbers from 2 to {n}, each bigger than the one before (e.g. 10, 15, 150).",
+                    "discrete-error": "Discrete mode: the candle list must be whole numbers from 2 to {n}, each bigger than the one before (e.g. 10, 15, 150 or 10 15 150).",
+                    "wrong-characters": "Only numbers separated by spaces or commas, e.g. 10, 15 or 10 15. Please check what you typed.",
                 },
                 "discrete": {
                     "title": "Discrete mode (trials)",

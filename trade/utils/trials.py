@@ -8,21 +8,31 @@ After the last trial the session ends.
 
 Candle numbers count from 1, like on the chart: candle n is row n-1 of the data.
 """
+import re
+
 import pandas as pd
 
 from trade.utils.orders import fill_orders
 
+# The candle list may only hold digits, spaces, commas (and semicolons)
+_ALLOWED = re.compile(r"[0-9\s,;]*")
+
+
+def has_wrong_characters(text):
+    """True when the candle list holds something else than numbers, spaces and commas
+    (a dot, a dash, a letter...)."""
+    return not _ALLOWED.fullmatch(str(text or ""))
+
 
 def parse_checkpoints(text, n_candles):
-    """'10, 15, 150' -> [10, 15, 150], or None when the list isn't valid.
+    """'10, 15, 150' or '10 15 150' -> [10, 15, 150], or None when the list isn't valid.
 
     Valid: whole numbers from 2 to the number of candles in the data, each one
     bigger than the one before. (Candle 1 alone isn't a chart.)
     """
-    try:
-        numbers = [int(part) for part in str(text).replace(';', ',').split(',') if part.strip()]
-    except ValueError:
+    if has_wrong_characters(text):
         return None
+    numbers = [int(part) for part in re.findall(r"[0-9]+", str(text or ""))]
     if not numbers or numbers[0] < 2 or numbers[-1] > n_candles:
         return None
     if any(b <= a for a, b in zip(numbers, numbers[1:])):

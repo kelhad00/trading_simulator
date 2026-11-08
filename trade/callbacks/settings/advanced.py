@@ -6,7 +6,7 @@ import dash_mantine_components as dmc
 from trade.defaults import defaults as dlt
 from trade.locales import translations as tls
 from trade.utils.market import get_market_dataframe
-from trade.utils.trials import parse_checkpoints, history_bars
+from trade.utils.trials import parse_checkpoints, history_bars, has_wrong_characters
 
 
 # The dark mode switch and its saved value. Showing reads the saved value as a
@@ -86,6 +86,20 @@ def show_candle_path_setting(tab, saved):
 )
 def save_candle_path_setting(value):
     return value if value in ("simple", "random") else dlt.candle_path
+
+
+# Discrete mode: red text under the candle list while it holds something else than
+# numbers, spaces and commas, so the researcher checks what was typed
+@callback(
+    Output("input-discrete-checkpoints", "error"),
+    Input("input-discrete-checkpoints", "value"),
+    State("url", "search"),
+)
+def warn_wrong_characters(text, search):
+    if not has_wrong_characters(text):
+        return ""
+    lang = "en" if (search and "lang=en" in search) else "fr"
+    return tls[lang]["settings"]["advanced"]["notif"]["wrong-characters"]
 
 
 @callback(
@@ -192,6 +206,8 @@ def update_advanced_settings(n, update_time, max_requests, init_cashflow, simula
     if discrete:
         market_df = get_market_dataframe()
         n_candles = len(market_df.index) if market_df is not None else 0
+        if has_wrong_characters(checkpoints_text):
+            return error(tl["wrong-characters"])
         checkpoints = parse_checkpoints(checkpoints_text, n_candles)
         if checkpoints is None:
             return error(tl["discrete-error"].format(n=n_candles))

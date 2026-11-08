@@ -394,7 +394,8 @@ translation = {
                     "success-message": "Vos paramètres ont été enregistrés.",
                     "error-title": "Erreur",
                     "error-message": "Veuillez remplir tous les champs.",
-                    "discrete-error": "Mode discret : la liste doit contenir des nombres entiers de 2 à {n}, chacun plus grand que le précédent (ex. 10, 15, 150).",
+                    "discrete-error": "Mode discret : la liste doit contenir des nombres entiers de 2 à {n}, chacun plus grand que le précédent (ex. 10, 15, 150 ou 10 15 150).",
+                    "wrong-characters": "Uniquement des nombres séparés par des espaces ou des virgules, ex. 10, 15 ou 10 15. Vérifiez ce que vous avez saisi.",
                 },
                 "discrete": {
                     "title": "Mode discret (essais)",

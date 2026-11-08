@@ -28,6 +28,12 @@ CHECKPOINTS = [105, 110]      # the fake data has 160 candles
     ("10, 15", [10, 15]),
     (" 10,15 , 150 ", [10, 15, 150]),
     ("10; 15", [10, 15]),
+    ("10 15", [10, 15]),       # spaces work like commas
+    ("10  15   150", [10, 15, 150]),
+    ("10,15 150", [10, 15, 150]),
+    ("10.5, 15", None),        # anything else than numbers, spaces and commas
+    ("10-15", None),
+    ("10/15", None),
     ("15, 10", None),          # must go up
     ("10, 10", None),
     ("1, 10", None),           # candle 1 alone isn't a chart
@@ -37,6 +43,24 @@ CHECKPOINTS = [105, 110]      # the fake data has 160 candles
 ])
 def test_candle_list_is_checked(text, expected):
     assert trials.parse_checkpoints(text, 200) == expected
+
+
+@pytest.mark.parametrize("text, wrong", [
+    ("10 15", False),
+    ("10, 15; 150", False),
+    ("", False),
+    (None, False),
+    ("10, abc", True),
+    ("10.5", True),
+])
+def test_wrong_characters_are_found(text, wrong):
+    assert trials.has_wrong_characters(text) is wrong
+
+
+def test_warning_under_the_candle_list():
+    assert advanced.warn_wrong_characters("10 15", "?lang=en") == ""
+    message = advanced.warn_wrong_characters("10.5, 15", "?lang=en")
+    assert "check what you typed" in message
 
 
 def test_session_opens_on_the_first_trial():
